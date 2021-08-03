@@ -103,16 +103,30 @@ class Airtable {
 
     if (response.success) {
       console.log(response.statusCode);
-      console.log(response.responseText);
-      console.log(response.responseData);
-      console.log(response.error);
       var text = response.responseText;
       var data = response.responseData;
       var results = JSON.parse(text);
     } else {
-      console.log(response.statusCode);
-      console.log(response.error);
+      var message = this._checkError(response.error);
+      App.displayErrorMessage(message);
+      console.log(message);
     }
+  }
+  
+  _checkError(code) {
+    var errorCodes = {
+      400: "Bad Request",
+      401: "Unauthorized",
+      402: "Payment Required",
+      403: "Forbidden",
+      404: "Not Found",
+      413: "Request Entity Too Large",
+      422: "Invalid Request";
+      500: "Internal Server Error",
+      502: "Bad Gateway";
+      503: "Service Unavailable",
+    };
+    return errorCodes[code];
   }
 
   // Setup & Store Credentials
