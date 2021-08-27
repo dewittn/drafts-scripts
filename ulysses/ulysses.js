@@ -13,17 +13,18 @@ class Ulysses {
 
   // Create a new sheet in Ulysses
   newSheet(sheetText, groupID, format = "markdown", index) {
-    var callbackAction = "new-sheet";
-
     // callback Params
     // TO DO: format and index NOT implemented yet
     var params = {
       group: groupID,
       text: sheetText,
     };
-    var baseURL = this.callbackURL + callbackAction;
-    var response = this._openCallback(baseURL, params);
-    this.targetID = response.targetId;
+    var response = this._openCallback("new-sheet", params);
+    if (response) {
+      this.targetID = response.targetId;
+    } else {
+      this._callBackFailed(response.status);
+    }
   }
 
   // Creates a new group.
@@ -38,14 +39,14 @@ class Ulysses {
 
   // Creates a new note attachment on a sheet.
   attachNote(id, text, format) {
-    // this.callbackURL Params
-    var callbackAction = "attach-note";
     var params = {
       id: this.targetID,
       text: HTML.escape(text),
     };
-    var baseURL = this.callbackURL + callbackAction;
-    this._openCallback(baseURL, params, false);
+    var response = this._openCallback("attach-note", params, false);
+    if (!response) {
+      this._callBackFailed(response.status);
+    }
   }
 
   // Changes an existing note attachment on a sheet.
@@ -147,25 +148,32 @@ class Ulysses {
 
   // Opens an item (sheet or group) with a particular identifier in Ulysses.
   open(targetID) {
-    var callbackAction = "open";
-    var baseURL = this.callbackURL + callbackAction;
     var params = { id: this.targetID };
-    this._openCallback(baseURL, params, false);
+    this._openCallback("open", params, false);
   }
 
   // Opens the special groups “All”
   openAll() {
-    // TO DO:
+    var response = this._openCallback("open-all", {}, false);
+    if (!response) {
+      this._callBackFailed(response.status);
+    }
   }
 
   // Opens the special groups “Last 7 Days”
   openRecent() {
-    // TO DO:
+    var response = this._openCallback("open-recent", {}, false);
+    if (!response) {
+      this._callBackFailed(response.status);
+    }
   }
 
   // Opens the special groups “Favorites”
   openFavorites() {
-    // TO DO:
+    var response = this._openCallback("open-favorites", {}, false);
+    if (!response) {
+      this._callBackFailed(response.status);
+    }
   }
 
   // Retrieves the build number of Ulysses, and the version of Ulysses’ X-Callback API.
@@ -199,9 +207,18 @@ class Ulysses {
   //Authorize Drafts with Ulysses and save credentials
   _authorize() {}
 
+  // Displays an error message when callbackURL response fails.
+  _callBackFailed(
+    status,
+    message = "Something went wrong. Check the colsole log."
+  ) {
+    console.log(status);
+    app.displayErrorMessage(message);
+  }
+
   // Open this.callbackURL
   _openCallback(
-    baseURL,
+    callbackAction,
     params = {},
     waitForResponse = true,
     message = "Sucess!"
@@ -209,7 +226,7 @@ class Ulysses {
     // open and wait for result
     var cb = CallbackURL.create();
     cb.waitForResponse = waitForResponse;
-    cb.baseURL = baseURL;
+    cb.baseURL = this.callbackURL + callbackAction;
     for (const [key, value] of Object.entries(params)) {
       cb.addParameter(key, value);
     }
