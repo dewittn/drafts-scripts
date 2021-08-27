@@ -109,7 +109,11 @@ class Ulysses {
   // Moves an item (sheet or group) to the trash.
   // Requires authorization.
   trash(targetID) {
-    this._openCallback("trash", { id: targetID });
+    this._authorize();
+    this._openCallback("trash", {
+      id: targetID,
+      "access-token": this.accessToken,
+    });
   }
 
   // Retrieves information about an item (sheet or group).
@@ -185,7 +189,35 @@ class Ulysses {
   }
 
   //Authorize Drafts with Ulysses and save credentials
-  _authorize() {}
+  _authorize() {
+    var model = device.model;
+    var credential = Credential.create(
+      "Ulysses (" + model + ")",
+      "Ulysses API"
+    );
+    credential.addPasswordField("access-token", "Access Token");
+    this.accessToken = credential.getValue("access-token");
+    if (!this.accessToken) {
+      var response = this._openCallback("authorize", {
+        appname: "Drafts App (" + model + ")",
+      });
+      var token = response["access-token"];
+      app.setClipboard(token);
+      alert(
+        "Your Ulysses access token for this devive (" +
+          model +
+          ") has been copied to the clipboard.\n\n Please paste it into the text field on the next window."
+      );
+      credential.authorize();
+      app.setClipboard("");
+      this.accessToken = credential.getValue("access-token");
+    }
+    //
+    // alert(response["access-token"]);
+    // credential.addTextField("baseID", "Default Base ID");
+
+    // this.baseID = credential.getValue("baseID");
+  }
 
   // Open this.callbackURL
   _openCallback(
