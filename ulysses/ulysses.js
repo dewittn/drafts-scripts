@@ -20,11 +20,7 @@ class Ulysses {
       text: sheetText,
     };
     var response = this._openCallback("new-sheet", params);
-    if (response) {
-      this.targetID = response.targetId;
-    } else {
-      this._callBackFailed(response.status);
-    }
+    this.targetID = response.targetId;
   }
 
   // Creates a new group.
@@ -44,9 +40,6 @@ class Ulysses {
       text: HTML.escape(text),
     };
     var response = this._openCallback("attach-note", params, false);
-    if (!response) {
-      this._callBackFailed(response.status);
-    }
   }
 
   // Changes an existing note attachment on a sheet.
@@ -71,8 +64,6 @@ class Ulysses {
   // Requires an identifier to specify which sheet to attach keywords
   // Default identifier is set when new sheet is created.
   attachKeywords(keywords, targetID = this.targetID) {
-    // this.callbackURL Params
-    var callbackAction = "attach-keywords";
     // A targetID is needed to attach keywords
     // If a targetID has not been set callback will not work
     if (targetID) {
@@ -80,8 +71,7 @@ class Ulysses {
         id: targetID,
         keywords: keywords,
       };
-      var baseURL = this.callbackURL + callbackAction;
-      this._openCallback(baseURL, params);
+      this._openCallback("attach-keywords", params);
     } else {
       app.displayErrorMessage("TargetID missing!");
     }
@@ -118,8 +108,8 @@ class Ulysses {
 
   // Moves an item (sheet or group) to the trash.
   // Requires authorization.
-  trash(id) {
-    // TO DO:
+  trash(targetID) {
+    this._openCallback("trash", { id: targetID });
   }
 
   // Retrieves information about an item (sheet or group).
@@ -147,33 +137,23 @@ class Ulysses {
   }
 
   // Opens an item (sheet or group) with a particular identifier in Ulysses.
-  open(targetID) {
-    var params = { id: this.targetID };
-    this._openCallback("open", params, false);
+  open(targetID = this.targetID) {
+    this._openCallback("open", { id: targetID }, false);
   }
 
   // Opens the special groups “All”
   openAll() {
-    var response = this._openCallback("open-all", {}, false);
-    if (!response) {
-      this._callBackFailed(response.status);
-    }
+    this._openCallback("open-all", {}, false);
   }
 
   // Opens the special groups “Last 7 Days”
   openRecent() {
-    var response = this._openCallback("open-recent", {}, false);
-    if (!response) {
-      this._callBackFailed(response.status);
-    }
+    this._openCallback("open-recent", {}, false);
   }
 
   // Opens the special groups “Favorites”
   openFavorites() {
-    var response = this._openCallback("open-favorites", {}, false);
-    if (!response) {
-      this._callBackFailed(response.status);
-    }
+    this._openCallback("open-favorites", {}, false);
   }
 
   // Retrieves the build number of Ulysses, and the version of Ulysses’ X-Callback API.
@@ -207,21 +187,12 @@ class Ulysses {
   //Authorize Drafts with Ulysses and save credentials
   _authorize() {}
 
-  // Displays an error message when callbackURL response fails.
-  _callBackFailed(
-    status,
-    message = "Something went wrong. Check the colsole log."
-  ) {
-    console.log(status);
-    app.displayErrorMessage(message);
-  }
-
   // Open this.callbackURL
   _openCallback(
     callbackAction,
     params = {},
     waitForResponse = true,
-    message = "Sucess!"
+    message = " was a sucess!"
   ) {
     // open and wait for result
     var cb = CallbackURL.create();
@@ -231,17 +202,18 @@ class Ulysses {
       cb.addParameter(key, value);
     }
     var success = cb.open();
+    var response = cb.callbackResponse;
+    console.log(JSON.stringify(response));
     if (success) {
-      console.log(message);
+      console.log(callbackAction + message);
     } else {
       // something went wrong or was cancelled
-      console.log(cb.status);
-      if (cb.status == "cancel") {
-        context.cancel();
-      } else {
-        context.fail();
-      }
+      var message =
+        "Error " + response["errorCode"] + ": " + response["errorMessage"];
+      console.log(response);
+      app.displayErrorMessage(message);
+      context.fail();
     }
-    return cb.callbackResponse;
+    return response;
   }
 }
