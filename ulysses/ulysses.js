@@ -12,33 +12,45 @@ class Ulysses {
   // *******
 
   // Create a new sheet in Ulysses
-  newSheet(sheetText, groupID, format = "markdown", index) {
+  newSheet(text, groupID, format, index) {
     // callback Params
-    // TO DO: format and index NOT implemented yet
     var params = {
       group: groupID,
-      text: sheetText,
+      text: HTML.escape(text),
     };
+    if (this._formatCheck(format)) { params["format"] = format; }
+    if (this._indexCheck(index)) { params["index"] = index; }
     var response = this._openCallback("new-sheet", params);
     this.targetID = response.targetId;
   }
 
   // Creates a new group.
-  newGroup(name, parents, index) {
-    // TO DO:
+  newGroup(name, parent, index) {
+    var params = { name: name };
+    if (parent) { params["parent"] = parent; }
+    if (this._indexCheck(index)) { params["index"] = index; }
+    this._openCallback("new-group", params);
   }
 
   // Inserts or appends text to a sheet.
   insert(id, text, format, position, newline) {
-    // TO DO:
+    var params = {
+      group: id,
+      text: HTML.escape(text),
+    };
+    if (this._formatCheck(format)) { params["format"] = format; }
+    if (this._potisionCheck(position)) { params["position"] = position; }
+    if (this._newlineCheck(newline)) { params["newline"] = newline; }
+    this._openCallback("insert", params);
   }
 
   // Creates a new note attachment on a sheet.
-  attachNote(id, text, format) {
+  attachNote(text, id = this.targetID, format) {
     var params = {
-      id: this.targetID,
+      id: id,
       text: HTML.escape(text),
     };
+    if (this._formatCheck(format)) { params["format"] = format; }
     var response = this._openCallback("attach-note", params, false);
   }
 
@@ -186,6 +198,22 @@ class Ulysses {
   convertMarkdown(content) {
     // Converts highlight tags `{==` and `==}` into `::`
     return content.replace(/\{==/g, "::").replace(/==\}/g, "::");
+  }
+
+  _formatCheck(f) {
+    return f.match(/^(markdown|text|html)$/);
+  }
+
+  _indexCheck(i) {
+    return Number.isInteger(i);
+  }
+  
+  _potisionCheck(p){
+    return p.match(/^(begin|end)$/);
+  }
+
+  _newlineCheck(n){
+    retusn n.match(/^(prepend|append|enclose)$/);
   }
 
   //Authorize Drafts with Ulysses and save credentials
