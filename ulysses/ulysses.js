@@ -12,14 +12,18 @@ class Ulysses {
   // *******
 
   // Create a new sheet in Ulysses
-  newSheet(text, groupID, format, index) {
+  newSheet(text, group, format, index) {
     // callback Params
     var params = {
-      group: groupID,
+      group: group,
       text: HTML.escape(text),
     };
-    if (this._formatCheck(format)) { params["format"] = format; }
-    if (this._indexCheck(index)) { params["index"] = index; }
+    if (this._formatCheck(format)) {
+      params["format"] = format;
+    }
+    if (this._indexCheck(index)) {
+      params["index"] = index;
+    }
     var response = this._openCallback("new-sheet", params);
     this.targetID = response.targetId;
   }
@@ -27,20 +31,30 @@ class Ulysses {
   // Creates a new group.
   newGroup(name, parent, index) {
     var params = { name: name };
-    if (parent) { params["parent"] = parent; }
-    if (this._indexCheck(index)) { params["index"] = index; }
+    if (parent) {
+      params["parent"] = parent;
+    }
+    if (this._indexCheck(index)) {
+      params["index"] = index;
+    }
     this._openCallback("new-group", params);
   }
 
   // Inserts or appends text to a sheet.
   insert(id, text, format, position, newline) {
     var params = {
-      group: id,
+      id: id,
       text: HTML.escape(text),
     };
-    if (this._formatCheck(format)) { params["format"] = format; }
-    if (this._potisionCheck(position)) { params["position"] = position; }
-    if (this._newlineCheck(newline)) { params["newline"] = newline; }
+    if (this._formatCheck(format)) {
+      params["format"] = format;
+    }
+    if (this._potisionCheck(position)) {
+      params["position"] = position;
+    }
+    if (this._newlineCheck(newline)) {
+      params["newline"] = newline;
+    }
     this._openCallback("insert", params);
   }
 
@@ -50,20 +64,40 @@ class Ulysses {
       id: id,
       text: HTML.escape(text),
     };
-    if (this._formatCheck(format)) { params["format"] = format; }
+    if (this._formatCheck(format)) {
+      params["format"] = format;
+    }
     var response = this._openCallback("attach-note", params, false);
   }
 
   // Changes an existing note attachment on a sheet.
   // Requires authorization.
   updateNote(id, text, index, format) {
-    // TO DO:
+    this._authorize();
+    var params = {
+      id: id,
+      text: HTML.escape(text),
+    };
+    if (this._formatCheck(format)) {
+      params["format"] = format;
+    }
+    if (this._indexCheck(index)) {
+      params["index"] = index;
+    }
+    var response = this._openCallback("update-note", params, false);
   }
 
   // Removes a note attachment from a sheet.
   // Requires authorization.
   removeNote(id, index) {
-    // TO DO:
+    this._authorize();
+    var params = {
+      id: id,
+    };
+    if (this._indexCheck(index)) {
+      params["index"] = index;
+    }
+    var response = this._openCallback("update-note", params, false);
   }
 
   // Creates a new image attachment on a sheet.
@@ -75,12 +109,12 @@ class Ulysses {
   // Attach keyword(s) to a sheet in Ulysses
   // Requires an identifier to specify which sheet to attach keywords
   // Default identifier is set when new sheet is created.
-  attachKeywords(keywords, targetID = this.targetID) {
+  attachKeywords(keywords, id = this.targetID) {
     // A targetID is needed to attach keywords
     // If a targetID has not been set callback will not work
-    if (targetID) {
+    if (id) {
       var params = {
-        id: targetID,
+        id: id,
         keywords: keywords,
       };
       this._openCallback("attach-keywords", params);
@@ -92,69 +126,153 @@ class Ulysses {
   // Removes one or more keywords from a sheet.
   // Requires authorization.
   removeKeywords(id, keywords) {
-    // TO DO:
+    this._authorize();
+    if (id) {
+      var params = {
+        id: id,
+        keywords: keywords,
+      };
+      this._openCallback("remove-keywords", params);
+    } else {
+      app.displayErrorMessage("TargetID missing!");
+    }
   }
 
   // Changes the title of a group.
   // Requires authorization.
   setGroupTitle(group, title) {
-    // TO DO:
+    this._authorize();
+    var params = {
+      group: group,
+      title: HTML.escape(title),
+    };
   }
 
   // Changes the first paragraph of a sheet.
   // Requires authorization.
-  setSheetTitle(targetID, title, type) {
-    // TO DO:
+  setSheetTitle(id, title, type) {
+    this._authorize();
+    var params = {
+      id: id,
+      title: HTML.escape(title),
+    };
+    if (this._typeCheck(type)) {
+      params["type"] = type;
+    }
   }
 
   // Moves an item (sheet or group) to a target group and/or to a new position.
   // Requires authorization.
   move(id, targetGroup, index) {
-    // TO DO:
+    this._authorize();
+    if (id) {
+      var params = {
+        id: id,
+        targetGroup: targetGroup,
+        "access-token": this.accessToken,
+      };
+      if (this._indexCheck(index)) {
+        params["index"] = index;
+      }
+      this._openCallback("copy", params);
+    } else {
+      app.displayErrorMessage("TargetID missing!");
+    }
   }
 
   // Copies an item (sheet or group) to a target group and/or to a new position.
   copy(id, targetGroup, index) {
-    // TO DO:
+    if (id) {
+      var params = {
+        id: id,
+        targetGroup: targetGroup,
+      };
+      if (this._indexCheck(index)) {
+        params["index"] = index;
+      }
+      this._openCallback("copy", params);
+    } else {
+      app.displayErrorMessage("TargetID missing!");
+    }
   }
 
   // Moves an item (sheet or group) to the trash.
   // Requires authorization.
-  trash(targetID) {
+  trash(id) {
     this._authorize();
     this._openCallback("trash", {
-      id: targetID,
+      id: id,
       "access-token": this.accessToken,
     });
   }
 
   // Retrieves information about an item (sheet or group).
   // Requires authorization.
-  getItem(id, recursive) {
-    // TO DO:
+  getItem(id, recursive = "Yes") {
+    this._authorize();
+    if (id) {
+      var params = {
+        id: id,
+        recursive: recursive,
+        "access-token": this.accessToken,
+      };
+      var response = this._openCallback("get-item", params);
+      return JSON.parse(response.item);
+    } else {
+      app.displayErrorMessage("TargetID missing!");
+    }
   }
 
   // Retrieves information about the root sections. Can be used to get a full listing of the entire Ulysses library.
   // Requires authorization.
-  getRootItems(recursive) {
-    // TO DO:
+  getRootItems(recursive = "Yes") {
+    this._authorize();
+    var params = {
+      recursive: recursive,
+      "access-token": this.accessToken,
+    };
+    var response = this._openCallback("get-root-items", params);
+    console.log(response);
+    return JSON.parse(response.items);
   }
 
   // Retrieves the contents (text, notes, keywords) of a sheet.
   // Requires authorization.
-  readSheet(id, text) {
-    // TO DO:
+  readSheet(id, text = "No") {
+    this._authorize();
+    if (id) {
+      var params = {
+        id: id,
+        text: text,
+        "access-token": this.accessToken,
+      };
+      var response = this._openCallback("read-sheet", params);
+      return JSON.parse(response.sheet);
+    } else {
+      app.displayErrorMessage("TargetID missing!");
+    }
   }
 
   // Gets the QuickLook URL for a sheet. This is the sheet’s location on the file system.
   // Only available in Ulysses for Mac.
   getQuickLookUrl(id) {
-    // TO DO:
+    var model = device.model;
+    if (model == "Mac") {
+      if (id) {
+        var params = {
+          id: id,
+        };
+        var response = this._openCallback("get-quick-look-url", params);
+        return response.url;
+      } else {
+        app.displayErrorMessage("TargetID missing!");
+      }
+    }
   }
 
   // Opens an item (sheet or group) with a particular identifier in Ulysses.
-  open(targetID = this.targetID) {
-    this._openCallback("open", { id: targetID }, false);
+  open(id = this.targetID) {
+    this._openCallback("open", { id: id }, false);
   }
 
   // Opens the special groups “All”
@@ -174,7 +292,7 @@ class Ulysses {
 
   // Retrieves the build number of Ulysses, and the version of Ulysses’ X-Callback API.
   getVersion() {
-    // TO DO:
+    return this._openCallback("get-version");
   }
 
   // *******
@@ -200,6 +318,10 @@ class Ulysses {
     return content.replace(/\{==/g, "::").replace(/==\}/g, "::");
   }
 
+  // *******
+  // "Private" Functions
+  // *******
+
   _formatCheck(f) {
     return f.match(/^(markdown|text|html)$/);
   }
@@ -207,13 +329,17 @@ class Ulysses {
   _indexCheck(i) {
     return Number.isInteger(i);
   }
-  
-  _potisionCheck(p){
+
+  _potisionCheck(p) {
     return p.match(/^(begin|end)$/);
   }
 
-  _newlineCheck(n){
-    retusn n.match(/^(prepend|append|enclose)$/);
+  _newlineCheck(n) {
+    return n.match(/^(prepend|append|enclose)$/);
+  }
+
+  _typeCheck(t) {
+    return t.match(/^(heading[1-6]|comment|filename)$/);
   }
 
   //Authorize Drafts with Ulysses and save credentials
@@ -240,11 +366,6 @@ class Ulysses {
       app.setClipboard("");
       this.accessToken = credential.getValue("access-token");
     }
-    //
-    // alert(response["access-token"]);
-    // credential.addTextField("baseID", "Default Base ID");
-
-    // this.baseID = credential.getValue("baseID");
   }
 
   // Open this.callbackURL
