@@ -5,6 +5,7 @@ class Ulysses {
   constructor() {
     this.callbackURL = "ulysses://x-callback-url/";
     this.targetID = "";
+    this.debug = false;
   }
 
   // *******
@@ -12,11 +13,11 @@ class Ulysses {
   // *******
 
   // Create a new sheet in Ulysses
-  newSheet(text, group, format, index) {
+  newSheet(text, group, format = "markdown", index) {
     // callback Params
     var params = {
-      group: group,
       text: HTML.escape(text),
+      group: group,
     };
     if (this._formatCheck(format)) {
       params["format"] = format;
@@ -26,6 +27,7 @@ class Ulysses {
     }
     var response = this._openCallback("new-sheet", params);
     this.targetID = response.targetId;
+    return response;
   }
 
   // Creates a new group.
@@ -37,7 +39,9 @@ class Ulysses {
     if (this._indexCheck(index)) {
       params["index"] = index;
     }
-    this._openCallback("new-group", params);
+    var response = this._openCallback("new-group", params);
+    this.targetID = response.targetId;
+    return response;
   }
 
   // Inserts or appends text to a sheet.
@@ -77,6 +81,7 @@ class Ulysses {
     var params = {
       id: id,
       text: HTML.escape(text),
+      "access-token": this.accessToken,
     };
     if (this._formatCheck(format)) {
       params["format"] = format;
@@ -93,11 +98,12 @@ class Ulysses {
     this._authorize();
     var params = {
       id: id,
+      "access-token": this.accessToken,
     };
     if (this._indexCheck(index)) {
       params["index"] = index;
     }
-    var response = this._openCallback("update-note", params, false);
+    this._openCallback("remove-note", params, false);
   }
 
   // Creates a new image attachment on a sheet.
@@ -131,6 +137,7 @@ class Ulysses {
       var params = {
         id: id,
         keywords: keywords,
+        "access-token": this.accessToken,
       };
       this._openCallback("remove-keywords", params);
     } else {
@@ -323,7 +330,9 @@ class Ulysses {
   // *******
 
   _formatCheck(f) {
-    return f.match(/^(markdown|text|html)$/);
+    if (f) {
+      return f.match(/^(markdown|text|html)$/);
+    }
   }
 
   _indexCheck(i) {
@@ -331,15 +340,21 @@ class Ulysses {
   }
 
   _potisionCheck(p) {
-    return p.match(/^(begin|end)$/);
+    if (p) {
+      return p.match(/^(begin|end)$/);
+    }
   }
 
   _newlineCheck(n) {
-    return n.match(/^(prepend|append|enclose)$/);
+    if (n) {
+      return n.match(/^(prepend|append|enclose)$/);
+    }
   }
 
   _typeCheck(t) {
-    return t.match(/^(heading[1-6]|comment|filename)$/);
+    if (t) {
+      return t.match(/^(heading[1-6]|comment|filename)$/);
+    }
   }
 
   //Authorize Drafts with Ulysses and save credentials
@@ -384,7 +399,9 @@ class Ulysses {
     }
     var success = cb.open();
     var response = cb.callbackResponse;
-    console.log(JSON.stringify(response));
+    if (this.debug) {
+      console.log(JSON.stringify(response));
+    }
     if (success) {
       console.log(callbackAction + message);
     } else {
