@@ -1,6 +1,4 @@
-// Ulysses API Test Script
-// This script tests all api functions to make sure they are working correctly.
-// Must be run from Drafts.
+// Ulysses Test Script
 require("ulysses-v2.js");
 var yesNo = ["Yes", "No"];
 var ok = ["OK"];
@@ -17,8 +15,11 @@ var base64IMG =
 var ulysses = new Ulysses();
 ulysses.debug = true;
 
-// Creates a prompt for displaying test messages.
+// API Commands to implement
 function prompt(message, buttons) {
+  // Prompt
+  /* --------------------- */
+
   var p = Prompt.create();
   p.isCancellable = false;
   p.title = "Ulysses API Test";
@@ -31,7 +32,6 @@ function prompt(message, buttons) {
   return p.buttonPressed;
 }
 
-// Main testing function
 function ulyssesAPITest() {
   // Test: get-version
   var version = ulysses.getVersion(); // Done
@@ -101,6 +101,14 @@ function ulyssesAPITest() {
     return false;
   }
 
+  // Test: attach-image
+  ulysses.attachImage(testSheet, base64IMG, "png");
+  if (
+    prompt("In Ulysses,has an image been attached to sheet 1?", yesNo) == "No"
+  ) {
+    return false;
+  }
+
   // Test: attach-keywords
   var keywords = ["Test", "Testing"];
   ulysses.attachKeywords(keywords, testSheet);
@@ -135,7 +143,6 @@ function ulyssesAPITest() {
   return true;
 }
 
-// Run main testing function
 if (ulyssesAPITest()) {
   prompt("API is working as expected!", ok);
 } else {

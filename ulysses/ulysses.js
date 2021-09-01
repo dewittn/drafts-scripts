@@ -109,7 +109,15 @@ class Ulysses {
   // Creates a new image attachment on a sheet.
   // Image data must use base64 encoding.
   attachImage(id, image, format, filename) {
-    // TO DO:
+    var params = {
+      id: id,
+      image: HTML.escape(image),
+      filename: filename,
+    };
+    if (this._formatCheck(format)) {
+      params["format"] = format;
+    }
+    this._openCallback("attach-image", params, false);
   }
 
   // Attach keyword(s) to a sheet in Ulysses
@@ -354,6 +362,12 @@ class Ulysses {
   _typeCheck(t) {
     if (t) {
       return t.match(/^(heading[1-6]|comment|filename)$/);
+    }
+  }
+
+  _formatCheck(f) {
+    if (f) {
+      return f.match(/^(png|pdf|jpg|raw|gif)$/);
     }
   }
 
