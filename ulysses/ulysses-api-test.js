@@ -122,14 +122,88 @@ function ulyssesAPITest() {
     return false;
   }
 
+  // Test: set-group-title
+  ulysses.setGroupTitle("Group 1", "Group 1: Renamed");
+  ulysses.setGroupTitle(
+    "/Ulysses API Test/Group 1: Renamed/Sub Group 1/",
+    "Sub Group 1: Renamed"
+  );
+  ulysses.setGroupTitle(testGroup2, "Group 2: Renamed");
+  if (
+    prompt("In Ulysses, have all three groups been renamed?", yesNo) == "No"
+  ) {
+    return false;
+  }
+
+  // Test: set-sheet-title
+  ulysses.setSheetTitle(testSheet, "Sheet 1: Renamed", "heading2");
+  if (prompt("In Ulysses, has Sheet 1 been renamed?", yesNo) == "No") {
+    return false;
+  }
+
+  // Test: move
+  ulysses.move(testSheet, testGroup2);
+  if (prompt("In Ulysses, has Sheet 1 been moved to Group 2?", yesNo) == "No") {
+    return false;
+  }
+
+  // Test: copy
+  ulysses.copy(testSheet, testGroup1);
+  if (
+    prompt("In Ulysses, Sheet 1 been copied back to Group 1", yesNo) == "No"
+  ) {
+    return false;
+  }
+
+  // Test: get-item
+  var item = ulysses.getItem(testGroup1, "No");
+  prompt(JSON.stringify(item), ok);
+  if (
+    prompt("Was the informatino about Group 1 displayed correctly?", yesNo) ==
+    "No"
+  ) {
+    return false;
+  }
+
+  // Test: get-root-items
+  var rootItems = ulysses.getRootItems("No");
+  prompt(JSON.stringify(rootItems), ok);
+  if (
+    prompt(
+      "Was the informatino about the root items displayed correctly?",
+      yesNo
+    ) == "No"
+  ) {
+    return false;
+  }
+
+  // Test: read-sheet
+  var sheet = ulysses.readSheet(testSheet, "Yes");
+  prompt(JSON.stringify(sheet), ok);
+  if (
+    prompt("Was the informatino about Sheet 1 displayed correctly?", yesNo) ==
+    "No"
+  ) {
+    return false;
+  }
+
   // Test: open-recent
-  //  ulysses.openRecent();
+  ulysses.openRecent();
+  if (prompt("Did Ulysses open to Recent Items?", yesNo) == "No") {
+    return false;
+  }
 
   // Test: open-favorites
-  //  ulysses.openFavorites();
+  ulysses.openFavorites();
+  if (prompt("Did Ulysses open to Favorites?", yesNo) == "No") {
+    return false;
+  }
 
   // Test: open-all
   ulysses.openAll();
+  if (prompt("Did Ulysses open to All Items?", yesNo) == "No") {
+    return false;
+  }
 
   // Test: trash
   ulysses.trash(testParentGroup);
