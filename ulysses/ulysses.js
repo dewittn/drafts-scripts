@@ -160,7 +160,9 @@ class Ulysses {
     var params = {
       group: group,
       title: HTML.escape(title),
+      "access-token": this.accessToken,
     };
+    this._openCallback("set-group-title", params);
   }
 
   // Changes the first paragraph of a sheet.
@@ -170,10 +172,12 @@ class Ulysses {
     var params = {
       id: id,
       title: HTML.escape(title),
+      "access-token": this.accessToken,
     };
     if (this._typeCheck(type)) {
       params["type"] = type;
     }
+    this._openCallback("set-sheet-title", params);
   }
 
   // Moves an item (sheet or group) to a target group and/or to a new position.
@@ -398,13 +402,9 @@ class Ulysses {
   }
 
   // Open this.callbackURL
-  _openCallback(
-    callbackAction,
-    params = {},
-    waitForResponse = true,
-    message = " was a sucess!"
-  ) {
+  _openCallback(callbackAction, params = {}, waitForResponse = true) {
     // open and wait for result
+    var message = "\n-------\nAction ";
     var cb = CallbackURL.create();
     cb.waitForResponse = waitForResponse;
     cb.baseURL = this.callbackURL + callbackAction;
@@ -413,18 +413,25 @@ class Ulysses {
     }
     var success = cb.open();
     var response = cb.callbackResponse;
-    if (this.debug) {
-      console.log(JSON.stringify(response));
-    }
     if (success) {
-      console.log(callbackAction + message);
+      message = message + callbackAction + ", ran successfully.";
     } else {
       // something went wrong or was cancelled
-      var message =
-        "Error " + response["errorCode"] + ": " + response["errorMessage"];
-      console.log(response);
+      message =
+        message +
+        callbackAction +
+        ", failed.\n" +
+        "Error " +
+        response["errorCode"] +
+        ": " +
+        response["errorMessage"];
       app.displayErrorMessage(message);
       context.fail();
+    }
+    if (this.debug) {
+      console.log(message);
+      console.log("Params: " + JSON.stringify(params));
+      console.log("Repsonse: " + JSON.stringify(response));
     }
     return response;
   }
