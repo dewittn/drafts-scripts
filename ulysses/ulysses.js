@@ -3,14 +3,48 @@
 // https://ulysses.app/kb/x-callback-url
 class Ulysses {
   constructor() {
-    this.callbackURL = "ulysses://x-callback-url/";
-    this.targetID = "";
-    this.debug = false;
+    this._callbackURL = "ulysses://x-callback-url/";
+    this._targetID = "";
+    this._debug = false;
   }
 
-  // *******
-  // Ulysses API Functions
-  // *******
+  static create() {
+    return new Ulysses();
+  }
+
+  // ***********
+  // * Class Properties
+  // ***********
+
+  get targetId() {
+    return this._targetID;
+  }
+
+  set targetId(id) {
+    if (typeof id === "string") {
+      this._targetID = id;
+    } else {
+      app.displayErrorMessage("Error: targetID must be a string.");
+      context.cancel();
+    }
+  }
+
+  get debug() {
+    return this._debug;
+  }
+
+  set debug(state) {
+    if (typeof state === "boolean") {
+      this._debug = state;
+    } else {
+      app.displayErrorMessage("Error: debug can only be set to true or false.");
+      context.cancel();
+    }
+  }
+
+  // ***********
+  // * Ulysses API Functions
+  // ***********
 
   // Create a new sheet in Ulysses
   newSheet(text, group, format = "markdown", index) {
@@ -26,7 +60,7 @@ class Ulysses {
       params["index"] = index;
     }
     var response = this._openCallback("new-sheet", params);
-    this.targetID = response.targetId;
+    this._targetID = response.targetId;
     return response;
   }
 
@@ -40,7 +74,7 @@ class Ulysses {
       params["index"] = index;
     }
     var response = this._openCallback("new-group", params);
-    this.targetID = response.targetId;
+    this._targetID = response.targetId;
     return response;
   }
 
@@ -63,7 +97,7 @@ class Ulysses {
   }
 
   // Creates a new note attachment on a sheet.
-  attachNote(text, id = this.targetID, format) {
+  attachNote(text, id = this._targetID, format) {
     var params = {
       id: id,
       text: HTML.escape(text),
@@ -123,7 +157,7 @@ class Ulysses {
   // Attach keyword(s) to a sheet in Ulysses
   // Requires an identifier to specify which sheet to attach keywords
   // Default identifier is set when new sheet is created.
-  attachKeywords(keywords, id = this.targetID) {
+  attachKeywords(keywords, id = this._targetID) {
     // A targetID is needed to attach keywords
     // If a targetID has not been set callback will not work
     if (id) {
@@ -290,7 +324,7 @@ class Ulysses {
   }
 
   // Opens an item (sheet or group) with a particular identifier in Ulysses.
-  open(id = this.targetID) {
+  open(id = this._targetID) {
     this._openCallback("open", { id: id }, false);
   }
 
@@ -314,9 +348,9 @@ class Ulysses {
     return this._openCallback("get-version");
   }
 
-  // *******
+  // ***********
   // Draft Specific Functions
-  // *******
+  // ***********
 
   // Optional Function that Capitalizes Draft tags
   // All draft tags are stored in lowercase so this
@@ -337,9 +371,9 @@ class Ulysses {
     return content.replace(/\{==/g, "::").replace(/==\}/g, "::");
   }
 
-  // *******
+  // ***********
   // "Private" Functions
-  // *******
+  // ***********
 
   _formatCheck(f) {
     if (f) {
@@ -401,13 +435,13 @@ class Ulysses {
     }
   }
 
-  // Open this.callbackURL
+  // Open this._callbackURL
   _openCallback(callbackAction, params = {}, waitForResponse = true) {
     // open and wait for result
     var message = "\n-------\nAction ";
     var cb = CallbackURL.create();
     cb.waitForResponse = waitForResponse;
-    cb.baseURL = this.callbackURL + callbackAction;
+    cb.baseURL = this._callbackURL + callbackAction;
     for (const [key, value] of Object.entries(params)) {
       cb.addParameter(key, value);
     }
@@ -428,7 +462,7 @@ class Ulysses {
       app.displayErrorMessage(message);
       context.fail();
     }
-    if (this.debug) {
+    if (this._debug) {
       console.log(message);
       console.log("Params: " + JSON.stringify(params));
       console.log("Repsonse: " + JSON.stringify(response));
