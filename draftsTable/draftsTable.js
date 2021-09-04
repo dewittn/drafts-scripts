@@ -1,15 +1,12 @@
-// Airtable API v0.1
-// Simple interface to interact with Airtable
-
-// Example
-// var Airtable = require('airtable');
-// var base = new Airtable({apiKey: 'YOUR_API_KEY'}).base('appawXyA4nkuMtT0U');
+// draftsTables
+// A simple script to interact with the Airtable API
 
 // ***************
 // * Airtable Class
 // ***************
 class Airtable {
   constructor(apiKey) {
+    this._endPointURL = "https://api.airtable.com/v0/";
     this._authorize();
     //this._baseID = this._baseLookup(baseName);
   }
@@ -66,7 +63,6 @@ class ATBase {
 // ***************
 class ATTable {
   constructor(airtable, base, tableName) {
-    this._endPointURL = "https://api.airtable.com/v0/";
     this._airtable = airtable;
     this._base = base;
     this._tableName = tableName;
@@ -75,6 +71,9 @@ class ATTable {
     this._records = [];
   }
 
+  get records() {
+    return this._records;
+  }
   get URLSafeName() {
     return this._tableName.replace(" ", "%20");
   }
@@ -84,7 +83,7 @@ class ATTable {
   }
 
   select(params = this._params) {
-    var results = this._request("GET", params);
+    const results = this._request("GET", params);
     for (const record of results.records) {
       this._records.push(ATRecord.create(record));
     }
@@ -92,7 +91,22 @@ class ATTable {
   }
 
   find(id) {
-    // ??
+    if (id) {
+      const result = this._request("GET", {}, id);
+      const record = ATRecord.create(result);
+      this._records = [record];
+      return record;
+    }
+  }
+
+  findBy(field, value) {
+    const results = this._request("GET", {
+      filterByFormula: "{" + field + "} = '" + value + "'",
+    });
+    for (const record of results.records) {
+      this._records.push(ATRecord.create(record));
+    }
+    return this._records;
   }
 
   // A string containing all the fields to include in the return separated by ,
@@ -156,11 +170,20 @@ class ATTable {
 
   // Adds record that will be saved when createRecords() is called
   addRecord(record) {
-    this._records.push(record.fields);
+    this._records.push(record);
   }
 
   saveRecords(typecast) {
     // Save record;
+    var requestBody = new Array();
+    for (const record of this._records) {
+      requestBody.push({ fields: record.fields });
+    }
+    var values = JSON.stringify(requestBody);
+    // alert(values);
+    const result = this._request("POST", {}, undefined, {
+      records: requestBody,
+    });
   }
 
   // Create new records in table
@@ -171,24 +194,32 @@ class ATTable {
     return this._params[key];
   }
 
-  _request(method, params) {
-    // Create URL
-    var url = this._endPointURL + this._base.baseID + "/" + this.URLSafeName;
-    var http = HTTP.create(); // create HTTP object
+  _request(method, params, id, data) {
+    var url =
+      this._airtable._endPointURL + this._base.baseID + "/" + this.URLSafeName;
+    if (id) {
+      url = url + "/" + id;
+    }
+    console.log(JSON.stringify(data));
+    var http = HTTP.create();
     var response = http.request({
       url: url,
       method: method,
       parameters: params,
+      data: data,
       headers: {
         Authorization: "Bearer " + this._airtable._apiKey,
+        "Content-Type": "application/json",
       },
     });
-    console.log(url, response);
+    console.log(url);
 
     if (response.success) {
       var text = response.responseText;
       var data = response.responseData;
       var results = JSON.parse(text);
+      console.log(text);
+      console.log(data);
     } else {
       console.log(response.statusCode);
       console.log(response.error);
@@ -222,7 +253,8 @@ class ATRecord {
     this._fields = fields;
     // Creates a property for each field
     Object.keys(this._fields).forEach((method) => {
-      Object.defineProperty(this, method, {
+      const propName = method.replace(/ /g, "");
+      Object.defineProperty(this, propName, {
         get: function myProperty() {
           return this._fields[method];
         },
@@ -230,19 +262,22 @@ class ATRecord {
     });
   }
 
+  static create(record) {
+    return new ATRecord(record.id, record.fields);
+  }
   get fields() {
     return this._fields;
   }
 
   addField(name, value) {
+    //Field names must be in Capital Case for Airtable compatibility
+    name = name.replace(/\w\S*/g, (w) =>
+      w.replace(/^\w/, (c) => c.toUpperCase())
+    );
     this._fields[name] = value;
   }
 
   field(name) {
     return this._fields[name];
-  }
-
-  static create(record) {
-    return new ATRecord(record.id, record.fields);
   }
 }
