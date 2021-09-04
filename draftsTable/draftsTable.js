@@ -274,6 +274,12 @@ class ATRecord {
     name = name.replace(/\w\S*/g, (w) =>
       w.replace(/^\w/, (c) => c.toUpperCase())
     );
+    const propName = name.replace(/ /g, "");
+    Object.defineProperty(this, propName, {
+      get: function myProperty() {
+        return this._fields[name];
+      },
+    });
     this._fields[name] = value;
   }
 
