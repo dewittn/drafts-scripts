@@ -1,4 +1,4 @@
-// Airtable API v0.2
+// Airtable API v0.1
 // Simple interface to interact with Airtable
 
 // Example
@@ -66,6 +66,7 @@ class ATBase {
 // ***************
 class ATTable {
   constructor(airtable, base, tableName) {
+    this._endPointURL = "https://api.airtable.com/v0/";
     this._airtable = airtable;
     this._base = base;
     this._tableName = tableName;
@@ -83,8 +84,11 @@ class ATTable {
   }
 
   select(params = this._params) {
-    var request = new ATHTTPRequest(this);
-    return request.get(params);
+    var results = this._request("GET", params);
+    for (const record of results.records) {
+      this._records.push(ATRecord.create(record));
+    }
+    return this._records;
   }
 
   find(id) {
@@ -166,56 +170,17 @@ class ATTable {
   returnParameter(key) {
     return this._params[key];
   }
-}
-
-// ***************
-// * ATRecord Class
-// ***************
-class ATRecord {
-  constructor() {
-    this._fields = [];
-  }
-  get fields() {
-    return this._fields;
-  }
-
-  addField(name, value) {
-    this._fields[name] = value;
-  }
-
-  field(name) {
-    return this._fields[name];
-  }
-}
-
-// ***************
-// * ATHTTPRequest Class
-// ***************
-class ATHTTPRequest {
-  constructor(table) {
-    this._endPointURL = "https://api.airtable.com/v0/";
-    this._table = table;
-    this._params = params;
-  }
-
-  get(params) {
-    return this._request("GET", params);
-  }
 
   _request(method, params) {
     // Create URL
-    var url =
-      this._endPointURL +
-      this._table._base.baseID +
-      "/" +
-      this._table.URLSafeName;
+    var url = this._endPointURL + this._base.baseID + "/" + this.URLSafeName;
     var http = HTTP.create(); // create HTTP object
     var response = http.request({
       url: url,
       method: method,
       parameters: params,
       headers: {
-        Authorization: "Bearer " + this._table._airtable._apiKey,
+        Authorization: "Bearer " + this._airtable._apiKey,
       },
     });
     console.log(url, response);
@@ -228,23 +193,56 @@ class ATHTTPRequest {
       console.log(response.statusCode);
       console.log(response.error);
     }
-
     return results;
   }
 
-  _checkError(code) {
-    var errorCodes = {
-      400: "Bad Request",
-      401: "Unauthorized",
-      402: "Payment Required",
-      403: "Forbidden",
-      404: "Not Found",
-      413: "Request Entity Too Large",
-      422: "Invalid Request",
-      500: "Internal Server Error",
-      502: "Bad Gateway",
-      503: "Service Unavailable",
-    };
-    return errorCodes[code];
+  //   _checkError(code) {
+  //     var errorCodes = {
+  //       400: "Bad Request",
+  //       401: "Unauthorized",
+  //       402: "Payment Required",
+  //       403: "Forbidden",
+  //       404: "Not Found",
+  //       413: "Request Entity Too Large",
+  //       422: "Invalid Request",
+  //       500: "Internal Server Error",
+  //       502: "Bad Gateway",
+  //       503: "Service Unavailable",
+  //     };
+  //     return errorCodes[code];
+  //   }
+}
+
+// ***************
+// * ATRecord Class
+// ***************
+class ATRecord {
+  constructor(id, fields = {}) {
+    this._id = id;
+    this._fields = fields;
+    // Creates a property for each field
+    Object.keys(this._fields).forEach((method) => {
+      Object.defineProperty(this, method, {
+        get: function myProperty() {
+          return this._fields[method];
+        },
+      });
+    });
+  }
+
+  get fields() {
+    return this._fields;
+  }
+
+  addField(name, value) {
+    this._fields[name] = value;
+  }
+
+  field(name) {
+    return this._fields[name];
+  }
+
+  static create(record) {
+    return new ATRecord(record.id, record.fields);
   }
 }
