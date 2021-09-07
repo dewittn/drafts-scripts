@@ -92,7 +92,7 @@ class ATTable {
 
   find(id) {
     if (id) {
-      const result = this._request("GET", {}, id);
+      const result = this._request({ method: "GET" }, id);
       const record = ATRecord.create(result);
       this._records = [record];
       return record;
@@ -100,9 +100,14 @@ class ATTable {
   }
 
   findBy(field, value) {
-    const results = this._request("GET", {
-      filterByFormula: "{" + field + "} = '" + value + "'",
-    });
+    const payload = {
+      method: "GET",
+      parameters: {
+        filterByFormula: "{" + field + "} = '" + value + "'",
+      },
+    };
+    const results = this._request(payload);
+    this._records = [];
     for (const record of results.records) {
       this._records.push(ATRecord.create(record));
     }
@@ -173,75 +178,106 @@ class ATTable {
     this._records.push(record);
   }
 
-  saveRecords(typecast) {
-    // Save record;
-    var requestBody = new Array();
-    for (const record of this._records) {
-      requestBody.push({ fields: record.fields });
-    }
-    var values = JSON.stringify(requestBody);
-    // alert(values);
-    const result = this._request("POST", {}, undefined, {
-      records: requestBody,
-    });
-  }
+  saveRecords() {}
 
   // Create new records in table
-  createRecords() {}
+  createRecords(records = this._records, typecast) {
+    // Save record;
+    var requestBody = new Array();
+    for (const record of records) {
+      requestBody.push({ fields: record.fields });
+    }
+    const payload = { method: "POST", data: { records: requestBody } };
+    const result = this._request(payload);
+  }
+
+  update(records = this._records) {
+    var requestBody = new Array();
+    for (const record of records) {
+      requestBody.push({ id: record.id, fields: record.fields });
+    }
+    var payload = { method: "PATCH", data: { records: requestBody } };
+    const result = this._request(payload);
+  }
+
+  delete(records) {
+    // var requestBody = new Array();
+    for (const record of records) {
+      // requestBody.push("records[]=" + record.id);
+      const result = this._request({ method: "DELETE" }, record.id);
+    }
+    // var payload = { method: "DELETE", data: requestBody.join("&") };
+  }
+
+  // Alternative method, doesn't work yet
+  // delete(records) {
+  //   var requestBody = new Array();
+  //   for (const record of records) {
+  //     requestBody.push("records[]=" + record.id);
+  //   }
+  //   var payload = { method: "DELETE", data: requestBody.join("&") };
+  //   const result = this._request(payload);
+  // }
 
   // Debugging function to make sure Parameters are begin set correctly
   returnParameter(key) {
     return this._params[key];
   }
 
-  _request(method, params, id, data) {
+  _request(payload, id) {
+    var debugMessage = "\n---------\n";
     var url =
       this._airtable._endPointURL + this._base.baseID + "/" + this.URLSafeName;
     if (id) {
       url = url + "/" + id;
     }
-    console.log(JSON.stringify(data));
-    var http = HTTP.create();
-    var response = http.request({
-      url: url,
-      method: method,
-      parameters: params,
-      data: data,
-      headers: {
-        Authorization: "Bearer " + this._airtable._apiKey,
-        "Content-Type": "application/json",
+    var request = Object.assign(
+      {
+        url: url,
+        headers: {
+          Authorization: "Bearer " + this._airtable._apiKey,
+          "Content-Type": "application/json",
+        },
       },
-    });
+      payload
+    );
+    var http = HTTP.create();
+    var response = http.request(request);
     console.log(url);
 
     if (response.success) {
       var text = response.responseText;
-      var data = response.responseData;
       var results = JSON.parse(text);
-      console.log(text);
-      console.log(data);
+      console.log(debugMessage + text);
     } else {
-      console.log(response.statusCode);
-      console.log(response.error);
+      var errorCode = response.statusCode;
+      console.log(
+        debugMessage +
+          errorCode +
+          ": " +
+          this._checkError(errorCode) +
+          "\n" +
+          JSON.stringify(payload)
+      );
     }
     return results;
   }
 
-  //   _checkError(code) {
-  //     var errorCodes = {
-  //       400: "Bad Request",
-  //       401: "Unauthorized",
-  //       402: "Payment Required",
-  //       403: "Forbidden",
-  //       404: "Not Found",
-  //       413: "Request Entity Too Large",
-  //       422: "Invalid Request",
-  //       500: "Internal Server Error",
-  //       502: "Bad Gateway",
-  //       503: "Service Unavailable",
-  //     };
-  //     return errorCodes[code];
-  //   }
+  _checkError(code) {
+    var errorCodes = {
+      400: "Bad Request",
+      401: "Unauthorized",
+      402: "Payment Required",
+      403: "Forbidden",
+      404: "Not Found",
+      413: "Request Entity Too Large",
+      422: "Invalid Request",
+      500: "Internal Server Error",
+      502: "Bad Gateway",
+      503: "Service Unavailable",
+    };
+    return errorCodes[code];
+  }
 }
 
 // ***************
@@ -258,6 +294,9 @@ class ATRecord {
         get: function myProperty() {
           return this._fields[method];
         },
+        set: function setMyProperty(value) {
+          this._fields[method] = value;
+        },
       });
     });
   }
@@ -269,6 +308,10 @@ class ATRecord {
     return this._fields;
   }
 
+  get id() {
+    return this._id;
+  }
+
   addField(name, value) {
     //Field names must be in Capital Case for Airtable compatibility
     name = name.replace(/\w\S*/g, (w) =>
@@ -276,8 +319,11 @@ class ATRecord {
     );
     const propName = name.replace(/ /g, "");
     Object.defineProperty(this, propName, {
-      get: function myProperty() {
+      get: function getMyProperty() {
         return this._fields[name];
+      },
+      set: function setMyProperty(value) {
+        this._fields[name] = value;
       },
     });
     this._fields[name] = value;
