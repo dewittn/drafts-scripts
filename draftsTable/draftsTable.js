@@ -170,15 +170,10 @@ class ATTable {
     return this;
   }
 
-  // List all records from a Table
-  listAllRecords() {}
-
   // Adds record that will be saved when createRecords() is called
   addRecord(record) {
     this._records.push(record);
   }
-
-  saveRecords() {}
 
   // Create new records in table
   createRecords(records = this._records, typecast) {
@@ -193,6 +188,9 @@ class ATTable {
 
   update(records = this._records) {
     var requestBody = new Array();
+    if (!Array.isArray(records)) {
+      records = [records];
+    }
     for (const record of records) {
       requestBody.push({ id: record.id, fields: record.fields });
     }
@@ -202,12 +200,19 @@ class ATTable {
 
   delete(records) {
     // var requestBody = new Array();
+    if (!Array.isArray(records)) {
+      records = [records];
+    }
     for (const record of records) {
-      // requestBody.push("records[]=" + record.id);
       const result = this._request({ method: "DELETE" }, record.id);
     }
-    // var payload = { method: "DELETE", data: requestBody.join("&") };
   }
+
+  // List all records from a Table
+  listAllRecords() {}
+
+  // Calls update() and create()
+  saveRecords() {}
 
   // Alternative method, doesn't work yet
   // delete(records) {
