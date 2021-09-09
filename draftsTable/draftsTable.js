@@ -82,8 +82,12 @@ class ATTable {
     return this._tableName;
   }
 
+  newRecord() {
+    return new ATRecord();
+  }
+
   select(params = this._params) {
-    const results = this._request("GET", params);
+    const results = this._request({ method: "GET", parameters: params });
     for (const record of results.records) {
       this._records.push(ATRecord.create(record));
     }
@@ -179,6 +183,9 @@ class ATTable {
   createRecords(records = this._records, typecast) {
     // Save record;
     var requestBody = new Array();
+    if (!Array.isArray(records)) {
+      records = [records];
+    }
     for (const record of records) {
       requestBody.push({ fields: record.fields });
     }
