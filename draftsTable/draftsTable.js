@@ -88,8 +88,10 @@ class ATTable {
 
   select(params = this._params) {
     const results = this._request({ method: "GET", parameters: params });
-    for (const record of results.records) {
-      this._records.push(ATRecord.create(record));
+    if (results) {
+      for (const record of results.records) {
+        this._records.push(ATRecord.create(record));
+      }
     }
     return this._records;
   }
@@ -104,11 +106,10 @@ class ATTable {
   }
 
   findBy(field, value) {
+    this._params["filterByFormula"] = "{" + field + "} = '" + value + "'";
     const payload = {
       method: "GET",
-      parameters: {
-        filterByFormula: "{" + field + "} = '" + value + "'",
-      },
+      parameters: this._params,
     };
     const results = this._request(payload);
     this._records = [];
@@ -121,11 +122,11 @@ class ATTable {
   // A string containing all the fields to include in the return separated by ,
   // "Title,Status,Priority"
   fields(value) {
-    if (typeof value === "array") {
-      value = value.toString();
+    if (!Array.isArray(value)) {
+      value = value.split(",");
     }
-    if (typeof value === "string") {
-      this._params["Fields[]"] = value;
+    for (let i = 0; i < value.length; i++) {
+      this._params["fields[" + i + "]"] = value[i];
     }
     return this;
   }
@@ -202,7 +203,7 @@ class ATTable {
       requestBody.push({ id: record.id, fields: record.fields });
     }
     var payload = { method: "PATCH", data: { records: requestBody } };
-    const result = this._request(payload);
+    return this._request(payload);
   }
 
   delete(records) {
@@ -255,17 +256,16 @@ class ATTable {
     );
     var http = HTTP.create();
     var response = http.request(request);
-    console.log(url);
+    console.log(debugMessage + url);
 
     if (response.success) {
       var text = response.responseText;
       var results = JSON.parse(text);
-      console.log(debugMessage + text);
+      console.log(text);
     } else {
       var errorCode = response.statusCode;
       console.log(
-        debugMessage +
-          errorCode +
+        errorCode +
           ": " +
           this._checkError(errorCode) +
           "\n" +
