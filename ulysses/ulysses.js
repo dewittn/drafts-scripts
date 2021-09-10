@@ -325,7 +325,7 @@ class Ulysses {
 
   // Opens an item (sheet or group) with a particular identifier in Ulysses.
   open(id = this._targetID) {
-    this._openCallback("open", { id: id }, false);
+    this._openURL("open", { id: id }, false);
   }
 
   // Opens the special groups “All”
@@ -432,6 +432,37 @@ class Ulysses {
       credential.authorize();
       app.setClipboard("");
       this.accessToken = credential.getValue("access-token");
+    }
+  }
+
+  _openURL(callbackAction, params = {}) {
+    var message = "\n-------\nAction ";
+    const queryString = Object.keys(params)
+      .map(
+        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`
+      )
+      .join("&");
+    var url = this._callbackURL + callbackAction + "?" + queryString;
+    var success = app.openURL(url);
+    if (success) {
+      message = message + callbackAction + ", ran successfully.";
+    } else {
+      // something went wrong or was cancelled
+      message =
+        message +
+        callbackAction +
+        ", failed.\n" +
+        "Error " +
+        response["errorCode"] +
+        ": " +
+        response["errorMessage"];
+      app.displayErrorMessage(message);
+      context.fail();
+    }
+    if (this._debug) {
+      console.log(message);
+      console.log("Params: " + JSON.stringify(params));
+      console.log("Repsonse: " + JSON.stringify(response));
     }
   }
 
