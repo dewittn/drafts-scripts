@@ -71,6 +71,8 @@ class ATTable {
     this._records = [];
   }
 
+  // *******
+  // Property Methods
   get records() {
     return this._records;
   }
@@ -82,10 +84,8 @@ class ATTable {
     return this._tableName;
   }
 
-  newRecord() {
-    return new ATRecord();
-  }
-
+  // *******
+  // Select Methods
   select(params = this._params) {
     const results = this._request({ method: "GET", parameters: params });
     if (results) {
@@ -105,18 +105,34 @@ class ATTable {
     }
   }
 
+  // Returns all records by a field value
   findBy(field, value) {
+    this._records = [];
     this._params["filterByFormula"] = "{" + field + "} = '" + value + "'";
     const payload = {
       method: "GET",
       parameters: this._params,
     };
     const results = this._request(payload);
-    this._records = [];
     for (const record of results.records) {
       this._records.push(ATRecord.create(record));
     }
     return this._records;
+  }
+
+  // Returns a single record by a field value
+  findFirstBy(field, value) {
+    this._records = [];
+    this._params["filterByFormula"] = "{" + field + "} = '" + value + "'";
+    const payload = {
+      method: "GET",
+      parameters: this._params,
+    };
+    const record = this._request(payload).records[0];
+    if (record) {
+      return ATRecord.create(record);
+    }
+    return false;
   }
 
   // A string containing all the fields to include in the return separated by ,
@@ -150,7 +166,8 @@ class ATTable {
     return this;
   }
 
-  // The number of records returned in each request. Must be less than or equal to 100. Default is 100.
+  // The number of records returned in each request.
+  // Must be less than or equal to 100. Default is 100.
   pageSize(value) {
     if (typeof value === "number") {
       value = value.toString();
@@ -175,6 +192,11 @@ class ATTable {
     return this;
   }
 
+  // Returns a new record
+  newRecord() {
+    return new ATRecord();
+  }
+
   // Adds record that will be saved when createRecords() is called
   addRecord(record) {
     this._records.push(record);
@@ -191,7 +213,7 @@ class ATTable {
       requestBody.push({ fields: record.fields });
     }
     const payload = { method: "POST", data: { records: requestBody } };
-    const result = this._request(payload);
+    return this._request(payload);
   }
 
   update(records = this._records) {
@@ -238,6 +260,7 @@ class ATTable {
   }
 
   _request(payload, id) {
+    let results = false;
     var debugMessage = "\n---------\n";
     var url =
       this._airtable._endPointURL + this._base.baseID + "/" + this.URLSafeName;
@@ -260,7 +283,7 @@ class ATTable {
 
     if (response.success) {
       var text = response.responseText;
-      var results = JSON.parse(text);
+      results = JSON.parse(text);
       console.log(text);
     } else {
       var errorCode = response.statusCode;
@@ -316,6 +339,7 @@ class ATRecord {
   static create(record) {
     return new ATRecord(record.id, record.fields);
   }
+
   get fields() {
     return this._fields;
   }
