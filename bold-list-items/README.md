@@ -1,6 +1,6 @@
 # Bold List Items
 
-This script action generates a Regular Expression that bolds the first couple of words in a bulleted or numbered list. For example, this text:
+A script action that generates a Regular Expression for bolding the first couple of words in a bulleted or numbered list. For example, this text:
 
 ```Markdown
 - Bulleted List. This item will get bolded
@@ -19,7 +19,7 @@ Will be transformed like this:
 * **This item:** will get bolded
 1. **Numbered List.** This item will also get bolded
 2. **Included Symbols:** You can specify which symbols in this case ':' will be bolded.
-3. **Excluded Symbols** - You can also specify symbols that will bold text but not be bolded themselves, in this case ' -' triggers the bold formatting but does not change itself.
+3. **Excluded Symbols** - You can also specify symbols that will bold text but not be bolded themselves, in this case ' -' triggers the formatting change but is not included.
 ```
 
 You can set which characters or string sets trigger the bolding as well as adjust the max word cut off.
