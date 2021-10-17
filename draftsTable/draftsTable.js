@@ -69,6 +69,8 @@ class ATTable {
     this._params = {};
     this._sort = [];
     this._records = [];
+    this._offset = null;
+    this._debug = false;
   }
 
   // *******
@@ -82,6 +84,13 @@ class ATTable {
 
   get tableName() {
     return this._tableName;
+  }
+
+  get debug() {
+    return this._debug;
+  }
+  set debug(value) {
+    this._debug = value;
   }
 
   // *******
@@ -109,11 +118,12 @@ class ATTable {
   findBy(field, value) {
     this._records = [];
     this._params["filterByFormula"] = "{" + field + "} = '" + value + "'";
-    const payload = {
+    let payload = {
       method: "GET",
       parameters: this._params,
     };
-    const results = this._request(payload);
+
+    let results = this._request(payload);
     for (const record of results.records) {
       this._records.push(ATRecord.create(record));
     }
@@ -261,13 +271,19 @@ class ATTable {
 
   _request(payload, id) {
     let results = false;
-    var debugMessage = "\n---------\n";
-    var url =
+    let debugMessage = "\n---------\n";
+    let url =
       this._airtable._endPointURL + this._base.baseID + "/" + this.URLSafeName;
     if (id) {
       url = url + "/" + id;
     }
-    var request = Object.assign(
+    if (this._offset) {
+      payload.parameters["offset"] = this._offset;
+    }
+    debugMessage =
+      debugMessage + "Payload: " + JSON.stringify(payload) + "\n\n";
+
+    let request = Object.assign(
       {
         url: url,
         headers: {
@@ -277,23 +293,31 @@ class ATTable {
       },
       payload
     );
-    var http = HTTP.create();
-    var response = http.request(request);
-    console.log(debugMessage + url);
+    let http = HTTP.create();
+    let response = http.request(request);
+    debugMessage = debugMessage + "URL: " + url + "\n\n";
 
     if (response.success) {
+      // Parse results and record debug info.
       var text = response.responseText;
       results = JSON.parse(text);
-      console.log(text);
+      debugMessage = debugMessage + "Reponse:" + text;
+
+      // save offset and clear params once request is complete
+      this._offset = results.offset;
+      this._params = {};
     } else {
       var errorCode = response.statusCode;
-      console.log(
+      debugMessage =
+        debugMessage +
         errorCode +
-          ": " +
-          this._checkError(errorCode) +
-          "\n" +
-          JSON.stringify(payload)
-      );
+        ": " +
+        this._checkError(errorCode) +
+        "\n" +
+        JSON.stringify(payload);
+    }
+    if (this._debug) {
+      console.log(debugMessage);
     }
     return results;
   }
