@@ -50,7 +50,8 @@ class Ulysses {
   newSheet(text, group, format = "markdown", index) {
     // callback Params
     var params = {
-      text: HTML.escape(text),
+      // text: HTML.escape(text),
+      text: text,
       group: group,
     };
     if (this._formatCheck(format)) {
@@ -82,7 +83,8 @@ class Ulysses {
   insert(id, text, format, position, newline) {
     var params = {
       id: id,
-      text: HTML.escape(text),
+      // text: HTML.escape(text),
+      text: text,
     };
     if (this._formatCheck(format)) {
       params["format"] = format;
@@ -100,7 +102,8 @@ class Ulysses {
   attachNote(text, id = this._targetID, format) {
     var params = {
       id: id,
-      text: HTML.escape(text),
+      // text: HTML.escape(text),
+      text: text,
     };
     if (this._formatCheck(format)) {
       params["format"] = format;
@@ -114,7 +117,8 @@ class Ulysses {
     this._authorize();
     var params = {
       id: id,
-      text: HTML.escape(text),
+      // text: HTML.escape(text),
+      text: text,
       "access-token": this.accessToken,
     };
     if (this._formatCheck(format)) {
@@ -160,20 +164,23 @@ class Ulysses {
   attachKeywords(keywords, id = this._targetID) {
     // A targetID is needed to attach keywords
     // If a targetID has not been set callback will not work
+    let response = false;
     if (id) {
       var params = {
         id: id,
         keywords: keywords,
       };
-      this._openCallback("attach-keywords", params);
+      response = this._openCallback("attach-keywords", params);
     } else {
       app.displayErrorMessage("TargetID missing!");
     }
+    return response;
   }
 
   // Removes one or more keywords from a sheet.
   // Requires authorization.
   removeKeywords(id, keywords) {
+    let response = false;
     this._authorize();
     if (id) {
       var params = {
@@ -181,10 +188,11 @@ class Ulysses {
         keywords: keywords,
         "access-token": this.accessToken,
       };
-      this._openCallback("remove-keywords", params);
+      response = this._openCallback("remove-keywords", params);
     } else {
       app.displayErrorMessage("TargetID missing!");
     }
+    return response;
   }
 
   // Changes the title of a group.
@@ -462,22 +470,21 @@ class Ulysses {
     if (this._debug) {
       console.log(message);
       console.log("Params: " + JSON.stringify(params));
-      console.log("Repsonse: " + JSON.stringify(response));
     }
   }
 
   // Open this._callbackURL
   _openCallback(callbackAction, params = {}, waitForResponse = true) {
     // open and wait for result
-    var message = "\n-------\nAction ";
-    var cb = CallbackURL.create();
+    let message = "\n-------\nAction ";
+    let cb = CallbackURL.create();
     cb.waitForResponse = waitForResponse;
     cb.baseURL = this._callbackURL + callbackAction;
     for (const [key, value] of Object.entries(params)) {
       cb.addParameter(key, value);
     }
-    var success = cb.open();
-    var response = cb.callbackResponse;
+    let success = cb.open();
+    let response = cb.callbackResponse;
     if (success) {
       message = message + callbackAction + ", ran successfully.";
     } else {
