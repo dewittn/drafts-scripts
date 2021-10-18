@@ -86,6 +86,14 @@ class ATTable {
     return this._tableName;
   }
 
+  get offset() {
+    return this._offset;
+  }
+
+  set offset(value) {
+    this._offset = value;
+  }
+
   get debug() {
     return this._debug;
   }
@@ -238,14 +246,30 @@ class ATTable {
     return this._request(payload);
   }
 
+  // Old Method, generates a request for EACH record.
+  // delete(records) {
+  //   // var requestBody = new Array();
+  //   if (!Array.isArray(records)) {
+  //     records = [records];
+  //   }
+  //   for (const record of records) {
+  //     const result = this._request({ method: "DELETE" }, record.id);
+  //   }
+  // }
+
+  // New method, deletes all records with a single request
+  // Record IDs must be stored as HTML arrays and sent as parameters
+  // record[0]="",record[1]=""
   delete(records) {
-    // var requestBody = new Array();
+    let requestBody = {};
     if (!Array.isArray(records)) {
       records = [records];
     }
-    for (const record of records) {
-      const result = this._request({ method: "DELETE" }, record.id);
+    for (let i = 0; i < records.length; i++) {
+      requestBody["records[" + i + "]"] = records[i].id;
     }
+    let payload = { method: "DELETE", parameters: requestBody };
+    const result = this._request(payload);
   }
 
   // List all records from a Table
@@ -254,21 +278,14 @@ class ATTable {
   // Calls update() and create()
   saveRecords() {}
 
-  // Alternative method, doesn't work yet
-  // delete(records) {
-  //   var requestBody = new Array();
-  //   for (const record of records) {
-  //     requestBody.push("records[]=" + record.id);
-  //   }
-  //   var payload = { method: "DELETE", data: requestBody.join("&") };
-  //   const result = this._request(payload);
-  // }
-
   // Debugging function to make sure Parameters are begin set correctly
   returnParameter(key) {
     return this._params[key];
   }
 
+  // ***********
+  // "Private" Functions
+  // ***********
   _request(payload, id) {
     let results = false;
     let debugMessage = "\n---------\n";
