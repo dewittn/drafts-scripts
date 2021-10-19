@@ -1,5 +1,5 @@
-// draftsTables
-// A simple script to interact with the Airtable API
+// draftsTables by Nelson/Roberto (@dewittn)
+// An Airtable API wrapper for Drafts
 
 // ***************
 // * Airtable Class
@@ -7,8 +7,8 @@
 class Airtable {
   constructor(apiKey) {
     this._endPointURL = "https://api.airtable.com/v0/";
+    this.filesPath = "/Library/Data/";
     this._authorize();
-    //this._baseID = this._baseLookup(baseName);
   }
 
   base(baseID = this._defaultBaseID) {
