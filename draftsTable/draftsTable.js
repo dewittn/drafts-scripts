@@ -138,6 +138,15 @@ class ATTable {
     return this._records;
   }
 
+  findById(id) {
+    let response = this._request({ method: "GET" }, id);
+    if (response) {
+      return ATRecord.create(response);
+    } else {
+      return false;
+    }
+  }
+
   // Returns a single record by a field value
   findFirstBy(field, value) {
     this._records = [];
@@ -146,11 +155,13 @@ class ATTable {
       method: "GET",
       parameters: this._params,
     };
-    const record = this._request(payload).records[0];
-    if (record) {
+    let response = this._request(payload);
+    if (response.records && response.records.length) {
+      var record = response.records[0];
       return ATRecord.create(record);
+    } else {
+      return false;
     }
-    return false;
   }
 
   // A string containing all the fields to include in the return separated by ,
