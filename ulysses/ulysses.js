@@ -4,7 +4,7 @@
 class Ulysses {
   constructor() {
     this._callbackURL = "ulysses://x-callback-url/";
-    this._targetID = "";
+    this._targetId = "";
     this._debug = false;
   }
 
@@ -17,16 +17,12 @@ class Ulysses {
   // ***********
 
   get targetId() {
-    return this._targetID;
+    return this._targetId;
   }
 
   set targetId(id) {
-    if (typeof id === "string") {
-      this._targetID = id;
-    } else {
-      app.displayErrorMessage("Error: targetID must be a string.");
-      context.cancel();
-    }
+    if (!typeof id === "string") this._displayErrorMessage("Error: targetID must be a string.");
+    this._targetId = id;
   }
 
   get debug() {
@@ -34,12 +30,8 @@ class Ulysses {
   }
 
   set debug(state) {
-    if (typeof state === "boolean") {
-      this._debug = state;
-    } else {
-      app.displayErrorMessage("Error: debug can only be set to true or false.");
-      context.cancel();
-    }
+    if (!typeof state === "boolean") this._displayErrorMessage("Error: debug can only be set to true or false.");
+    this._debug = state;
   }
 
   // ***********
@@ -47,292 +39,262 @@ class Ulysses {
   // ***********
 
   // Create a new sheet in Ulysses
-  newSheet(text, group, format = "markdown", index) {
+  newSheet(text, group, textFormat = "markdown", index) {
     // callback Params
-    var params = {
+    let params = {
       // text: HTML.escape(text),
       text: text,
       group: group,
     };
-    if (this._formatCheck(format)) {
-      params["format"] = format;
-    }
-    if (this._indexCheck(index)) {
-      params["index"] = index;
-    }
-    var response = this._openCallback("new-sheet", params);
-    this._targetID = response.targetId;
+    if (this._textFormatCheck(format)) params["format"] = format;
+    if (this._indexCheck(index)) params["index"] = index;
+
+    const response = this._openCallback("new-sheet", params);
+    this._targetId = response.targetId;
     return response;
   }
 
   // Creates a new group.
   newGroup(name, parent, index) {
-    var params = { name: name };
-    if (parent) {
-      params["parent"] = parent;
-    }
-    if (this._indexCheck(index)) {
-      params["index"] = index;
-    }
-    var response = this._openCallback("new-group", params);
-    this._targetID = response.targetId;
+    let params = { name: name };
+    if (parent) params["parent"] = parent;
+    if (this._indexCheck(index)) params["index"] = index;
+
+    const response = this._openCallback("new-group", params);
+    this._targetId = response.targetId;
     return response;
   }
 
   // Inserts or appends text to a sheet.
-  insert(id, text, format, position, newline) {
-    var params = {
+  insert(id, text, textFormat, position, newline) {
+    let params = {
       id: id,
       // text: HTML.escape(text),
       text: text,
     };
-    if (this._formatCheck(format)) {
-      params["format"] = format;
-    }
-    if (this._potisionCheck(position)) {
-      params["position"] = position;
-    }
-    if (this._newlineCheck(newline)) {
-      params["newline"] = newline;
-    }
-    this._openCallback("insert", params);
+    if (this._textFormatCheck(textFormat)) params["format"] = format;
+    if (this._potisionCheck(position)) params["position"] = position;
+    if (this._newlineCheck(newline)) params["newline"] = newline;
+
+    return this._openCallback("insert", params);
   }
 
   // Creates a new note attachment on a sheet.
-  attachNote(text, id = this._targetID, format) {
-    var params = {
+  attachNote(text, id = this._targetId, textFormat) {
+    let params = {
       id: id,
       // text: HTML.escape(text),
       text: text,
     };
-    if (this._formatCheck(format)) {
-      params["format"] = format;
-    }
-    var response = this._openCallback("attach-note", params, false);
+    if (this._textFormatCheck(textFormat)) params["format"] = format;
+
+    return this._openCallback("attach-note", params, false);
   }
 
   // Changes an existing note attachment on a sheet.
   // Requires authorization.
-  updateNote(id, text, index, format) {
+  updateNote(id, text, index, textFormat) {
     this._authorize();
-    var params = {
+    let params = {
       id: id,
       // text: HTML.escape(text),
       text: text,
       "access-token": this.accessToken,
     };
-    if (this._formatCheck(format)) {
-      params["format"] = format;
-    }
-    if (this._indexCheck(index)) {
-      params["index"] = index;
-    }
-    var response = this._openCallback("update-note", params, false);
+    if (this._textFormatCheck(textFormat)) params["format"] = format;
+    if (this._indexCheck(index)) params["index"] = index;
+
+    return this._openCallback("update-note", params, false);
   }
 
   // Removes a note attachment from a sheet.
   // Requires authorization.
   removeNote(id, index) {
     this._authorize();
-    var params = {
+    let params = {
       id: id,
       "access-token": this.accessToken,
     };
-    if (this._indexCheck(index)) {
-      params["index"] = index;
-    }
-    this._openCallback("remove-note", params, false);
+    if (this._indexCheck(index)) params["index"] = index;
+
+    return this._openCallback("remove-note", params, false);
   }
 
   // Creates a new image attachment on a sheet.
   // Image data must use base64 encoding.
-  attachImage(id, image, format, filename) {
-    var params = {
+  attachImage(id, image, imageFormat, filename) {
+    let params = {
       id: id,
       image: HTML.escape(image),
       filename: filename,
     };
-    if (this._formatCheck(format)) {
-      params["format"] = format;
-    }
-    this._openCallback("attach-image", params, false);
+    if (this._imageFormatCheck(imageFormat)) params["format"] = format;
+
+    return this._openCallback("attach-image", params, false);
   }
 
   // Attach keyword(s) to a sheet in Ulysses
   // Requires an identifier to specify which sheet to attach keywords
   // Default identifier is set when new sheet is created.
-  attachKeywords(keywords, id = this._targetID) {
-    // A targetID is needed to attach keywords
-    // If a targetID has not been set callback will not work
-    let response = false;
-    if (id) {
-      var params = {
-        id: id,
-        keywords: keywords,
-      };
-      response = this._openCallback("attach-keywords", params);
-    } else {
-      app.displayErrorMessage("TargetID missing!");
-    }
-    return response;
+  attachKeywords(keywords, id = this._targetId) {
+    if (!id) return this._displayErrorMessage("TargetID missing!");
+
+    const params = {
+      id: id,
+      keywords: keywords,
+    };
+
+    return this._openCallback("attach-keywords", params);
   }
 
   // Removes one or more keywords from a sheet.
   // Requires authorization.
   removeKeywords(id, keywords) {
-    let response = false;
+    if (!id) return this._displayErrorMessage("TargetID missing!");
+
     this._authorize();
-    if (id) {
-      var params = {
-        id: id,
-        keywords: keywords,
-        "access-token": this.accessToken,
-      };
-      response = this._openCallback("remove-keywords", params);
-    } else {
-      app.displayErrorMessage("TargetID missing!");
-    }
-    return response;
+    const params = {
+      id: id,
+      keywords: keywords,
+      "access-token": this.accessToken,
+    };
+
+    return this._openCallback("remove-keywords", params);
   }
 
   // Changes the title of a group.
   // Requires authorization.
   setGroupTitle(group, title) {
     this._authorize();
-    var params = {
+    const params = {
       group: group,
-      title: HTML.escape(title),
+      title: title,
       "access-token": this.accessToken,
     };
-    this._openCallback("set-group-title", params);
+
+    return this._openCallback("set-group-title", params);
   }
 
   // Changes the first paragraph of a sheet.
   // Requires authorization.
   setSheetTitle(id, title, type) {
     this._authorize();
-    var params = {
+    let params = {
       id: id,
-      title: HTML.escape(title),
+      title: title,
       "access-token": this.accessToken,
     };
-    if (this._typeCheck(type)) {
-      params["type"] = type;
-    }
-    this._openCallback("set-sheet-title", params);
+    if (this._typeCheck(type)) params["type"] = type;
+
+    return this._openCallback("set-sheet-title", params);
   }
 
   // Moves an item (sheet or group) to a target group and/or to a new position.
   // Requires authorization.
   move(id, targetGroup, index) {
+    if (!id) return this._displayErrorMessage("TargetID missing!");
+
     this._authorize();
-    if (id) {
-      var params = {
-        id: id,
-        targetGroup: targetGroup,
-        "access-token": this.accessToken,
-      };
-      if (this._indexCheck(index)) {
-        params["index"] = index;
-      }
-      this._openCallback("copy", params);
-    } else {
-      app.displayErrorMessage("TargetID missing!");
-    }
+    let params = {
+      id: id,
+      targetGroup: targetGroup,
+      "access-token": this.accessToken,
+    };
+    if (this._indexCheck(index)) params["index"] = index;
+
+    return this._openCallback("copy", params);
   }
 
   // Copies an item (sheet or group) to a target group and/or to a new position.
   copy(id, targetGroup, index) {
-    if (id) {
-      var params = {
-        id: id,
-        targetGroup: targetGroup,
-      };
-      if (this._indexCheck(index)) {
-        params["index"] = index;
-      }
-      this._openCallback("copy", params);
-    } else {
-      app.displayErrorMessage("TargetID missing!");
-    }
+    if (!id) this._displayErrorMessage("TargetID missing!");
+
+    let params = {
+      id: id,
+      targetGroup: targetGroup,
+    };
+    if (this._indexCheck(index)) params["index"] = index;
+
+    return this._openCallback("copy", params);
   }
 
   // Moves an item (sheet or group) to the trash.
   // Requires authorization.
   trash(id) {
+    if (!id) this._displayErrorMessage("TargetID missing!");
+
     this._authorize();
-    this._openCallback("trash", {
+    const params = {
       id: id,
       "access-token": this.accessToken,
-    });
+    };
+
+    return this._openCallback("trash", params);
   }
 
   // Retrieves information about an item (sheet or group).
   // Requires authorization.
   getItem(id, recursive = "Yes") {
+    if (!id) this._displayErrorMessage("TargetID missing!");
+
     this._authorize();
-    if (id) {
-      var params = {
-        id: id,
-        recursive: recursive,
-        "access-token": this.accessToken,
-      };
-      var response = this._openCallback("get-item", params);
-      return JSON.parse(response.item);
-    } else {
-      app.displayErrorMessage("TargetID missing!");
-    }
+    const params = {
+      id: id,
+      recursive: recursive,
+      "access-token": this.accessToken,
+    };
+
+    const response = this._openCallback("get-item", params);
+    return JSON.parse(response.item);
   }
 
   // Retrieves information about the root sections. Can be used to get a full listing of the entire Ulysses library.
   // Requires authorization.
   getRootItems(recursive = "Yes") {
     this._authorize();
-    var params = {
+    const params = {
       recursive: recursive,
       "access-token": this.accessToken,
     };
-    var response = this._openCallback("get-root-items", params);
-    console.log(response);
+
+    const response = this._openCallback("get-root-items", params);
     return JSON.parse(response.items);
   }
 
   // Retrieves the contents (text, notes, keywords) of a sheet.
   // Requires authorization.
   readSheet(id, text = "No") {
+    if (!id) return this._displayErrorMessage("TargetID missing!");
+
     this._authorize();
-    if (id) {
-      var params = {
-        id: id,
-        text: text,
-        "access-token": this.accessToken,
-      };
-      var response = this._openCallback("read-sheet", params);
-      return JSON.parse(response.sheet);
-    } else {
-      app.displayErrorMessage("TargetID missing!");
-    }
+    const params = {
+      id: id,
+      text: text,
+      "access-token": this.accessToken,
+    };
+
+    const response = this._openCallback("read-sheet", params);
+    return JSON.parse(response.sheet);
   }
 
   // Gets the QuickLook URL for a sheet. This is the sheet’s location on the file system.
   // Only available in Ulysses for Mac.
   getQuickLookUrl(id) {
-    var model = device.model;
-    if (model == "Mac") {
-      if (id) {
-        var params = {
-          id: id,
-        };
-        var response = this._openCallback("get-quick-look-url", params);
-        return response.url;
-      } else {
-        app.displayErrorMessage("TargetID missing!");
-      }
-    }
+    if (!id) return this._displayErrorMessage("TargetID missing!");
+
+    const model = device.model;
+    if (model != "Mac") return;
+
+    const params = {
+      id: id,
+    };
+
+    const response = this._openCallback("get-quick-look-url", params);
+    return response.url;
   }
 
   // Opens an item (sheet or group) with a particular identifier in Ulysses.
-  open(id = this._targetID) {
+  open(id = this._targetId) {
     this._openURL("open", { id: id }, false);
   }
 
@@ -365,9 +327,7 @@ class Ulysses {
   capitalizeTags(tags) {
     if (tags.length > 0) {
       tags.forEach(function capitalize(tag, index, array) {
-        array[index] = tag.replace(/\w\S*/g, (w) =>
-          w.replace(/^\w/, (c) => c.toUpperCase())
-        );
+        array[index] = tag.replace(/\w\S*/g, (w) => w.replace(/^\w/, (c) => c.toUpperCase()));
       });
     }
     return tags;
@@ -383,93 +343,75 @@ class Ulysses {
   // "Private" Functions
   // ***********
 
-  _formatCheck(f) {
-    if (f) {
-      return f.match(/^(markdown|text|html)$/);
-    }
+  _textFormatCheck(textFormat) {
+    if (textFormat) return textFormat.match(/^(markdown|text|html)$/);
   }
 
-  _indexCheck(i) {
-    return Number.isInteger(i);
+  _indexCheck(index) {
+    return Number.isInteger(index);
   }
 
-  _potisionCheck(p) {
-    if (p) {
-      return p.match(/^(begin|end)$/);
-    }
+  _potisionCheck(potision) {
+    if (potision) return potision.match(/^(begin|end)$/);
   }
 
-  _newlineCheck(n) {
-    if (n) {
-      return n.match(/^(prepend|append|enclose)$/);
-    }
+  _newlineCheck(newLine) {
+    if (newLine) return newLine.match(/^(prepend|append|enclose)$/);
   }
 
-  _typeCheck(t) {
-    if (t) {
-      return t.match(/^(heading[1-6]|comment|filename)$/);
-    }
+  _typeCheck(type) {
+    if (type) return type.match(/^(heading[1-6]|comment|filename)$/);
   }
 
-  _formatCheck(f) {
-    if (f) {
-      return f.match(/^(png|pdf|jpg|raw|gif)$/);
-    }
+  _imageFormatCheck(imageFormat) {
+    if (imageFormat) return imageFormat.match(/^(png|pdf|jpg|raw|gif)$/);
   }
 
   //Authorize Drafts with Ulysses and save credentials
   _authorize() {
-    var model = device.model;
-    var credential = Credential.create(
-      "Ulysses (" + model + ")",
-      "Ulysses API"
-    );
+    const model = device.model;
+    let credential = Credential.create(`Ulysses (${model})`, "Ulysses API");
     credential.addPasswordField("access-token", "Access Token");
     this.accessToken = credential.getValue("access-token");
-    if (!this.accessToken) {
-      var response = this._openCallback("authorize", {
-        appname: "Drafts App (" + model + ")",
-      });
-      var token = response["access-token"];
-      app.setClipboard(token);
-      alert(
-        "Your Ulysses access token for this devive (" +
-          model +
-          ") has been copied to the clipboard.\n\n Please paste it into the text field on the next window."
-      );
-      credential.authorize();
-      app.setClipboard("");
-      this.accessToken = credential.getValue("access-token");
-    }
+    if (this.accessToken) return;
+
+    let response = this._openCallback("authorize", {
+      appname: `Drafts App (${model})`,
+    });
+    app.setClipboard(response["access-token"]);
+    alert(
+      "Your Ulysses access token for this devive (" +
+        model +
+        ") has been copied to the clipboard.\n\n" +
+        "Please paste it into the text field on the next window."
+    );
+    credential.authorize();
+    app.setClipboard("");
+
+    this.accessToken = credential.getValue("access-token");
   }
 
   _openURL(callbackAction, params = {}) {
-    var message = "\n-------\nAction ";
+    let message = "\n-------\nAction ";
     const queryString = Object.keys(params)
-      .map(
-        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`
-      )
+      .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
       .join("&");
-    var url = this._callbackURL + callbackAction + "?" + queryString;
-    var success = app.openURL(url);
+    const url = `${this._callbackURL}${callbackAction}?${queryString}`;
+
+    const success = app.openURL(url);
     if (success) {
       message = message + callbackAction + ", ran successfully.";
     } else {
       // something went wrong or was cancelled
       message =
-        message +
-        callbackAction +
-        ", failed.\n" +
-        "Error " +
-        response["errorCode"] +
-        ": " +
-        response["errorMessage"];
-      app.displayErrorMessage(message);
+        message + callbackAction + ", failed." + `\nError ${response["errorCode"]}: ${response["errorMessage"]}`;
+      this._displayErrorMessage(message);
       context.fail();
     }
+
     if (this._debug) {
       console.log(message);
-      console.log("Params: " + JSON.stringify(params));
+      console.log(`Params: ${JSON.stringify(params)}`);
     }
   }
 
@@ -480,31 +422,42 @@ class Ulysses {
     let cb = CallbackURL.create();
     cb.waitForResponse = waitForResponse;
     cb.baseURL = this._callbackURL + callbackAction;
-    for (const [key, value] of Object.entries(params)) {
-      cb.addParameter(key, value);
-    }
-    let success = cb.open();
-    let response = cb.callbackResponse;
+    Object.entries(params).forEach(([key, value]) => cb.addParameter(key, value));
+
+    const success = cb.open();
+    const response = cb.callbackResponse;
     if (success) {
       message = message + callbackAction + ", ran successfully.";
     } else {
       // something went wrong or was cancelled
       message =
-        message +
-        callbackAction +
-        ", failed.\n" +
-        "Error " +
-        response["errorCode"] +
-        ": " +
-        response["errorMessage"];
-      app.displayErrorMessage(message);
+        message + callbackAction + ", failed.\n" + "Error " + response["errorCode"] + ": " + response["errorMessage"];
+      this._displayErrorMessage(message);
       context.fail();
     }
+
     if (this._debug) {
       console.log(message);
-      console.log("Params: " + JSON.stringify(params));
-      console.log("Repsonse: " + JSON.stringify(response));
+      console.log(`Params: ${JSON.stringify(params)}`);
+      console.log(`Repsonse: ${JSON.stringify(response)}`);
     }
     return response;
+  }
+
+  _displayErrorMessage(message) {
+    app.displayErrorMessage(message);
+    context.cancel();
+    return false;
+  }
+
+  _displayInfoMessage(message) {
+    app.displayInfoMessage(message);
+    context.cancel();
+    return false;
+  }
+
+  // Helper method that throws an alert displaying the variable passed to it
+  _debugVariable(value) {
+    alert(JSON.stringify(value));
   }
 }
