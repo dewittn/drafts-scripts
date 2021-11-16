@@ -15,15 +15,6 @@ class Ulysses {
   // * Class Properties
   // ***********
 
-  get targetId() {
-    return this._targetId;
-  }
-
-  set targetId(id) {
-    if (!typeof id === "string") this._displayErrorMessage("Error: targetID must be a string.");
-    this._targetId = id;
-  }
-
   get debug() {
     return this._debug;
   }
@@ -41,15 +32,13 @@ class Ulysses {
   newSheet(text, group, textFormat = "markdown", index) {
     // callback Params
     let params = {
-      // text: HTML.escape(text),
       text: text,
       group: group,
     };
-    if (this._textFormatCheck(format)) params["format"] = format;
+    if (this._textFormatCheck(textFormat)) params["format"] = textFormat;
     if (this._indexCheck(index)) params["index"] = index;
 
     const response = this._openCallback("new-sheet", params);
-    this._targetId = response.targetId;
     return response;
   }
 
@@ -60,7 +49,6 @@ class Ulysses {
     if (this._indexCheck(index)) params["index"] = index;
 
     const response = this._openCallback("new-group", params);
-    this._targetId = response.targetId;
     return response;
   }
 
@@ -70,10 +58,9 @@ class Ulysses {
 
     let params = {
       id: id,
-      // text: HTML.escape(text),
       text: text,
     };
-    if (this._textFormatCheck(textFormat)) params["format"] = format;
+    if (this._textFormatCheck(textFormat)) params["format"] = textFormat;
     if (this._potisionCheck(position)) params["position"] = position;
     if (this._newlineCheck(newline)) params["newline"] = newline;
 
@@ -86,10 +73,9 @@ class Ulysses {
 
     let params = {
       id: id,
-      // text: HTML.escape(text),
       text: text,
     };
-    if (this._textFormatCheck(textFormat)) params["format"] = format;
+    if (this._textFormatCheck(textFormat)) params["format"] = textFormat;
 
     return this._openCallback("attach-note", params, false);
   }
@@ -102,11 +88,10 @@ class Ulysses {
     this._authorize();
     let params = {
       id: id,
-      // text: HTML.escape(text),
       text: text,
       "access-token": this.accessToken,
     };
-    if (this._textFormatCheck(textFormat)) params["format"] = format;
+    if (this._textFormatCheck(textFormat)) params["format"] = textFormat;
     if (this._indexCheck(index)) params["index"] = index;
 
     return this._openCallback("update-note", params, false);
@@ -135,7 +120,7 @@ class Ulysses {
       image: HTML.escape(image),
       filename: filename,
     };
-    if (this._imageFormatCheck(imageFormat)) params["format"] = format;
+    if (this._imageFormatCheck(imageFormat)) params["format"] = imageFormat;
 
     return this._openCallback("attach-image", params, false);
   }
@@ -416,7 +401,6 @@ class Ulysses {
       message =
         message + callbackAction + ", failed." + `\nError ${response["errorCode"]}: ${response["errorMessage"]}`;
       this._displayErrorMessage(message);
-      context.fail();
     }
 
     if (this._debug) {
