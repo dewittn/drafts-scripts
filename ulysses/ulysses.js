@@ -4,7 +4,6 @@
 class Ulysses {
   constructor() {
     this._callbackURL = "ulysses://x-callback-url/";
-    this._targetId = "";
     this._debug = false;
   }
 
@@ -67,6 +66,8 @@ class Ulysses {
 
   // Inserts or appends text to a sheet.
   insert(id, text, textFormat, position, newline) {
+    if (!id) return this._displayErrorMessage("TargetID missing!");
+
     let params = {
       id: id,
       // text: HTML.escape(text),
@@ -80,7 +81,9 @@ class Ulysses {
   }
 
   // Creates a new note attachment on a sheet.
-  attachNote(text, id = this._targetId, textFormat) {
+  attachNote(id, text, textFormat) {
+    if (!id) return this._displayErrorMessage("TargetID missing!");
+
     let params = {
       id: id,
       // text: HTML.escape(text),
@@ -94,6 +97,8 @@ class Ulysses {
   // Changes an existing note attachment on a sheet.
   // Requires authorization.
   updateNote(id, text, index, textFormat) {
+    if (!id) return this._displayErrorMessage("TargetID missing!");
+
     this._authorize();
     let params = {
       id: id,
@@ -123,6 +128,8 @@ class Ulysses {
   // Creates a new image attachment on a sheet.
   // Image data must use base64 encoding.
   attachImage(id, image, imageFormat, filename) {
+    if (!id) return this._displayErrorMessage("TargetID missing!");
+
     let params = {
       id: id,
       image: HTML.escape(image),
@@ -136,7 +143,7 @@ class Ulysses {
   // Attach keyword(s) to a sheet in Ulysses
   // Requires an identifier to specify which sheet to attach keywords
   // Default identifier is set when new sheet is created.
-  attachKeywords(keywords, id = this._targetId) {
+  attachKeywords(id, keywords) {
     if (!id) return this._displayErrorMessage("TargetID missing!");
 
     const params = {
@@ -178,6 +185,8 @@ class Ulysses {
   // Changes the first paragraph of a sheet.
   // Requires authorization.
   setSheetTitle(id, title, type) {
+    if (!id) return this._displayErrorMessage("TargetID missing!");
+
     this._authorize();
     let params = {
       id: id,
@@ -294,7 +303,8 @@ class Ulysses {
   }
 
   // Opens an item (sheet or group) with a particular identifier in Ulysses.
-  open(id = this._targetId) {
+  open(id) {
+    if (!id) return this._displayErrorMessage("TargetID missing!");
     this._openURL("open", { id: id }, false);
   }
 
