@@ -1,3 +1,4 @@
+// Ulysses.js by Nelson/Roberto (@dewittn)
 // A simple interface for Drafts to interact with the Ulysses writing app
 // Written against Ulysses API v2.8 and later
 // https://ulysses.app/kb/x-callback-url
