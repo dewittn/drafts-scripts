@@ -17,7 +17,7 @@ class Airtable {
 
   // Setup & Store Credentials
   _authorize() {
-    var credential = Credential.create("AirTable", "AirTable API");
+    let credential = Credential.create("AirTable", "AirTable API");
     credential.addPasswordField("api_key", "API Key");
     credential.addTextField("baseID", "Default Base ID");
     credential.authorize();
@@ -28,14 +28,12 @@ class Airtable {
   // Allows BaseIDs to be stored in an iCloud json file.
   // Default base id is used if no name is specified
   _baseLookup(baseName) {
-    if (baseName == "default") {
-      return this._defaultBaseID;
-    } else {
-      // read from file in iCloud
-      let fmCloud = FileManager.createCloud(); // Connect to iCloud storage
-      let bases = fmCloud.readJSON(this.filesPath + "bases.json");
-      return bases[baseName];
-    }
+    if (baseName == "default") return this._defaultBaseID;
+
+    // read from file in iCloud
+    let fmCloud = FileManager.createCloud(); // Connect to iCloud storage
+    const bases = fmCloud.readJSON(this.filesPath + "bases.json");
+    return bases[baseName];
   }
 }
 
@@ -104,113 +102,84 @@ class ATTable {
   // *******
   // Select Methods
   select(params = this._params) {
-    const results = this._request({ method: "GET", parameters: params });
-    if (results) {
-      for (const record of results.records) {
-        this._records.push(ATRecord.create(record));
-      }
-    }
+    const response = this._makeHTTPRequest({ method: "GET", parameters: params });
+    if (!response.records) return false;
+    response.records.forEach((record) => this._records.push(ATRecord.create(record)));
     return this._records;
   }
 
-  find(id) {
-    if (id) {
-      const result = this._request({ method: "GET" }, id);
-      const record = ATRecord.create(result);
-      this._records = [record];
-      return record;
-    }
+  findById(id) {
+    const response = this._makeHTTPRequest({ method: "GET" }, id);
+    if (!response) return false;
+    return ATRecord.create(response);
   }
 
-  // Returns all records by a field value
-  findBy(field, value) {
+  // Returns an array of records by a field value
+  findByField(field, value) {
     this._records = [];
-    this._params["filterByFormula"] = "{" + field + "} = '" + value + "'";
+    this._params["filterByFormula"] = `{${field}} = '${value}'`;
     let payload = {
       method: "GET",
       parameters: this._params,
     };
 
-    let results = this._request(payload);
-    for (const record of results.records) {
-      this._records.push(ATRecord.create(record));
-    }
+    const response = this._makeHTTPRequest(payload);
+    if (!response.records) return false;
+    response.records.forEach((record) => this._records.push(ATRecord.create(record)));
     return this._records;
   }
 
-  findById(id) {
-    let response = this._request({ method: "GET" }, id);
-    if (response) {
-      return ATRecord.create(response);
-    } else {
-      return false;
-    }
-  }
-
-  // Returns a single record by a field value
-  findFirstBy(field, value) {
+  // Returns a the first record by a field value
+  findFirstByField(field, value) {
     this._records = [];
-    this._params["filterByFormula"] = "{" + field + "} = '" + value + "'";
+    this._params["filterByFormula"] = `{${field}} = '${value}'`;
     const payload = {
       method: "GET",
       parameters: this._params,
     };
-    let response = this._request(payload);
-    if (response.records && response.records.length) {
-      var record = response.records[0];
-      return ATRecord.create(record);
-    } else {
-      return false;
-    }
+    const response = this._makeHTTPRequest(payload);
+    if (!response.records && !response.records.length) return false;
+    return ATRecord.create(response.records[0]);
   }
 
   // A string containing all the fields to include in the return separated by ,
   // "Title,Status,Priority"
   fields(value) {
-    if (!Array.isArray(value)) {
-      value = value.split(",");
-    }
-    for (let i = 0; i < value.length; i++) {
-      this._params["fields[" + i + "]"] = value[i];
+    if (typeof value === "string") value = value.split(",");
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        this._params[`fields[${i}]`] = value[i];
+      }
     }
     return this;
   }
 
   // A string containing a filter by formula
   filterBy(value) {
-    if (typeof value === "string") {
-      this._params["filterByFormula"] = value;
-    }
+    if (typeof value === "string") this._params["filterByFormula"] = value;
     return this;
   }
 
   //  containing the maximum number of records to return
   maxRecords(value) {
-    if (typeof value === "number") {
-      value = value.toString();
-    }
-    if (typeof value === "string") {
-      this._params["maxRecords"] = value;
-    }
+    if (typeof value === "number") value = value.toString();
+    if (typeof value === "string") this._params["maxRecords"] = value;
     return this;
   }
+
+  // **************************\
+  // stopped here
 
   // The number of records returned in each request.
   // Must be less than or equal to 100. Default is 100.
   pageSize(value) {
-    if (typeof value === "number") {
-      value = value.toString();
-    }
-    if (typeof value === "string") {
-      this._params["pageSize"] = value;
-    }
+    if (typeof value === "number") value = value.toString();
+    if (typeof value === "string") this._params["pageSize"] = value;
     return this;
   }
 
   view(vaule) {
-    if (typeof value === "string") {
-      this._params["view"] = value;
-    }
+    if (typeof value === "string") this._params["view"] = value;
     return this;
   }
 
@@ -234,27 +203,34 @@ class ATTable {
   // Create new records in table
   createRecords(records = this._records, typecast) {
     // Save record;
-    var requestBody = new Array();
-    if (!Array.isArray(records)) {
-      records = [records];
-    }
-    for (const record of records) {
-      requestBody.push({ fields: record.fields });
-    }
+    if (!Array.isArray(records)) records = [records];
+    // for (const record of records) {
+    //   requestBody.push({ fields: record.fields });
+    // }
+    const requestBody = records.map((record) => ({ fields: record.fields }));
     const payload = { method: "POST", data: { records: requestBody } };
-    return this._request(payload);
+    return this._makeHTTPRequest(payload);
   }
 
   update(records = this._records) {
-    var requestBody = new Array();
-    if (!Array.isArray(records)) {
-      records = [records];
-    }
-    for (const record of records) {
-      requestBody.push({ id: record.id, fields: record.fields });
-    }
+    // var requestBody = new Array();
+    if (!Array.isArray(records)) records = [records];
+    const requestBody = records.map((record) => ({ id: record.id, fields: record.fields }));
     var payload = { method: "PATCH", data: { records: requestBody } };
-    return this._request(payload);
+    return this._makeHTTPRequest(payload);
+  }
+
+  // New method, deletes all records with a single request
+  // Record IDs must be stored as HTML arrays and sent as parameters
+  // record[0]="",record[1]=""
+  delete(records) {
+    let requestBody = {};
+    if (!Array.isArray(records)) records = [records];
+    for (let i = 0; i < records.length; i++) {
+      requestBody[`records[${i}]`] = records[i].id;
+    }
+    const payload = { method: "DELETE", parameters: requestBody };
+    const result = this._makeHTTPRequest(payload);
   }
 
   // Old Method, generates a request for EACH record.
@@ -264,27 +240,12 @@ class ATTable {
   //     records = [records];
   //   }
   //   for (const record of records) {
-  //     const result = this._request({ method: "DELETE" }, record.id);
+  //     const result = this._makeHTTPRequest({ method: "DELETE" }, record.id);
   //   }
   // }
 
-  // New method, deletes all records with a single request
-  // Record IDs must be stored as HTML arrays and sent as parameters
-  // record[0]="",record[1]=""
-  delete(records) {
-    let requestBody = {};
-    if (!Array.isArray(records)) {
-      records = [records];
-    }
-    for (let i = 0; i < records.length; i++) {
-      requestBody["records[" + i + "]"] = records[i].id;
-    }
-    let payload = { method: "DELETE", parameters: requestBody };
-    const result = this._request(payload);
-  }
-
   // List all records from a Table
-  listAllRecords() {}
+  findAllRecords() {}
 
   // Calls update() and create()
   saveRecords() {}
@@ -297,21 +258,14 @@ class ATTable {
   // ***********
   // "Private" Functions
   // ***********
-  _request(payload, id) {
+  _makeHTTPRequest(payload, id = "") {
     let results = false;
-    let debugMessage = "\n---------\n";
-    let url =
-      this._airtable._endPointURL + this._base.baseID + "/" + this.URLSafeName;
-    if (id) {
-      url = url + "/" + id;
-    }
-    if (this._offset) {
-      payload.parameters["offset"] = this._offset;
-    }
-    debugMessage =
-      debugMessage + "Payload: " + JSON.stringify(payload) + "\n\n";
+    const url = `${this._airtable._endPointURL}${this._base.baseID}/${this.URLSafeName}/${id}`;
+    if (this._offset) payload.parameters["offset"] = this._offset;
 
-    let request = Object.assign(
+    let debugMessage = `\n---------\nURL: ${url}\n\nPayload: ${JSON.stringify(payload)}\n\n`;
+
+    const request = Object.assign(
       {
         url: url,
         headers: {
@@ -322,36 +276,27 @@ class ATTable {
       payload
     );
     let http = HTTP.create();
-    let response = http.request(request);
-    debugMessage = debugMessage + "URL: " + url + "\n\n";
+    const response = http.request(request);
 
     if (response.success) {
       // Parse results and record debug info.
       var text = response.responseText;
       results = JSON.parse(text);
-      debugMessage = debugMessage + "Reponse:" + text;
+      debugMessage = debugMessage + `Reponse: ${text}`;
 
       // save offset and clear params once request is complete
       this._offset = results.offset;
       this._params = {};
     } else {
-      var errorCode = response.statusCode;
       debugMessage =
-        debugMessage +
-        errorCode +
-        ": " +
-        this._checkError(errorCode) +
-        "\n" +
-        JSON.stringify(payload);
+        debugMessage + errorCode + `: ${this._checkError(response.statusCode)}\n${JSON.stringify(payload)}`;
     }
-    if (this._debug) {
-      console.log(debugMessage);
-    }
+    if (this._debug) console.log(debugMessage);
     return results;
   }
 
   _checkError(code) {
-    var errorCodes = {
+    const errorCodes = {
       400: "Bad Request",
       401: "Unauthorized",
       402: "Payment Required",
@@ -402,22 +347,23 @@ class ATRecord {
 
   addField(name, value) {
     //Field names must be in Capital Case for Airtable compatibility
-    name = name.replace(/\w\S*/g, (w) =>
-      w.replace(/^\w/, (c) => c.toUpperCase())
-    );
+    name = name.replace(/\w\S*/g, (w) => w.replace(/^\w/, (c) => c.toUpperCase()));
     const propName = name.replace(/ /g, "");
-    Object.defineProperty(this, propName, {
-      get: function getMyProperty() {
-        return this._fields[name];
-      },
-      set: function setMyProperty(value) {
-        this._fields[name] = value;
-      },
-    });
+    // Creates getter and setter methods for each field added
+    if (!propName in this) {
+      Object.defineProperty(this, propName, {
+        get: function getMyProperty() {
+          return this._fields[name];
+        },
+        set: function setMyProperty(value) {
+          this._fields[name] = value;
+        },
+      });
+    }
     this._fields[name] = value;
   }
 
-  field(name) {
+  valueOfField(name) {
     return this._fields[name];
   }
 }
