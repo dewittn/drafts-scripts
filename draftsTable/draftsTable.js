@@ -84,6 +84,10 @@ class ATTable {
     return this._tableName;
   }
 
+  get params() {
+    return this._params;
+  }
+
   get offset() {
     return this._offset;
   }
@@ -109,7 +113,7 @@ class ATTable {
   }
 
   findById(id) {
-    const response = this._makeHTTPRequest({ method: "GET" }, id);
+    const response = this._makeHTTPRequest({ method: "GET", parameters: this._params }, id);
     if (!response) return false;
     return ATRecord.create(response);
   }
@@ -138,7 +142,7 @@ class ATTable {
       parameters: this._params,
     };
     const response = this._makeHTTPRequest(payload);
-    if (!response.records && !response.records.length) return false;
+    if (!response.records || !response.records.length) return false;
     return ATRecord.create(response.records[0]);
   }
 
@@ -201,14 +205,11 @@ class ATTable {
   }
 
   // Create new records in table
-  createRecords(records = this._records, typecast) {
-    // Save record;
+  createRecords(records = this._records, typecast = false) {
     if (!Array.isArray(records)) records = [records];
-    // for (const record of records) {
-    //   requestBody.push({ fields: record.fields });
-    // }
+
     const requestBody = records.map((record) => ({ fields: record.fields }));
-    const payload = { method: "POST", data: { records: requestBody } };
+    const payload = { method: "POST", data: { records: requestBody, typecast: typecast } };
     return this._makeHTTPRequest(payload);
   }
 
@@ -248,7 +249,17 @@ class ATTable {
   findAllRecords() {}
 
   // Calls update() and create()
-  saveRecords() {}
+  saveRecords(records) {
+    const recordsToUpdate = records.map((record) => {
+      if (record.id) return record;
+    });
+    const recordsToCreate = records.map((record) => {
+      if (!record.id) return record;
+    });
+
+    this.update(recordsToUpdate);
+    this.createRecords(recordsToCreate);
+  }
 
   // Debugging function to make sure Parameters are begin set correctly
   returnParameter(key) {
@@ -280,7 +291,7 @@ class ATTable {
 
     if (response.success) {
       // Parse results and record debug info.
-      var text = response.responseText;
+      let text = response.responseText;
       results = JSON.parse(text);
       debugMessage = debugMessage + `Reponse: ${text}`;
 
@@ -289,7 +300,7 @@ class ATTable {
       this._params = {};
     } else {
       debugMessage =
-        debugMessage + errorCode + `: ${this._checkError(response.statusCode)}\n${JSON.stringify(payload)}`;
+        debugMessage + response.statusCode + `: ${this._checkError(response.statusCode)}\n${JSON.stringify(payload)}`;
     }
     if (this._debug) console.log(debugMessage);
     return results;
@@ -309,6 +320,11 @@ class ATTable {
       503: "Service Unavailable",
     };
     return errorCodes[code];
+  }
+
+  // Helper method that throws an alert displaying the variable passed to it
+  _debugVariable(value) {
+    alert(JSON.stringify(value));
   }
 }
 
@@ -346,9 +362,10 @@ class ATRecord {
   }
 
   addField(name, value) {
-    //Field names must be in Capital Case for Airtable compatibility
+    //Field names are created using Capital Case for Airtable compatibility
     name = name.replace(/\w\S*/g, (w) => w.replace(/^\w/, (c) => c.toUpperCase()));
     const propName = name.replace(/ /g, "");
+
     // Creates getter and setter methods for each field added
     if (!propName in this) {
       Object.defineProperty(this, propName, {
