@@ -188,9 +188,11 @@ class ATTable {
   }
 
   sort(field, direction) {
-    const sort = { field: field, direction: direction };
-    this._sort.push(sort);
-    this._params["sort"] = this._sort;
+    this._sort.push({ field: field, direction: direction });
+    this._sort.forEach((sort, i) => {
+      this._params[`sort[${i}][field]`] = sort.field;
+      this._params[`sort[${i}][direction]`] = sort.direction;
+    });
     return this;
   }
 
@@ -250,15 +252,21 @@ class ATTable {
 
   // Calls update() and create()
   saveRecords(records) {
-    const recordsToUpdate = records.map((record) => {
-      if (record.id) return record;
-    });
-    const recordsToCreate = records.map((record) => {
-      if (!record.id) return record;
-    });
+    const recordsToUpdate = records
+      .map((record) => {
+        if (record.id) return record;
+      })
+      .filter(Boolean);
+    const recordsToCreate = records
+      .map((record) => {
+        if (!record.id) return record;
+      })
+      .filter(Boolean);
 
-    this.update(recordsToUpdate);
-    this.createRecords(recordsToCreate);
+    let updateResult, createResult;
+    if (recordsToUpdate?.length) updateResult = this.update(recordsToUpdate);
+    if (recordsToCreate?.length) createResult = this.createRecords(recordsToCreate);
+    return updateResult || createResult ? true : false;
   }
 
   // Debugging function to make sure Parameters are begin set correctly
