@@ -69,7 +69,7 @@ class Ulysses {
 
   // Creates a new note attachment on a sheet.
   attachNote(id, text, textFormat = "markdown") {
-    if (!id) return this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "attachNote")) return;
 
     let params = {
       id: id,
@@ -83,7 +83,7 @@ class Ulysses {
   // Changes an existing note attachment on a sheet.
   // Requires authorization.
   updateNote(id, text, index, textFormat) {
-    if (!id) return this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "updateNote")) return;
 
     this._authorize();
     let params = {
@@ -100,6 +100,8 @@ class Ulysses {
   // Removes a note attachment from a sheet.
   // Requires authorization.
   removeNote(id, index) {
+    if (!this._typeCheckString(id, "removeNote")) return;
+
     this._authorize();
     let params = {
       id: id,
@@ -113,7 +115,7 @@ class Ulysses {
   // Creates a new image attachment on a sheet.
   // Image data must use base64 encoding.
   attachImage(id, image, imageFormat, filename) {
-    if (!id) return this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "attachImage")) return;
 
     let params = {
       id: id,
@@ -129,7 +131,7 @@ class Ulysses {
   // Requires an identifier to specify which sheet to attach keywords
   // Default identifier is set when new sheet is created.
   attachKeywords(id, keywords) {
-    if (!id) return this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "attachKeywords")) return;
 
     const params = {
       id: id,
@@ -142,7 +144,7 @@ class Ulysses {
   // Removes one or more keywords from a sheet.
   // Requires authorization.
   removeKeywords(id, keywords) {
-    if (!id) return this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "removeKeywords")) return;
 
     this._authorize();
     const params = {
@@ -157,6 +159,8 @@ class Ulysses {
   // Changes the title of a group.
   // Requires authorization.
   setGroupTitle(group, title) {
+    if (!this._typeCheckString(group, "setGroupTitle")) return;
+
     this._authorize();
     const params = {
       group: group,
@@ -170,7 +174,7 @@ class Ulysses {
   // Changes the first paragraph of a sheet.
   // Requires authorization.
   setSheetTitle(id, title, type) {
-    if (!id) return this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "setSheetTitle")) return;
 
     this._authorize();
     let params = {
@@ -186,7 +190,7 @@ class Ulysses {
   // Moves an item (sheet or group) to a target group and/or to a new position.
   // Requires authorization.
   move(id, targetGroup, index) {
-    if (!id) return this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "move")) return;
 
     this._authorize();
     let params = {
@@ -201,7 +205,7 @@ class Ulysses {
 
   // Copies an item (sheet or group) to a target group and/or to a new position.
   copy(id, targetGroup, index) {
-    if (!id) this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "copy")) return;
 
     let params = {
       id: id,
@@ -215,7 +219,7 @@ class Ulysses {
   // Moves an item (sheet or group) to the trash.
   // Requires authorization.
   trash(id) {
-    if (!id) this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "trash")) return;
 
     this._authorize();
     const params = {
@@ -229,7 +233,7 @@ class Ulysses {
   // Retrieves information about an item (sheet or group).
   // Requires authorization.
   getItem(id, recursive = "Yes") {
-    if (!id) this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "getItem")) return;
 
     this._authorize();
     const params = {
@@ -258,7 +262,7 @@ class Ulysses {
   // Retrieves the contents (text, notes, keywords) of a sheet.
   // Requires authorization.
   readSheet(id, text = "No") {
-    if (!id) return this._displayErrorMessage("TargetID missing!");
+    if (!this._typeCheckString(id, "readSheet")) return;
 
     this._authorize();
     const params = {
@@ -436,7 +440,7 @@ class Ulysses {
     const varType = Object.prototype.toString.call(variable).slice(8, -1).toLowerCase();
     if (varType == "string") return true;
     this._continueWithWarning(
-      "Type mismatch error! Check the logs.",
+      `Ulysses-v2.js, ${location}: Incorret or missing value!`,
       `Type mismatch: Ulysses-v2.js, ${location}\nExpected type 'string', got '${varType}' instead.`
     );
     return false;
@@ -456,7 +460,7 @@ class Ulysses {
 
   _continueWithWarning(message, details) {
     app.displayWarningMessage(message);
-    console.log(`******* Warning *******\n${details}`);
+    if (this._debug) console.log(`******* Warning *******\n${details}`);
   }
 
   // Helper method that throws an alert displaying the variable passed to it
