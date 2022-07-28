@@ -39,8 +39,7 @@ class Ulysses {
     if (this._textFormatCheck(textFormat)) params["format"] = textFormat;
     if (this._indexCheck(index)) params["index"] = index;
 
-    const response = this._openCallback("new-sheet", params);
-    return response;
+    return this._openCallback("new-sheet", params);
   }
 
   // Creates a new group.
@@ -49,8 +48,7 @@ class Ulysses {
     if (parent) params["parent"] = parent;
     if (this._indexCheck(index)) params["index"] = index;
 
-    const response = this._openCallback("new-group", params);
-    return response;
+    return this._openCallback("new-group", params);
   }
 
   // Inserts or appends text to a sheet.
@@ -69,7 +67,7 @@ class Ulysses {
   }
 
   // Creates a new note attachment on a sheet.
-  attachNote(id, text, textFormat) {
+  attachNote(id, text, textFormat = "markdown") {
     if (!id) return this._displayErrorMessage("TargetID missing!");
 
     let params = {
@@ -240,7 +238,7 @@ class Ulysses {
     };
 
     const response = this._openCallback("get-item", params);
-    return JSON.parse(response.item);
+    return response?.item ? JSON.parse(response.item) : response;
   }
 
   // Retrieves information about the root sections. Can be used to get a full listing of the entire Ulysses library.
@@ -253,7 +251,7 @@ class Ulysses {
     };
 
     const response = this._openCallback("get-root-items", params);
-    return JSON.parse(response.items);
+    return response?.items ? JSON.parse(response.items) : response;
   }
 
   // Retrieves the contents (text, notes, keywords) of a sheet.
@@ -269,7 +267,7 @@ class Ulysses {
     };
 
     const response = this._openCallback("read-sheet", params);
-    return JSON.parse(response.sheet);
+    return response?.sheet ? JSON.parse(response.sheet) : response;
   }
 
   // Gets the QuickLook URL for a sheet. This is the sheet’s location on the file system.
@@ -285,7 +283,7 @@ class Ulysses {
     };
 
     const response = this._openCallback("get-quick-look-url", params);
-    return response.url;
+    return response?.url ? JSON.parse(response.url) : response;
   }
 
   // Opens an item (sheet or group) with a particular identifier in Ulysses.
@@ -339,27 +337,37 @@ class Ulysses {
   // "Private" Functions
   // ***********
 
+  // Expects string, Returns true or false
   _textFormatCheck(textFormat) {
-    if (textFormat) return textFormat.match(/^(markdown|text|html)$/);
+    if (!this._typeCheckString(textFormat, "_textFormatCheck")) return false;
+    return textFormat.match(/^(markdown|text|html)$/);
   }
 
+  // Expects int, Returns true or false
   _indexCheck(index) {
     return Number.isInteger(index);
   }
 
+  // Expects string, Returns true or false
   _potisionCheck(potision) {
+    if (!this._typeCheckString(potision, "_potisionCheck")) return false;
     if (potision) return potision.match(/^(begin|end)$/);
   }
 
+  // Expects string, Returns true or false
   _newlineCheck(newLine) {
+    if (!this._typeCheckString(newLine, "_newlineCheck")) return false;
     if (newLine) return newLine.match(/^(prepend|append|enclose)$/);
   }
 
+  // Expects string, Returns true or false
   _typeCheck(type) {
+    if (!this._typeCheckString(type, "_typeCheck")) return false;
     if (type) return type.match(/^(heading[1-6]|comment|filename)$/);
   }
 
   _imageFormatCheck(imageFormat) {
+    if (!this._typeCheckString(imageFormat, "_imageFormatCheck")) return false;
     if (imageFormat) return imageFormat.match(/^(png|pdf|jpg|raw|gif)$/);
   }
 
@@ -395,14 +403,9 @@ class Ulysses {
     const url = `${this._callbackURL}${callbackAction}?${queryString}`;
 
     const success = app.openURL(url);
-    if (success) {
-      message = message + callbackAction + ", ran successfully.";
-    } else {
-      // something went wrong or was cancelled
-      message =
-        message + callbackAction + ", failed." + `\nError ${response["errorCode"]}: ${response["errorMessage"]}`;
-      this._displayErrorMessage(message);
-    }
+    const successMessage = `${callbackAction}, ran successfully.`;
+    const errorMessage = `${callbackAction}, failed.\nError ${response["errorCode"]}: ${response["errorMessage"]}`;
+    message = success ? message + successMessage : message + errorMessage;
 
     if (this._debug) {
       console.log(message);
@@ -421,15 +424,9 @@ class Ulysses {
 
     const success = cb.open();
     const response = cb.callbackResponse;
-    if (success) {
-      message = message + callbackAction + ", ran successfully.";
-    } else {
-      // something went wrong or was cancelled
-      message =
-        message + callbackAction + ", failed.\n" + "Error " + response["errorCode"] + ": " + response["errorMessage"];
-      this._displayErrorMessage(message);
-      context.fail();
-    }
+    const successMessage = `${callbackAction}, ran successfully.`;
+    const errorMessage = `${callbackAction}, failed.\nError ${response["errorCode"]}: ${response["errorMessage"]}`;
+    message = success ? message + successMessage : message + errorMessage;
 
     if (this._debug) {
       console.log(message);
@@ -437,6 +434,16 @@ class Ulysses {
       console.log(`Repsonse: ${JSON.stringify(response)}`);
     }
     return response;
+  }
+
+  _typeCheckString(variable, location) {
+    const varType = Object.prototype.toString.call(variable).slice(8, -1).toLowerCase();
+    if (varType == "string") return true;
+    this._continueWithWarning(
+      "Type mismatch error! Check the logs.",
+      `Type mismatch: Ulysses-v2.js, ${location}\nExpected type 'string', got '${varType}' instead.`
+    );
+    return false;
   }
 
   _displayErrorMessage(message) {
@@ -449,6 +456,11 @@ class Ulysses {
     app.displayInfoMessage(message);
     context.cancel();
     return false;
+  }
+
+  _continueWithWarning(message, details) {
+    app.displayWarningMessage(message);
+    console.log(`******* Warning *******\n${details}`);
   }
 
   // Helper method that throws an alert displaying the variable passed to it
