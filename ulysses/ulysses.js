@@ -21,8 +21,9 @@ class Ulysses {
   }
 
   set debug(state) {
-    if (!typeof state === "boolean") this._displayErrorMessage("Error: debug can only be set to true or false.");
-    this._debug = state;
+    if (state == false) return;
+
+    this._debug = true;
   }
 
   // ***********
@@ -396,27 +397,18 @@ class Ulysses {
   }
 
   _openURL(callbackAction, params = {}) {
-    let message = "\n-------\nAction ";
     const queryString = Object.keys(params)
       .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
       .join("&");
     const url = `${this._callbackURL}${callbackAction}?${queryString}`;
 
     const success = app.openURL(url);
-    const successMessage = `${callbackAction}, ran successfully.`;
-    const errorMessage = `${callbackAction}, failed.\nError ${response["errorCode"]}: ${response["errorMessage"]}`;
-    message = success ? message + successMessage : message + errorMessage;
-
-    if (this._debug) {
-      console.log(message);
-      console.log(`Params: ${JSON.stringify(params)}`);
-    }
+    if (this._debug) this._logResponse(callbackAction, params, success);
   }
 
   // Open this._callbackURL
   _openCallback(callbackAction, params = {}, waitForResponse = true) {
     // open and wait for result
-    let message = "\n-------\nAction ";
     let cb = CallbackURL.create();
     cb.waitForResponse = waitForResponse;
     cb.baseURL = this._callbackURL + callbackAction;
@@ -424,16 +416,20 @@ class Ulysses {
 
     const success = cb.open();
     const response = cb.callbackResponse;
+    if (this._debug) this._logResponse(callbackAction, params, success, response);
+
+    return response;
+  }
+
+  _logResponse(callbackAction, params, success, response = null) {
+    let message = "\n-------\nAction ";
     const successMessage = `${callbackAction}, ran successfully.`;
     const errorMessage = `${callbackAction}, failed.\nError ${response["errorCode"]}: ${response["errorMessage"]}`;
     message = success ? message + successMessage : message + errorMessage;
 
-    if (this._debug) {
-      console.log(message);
-      console.log(`Params: ${JSON.stringify(params)}`);
-      console.log(`Repsonse: ${JSON.stringify(response)}`);
-    }
-    return response;
+    console.log(message);
+    console.log(`Params: ${JSON.stringify(params)}\n`);
+    if (response) console.log(`Repsonse: ${JSON.stringify(response)}`);
   }
 
   _typeCheckString(variable, location) {
