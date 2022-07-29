@@ -373,9 +373,10 @@ class ATRecord {
     //Field names are created using Capital Case for Airtable compatibility
     name = name.replace(/\w\S*/g, (w) => w.replace(/^\w/, (c) => c.toUpperCase()));
     const propName = name.replace(/ /g, "");
+    const propExists = propName in this;
 
-    // Creates getter and setter methods for each field added
-    if (!propName in this) {
+    if (propExists == false) {
+      // Creates getter and setter methods for each field added
       Object.defineProperty(this, propName, {
         get: function getMyProperty() {
           return this._fields[name];
