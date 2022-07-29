@@ -154,7 +154,15 @@ function updateSlugOfActiveRecord() {
 }
 
 function lookupTragetID() {
-  if (!this._activeRecord.UlyssesID) return this._addMissingTargetId();
+  if (this._activeRecord.UlyssesID == undefined) {
+    const validId = this._addMissingTargetId();
+    if (validId == undefined) return undefined;
+
+    // Update Pipeline with a valid Ulysses ID
+    this._activeRecord.addField("UlyssesID", validId);
+    this._saveActiveRecord();
+  }
+
   return this._activeRecord.UlyssesID;
 }
 
@@ -221,7 +229,9 @@ function updateDraftWithTag(workingDraft, tag) {
   workingDraft.update();
 }
 
-const lookupActionBy = (destination) => Action.find(this._destinations[destination].draftAction);
+function lookupActionBy(destination) {
+  return Action.find(this._destinations[destination].draftAction);
+}
 
 // ********************
 // ** Ulysses Functions
@@ -254,6 +264,7 @@ function returnDestinationOfSheet(sheet) {
 function updateStatusOfSheet(targetId, newStatus) {
   if (!targetId) return;
 
+  // Debug this
   const sheet = this._retrieveSheetById(targetId);
   const currentStatus = this._returnStatusOfSheet(sheet);
   if (currentStatus == newStatus) return;
@@ -265,9 +276,6 @@ function updateStatusOfSheet(targetId, newStatus) {
 
 function createSheetInUlyssesWith(workingDraft) {
   // Process Draft
-  const {
-    _createSheetInUlyssesWith: { excerptText },
-  } = this._settings;
   const destination = this._getDestinationFromDraft(workingDraft);
   const groupID = this._destinations[destination].groupID;
   const content = this._ulysses.convertMarkdown(workingDraft.content);
@@ -276,13 +284,32 @@ function createSheetInUlyssesWith(workingDraft) {
   // Create new sheet and attach keywords + note
   const newSheet = this._ulysses.newSheet(content, groupID);
   this._ulysses.attachKeywords(newSheet.targetId, keywords);
-  this._ulysses.attachNote(newSheet.targetId, excerptText);
+  this._attachDefaultNotes(newSheet.targetId);
 }
 
-const getItemsFromUlyssesV2 = (targetId) => this._ulysses.getItem(targetId);
-const retrieveSheetById = (targetId) => this._ulysses.readSheet(targetId);
 function getItemsFromUlyssesV1(targetId) {
-  return this._ulysses.getItem(targetId);
+  const emptySet = { sheets: {} };
+  if (targetId == null || this._typeCheckString(targetId, "getItemsFromUlyssesV1") == false) return emptySet;
+
+  const items = this._ulysses.getItem(targetId);
+  return items?.errorCode ? emptySet : items;
+}
+
+function retrieveSheetById(targetId) {
+  return this._ulysses.readSheet(targetId);
+}
+
+function attachDefaultNotes(targetId) {
+  if (!this._typeCheckString(targetId, "attachDefaultNotes")) return false;
+
+  const { excerptText, cbData: darftsCallbackData, markdownLinks } = this._settings;
+  this._ulysses.attachNote(targetId, excerptText);
+
+  // markdownLinks.links.forEach((link) => this._ulysses.attachNote(cbData.baseURL + cbData.runActionParams );
+  this._ulysses.attachNote(
+    targetId,
+    `[Content Pipeline: Update Status](drafts://x-callback-url/runAction?action=updateStatusWithUlyssesID&text=${targetId})`
+  );
 }
 
 // ********************
@@ -315,7 +342,7 @@ function lookUpAirTableFieldName(destination) {
 function createRecordWith(fields) {
   // let record = this._table.newRecord();
   // Object.entries(fields).forEach(([field, value]) => record.addField(field, value));
-  return new ATRecord.create({ id: null, fields: fields });
+  return ATRecord.create({ id: null, fields: fields });
 }
 
 function updateRecordWith(record, fields) {
