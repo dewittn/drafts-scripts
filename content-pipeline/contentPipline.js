@@ -147,10 +147,11 @@ class ContentPipeline {
 
   // **************
   // * addSheetToPipeline()
-  // * Creates a new Draft from a template or a black with a destination tag
+  // * Adds an existing Ulysses sheet to the pipeline
   // **************
   addSheetToPipeline(sheetID) {
     // Retrieve settings
+    const { excerptText } = this._settings;
     const { infoMessage, errorMessage, successMessage, menuSettings } = this._settings.addSheetToPipeline;
 
     if (!sheetID) {
@@ -165,9 +166,8 @@ class ContentPipeline {
     this._activeRecord = this._retrieveRecordByField("UlyssesID", sheetID);
     if (this._activeRecord) return this._displayInfoMessage(infoMessage);
 
+    // Lookup info about the sheet
     const sheet = this._retrieveSheetById(sheetID);
-
-    // Select Status & destination
     const status = this._returnStatusOfSheet(sheet);
     const destination = this._returnDestinationOfSheet(sheet);
 
@@ -182,9 +182,11 @@ class ContentPipeline {
     this._activeRecord = this._createRecordWith(fields);
 
     // Save to Pipeline
-    if (!this._saveActiveRecord()) return this._displayErrorMessage(errorMessage);
+    if (!this._saveActiveRecord())
+      return this._displayErrorMessage(errorMessage, { function: "addSheetToPipeline", ...fields });
 
-    // Update and save Sheet
+    // Add default notes to sheet
+    this._attachDefaultNotes(sheet.targetId);
     // this._updateDraftWithTag(workingDraft, status);
     // this._updateDraftWithTag(workingDraft, destination);
     // defualtTags.forEach((tag) => this._updateDraftWithTag(workingDraft, tag));
@@ -219,7 +221,8 @@ class ContentPipeline {
     this._activeRecord = this._createRecordWith(fields);
 
     // Save to Pipeline
-    if (!this._saveActiveRecord()) return this._displayErrorMessage(errorMessage);
+    if (!this._saveActiveRecord())
+      return this._displayErrorMessage(errorMessage, { function: "addDraftToPipeline", ...fields });
 
     // Update and save draft
     this._updateDraftWithTag(workingDraft, status);
@@ -251,7 +254,7 @@ class ContentPipeline {
     // Set _activeRecord to the selected record and run next function
     const index = menu.fieldValues[menuPicker.name];
     this._activeRecord = records[index];
-    this._functionToRunNext(menu.buttonPressed, this._activeRecord);
+    this._functionToRunNext(menu.buttonPressed, this._activeRecord.id);
   }
 
   // **************
@@ -262,7 +265,8 @@ class ContentPipeline {
     const { errorMessage, menuSettings } = this._settings.modifyActiveRecord;
 
     if (recordID) this._activeRecord = this._retrieveRecordById(recordID);
-    if (!this._activeRecord) return this._displayErrorMessage(errorMessage);
+    if (!this._activeRecord)
+      return this._displayErrorMessage(errorMessage, { function: "modifyActiveRecord", recordID: recordID });
 
     menuSettings.menuMessage = menuSettings.menuMessage.concat(this._activeRecord.Title);
 
@@ -278,7 +282,14 @@ class ContentPipeline {
   // * Open content in Drafts or Ulysses
   // **************
   openContent(contentID, type = "AirTableID") {
-    if (!contentID) return this._displayErrorMessage("openContent: content ID missing!");
+    // What happens when ActiveRecord is already set?
+    // Making another DB call is pointless
+    if (!contentID)
+      return this._displayErrorMessage("Content ID missing!", {
+        function: "openContent",
+        contentID: contentID,
+        type: type,
+      });
     if (type == "AirTableID") this._activeRecord = this._retrieveRecordById(contentID);
 
     this._saveRecentRecord();
@@ -289,6 +300,9 @@ class ContentPipeline {
 
     // Check for UlyssesID and open if found, add if not
     const ulyssesID = type == "UlyssesID" ? contentID : this._lookupTragetID();
+    if (draftsID == undefined && ulyssesID == undefined)
+      this._displayErrorMessage("Error: missing a valid Drafts ID or Ulysses ID. Cannot Continue!");
+
     this._ulysses.open(ulyssesID);
   }
 
@@ -297,13 +311,13 @@ class ContentPipeline {
   // * Update the status of the current draft
   // **************
   updateCurrentDraft(workingDraft = draft) {
-    this._activeRecord = this._retrieveRecordByField("DraftsID", workingDraft.uuid);
+    const draftInPipeline = this._retrieveRecordByField("DraftsID", workingDraft.uuid);
 
     // If is not Pipeline prompt to add it
     // If adding it fails exit function
-    if (!this._activeRecord && !this._addDraftToPipelinePrompt(workingDraft)) return context.cancel();
+    if (!draftInPipeline && !this._addDraftToPipelinePrompt(workingDraft)) return context.cancel();
 
-    return this.updateStatusOfActiveRecord();
+    return this.updateStatusOfRecord(draftInPipeline.id);
   }
 
   // **************
@@ -349,8 +363,12 @@ class ContentPipeline {
     if (ulyssesID) this._activeRecord = this._retrieveRecordByField("UlyssesID", ulyssesID);
 
     // Lookup record if recordID is provided
-    if (!this._activeRecord) return this._displayErrorMessage(errorMessage);
-
+    if (!this._activeRecord)
+      return this._displayErrorMessage(errorMessage, {
+        function: "updateStatusOfRecord",
+        contentID: contentID,
+        type: type,
+      });
     const currentStatus = this._activeRecord.Status;
 
     // Create and show menu
@@ -369,8 +387,7 @@ class ContentPipeline {
         break;
       case "Writing":
         if (draftsID) this._addDraftToUlyssesPrompt(Draft.find(draftsID));
-      case "Editing":
-      case "Polishing":
+      default:
         this._updateSlugOfActiveRecord();
     }
     this._updateStatusOfDraft(draftsID, newStatus);
@@ -378,7 +395,11 @@ class ContentPipeline {
 
     // Update ATRecord status and save changes
     this._activeRecord.Status = newStatus;
-    if (!this._saveActiveRecord()) return this._displayErrorMessage(errorMessage2);
+    if (!this._saveActiveRecord())
+      return this._displayErrorMessage(errorMessage2, {
+        function: "updateStatusOfRecord",
+        recordData: JSON.stringify(this._activeRecord),
+      });
 
     // Display Success Message when Pipeline has been update
     app.displaySuccessMessage(successMessage + newStatus);
@@ -409,6 +430,7 @@ ContentPipeline.prototype._updateStatusOfSheet = updateStatusOfSheet;
 ContentPipeline.prototype._createSheetInUlyssesWith = createSheetInUlyssesWith;
 ContentPipeline.prototype._getItemsFromUlysses = getItemsFromUlyssesV1;
 ContentPipeline.prototype._retrieveSheetById = retrieveSheetById;
+ContentPipeline.prototype._attachDefaultNotes = attachDefaultNotes;
 
 // AirTable Functions - cp/model.js
 ContentPipeline.prototype._retrieveRecordById = retrieveRecordById;
@@ -435,10 +457,13 @@ ContentPipeline.prototype._statusIsNotLast = statusIsNotLast;
 // Utility Functions - Utilities.js
 ContentPipeline.prototype._displayInfoMessage = displayInfoMessage;
 ContentPipeline.prototype._displayErrorMessage = displayErrorMessage;
+ContentPipeline.prototype._continueWithWarning = continueWithWarning;
 ContentPipeline.prototype._parseJSONFromiCloudFile = parseJSONFromiCloudFile;
-ContentPipeline.prototype._debugVariable = debugVariable;
 ContentPipeline.prototype._functionToRunNext = functionToRunNext;
+ContentPipeline.prototype._typeCheckString = typeCheckString;
+ContentPipeline.prototype._debugVariable = debugVariable;
 ContentPipeline.prototype._sleep = sleep;
+ContentPipeline.prototype._lookUpDestinationID = lookUpDestinationID;
 
 // Text Functions - Utilities.js
 ContentPipeline.prototype._convertTitleToSlug = convertTitleToSlug;
