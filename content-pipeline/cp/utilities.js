@@ -7,9 +7,15 @@ function sleep(p_intMSDelay) {
   }
 }
 
-function displayErrorMessage(message) {
-  if (this._debug) console.log(message);
+function displayErrorMessage(message, details = {}) {
   app.displayErrorMessage(message);
+  const errorLog = Draft.find("F59242F5-8096-44A6-B8DC-529DA4082AAC");
+  const timeCode = new Date().toString();
+  errorLog.append(`**${message}**`, `\n\n--------- ${timeCode}\n`);
+  for (const [key, value] of Object.entries(details)) {
+    errorLog.append(`- ${key}: ${value}`, "\n");
+  }
+  errorLog.update();
 
   context.cancel();
   return false;
@@ -39,7 +45,31 @@ function parseJSONFromiCloudFile(file) {
 function functionToRunNext(name, args) {
   if (!name) return this._displayErrorMessage("Error: Function name missing (_functionToRunNext)");
   if (!Array.isArray(args)) args = [args];
+
+  // Log & run function
+  console.log(`\n\n#######\nRunning function: ${name}`);
   return this[name].apply(this, args);
+}
+
+function typeCheckString(variable, location) {
+  const varType = Object.prototype.toString.call(variable).slice(8, -1).toLowerCase();
+  if (varType == "string") return true;
+  this._continueWithWarning(
+    "Type mismatch error! Check the logs.",
+    `Type mismatch: Ulysses-v2.js, ${location}\nExpected type 'string', got '${varType}' instead.`
+  );
+  return false;
+}
+
+function continueWithWarning(message, details) {
+  app.displayWarningMessage(message);
+  console.log(`******* Warning *******\n${details}`);
+}
+
+function lookUpDestinationID(key) {
+  const id = this._destinations[key];
+
+  return id != undefined ? id : { groupID: null };
 }
 
 // ********************
