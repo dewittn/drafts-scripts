@@ -125,34 +125,33 @@ function addMissingTargetId() {
   // Get All items in group from Ulysses
   const destinationKey = this._activeRecord.Destination.toLowerCase();
 
-  try {
-    // This will throw an error if no groupID is found
-    const { groupID } = this._destinations[destinationKey];
-    const { sheets } = this._getItemsFromUlysses(groupID);
+  // This will throw an error if no groupID is found
+  const { groupID } = this._lookUpDestinationID(destinationKey);
+  const { sheets } = this._getItemsFromUlysses(groupID);
+  const foundSheets = Object.entries(sheets).length > 0;
 
+  if (foundSheets) {
     // Construct prompt
     const pickerItems = sheets.map((sheet) => sheet.title);
     menuSettings.menuItems.unshift({ type: "picker", data: menuPicker });
     menuPicker["columns"] = [pickerItems];
-  } catch (error) {
-    this._displayInfoMessage(`No matching destitnation found for: ${destinationKey}`);
   }
 
   menuSettings.menuMessage = menuSettings.menuMessage.concat(this._activeRecord.Title);
   const addId = this._buildMenu(menuSettings);
 
-  // Display prompt and save targetID to Pipeline
-  if (!addId.show()) return context.cancel();
-  const index = addId.fieldValues["sheetIndex"];
-  let targetId = addId.fieldValues["targetID"];
+  let validSheet;
+  do {
+    // Display prompt and save targetID to Pipeline
+    if (!addId.show()) return context.cancel();
+    const indexValue = addId.fieldValues["sheetIndex"];
+    const textFieldValue = addId.fieldValues["targetID"];
+    const targetId = foundSheets ? sheets[indexValue].identifier : textFieldValue;
 
-  // Set this._ulyssesTargetID based on prompt response
-  if (!targetId) targetId = sheets[index].identifier;
+    validSheet = this._ulysses.readSheet(targetId);
+  } while (validSheet["errorCode"] == 1);
 
-  // Update Pipline with ID and open sheet
-  this._activeRecord.addField("UlyssesID", targetId);
-  this._saveActiveRecord();
-  return targetId;
+  return validSheet.identifier;
 }
 
 function createPickerFromRecordsV2(records) {
