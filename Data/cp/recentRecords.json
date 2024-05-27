@@ -1,0 +1,307 @@
+{
+  "Content" : [
+    {
+      "id" : "recFc71NlkkOEDslI",
+      "fields" : {
+        "docID" : "HNsFvbjS_q1VMNeH1Qe58g",
+        "docIDType" : "UlyssesID",
+        "Updated" : "2024-04-23T13:09:39.674Z",
+        "Title" : "Innocent Dreams: Author Update, April 2024",
+        "Destination" : "newsletter",
+        "Status" : "On Deck"
+      }
+    },
+    {
+      "id" : "recK6wvh9OhJOg0Hg",
+      "fields" : {
+        "docID" : "1F72E00D-B0CB-4761-9BBC-94953088959A",
+        "docIDType" : "DraftsID",
+        "Updated" : "2024-04-17T12:47:25.481Z",
+        "Title" : "Incorporating Magical Realism",
+        "Destination" : "beyond the book",
+        "Status" : "Developing"
+      }
+    },
+    {
+      "id" : "rechlJPLfmPONOaZ9",
+      "fields" : {
+        "docID" : "VwPO_t9D-5P6oM_WsnKJ-A",
+        "docIDType" : "UlyssesID",
+        "Destination" : "newsletter",
+        "Status" : "On Deck",
+        "Title" : "Innocent Dreams: Author Update, March 2024",
+        "Updated" : "2024-04-17T11:42:10.808Z"
+      }
+    },
+    {
+      "id" : "recDqLyXAbeu6OTux",
+      "fields" : {
+        "docID" : "JhrZeCawJx5wb6D41OWlKg",
+        "docIDType" : "UlyssesID",
+        "Updated" : "2024-04-08T15:20:38.810Z",
+        "Title" : "Why do we shame work that does not pay?",
+        "Destination" : "medium.com",
+        "Status" : "On Deck"
+      }
+    },
+    {
+      "id" : "recxNXOP4cIHeRHsl",
+      "fields" : {
+        "docID" : "8C32C443-6332-42C9-80A0-FA1B6DFCF2D5",
+        "docIDType" : "DraftsID",
+        "Title" : "INBAR: Film Update, April 2024",
+        "Status" : "Drafting",
+        "Updated" : "2024-03-21T12:11:58.545Z",
+        "Destination" : "cabin23"
+      }
+    },
+    {
+      "id" : "recrAXr4oeuF02ftZ",
+      "fields" : {
+        "docID" : "-VTmi3jwlp2BMIqMDJIUPg",
+        "docIDType" : "UlyssesID",
+        "Destination" : "cabin23",
+        "Status" : "Writing",
+        "Title" : "INBAR: Film Update February 2024",
+        "Updated" : "2024-03-20T11:51:29.451Z"
+      }
+    },
+    {
+      "id" : "recOin4oRnIv9CrZJ",
+      "fields" : {
+        "docID" : "154EDECC-D328-4F3E-A12B-D900BC951A01",
+        "docIDType" : "DraftsID",
+        "Title" : "Emerging Writer Fellowship Application",
+        "Status" : "Developing",
+        "Updated" : "2024-03-11T14:18:37.738Z",
+        "Destination" : "application"
+      }
+    },
+    {
+      "id" : "reckXIRVvowqnxWsQ",
+      "fields" : {
+        "docID" : "dIadr1rmDStsG20Pm03zhw",
+        "docIDType" : "UlyssesID",
+        "Updated" : "2024-02-27T14:49:31.938Z",
+        "Title" : "Innocent Dreams: Author Update, February 2024",
+        "Destination" : "newsletter",
+        "Status" : "Writing"
+      }
+    },
+    {
+      "id" : "recZAyfD6QI5rvJM3",
+      "fields" : {
+        "docID" : "h6XiBlURtGhJWInqxhFxiw",
+        "docIDType" : "UlyssesID",
+        "Destination" : "nr.com",
+        "Status" : "Developing",
+        "Title" : "Finding Latinidad as an Adoptee",
+        "Updated" : "2024-02-11T13:53:48.314Z"
+      }
+    },
+    {
+      "id" : "recXWuoB3CGNN70XE",
+      "fields" : {
+        "docID" : "8BDTmqs5MBbys_7jzb6B3g",
+        "docIDType" : "UlyssesID",
+        "Title" : "You are one of the disappeared?",
+        "Status" : "Polishing",
+        "Updated" : "2024-02-09T13:40:55.742Z",
+        "Destination" : "nr.com"
+      }
+    },
+    {
+      "id" : "recAzeoPHjDtgqf09",
+      "fields" : {
+        "docID" : "190672A2-E2E7-4B43-BBCA-D7DAA2945E19",
+        "docIDType" : "DraftsID",
+        "Title" : "The Aftermath Project Application",
+        "Status" : "Developing",
+        "Updated" : "2024-01-26T13:22:55.880Z",
+        "Destination" : "application"
+      }
+    },
+    {
+      "id" : "recrq8YT9LqixI9Sb",
+      "fields" : {
+        "docID" : "JZENuLtCtOcVaaeO9zMgfw",
+        "docIDType" : "UlyssesID",
+        "Updated" : "2024-01-25T14:16:12.310Z",
+        "Title" : "You Sound Like A White Girl",
+        "Destination" : "social media",
+        "Status" : "On Deck"
+      }
+    },
+    {
+      "id" : "recEbAwsDE64geHGn",
+      "fields" : {
+        "docID" : "Ux4jMCVkd4g5k6itXnPLzg",
+        "docIDType" : "UlyssesID",
+        "Title" : "Innocent Dreams: Author Update, January 2024",
+        "Status" : "Polishing",
+        "Updated" : "2024-01-23T14:27:14.143Z",
+        "Destination" : "newsletter"
+      }
+    },
+    {
+      "id" : "rec2XY1RXH8qtr9Ho",
+      "fields" : {
+        "docID" : "4FF770A8-DF40-478A-B3C8-C5E8047BDDD3",
+        "docIDType" : "DraftsID",
+        "Destination" : "book review",
+        "Status" : "Developing",
+        "Title" : "How Healing Works: Get Well and Stay Well Using Your Hidden Power to Heal",
+        "Updated" : "2024-01-14T23:09:10.572Z"
+      }
+    },
+    {
+      "id" : "rechxb70PHEU0mrnP",
+      "fields" : {
+        "docID" : "8BEC813B-CA59-4F91-96F4-04624741829E",
+        "docIDType" : "DraftsID",
+        "Updated" : "2024-01-11T13:57:41.804Z",
+        "Title" : "Misfit Post",
+        "Destination" : "social media",
+        "Status" : "On Deck"
+      }
+    }
+  ],
+  "Test Table" : [
+    {
+      "id" : "recv8woEUvFO9ghYx",
+      "fields" : {
+        "docID" : "r2KgMFVf1hBsVwh1ZEXGDg",
+        "docIDType" : "UlyssesID",
+        "Title" : "This is a test of scrubText",
+        "Status" : "Writing",
+        "Updated" : "2024-01-09T13:31:34.347Z",
+        "Destination" : "nr.com"
+      }
+    },
+    {
+      "id" : "recnGjZBqgzPNHuIK",
+      "fields" : {
+        "docID" : "KT5cc1yGi-2VGcec-iZn4g",
+        "docIDType" : "UlyssesID",
+        "Title" : "Test Doc: This is a test of scrubText",
+        "Status" : "Polishing",
+        "Updated" : "2024-01-09T13:23:49.966Z",
+        "Destination" : "nr.com"
+      }
+    },
+    {
+      "id" : "rec0CjlVxcdzQNWGq",
+      "fields" : {
+        "docID" : "J3V8hUSA1GjF1nLUyyRjCQ",
+        "docIDType" : "UlyssesID",
+        "Updated" : "2024-01-09T13:17:13.240Z",
+        "Title" : "Operation Ninja Star",
+        "Destination" : "Portfolio",
+        "Status" : "Drafting"
+      }
+    },
+    {
+      "id" : "recGAVWhz5inG1COq",
+      "fields" : {
+        "docID" : "x6mAo7gvtfqVUuCvX1MhTw",
+        "docIDType" : "UlyssesID",
+        "Destination" : "coto.studio",
+        "Status" : "On Deck",
+        "Title" : "A final Test Draft... hopefully",
+        "Updated" : "2024-01-09T13:08:39.781Z"
+      }
+    },
+    {
+      "id" : "recWXSYPGfMaY8nrg",
+      "fields" : {
+        "docID" : "rLp6sjUIoNGmtFkcBs8UVg",
+        "docIDType" : "UlyssesID",
+        "Destination" : "NR.com",
+        "Status" : "On Deck",
+        "Title" : "This is another test document",
+        "Updated" : "2024-01-09T12:54:04.712Z"
+      }
+    },
+    {
+      "id" : "recKoX7qXygnChCdL",
+      "fields" : {
+        "Title" : "My Creative process:",
+        "UlyssesID" : "ax450SUXgWvL0YFvstD6OA",
+        "Updated" : "2022-08-06T16:49:26.612Z"
+      }
+    },
+    {
+      "id" : "recH0H7mZEhiDHkKR",
+      "fields" : {
+        "Title" : "My Creative process:",
+        "UlyssesID" : "ax450SUXgWvL0YFvstD6OA",
+        "Updated" : "2022-08-06T16:48:10.972Z"
+      }
+    },
+    {
+      "id" : "rectfUokwueTzx5Cx",
+      "fields" : {
+        "Title" : "My Creative process:",
+        "UlyssesID" : "ax450SUXgWvL0YFvstD6OA",
+        "Updated" : "2022-08-06T16:47:17.175Z"
+      }
+    },
+    {
+      "id" : "recgnw3WDA9JwTFPa",
+      "fields" : {
+        "Title" : "My Creative process:",
+        "UlyssesID" : "ax450SUXgWvL0YFvstD6OA",
+        "Updated" : "2022-08-06T16:46:17.957Z"
+      }
+    },
+    {
+      "id" : "reciSQ27kPaVCOxDm",
+      "fields" : {
+        "Title" : "You are one of the disappeared?",
+        "UlyssesID" : "fugUu0N3TxAG16Icg18BgA",
+        "Updated" : "2022-08-05T16:50:43.820Z"
+      }
+    },
+    {
+      "id" : "recaJIk0IJTL9fmVV",
+      "fields" : {
+        "UlyssesID" : "O-NI049L0EbHNtKZE0O0aw",
+        "Title" : "Test Doc",
+        "DraftsID" : "E1D11EFF-A996-47F2-B6B9-EC5D5053550D",
+        "Updated" : "2022-07-29T18:52:11.562Z"
+      }
+    },
+    {
+      "id" : "recQMCFg11Rt1XPri",
+      "fields" : {
+        "Title" : "Missing Mila",
+        "UlyssesID" : "MRP3qZDw88_7P3WZIqz0_g",
+        "Updated" : "2022-05-17T11:54:29.025Z"
+      }
+    },
+    {
+      "id" : "rec5Gz6aW3I9Qxd1r",
+      "fields" : {
+        "Title" : "StreetXSW portfolio item",
+        "UlyssesID" : "-LtGawLUBaCipsY2l-Ig0A",
+        "Updated" : "2022-05-17T11:46:48.708Z"
+      }
+    },
+    {
+      "id" : "rec73nBUolqUgBW6d",
+      "fields" : {
+        "Title" : "Innocent Dreams: Author Update, September 2021",
+        "UlyssesID" : "yRSm93I1tUrtOEDGW8yl6w",
+        "Updated" : "2022-05-15T13:12:16.103Z"
+      }
+    },
+    {
+      "id" : "rec49FIp4R5FJk7NE",
+      "fields" : {
+        "Title" : "Willing Hero vs Reluctant Hero",
+        "UlyssesID" : "t6wAzRGvzBte-VNXbJl9DQ",
+        "Updated" : "2022-05-15T13:06:56.041Z"
+      }
+    }
+  ]
+}
