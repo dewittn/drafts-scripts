@@ -1,0 +1,48 @@
+---
+teamsData:
+  - id: us-ultimate
+    name: Varsity Ultimate Frisbee
+    abbr: VUS
+    sport: ultimate
+    season: spring
+    startDate: "2024-03-04"
+    calendar: US Ultimate
+    attendanceDraftID: 5E1337A5-F964-4DEC-95A8-091AE789F0B1
+    defualtTag: bvr/ultimate/us
+  - id: ms-ultimate
+    name: "MS Ultimate Frisbee"
+    abbr: MSUF
+    sport: ultimate
+    season: spring
+    calendar: MS Ultimate
+    startDate: "2024-02-20"
+    attendanceDraftID: "07AFCA9A-F93B-42F3-8E61-39DA3E599032"
+    recordDraft: 359AC178-208F-42D9-84F3-935ABA6BB38E
+    defualtTag: bvr/ultimate/ms
+    practicePlan:
+      draftTags:
+        - bvr/ultimate/ms
+        - bvr/ultimate/practice/plan
+    attendanceSettings:
+      msgConfig:
+        type: "Text"
+        recipients:
+          - "***REMOVED***"
+        bodyText: "Hey Amber, these students are absent from frisbee today: "
+  - id: msg-soccer
+    name: MS Girls Soccer
+    abbr: MSGS
+    sport: soccer
+    season: fall
+    defualtTag: bvr/soccer
+    practicePlan:
+      draftTags:
+        - bvr/soccer
+    startDate: "2023-09-06"
+    attendanceDraftID: "382D02CF-EDB1-4312-9B90-E469ED50DCD6"
+    attendanceSettings:
+      msgConfig:
+        type: "Text"
+        recipients:
+          - "***REMOVED***"
+        bodyText: "Hey Amber, these students are absent from soccer today: "
