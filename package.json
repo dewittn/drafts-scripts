@@ -1,0 +1,30 @@
+{
+  "name": "drafts-scripts",
+  "version": "0.1.0",
+  "description": "A collection of scripts for the Drafts app.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dewittn/drafts-scripts.git"
+  },
+  "keywords": [
+    "drafts",
+    "javascript"
+  ],
+  "author": "Nelson/Roberto",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dewittn/drafts-scripts/issues"
+  },
+  "homepage": "https://github.com/dewittn/drafts-scripts#readme",
+  "devDependencies": {
+    "gulp": "^5.0.0",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
