@@ -1,0 +1,94 @@
+---
+displayMsgs:
+  messageSuccess:
+  submitSuccess: Attendance has been submitted!
+  submitFailure: Attendance could not be submitted!
+  alreadySubmitted: Addendace has already been submitted today.
+  noOneAbsent: No one is absent today!
+getTeamIDFromPrompt:
+  menuSettings:
+    menuTitle: Selcet Team
+    menuMessage: Which team would you like to use?
+    isCancellable: false
+    menuItems: []
+attendaceIsReady:
+  menuSettings:
+    menuTitle: Submit Attendenace?
+    menuMessage: Attenhance has not been marked as taken. Submit it anyway?
+    menuItems:
+      - type: button
+        data:
+          name: Yes
+          value: yes
+      - type: button
+        data:
+          name: No
+          value: no
+recordScore:
+  pickerData:
+    name: score
+    label: Game Score
+  menuSettings:
+    menuTitle: What was the score?
+    menuMessage: "Remember: Your team score is always first!"
+    menuItems:
+      - type: button
+        data:
+          name: Go
+          value: go
+recordDate:
+  menuSettings:
+    menuTitle: Day of Game
+    menuMessage: When was the game played?
+    menuItems:
+      - type: button
+        data:
+          name: Today
+          value: today
+      - type: button
+        data:
+          name: Another Day
+          value: other
+getDateFromPrompt:
+  menuSettings:
+    menuTitle: Day of Game
+    menuMessage: Please select the date of the game
+    menuItems:
+      - type: datePicker
+        data:
+          name: date
+          label: Date
+          options:
+            mode: date
+      - type: button
+        data:
+          name: Ok
+          value: ok
+recordOpponent:
+  textField:
+    type: textField
+    data:
+      name: opponent
+      label: Opponent
+  menuSettings:
+    menuTitle: Name of Opponent
+    menuMessage: Please enter who you played
+    menuItems:
+      - type: button
+        data:
+          name: Ok
+          value: ok
+getLocationFromPrompt:
+  menuSettings:
+    menuTitle: Location of Game
+    menuMessage: Please where you played
+    isCancellable: false
+    menuItems:
+      - type: button
+        data:
+          name: Home
+          value: Home
+      - type: button
+        data:
+          name: Away
+          value: Away

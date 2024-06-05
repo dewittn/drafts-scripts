@@ -1,0 +1,34 @@
+{
+  "name": "drafts-scripts",
+  "version": "0.1.0",
+  "description": "A collection of scripts for the Drafts app.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dewittn/drafts-scripts.git"
+  },
+  "keywords": [
+    "drafts",
+    "javascript"
+  ],
+  "author": "Nelson/Roberto",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dewittn/drafts-scripts/issues"
+  },
+  "homepage": "https://github.com/dewittn/drafts-scripts#readme",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "gulp": "^5.0.0",
+    "gulp-rsync": "^0.1.0",
+    "fancy-log": "^2.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "gulp": "gulp",
+    "clean": "gulp clean",
+    "watch": "gulp watch"
+  }
+}
