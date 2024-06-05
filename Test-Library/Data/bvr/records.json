@@ -1,0 +1,502 @@
+{
+  "us-ultimate" : {
+    "2024" : [
+      {
+        "opponent" : "Cambridge School of Weston JV",
+        "recorded" : true,
+        "submitted" : true,
+        "formattedDate" : "04-05-2024",
+        "calLocation" : "Home",
+        "location" : "Home",
+        "date" : "2024-04-05T22:06:16.193Z",
+        "descrition" : "Home vs Cambridge school of Weston JV (04-05-2024)",
+        "draftID" : "342631CA-1B6F-4BD9-95A8-70FF9D77A6DD",
+        "result" : "Win",
+        "score" : [
+          "13",
+          "0"
+        ],
+        "calOpponent" : "CSW"
+      },
+      {
+        "opponent" : "Pingree",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-10-2024",
+        "calLocation" : "Away",
+        "location" : "Away",
+        "date" : "2024-04-10T21:26:58.915Z",
+        "descrition" : "Away vs Pingree (04-10-2024)",
+        "draftID" : "48677CEC-08C4-4E05-969F-0B088427225C",
+        "result" : "Win",
+        "score" : [
+          "13",
+          "0"
+        ],
+        "calOpponent" : "Pingree"
+      },
+      {
+        "comments" : "",
+        "opponent" : "Nobels",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-17-2024",
+        "location" : "Home",
+        "date" : "2024-04-17T22:33:43.966Z",
+        "highlights" : "BVR Ultimate’s nine freshmen were victorious against a team of 19. Ethan Chau made an incredible diving catch after running the length of the field for a score. Both Nate Thompson and Niko Reuning threw upside-down hammers to score.",
+        "descrition" : "Home vs Nobels (04-17-2024)",
+        "sumbitted" : true,
+        "result" : "Win",
+        "draftID" : "7BC286A2-6E79-45BD-ACA7-AB9A40F39F25",
+        "score" : [
+          "13",
+          "3"
+        ]
+      },
+      {
+        "comments" : "",
+        "opponent" : "Nobels",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-17-2024",
+        "location" : "Home",
+        "date" : "2024-04-17T22:33:43.966Z",
+        "highlights" : "BVR Ultimate’s nine freshmen were victorious against a team of 19. Ethan Chau made an incredible diving catch after running the length of the field for a score. Both Nate Thompson and Niko Reuning threw upside-down hammers to score.",
+        "descrition" : "Home vs Nobels (04-17-2024)",
+        "sumbitted" : true,
+        "result" : "Win",
+        "draftID" : "7BC286A2-6E79-45BD-ACA7-AB9A40F39F25",
+        "score" : [
+          "13",
+          "3"
+        ]
+      },
+      {
+        "comments" : "",
+        "opponent" : "Concord Academy",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-19-2024",
+        "location" : "Away",
+        "date" : "2024-04-19T23:49:54.783Z",
+        "highlights" : "BVR Ultimate lost its first game to Concord, playing most of the game with no subs. Niko Reuning and Arnav Bagchi made several key defensive plays in the effort.",
+        "descrition" : "Away vs Concord Academy (04-19-2024)",
+        "draftID" : "E123C0D9-A512-4574-B232-5816557EB836",
+        "result" : "Loss",
+        "sumbitted" : true,
+        "score" : [
+          "6",
+          "11"
+        ]
+      },
+      {
+        "comments" : "",
+        "opponent" : "Concord Academy",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-19-2024",
+        "location" : "Away",
+        "date" : "2024-04-19T23:49:54.783Z",
+        "highlights" : "BVR Ultimate lost its first game to Concord, playing most of the game with no subs. Niko Reuning and Arnav Bagchi made several key defensive plays in the effort.",
+        "descrition" : "Away vs Concord Academy (04-19-2024)",
+        "draftID" : "E123C0D9-A512-4574-B232-5816557EB836",
+        "result" : "Loss",
+        "sumbitted" : true,
+        "score" : [
+          "6",
+          "11"
+        ]
+      },
+      {
+        "comments" : "",
+        "opponent" : "CSW-A",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-13-2024",
+        "location" : "Home",
+        "calLocation" : "Home",
+        "date" : "2024-05-13T11:19:15.729Z",
+        "descrition" : "Home vs CSW-A (05-13-2024)",
+        "draftID" : "7579661F-C40F-4AB9-BBBF-E8E9CEF36C3C",
+        "result" : "Loss",
+        "highlights" : "BVR Ultimate played competitively against a much taller and older team of mostly Juniors and Seniors. They even came back from a three-point deficit at halftime to retake the lead. Ethan Chau made an outstanding reaction grab to score a point.",
+        "score" : [
+          "8",
+          "12"
+        ],
+        "calOpponent" : "CSW",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "CSW-A",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-13-2024",
+        "location" : "Home",
+        "calLocation" : "Home",
+        "date" : "2024-05-13T11:19:15.729Z",
+        "descrition" : "Home vs CSW-A (05-13-2024)",
+        "draftID" : "7579661F-C40F-4AB9-BBBF-E8E9CEF36C3C",
+        "result" : "Loss",
+        "highlights" : "BVR Ultimate played competitively against a much taller and older team of mostly Juniors and Seniors. They even came back from a three-point deficit at halftime to retake the lead. Ethan Chau made an outstanding reaction grab to score a point.",
+        "score" : [
+          "8",
+          "12"
+        ],
+        "calOpponent" : "CSW",
+        "sumbitted" : true
+      }
+    ]
+  },
+  "ms-ultimate" : {
+    "2024" : [
+      {
+        "opponent" : "Shady Hill JV",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-02-2024",
+        "calLocation" : "Home",
+        "location" : "Home",
+        "date" : "2024-04-02T11:56:02.448Z",
+        "descrition" : "Home vs Shady Hill JV (04-02-2024)",
+        "draftID" : "4F660C37-6F07-46BF-B450-0C3626012409",
+        "result" : "Win",
+        "score" : [
+          "11",
+          "6"
+        ],
+        "calOpponent" : "Shady Hill JV"
+      },
+      {
+        "opponent" : "The Carroll School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-11-2024",
+        "calLocation" : "Home",
+        "location" : "Home",
+        "date" : "2024-04-11T11:37:55.178Z",
+        "descrition" : "Home vs The Carroll School (04-11-2024)",
+        "draftID" : "71C5EA47-28CB-4219-A1F2-7E6EE655BACE",
+        "result" : "Win",
+        "score" : [
+          "14",
+          "1"
+        ],
+        "calOpponent" : "The Carroll School"
+      },
+      {
+        "comments" : "",
+        "opponent" : "Charles River School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-17-2024",
+        "location" : "Away",
+        "date" : "2024-04-17T22:34:39.484Z",
+        "highlights" : "Highlights include a layout catch from 6th grader Daniel Orloff. Nathaniel Bennett scored his first point, and Miles Diver got his first assist.",
+        "descrition" : "Away vs Charles River School (04-17-2024)",
+        "draftID" : "87E7B052-5B3B-43E2-BE76-64678EC00018",
+        "result" : "Win",
+        "sumbitted" : true,
+        "score" : [
+          "7",
+          "4"
+        ]
+      },
+      {
+        "comments" : "",
+        "opponent" : "Charles River School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-17-2024",
+        "location" : "Away",
+        "date" : "2024-04-17T22:34:39.484Z",
+        "highlights" : "Highlights include a layout catch from 6th grader Daniel Orloff. Nathaniel Bennett scored his first point, and Miles Diver got his first assist.",
+        "descrition" : "Away vs Charles River School (04-17-2024)",
+        "draftID" : "87E7B052-5B3B-43E2-BE76-64678EC00018",
+        "result" : "Win",
+        "sumbitted" : true,
+        "score" : [
+          "7",
+          "4"
+        ]
+      },
+      {
+        "comments" : "",
+        "opponent" : "Charles River School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-24-2024",
+        "location" : "Away",
+        "calLocation" : "Away",
+        "date" : "2024-04-24T13:56:36.836Z",
+        "descrition" : "Away vs Charles River School (04-24-2024)",
+        "draftID" : "F3CC1E81-8E61-4DBF-A1DB-C1F64E86E2DE",
+        "result" : "Win",
+        "highlights" : "Miles Diver and Elliot Enyeart both scored. Daniel Orloff had an assist and a score. Zach Chiu also had an assist. ",
+        "score" : [
+          "8",
+          "2"
+        ],
+        "calOpponent" : "CRS",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "Charles River School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-24-2024",
+        "location" : "Away",
+        "calLocation" : "Away",
+        "date" : "2024-04-24T13:56:36.836Z",
+        "descrition" : "Away vs Charles River School (04-24-2024)",
+        "draftID" : "F3CC1E81-8E61-4DBF-A1DB-C1F64E86E2DE",
+        "result" : "Win",
+        "highlights" : "Miles Diver and Elliot Enyeart both scored. Daniel Orloff had an assist and a score. Zach Chiu also had an assist. ",
+        "score" : [
+          "8",
+          "2"
+        ],
+        "calOpponent" : "CRS",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "Brown MS",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-25-2024",
+        "location" : "Home",
+        "date" : "2024-04-25T22:40:26.477Z",
+        "highlights" : "Nate Howard had two layouts for scores. Aaron Westerling made several difficult catches under pressure. Kaz Jurkiewicz and Lawrence Rosembert played incredible defense making multiple stops.",
+        "descrition" : "Home vs Brown MS (04-25-2024)",
+        "draftID" : "7E20F0DB-E18C-4D57-8F05-3773669B78E5",
+        "result" : "Draw",
+        "sumbitted" : true,
+        "score" : [
+          "14",
+          "14"
+        ]
+      },
+      {
+        "comments" : "",
+        "opponent" : "Brown MS",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "04-25-2024",
+        "location" : "Home",
+        "date" : "2024-04-25T22:40:26.477Z",
+        "highlights" : "Nate Howard had two layouts for scores. Aaron Westerling made several difficult catches under pressure. Kaz Jurkiewicz and Lawrence Rosembert played incredible defense making multiple stops.",
+        "descrition" : "Home vs Brown MS (04-25-2024)",
+        "draftID" : "7E20F0DB-E18C-4D57-8F05-3773669B78E5",
+        "result" : "Draw",
+        "sumbitted" : true,
+        "score" : [
+          "14",
+          "14"
+        ]
+      },
+      {
+        "comments" : "",
+        "opponent" : "Shady Hill Varsity",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-02-2024",
+        "location" : "Away",
+        "calLocation" : "Away",
+        "date" : "2024-05-02T10:36:36.249Z",
+        "descrition" : "Away vs Shady Hill Varsity (05-02-2024)",
+        "draftID" : "72639A82-71CE-476D-9A2A-D25CB80AE762",
+        "result" : "Loss",
+        "highlights" : "",
+        "score" : [
+          "4",
+          "10"
+        ],
+        "calOpponent" : "SH",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "Shady Hill Varsity",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-02-2024",
+        "location" : "Away",
+        "calLocation" : "Away",
+        "date" : "2024-05-02T10:36:36.249Z",
+        "descrition" : "Away vs Shady Hill Varsity (05-02-2024)",
+        "draftID" : "72639A82-71CE-476D-9A2A-D25CB80AE762",
+        "result" : "Loss",
+        "highlights" : "",
+        "score" : [
+          "4",
+          "10"
+        ],
+        "calOpponent" : "SH",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "The Park School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-06-2024",
+        "location" : "Away",
+        "calLocation" : "Away",
+        "date" : "2024-05-06T14:59:02.357Z",
+        "descrition" : "Away vs The Park School (05-06-2024)",
+        "draftID" : "734389FB-0B6B-45A0-B39B-3CCA3CA5DBF1",
+        "result" : "Win",
+        "highlights" : "Kyle Benton and Kaz Jurkiewicz with some great defense stops. Nate Howard and Lawrence Rosembert with a few big touchdown catches each.",
+        "score" : [
+          "9",
+          "7"
+        ],
+        "calOpponent" : "Park",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "The Park School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-06-2024",
+        "location" : "Away",
+        "calLocation" : "Away",
+        "date" : "2024-05-06T14:59:02.357Z",
+        "descrition" : "Away vs The Park School (05-06-2024)",
+        "draftID" : "734389FB-0B6B-45A0-B39B-3CCA3CA5DBF1",
+        "result" : "Win",
+        "highlights" : "Kyle Benton and Kaz Jurkiewicz with some great defense stops. Nate Howard and Lawrence Rosembert with a few big touchdown catches each.",
+        "score" : [
+          "9",
+          "7"
+        ],
+        "calOpponent" : "Park",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "The Charles River School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-15-2024",
+        "location" : "Home",
+        "calLocation" : "Home",
+        "date" : "2024-05-15T20:40:39.902Z",
+        "descrition" : "Home vs The Charles River School (05-15-2024)",
+        "draftID" : "DD1B902A-9975-4FF3-BC31-E77416DD8461",
+        "result" : "Win",
+        "highlights" : "Toren Andersen got a had block and his first score of the season. Micah Gross ran down a disc for a point. Aaron Westerling threw an upside-down hammer on the last point of the game.",
+        "score" : [
+          "15",
+          "4"
+        ],
+        "calOpponent" : "Park",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "The Charles River School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-15-2024",
+        "location" : "Home",
+        "calLocation" : "Home",
+        "date" : "2024-05-15T20:40:39.902Z",
+        "descrition" : "Home vs The Charles River School (05-15-2024)",
+        "draftID" : "DD1B902A-9975-4FF3-BC31-E77416DD8461",
+        "result" : "Win",
+        "highlights" : "Toren Andersen got a had block and his first score of the season. Micah Gross ran down a disc for a point. Aaron Westerling threw an upside-down hammer on the last point of the game.",
+        "score" : [
+          "15",
+          "4"
+        ],
+        "calOpponent" : "Park",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "The Park School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-16-2024",
+        "location" : "Home",
+        "calLocation" : "Home",
+        "date" : "2024-05-16T12:02:00.000Z",
+        "descrition" : "Home vs The Park School (05-16-2024)",
+        "draftID" : "D2B9A213-304D-45AA-ACA2-69FE91EEC775",
+        "result" : "Win",
+        "highlights" : "",
+        "score" : [
+          "14",
+          "5"
+        ],
+        "calOpponent" : "Park",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "The Park School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-16-2024",
+        "location" : "Home",
+        "calLocation" : "Home",
+        "date" : "2024-05-16T12:02:00.000Z",
+        "descrition" : "Home vs The Park School (05-16-2024)",
+        "draftID" : "D2B9A213-304D-45AA-ACA2-69FE91EEC775",
+        "result" : "Win",
+        "highlights" : "",
+        "score" : [
+          "14",
+          "5"
+        ],
+        "calOpponent" : "Park",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "Brown Middle School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-21-2024",
+        "calLocation" : "Away",
+        "location" : "Away",
+        "date" : "2024-05-21T12:22:00.000Z",
+        "descrition" : "Away vs Brown Middle School (05-21-2024)",
+        "draftID" : "BD0D293F-C21F-4A3F-A487-6258E22E9440",
+        "result" : "Loss",
+        "highlights" : "",
+        "score" : [
+          "5",
+          "8"
+        ],
+        "calOpponent" : "Brown",
+        "sumbitted" : true
+      },
+      {
+        "comments" : "",
+        "opponent" : "Brown Middle School",
+        "recorded" : true,
+        "submitted" : false,
+        "formattedDate" : "05-21-2024",
+        "calLocation" : "Away",
+        "location" : "Away",
+        "date" : "2024-05-21T12:22:00.000Z",
+        "descrition" : "Away vs Brown Middle School (05-21-2024)",
+        "draftID" : "BD0D293F-C21F-4A3F-A487-6258E22E9440",
+        "result" : "Loss",
+        "highlights" : "",
+        "score" : [
+          "5",
+          "8"
+        ],
+        "calOpponent" : "Brown",
+        "sumbitted" : true
+      }
+    ]
+  }
+}

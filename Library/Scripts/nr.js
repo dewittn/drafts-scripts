@@ -1,6 +1,6 @@
 require("libraries/js-yaml.js");
 // NR Scripts for Drafts App
-
+// This is a test
 //------------
 // Extend Draft Object
 
@@ -133,7 +133,9 @@ function hashTags(spaceReplaceChar = "/") {
 // Menu System
 function actionMenu(actions) {
   const draftAction = draft.getTemplateTag("draft_action");
-  const nextAction = Action.find(draftAction == undefined ? draftAction : chooseAction(actions));
+  const nextAction = Action.find(
+    draftAction == undefined ? draftAction : chooseAction(actions)
+  );
 
   app.queueAction(nextAction, draft);
 }
@@ -149,7 +151,12 @@ function chooseAction(actions) {
 }
 
 // Open callbackURL
-function openCallback(baseURL, params = {}, waitForResponse = true, message = "Sucess!") {
+function openCallback(
+  baseURL,
+  params = {},
+  waitForResponse = true,
+  message = "Sucess!"
+) {
   // open and wait for result
   const cb = CallbackURL.create();
   cb.waitForResponse = waitForResponse;

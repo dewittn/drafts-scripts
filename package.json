@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "description": "A collection of scripts for the Drafts app.",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dewittn/drafts-scripts.git"
@@ -21,10 +18,16 @@
   },
   "homepage": "https://github.com/dewittn/drafts-scripts#readme",
   "devDependencies": {
+    "@types/bun": "latest",
     "gulp": "^5.0.0",
-    "@types/bun": "latest"
+    "gulp-rsync": "^0.1.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "gulp": "gulp",
+    "clean": "gulp clean",
+    "watch": "gulp watch"
   }
 }

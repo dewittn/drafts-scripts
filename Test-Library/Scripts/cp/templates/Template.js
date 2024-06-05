@@ -1,0 +1,101 @@
+class Template {
+  static basePath = "/Library/Templates";
+  #fs;
+  #settings;
+
+  constructor(settings) {
+    this.#fs = new CloudFS(this.basePath);
+    this.#settings = settings;
+
+    this.#createDraft();
+  }
+
+  static load(fileName) {
+    const fs = new CloudFS(this.basePath);
+    return fs.read(fileName);
+  }
+
+  get basePath() {
+    return this.constructor.basePath;
+  }
+
+  get draftID() {
+    if (this.draft == undefined) return "";
+    return this.draft.uuid;
+  }
+
+  get displayTitle() {
+    if (this.draft == undefined) return "";
+    return this.draft.displayTitle;
+  }
+
+  get content() {
+    if (this.draft == undefined) return "";
+    return this.draft.content;
+  }
+
+  get draftTags() {
+    if (this.#settings.draftTags == undefined) return [];
+    return this.#settings.draftTags;
+  }
+
+  get templateFile() {
+    return this.#settings.templateFile;
+  }
+
+  get templateText() {
+    return this.#settings.templateText;
+  }
+
+  get templateTags() {
+    if (this.#settings.templateTags == undefined) return [];
+    return Object.entries(this.#settings.templateTags);
+  }
+
+  save() {
+    this.draft.update();
+    return this;
+  }
+
+  archive() {
+    this.draft.isArchived = true;
+    return this;
+  }
+
+  activate() {
+    if (this.draft == undefined) return;
+
+    // find workspace and load it in drafts list
+    const workspace = Workspace.find(this.workspaceName);
+    app.applyWorkspace(workspace);
+
+    editor.load(this.draft);
+    editor.activate();
+    return this;
+  }
+
+  addToPipeline() {
+    if (this.draft == undefined) return;
+
+    const nextAction = Action.find(this.nextAction);
+    app.queueAction(nextAction, this.draft);
+
+    return this;
+  }
+
+  #createDraft() {
+    this.draft = Draft.create();
+    // draftsTags should be formatted as an array like this: ["tag1", "tag2", "tag3"]
+    this.draftTags.forEach((tag) => this.draft.addTag(tag));
+    this.templateTags.forEach(([key, value]) => this.draft.setTemplateTag(key, value));
+
+    this.#processTemplate();
+  }
+
+  #processTemplate() {
+    if (this.templateFile == undefined) return;
+
+    const template = this.#fs.read(this.templateFile);
+    this.draft.content = this.draft.processTemplate(template);
+  }
+}

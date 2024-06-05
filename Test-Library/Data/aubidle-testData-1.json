@@ -1,0 +1,48 @@
+{
+  "data-selector": [
+    "<img alt=\"Such Big Dreams Audiobook By Reema Patel cover art\" aria-hidden=\"true\" class=\"bc-pub-block bc-image-inset-border js-only-element\" id=\"\" src=\"https://m.media-amazon.com/images/I/512XPFRf2uL._SL500_.jpg\" style=\"vertical-align: top\" width=\"100%\"/>\n",
+    "<img alt=\"Such Big Dreams  By  cover art\" aria-hidden=\"true\" class=\"bc-pub-block bc-image-inset-border js-only-element\" height=\"63\" id=\"\" src=\"https://m.media-amazon.com/images/I/512XPFRf2uL._SL63_.jpg\" style=\"vertical-align: top\" width=\"63\"/>\n",
+    "<div class=\"bc-box bc-box-padding-none bc-spacing-s2\">\n <span class=\"bc-text bc-color-secondary\">\n  <p>\n   <b>\n    A savvy former street child working at a law office in Mumbai fights for redemption and a chance to live life on her own terms in this \u201csmart, haunting, and compulsively readable\u201d (Amy Jones, author of\n   </b>\n   <b>\n    <i>\n     We\u2019re All in This Together\n    </i>\n   </b>\n   <b>\n    )\u00a0debut novel about fortune and survival.\n   </b>\n  </p>\n  <p>\n   <b>\n    \u201cA page-turner of a story that doesn\u2019t shy away from exploring hard and painful truths about the way people navigate the systemic conditions of society.\u201d (Zalika Reid-Benta, author of\n   </b>\n   <b>\n    <i>\n     Frying Plantain)\n    </i>\n   </b>\n  </p>\n  <p>\n   Rakhi is a 23-year-old haunted by the grisly aftermath of an incident that led to the loss of her best friend 11 years ago. Constantly reminded she doesn\u2019t belong, Rakhi lives alone in a Mumbai slum, working as a lowly office assistant at Justice For All, a struggling human-rights law organization headed by the renowned lawyer who gave her a fresh start.\n  </p>\n  <p>\n   Fiercely intelligent and in possession of a sharp wit and an even sharper tongue, Rakhi is nobody\u2019s fool, even if she is underestimated by everyone around her. Rakhi\u2019s life isn\u2019t much, but she\u2019s managing. That is, until Rubina Mansoor, a fading former Bollywood starlet, tries to edge her way back into the spotlight by becoming a celebrity ambassador for Justice For All. Steering the organization into uncharted territories, she demands an internship for Alex, a young family friend from Canada and Harvard-bound graduate student. Ambitious, persistent, and na\u00efve, Alex persuades Rakhi to show him \u201cthe real\u201d India. In exchange, he\u2019ll do something to further Rakhi\u2019s dreams in a transaction that seems harmless, at first.\n  </p>\n  <p>\n   As old guilt and new aspirations collide, everything Rakhi once knew to be true is set ablaze. And as the stakes mount, she will come face-to-face with the difficult choices and moral compromises that people make in order to survive, no matter the cost. Reema Patel\u2019s transportive debut novel offers a moving, smart, and arrestingly clever look at the cost of ambition and power in reclaiming one\u2019s story.\n  </p>\n </span>\n</div>\n",
+    "<div class=\"bc-box bc-box-padding-none bc-spacing-s2\">\n <span class=\"bc-text bc-color-secondary\">\n  \u00a92022 Reema Patel (P)2022 Random House Audio\n </span>\n</div>\n"
+  ],
+  "options": {
+    "country": "ANY",
+    "render": true,
+    "selector": "#center-1 img.bc-pub-block.bc-image-inset-border.js-only-element, #center-8 div.bc-box.bc-box-padding-none.bc-spacing-s2",
+    "timeout": 30
+  },
+  "page_title": "Such Big Dreams by Reema Patel - Audiobook - Audible.com: English",
+  "request_headers": {
+    "Cloud-Trace-Context": "fff6c602ed1591f83eee526f1eefe455/8571498403138796432;o=1",
+    "Consumer-Custom-Id": "hello@nelsonroberto.com",
+    "Consumer-Id": "f23cee26-8c5c-4fa7-80bb-8d3ca2d238c1",
+    "Consumer-Username": "hello@nelsonroberto.com",
+    "Forwarded-For": "2600:1900:2000:a5::9,2600:1900:2000:a5::9, 172.71.22.51,35.226.2.35",
+    "Forwarded-Host": "api.apilayer.com",
+    "Forwarded-Port": "8000",
+    "Forwarded-Proto": "https",
+    "Real-Ip": "172.71.22.51"
+  },
+  "response_headers": {
+    "content-encoding": "gzip",
+    "content-language": "und",
+    "content-type": "text/html;charset=UTF-8",
+    "date": "Tue, 23 Aug 2022 16:12:59 GMT",
+    "permissions-policy": "interest-cohort=()",
+    "server": "Server",
+    "set-cookie": "currentSourceCode=\"ANONAUDW0378WS010202_08/23/2022 16:12\"; Version=1; Domain=.www.audible.com; Max-Age=5184000; Expires=Sat, 22-Oct-2022 16:12:59 GMT; Path=/",
+    "status": "200",
+    "strict-transport-security": "max-age=300",
+    "vary": "accept-encoding,Content-Type,Accept-Encoding,X-Amzn-CDN-Cache,X-Amzn-AX-Treatment,User-Agent",
+    "via": "1.1 5e1439d2277c06dce3f7e9e4522a4c20.cloudfront.net (CloudFront)",
+    "x-amz-cf-id": "rTGwK30xRaP6nACn8TDhhjVKvDigZ_6zBlBygWtVAfe0GovJq6qdTg==",
+    "x-amz-cf-pop": "GRU3-P1",
+    "x-amz-rid": "Q6HTQ7PS16E9ZVGJ7WHQ",
+    "x-cache": "Miss from cloudfront",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "sameorigin",
+    "x-xss-protection": "1; mode=block"
+  },
+  "result_url": "https://www.audible.com/pd/Such-Big-Dreams-Audiobook/B09LRLD7L1?ref=a_library_t_c5_libItem_&pf_rd_p=80765e81-b10a-4f33-b1d3-ffb87793d047&pf_rd_r=5YERSH4FE4XH8YQ2XFQT",
+  "url": "https://www.audible.com/pd/Such-Big-Dreams-Audiobook/B09LRLD7L1?ref=a_library_t_c5_libItem_&pf_rd_p=80765e81-b10a-4f33-b1d3-ffb87793d047&pf_rd_r=5YERSH4FE4XH8YQ2XFQT"
+}
