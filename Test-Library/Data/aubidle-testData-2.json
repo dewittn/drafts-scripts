@@ -1,0 +1,48 @@
+{
+  "data-selector": [
+    "<img alt=\"Woman of Light Audiobook By Kali Fajardo-Anstine cover art\" aria-hidden=\"true\" class=\"bc-pub-block bc-image-inset-border js-only-element\" id=\"\" src=\"https://m.media-amazon.com/images/I/51lj1LO6FcL._SL500_.jpg\" style=\"vertical-align: top\" width=\"100%\"/>\n",
+    "<img alt=\"Woman of Light  By  cover art\" aria-hidden=\"true\" class=\"bc-pub-block bc-image-inset-border js-only-element\" height=\"63\" id=\"\" src=\"https://m.media-amazon.com/images/I/51lj1LO6FcL._SL63_.jpg\" style=\"vertical-align: top\" width=\"63\"/>\n",
+    "<div class=\"bc-box bc-box-padding-none bc-spacing-s2\">\n <span class=\"bc-text bc-color-secondary\">\n  <p>\n   <b>\n    A dazzling epic of betrayal, love, and fate that spans five generations of an Indigenous Chicano family in the American West, from the author of the National Book Award finalist\n   </b>\n   <b>\n    <i>\n     Sabrina & Corina\n    </i>\n   </b>\n  </p>\n  <p>\n   <b>\n    A Phenomenal Book Club Pick\n   </b>\n  </p>\n  <p>\n   <b>\n    “Sometimes you just step into a book and let it wash over you, like you’re swimming under a big, sparkling night sky.”—Celeste Ng, author of\n   </b>\n   <b>\n    <i>\n     Little Fires Everywhere\n    </i>\n   </b>\n   <b>\n    and\n   </b>\n   <b>\n    <i>\n     Everything I Never Told You\n    </i>\n   </b>\n  </p>\n  <p>\n   <b>\n    ONE OF THE MOST ANTICIPATED BOOKS OF 2022—\n   </b>\n   <b>\n    <i>\n     The Millions, Electric Lit, Lit Hub, Book Riot\n    </i>\n   </b>\n  </p>\n  <p>\n   <i>\n    There is one every generation, a seer who keeps the stories.\n   </i>\n  </p>\n  <p>\n   Luz “Little Light” Lopez, a tea leaf reader and laundress, is left to fend for herself after her older brother, Diego, a snake charmer and factory worker, is run out of town by a violent white mob. As Luz navigates 1930s Denver, she begins to have visions that transport her to her Indigenous homeland in the nearby Lost Territory. Luz recollects her ancestors’ origins, how her family flourished, and how they were threatened. She bears witness to the sinister forces that have devastated her people and their homelands for generations. In the end, it is up to Luz to save her family stories from disappearing into oblivion.\n  </p>\n  <p>\n   Written in Kali Fajardo-Anstine’s singular voice, the wildly entertaining and complex lives of the Lopez family fill the pages of this multigenerational western saga.\n   <i>\n    Woman of Light\n   </i>\n   is a transfixing novel about survival, family secrets, and love—filled with an unforgettable cast of characters, all of whom are just as special, memorable, and complicated as our beloved heroine, Luz.\n  </p>\n </span>\n</div>\n",
+    "<div class=\"bc-box bc-box-padding-none bc-spacing-s2\">\n <span class=\"bc-text bc-color-secondary\">\n  ©2022 Kali Fajardo-Anstine (P)2022 Random House Audio\n </span>\n</div>\n"
+  ],
+  "options": {
+    "country": "ANY",
+    "render": true,
+    "selector": "#center-1 img.bc-pub-block.bc-image-inset-border.js-only-element, #center-8 div.bc-box.bc-box-padding-none.bc-spacing-s2",
+    "timeout": 30
+  },
+  "page_title": "Woman of Light by Kali Fajardo-Anstine - Audiobook - Audible.com: English",
+  "request_headers": {
+    "Cloud-Trace-Context": "b22073c4d1c0e5568a471481409d2bd5/3537895435997447280;o=1",
+    "Consumer-Custom-Id": "hello@nelsonroberto.com",
+    "Consumer-Id": "f23cee26-8c5c-4fa7-80bb-8d3ca2d238c1",
+    "Consumer-Username": "hello@nelsonroberto.com",
+    "Forwarded-For": "2600:1900:2000:a5::c,2600:1900:2000:a5::c, 172.70.130.215,35.226.2.35",
+    "Forwarded-Host": "api.apilayer.com",
+    "Forwarded-Port": "8000",
+    "Forwarded-Proto": "https",
+    "Real-Ip": "172.70.130.215"
+  },
+  "response_headers": {
+    "content-encoding": "gzip",
+    "content-language": "und",
+    "content-type": "text/html;charset=UTF-8",
+    "date": "Tue, 23 Aug 2022 15:57:55 GMT",
+    "permissions-policy": "interest-cohort=()",
+    "server": "Server",
+    "set-cookie": "currentSourceCode=\"ANONAUDW0378WS010202_08/23/2022 15:57\"; Version=1; Domain=.www.audible.com; Max-Age=5184000; Expires=Sat, 22-Oct-2022 15:57:55 GMT; Path=/",
+    "status": "200",
+    "strict-transport-security": "max-age=300",
+    "vary": "accept-encoding,Content-Type,Accept-Encoding,X-Amzn-CDN-Cache,X-Amzn-AX-Treatment,User-Agent",
+    "via": "1.1 236735b52059949e1df9130ff0e7ce4e.cloudfront.net (CloudFront)",
+    "x-amz-cf-id": "bKp0NO7uwY-adp6OoUOD9ibt0cDIW-zNlvBje5C_PXwE-pYCwCGzyA==",
+    "x-amz-cf-pop": "HKG60-C1",
+    "x-amz-rid": "BEA40HQ17S7D9ZD49ZQQ",
+    "x-cache": "Miss from cloudfront",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "sameorigin",
+    "x-xss-protection": "1; mode=block"
+  },
+  "result_url": "https://www.audible.com/pd/Woman-of-Light-Audiobook/B09HN2P2HW?ref=a_library_t_c5_libItem_&pf_rd_p=80765e81-b10a-4f33-b1d3-ffb87793d047&pf_rd_r=Z87SFKJXKE3R6KPHQ23S",
+  "url": "https://www.audible.com/pd/Woman-of-Light-Audiobook/B09HN2P2HW?ref=a_library_t_c5_libItem_&pf_rd_p=80765e81-b10a-4f33-b1d3-ffb87793d047&pf_rd_r=Z87SFKJXKE3R6KPHQ23S"
+}

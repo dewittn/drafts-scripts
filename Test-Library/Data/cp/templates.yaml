@@ -1,0 +1,15 @@
+authorUpdate:
+  dateFormat: "%B Y"
+  draftTags:
+    - newsletter
+    - drafting
+  nextAction: Add Draft to Pipeline
+  templateFile: innocent-dreams-newsletter.md
+  templateTag: "publish_date"
+  workspaceName: "defualt"
+  uiSettings:
+    getMonthFromPrompt:
+      menuSettings:
+        menuTitle: Author Update
+        menuMessage: When are you sending out this update?
+        menuItems: []

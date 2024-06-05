@@ -1,0 +1,44 @@
+---
+recordsDraftID: 359AC178-208F-42D9-84F3-935ABA6BB38E
+messageSettings:
+  - type: text
+    recipients:
+      - +1(814)823-7033
+    bodyText: "[[game_summary]]"
+  - type: text
+    recipients:
+      - +1(814)823-7033
+    bodyText: "[[game_highlights]]"
+googleFormSettings:
+  url: https://docs.google.com/forms/d/e/1FAIpQLSdiWu9xpwpzYyr31DD_1NbmSUdjqAWHh4wXtwcMOnYaaqFRWw
+  postData: true
+  fields:
+    - key: teamName
+      title: Team
+      entryID: 2066576502
+    - key: googleFormDate
+      title: Date of Contest
+      entryID: 2108682401
+    - key: opponent
+      title: Opponent
+      entryID: 1269407546
+    - key: location
+      title: Location
+      entryID: 542234752
+    - key: result
+      title: Result
+      entryID: 936144083
+      options:
+        - Win
+        - Loss
+        - Draw
+    - key: scoreUs
+      title: BVR
+      entryID: 1101471948
+    - key: scoreThem
+      title: Them
+      entryID: 1320101693
+    - key: highlights
+      title: Highlights?
+      message: Check for grammar and spelling. Please include some statistical info if possible
+      entryID: 211909310
