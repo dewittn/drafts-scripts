@@ -1,1 +1,0 @@
-| [[game_date]] | [[game_opponent]] | [[game_location]] | [[game_result]] | [[game_score_us]] | [[game_score_them]] |
