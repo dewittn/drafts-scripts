@@ -3,11 +3,11 @@ recordsDraftID: 6A0F43B4-84E4-40F3-8E73-DDEA573DA0D6
 messageSettings:
   - type: text
     recipients:
-      - ""
-      - ""
+      - op://BVR/AG/cell
+      - op://BVR/AH/cell
     bodyText: "[[game_summary]]"
 googleFormSettings:
-  url: ""
+  url: op://BVR/VUF/gform-url
   postData: false
   fields:
     - key: teamName
@@ -38,7 +38,7 @@ googleFormSettings:
       entryID: 1620020605
     - key: reported
       title: Report the score?
-      message: "Did you report the score to the Boston Globe (***REMOVED***) and Boston Herald: hssports@bostonherald.com"
+      message: "Did you report the score to the Boston Globe (617-929-3235) and Boston Herald: hssports@bostonherald.com"
       entryID: 999954584
       options:
         - "Yes"
