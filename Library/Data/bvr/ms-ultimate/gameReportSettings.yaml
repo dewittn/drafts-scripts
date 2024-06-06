@@ -3,14 +3,14 @@ recordsDraftID: 359AC178-208F-42D9-84F3-935ABA6BB38E
 messageSettings:
   - type: text
     recipients:
-      - ***REMOVED***
+      - ""
     bodyText: "[[game_summary]]"
   - type: text
     recipients:
-      - ***REMOVED***
+      - ""
     bodyText: "[[game_highlights]]"
 googleFormSettings:
-  url: ***REMOVED***
+  url: ""
   postData: true
   fields:
     - key: teamName

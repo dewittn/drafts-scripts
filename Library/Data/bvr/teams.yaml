@@ -27,7 +27,7 @@ teamsData:
       msgConfig:
         type: "Text"
         recipients:
-          - "***REMOVED***"
+          - ""
         bodyText: "Hey Amber, these students are absent from frisbee today: "
   - id: msg-soccer
     name: MS Girls Soccer
@@ -44,5 +44,5 @@ teamsData:
       msgConfig:
         type: "Text"
         recipients:
-          - "***REMOVED***"
+          - ""
         bodyText: "Hey Amber, these students are absent from soccer today: "

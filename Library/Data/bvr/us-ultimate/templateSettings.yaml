@@ -4,7 +4,7 @@ defaultDraftTags:
 teamTemplateTags:
   hc_year: 4th
   ac_name: Donroy Grant
-  ac_email: ***REMOVED***
+  ac_email: ""
   ac_years_coaching: 3rd
 reportTemplate:
   draftTags:
