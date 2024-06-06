@@ -19,9 +19,11 @@
   "homepage": "https://github.com/dewittn/drafts-scripts#readme",
   "devDependencies": {
     "@types/bun": "latest",
+    "fancy-log": "^2.0.0",
     "gulp": "^5.0.0",
-    "gulp-rsync": "^0.1.0",
-    "fancy-log": "^2.0.0"
+    "gulp-exec": "^5.0.0",
+    "gulp-ext-replace": "^0.3.0",
+    "gulp-rsync": "^0.1.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
