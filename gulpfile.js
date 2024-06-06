@@ -29,6 +29,7 @@ function watchFiles() {
   });
 }
 
-exports.default = logVaribles;
+exports.default = series(rsyncLibrary, watchFiles);
 exports.watch = watchFiles;
 exports.clean = rsyncLibrary;
+exports.debug = logVaribles;
