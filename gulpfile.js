@@ -28,10 +28,10 @@ function rsyncLibrary(cb) {
 }
 
 function watchFiles(cb) {
-  watch(`${srcDir}/*`).on("change", function (path) {
-    log(`Path: ${path}`);
+  watch(`${srcDir}/**`).on("change", function (file) {
+    log(`Dest: ${file}`);
     log(`Dest: ${destDir}`);
-    src(path).pipe(dest(`${destDir}/${path}`));
+    src(file, { base: "./" }).pipe(dest(`${destDir}/`));
   });
   cb();
 }
