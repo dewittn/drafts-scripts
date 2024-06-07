@@ -13,7 +13,7 @@ function logVaribles(cb) {
 }
 
 function rsyncLibrary() {
-  return src(`${srcDir}/**`).pipe(
+  return src([`${srcDir}/**`, `!${srcDir}/**/*.tpl`]).pipe(
     rsync({
       root: "${destDir}/",
       destination: `${destDir}/${path}`,
@@ -31,7 +31,7 @@ function watchFiles() {
   });
 }
 
-function injectSecrets() {
+function injectSecrets(cb) {
   const options = {
     continueOnError: false, // default = false, true means don't emit error event
     pipeStdout: true, // default = false, true means stdout is written to file.contents
@@ -41,11 +41,12 @@ function injectSecrets() {
     stderr: true, // default = true, false means don't write stderr
     stdout: false, // default = true, false means don't write stdout
   };
-  return src(`${srcDir}/**/*.tpl`)
+  src(`${srcDir}/**/*.tpl`)
     .pipe(exec((file) => `op inject -i ${file.path}`, options))
     .pipe(exec.reporter(reportOptions))
     .pipe(ext_replace(".yaml"))
     .pipe(dest(`${srcDir}`));
+  cb();
 }
 
 exports.default = series(injectSecrets, rsyncLibrary, watchFiles);
