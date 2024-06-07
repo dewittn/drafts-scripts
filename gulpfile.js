@@ -4,7 +4,7 @@ const rsync = require("gulp-rsync");
 const exec = require("gulp-exec");
 const log = require("fancy-log");
 const srcDir = "./Library";
-const destDir = `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents/Library`;
+const destDir = `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`;
 
 function logVaribles(cb) {
   log(`${srcDir}/*`);
@@ -12,23 +12,28 @@ function logVaribles(cb) {
   cb();
 }
 
-function rsyncLibrary() {
-  return src([`${srcDir}/**`, `!${srcDir}/**/*.tpl`]).pipe(
+function rsyncLibrary(cb) {
+  log(destDir);
+  src([`${srcDir}/`]).pipe(
     rsync({
-      root: "${destDir}/",
-      destination: `${destDir}/${path}`,
+      destination: `${destDir}/`,
+      exclude: ["*.tpl", ".DS_Store"],
+      progress: true,
       recursive: true,
-      verbose: true,
+      incremental: true,
+      clean: true,
     })
   );
+  cb();
 }
 
-function watchFiles() {
-  watch(`${srcDir}/**`).on("change", function (path) {
+function watchFiles(cb) {
+  watch(`${srcDir}/*`).on("change", function (path) {
     log(`Path: ${path}`);
     log(`Dest: ${destDir}`);
     src(path).pipe(dest(`${destDir}/${path}`));
   });
+  cb();
 }
 
 function injectSecrets(cb) {
@@ -51,6 +56,6 @@ function injectSecrets(cb) {
 
 exports.default = series(injectSecrets, rsyncLibrary, watchFiles);
 exports.watch = watchFiles;
-exports.clean = rsyncLibrary;
+exports.sync = rsyncLibrary;
 exports.debug = logVaribles;
 exports.inject = injectSecrets;
