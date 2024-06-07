@@ -1,3 +1,6 @@
 node_modules/
 secrets.txt
 gameReportSettings.yaml
+settings.yaml
+attendanceSettings.yaml
+templateSettings.yaml
