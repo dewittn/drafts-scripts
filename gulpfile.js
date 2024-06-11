@@ -1,10 +1,11 @@
 const { src, dest, series, watch } = require("gulp");
 const ext_replace = require("gulp-ext-replace");
 const rsync = require("gulp-rsync");
-const exec = require("gulp-exec");
+const gulpExec = require("gulp-exec");
+const exec = require("child_process").exec;
 const log = require("fancy-log");
 const srcDir = "./Library";
-const destDir = `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents/Library`;
+const destDir = `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`;
 
 function logVaribles(cb) {
   log(`${srcDir}/*`);
@@ -12,23 +13,35 @@ function logVaribles(cb) {
   cb();
 }
 
-function rsyncLibrary() {
-  return src([`${srcDir}/**`, `!${srcDir}/**/*.tpl`]).pipe(
-    rsync({
-      root: "${destDir}/",
-      destination: `${destDir}/${path}`,
-      recursive: true,
-      verbose: true,
-    })
+function copyJSONData(cb) {
+  exec(
+    `rsync -r --progress --include='*.json' --exclude-from='./exclude-file.txt' '${destDir}/Library/' '${srcDir}'`
   );
+  cb();
 }
 
-function watchFiles() {
-  watch(`${srcDir}/**`).on("change", function (path) {
-    log(`Path: ${path}`);
+function rsyncLibrary(cb) {
+  log(destDir);
+  src([`${srcDir}/`]).pipe(
+    rsync({
+      destination: `${destDir}/`,
+      exclude: ["*.tpl", ".DS_Store"],
+      progress: true,
+      recursive: true,
+      incremental: true,
+      clean: true,
+    })
+  );
+  cb();
+}
+
+function watchFiles(cb) {
+  watch(`${srcDir}/**`).on("change", function (file) {
+    log(`Dest: ${file}`);
     log(`Dest: ${destDir}`);
-    src(path).pipe(dest(`${destDir}/${path}`));
+    src(file, { base: "./" }).pipe(dest(`${destDir}/`));
   });
+  cb();
 }
 
 function injectSecrets(cb) {
@@ -42,15 +55,16 @@ function injectSecrets(cb) {
     stdout: false, // default = true, false means don't write stdout
   };
   src(`${srcDir}/**/*.tpl`)
-    .pipe(exec((file) => `op inject -i ${file.path}`, options))
-    .pipe(exec.reporter(reportOptions))
+    .pipe(gulpExec((file) => `op inject -i ${file.path}`, options))
+    .pipe(gulpExec.reporter(reportOptions))
     .pipe(ext_replace(".yaml"))
     .pipe(dest(`${srcDir}`));
   cb();
 }
 
-exports.default = series(injectSecrets, rsyncLibrary, watchFiles);
+exports.default = series(copyJSONData, injectSecrets, rsyncLibrary, watchFiles);
 exports.watch = watchFiles;
-exports.clean = rsyncLibrary;
+exports.sync = rsyncLibrary;
 exports.debug = logVaribles;
 exports.inject = injectSecrets;
+exports.data = copyJSONData;
