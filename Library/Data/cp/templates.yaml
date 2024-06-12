@@ -4,7 +4,7 @@ authorUpdate:
     - newsletter
     - drafting
   nextAction: Add Draft to Pipeline
-  templateFile: innocent-dreams-newsletter.md
+  templateFile: "cp/innocent-dreams-newsletter.md"
   templateTag: "publish_date"
   workspaceName: "defualt"
   uiSettings:
