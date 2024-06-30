@@ -1,0 +1,26 @@
+Prep for Trip to [[destination]]: @area(Sanity) @tags(Chore) @deadline([[deadline]])
+  _Goal: Prepare for my an upcoming trip to [[destination]]._
+  Suitcase:
+    - PJs
+    - Underthings
+    - Nice clothing 👔
+    - Baiting suit 🩳
+    - Sneakers 👟 
+    - Workout Clothes
+    - Mobility Tools
+  Tech Bag:
+    - Charge Battery Pack(s) 
+    - Check for wall chargers 🔌 
+    - Check for iPhone cables
+    - Check for iPad cables
+    - Check for Apple Watch cables
+    - Camera & Len(s)
+  Toiletries Bag:
+    - Body Wash
+    - Shampoo
+    - Face wash
+    - Sleepy Mask
+    - Ear Plugs
+    - Nose Strips
+  Other:
+    - Make sure PiCam is working
