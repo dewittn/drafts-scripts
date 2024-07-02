@@ -6,6 +6,7 @@ require("bvr/Attendance.js");
 require("bvr/utilities.js");
 require("bvr/PracticePlan.js");
 require("bvr/messages/message_factory.js");
+require("libraries/bear.js");
 require("cp/ui/DraftsUI.js");
 require("cp/filesystems/CloudFS.js");
 require("cp/templates/Template.js");
@@ -31,7 +32,9 @@ class BVR {
   }
 
   get dirPrefix() {
-    return this.#settings.dirPrefix != undefined ? this.#settings.dirPrefix : "";
+    return this.#settings.dirPrefix != undefined
+      ? this.#settings.dirPrefix
+      : "";
   }
 
   get teamSettingsFile() {
@@ -59,7 +62,10 @@ class BVR {
   }
 
   get ppDataFile() {
-    const dataFile = this.#settings.ppDataFile != undefined ? `practicePlans.json` : this.#settings.ppDataFile;
+    const dataFile =
+      this.#settings.ppDataFile != undefined
+        ? `practicePlans.json`
+        : this.#settings.ppDataFile;
 
     return `${this.dirPrefix}${dataFile}`;
   }
@@ -135,7 +141,11 @@ class BVR {
   }
 
   #deconstructDate(date) {
-    return { day: this.getDay(date), month: this.getMonth(date), year: this.getYear(date) };
+    return {
+      day: this.getDay(date),
+      month: this.getMonth(date),
+      year: this.getYear(date),
+    };
   }
 
   #loadWorkspace() {

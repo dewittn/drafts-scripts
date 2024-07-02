@@ -66,7 +66,8 @@ class Team {
   }
 
   get gameReportSettings() {
-    if (this.#teamData.gameReportSettings != undefined) return this.#teamData.gameReportSettings;
+    if (this.#teamData.gameReportSettings != undefined)
+      return this.#teamData.gameReportSettings;
 
     const settingsFile =
       this.#teamData.gameReportSettingsFile == undefined
@@ -76,7 +77,8 @@ class Team {
   }
 
   get attendanceSettings() {
-    if (this.#teamData.attendanceSettings != undefined) return this.#teamData.attendanceSettings;
+    if (this.#teamData.attendanceSettings != undefined)
+      return this.#teamData.attendanceSettings;
 
     const settingsFile =
       this.#teamData.attendanceSettingsFile == undefined
@@ -86,7 +88,8 @@ class Team {
   }
 
   get templateSettings() {
-    if (this.#teamData.templateSettings != undefined) return this.#teamData.templateSettings;
+    if (this.#teamData.templateSettings != undefined)
+      return this.#teamData.templateSettings;
 
     const settingsFile =
       this.#teamData.templateSettingsFile == undefined
@@ -95,11 +98,19 @@ class Team {
     return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
   }
 
+  get defualtTag() {
+    return this.#teamData.defualtTag;
+  }
+
   createWelcomeLetter() {
     if (this.#teamData.welcomeLetter == undefined) return;
 
     const settings = this.#teamData.welcomeLetter;
-    settings.templateTags = { ...this.globatTags, ...this.teamTemplateTags, team_name: this.name };
+    settings.templateTags = {
+      ...this.globatTags,
+      ...this.teamTemplateTags,
+      team_name: this.name,
+    };
 
     this.#bvr.createDraftFromTemplate(settings);
   }
@@ -132,10 +143,48 @@ class Team {
     this.game.createTasks();
   }
 
+  archiveNotes() {
+    const teamNotes = Draft.query("", "archive", [this.defualtTag]);
+    teamNotes.every((note) => this.#processNote(note));
+  }
+
+  #processNote(workingDraft) {
+    const { menuSettings, tempMessage } = this.#bvr.ui.settings("notePrompt");
+    menuSettings.menuMessage = `${tempMessage}\n\n${workingDraft.displayTitle}`;
+
+    const notePrompt = this.#bvr.ui.buildMenu(menuSettings);
+
+    if (notePrompt.show() == false) return false;
+    if (notePrompt.buttonPressed == "leave") return true;
+
+    bearTags(workingDraft);
+    updateWikiLinks(workingDraft);
+    const bearTemplate = Template.load("bear-note.md");
+    const bearNote = workingDraft.processTemplate(bearTemplate);
+
+    if (this.#sendNoteToBear(bearNote) == false) return false;
+    workingDraft.isTrashed = true;
+    workingDraft.update();
+    return true;
+  }
+
+  #sendNoteToBear(note) {
+    const bearURL = `bear://x-callback-url/create`;
+
+    const cb = CallbackURL.create();
+    cb.baseURL = bearURL;
+    cb.waitForResponse = false;
+    cb.addParameter("text", note);
+
+    return cb.open();
+  }
+
   #getTeamData(teamID) {
-    const teamData = this.teamsData.filter((team) =>  draft.hasTag(team.defualtTag))[0]
-    if (teamData != undefined) return teamData
-    
+    const teamData = this.teamsData.filter((team) =>
+      draft.hasTag(team.defualtTag)
+    )[0];
+    if (teamData != undefined) return teamData;
+
     const id = teamID == "" ? this.#getTeamIDFromPrompt() : teamID;
     return this.teamsData.filter((team) => team.id == id)[0];
   }
@@ -143,7 +192,10 @@ class Team {
   #getTeamIDFromPrompt() {
     const { menuSettings } = this.#bvr.ui.settings("getTeamIDFromPrompt");
     this.teamsData.forEach((team) =>
-      menuSettings.menuItems.push({ type: "button", data: { name: team.name, value: team.id } })
+      menuSettings.menuItems.push({
+        type: "button",
+        data: { name: team.name, value: team.id },
+      })
     );
     const selectMenu = this.#bvr.ui.buildMenu(menuSettings);
 

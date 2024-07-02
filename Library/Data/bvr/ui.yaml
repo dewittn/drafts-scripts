@@ -92,3 +92,16 @@ getLocationFromPrompt:
         data:
           name: Away
           value: Away
+notePrompt:
+  tempMessage: What would you like to do with this note?
+  menuSettings:
+    menuTitle: Pick Action
+    menuItems:
+      - type: button
+        data:
+          name: Archive
+          value: archive
+      - type: button
+        data:
+          name: Leave in Place
+          value: leave
