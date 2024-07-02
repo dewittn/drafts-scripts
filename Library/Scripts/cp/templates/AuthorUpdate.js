@@ -67,7 +67,9 @@ class AuthorUpdate {
   #getMonthFromPrompt() {
     const { menuSettings } = this.#ui.settings("getMonthFromPrompt");
     const months = this.#getMonths();
-    months.forEach((month) => menuSettings.menuItems.push({ type: "button", data: { name: month } }));
+    months.forEach((month) =>
+      menuSettings.menuItems.push({ type: "button", data: { name: month } })
+    );
 
     const monthPrompt = this.#ui.buildMenu(menuSettings);
     if (monthPrompt.show() == false) return context.cancel();

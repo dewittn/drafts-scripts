@@ -106,10 +106,15 @@ class ContentPipeline {
   // **************
   welcome() {
     // Retrieve settings for welcome prompt
-    const { menuPicker, menuSettings, errorMessage } = this.#ui.settings("welcome");
+    const { menuPicker, menuSettings, errorMessage } =
+      this.#ui.settings("welcome");
 
     // Create menuPicker from recent records
-    this.#ui.utilities.addRecordColomsToMenuPicker(menuPicker, menuSettings, this.#recent.records);
+    this.#ui.utilities.addRecordColomsToMenuPicker(
+      menuPicker,
+      menuSettings,
+      this.#recent.records
+    );
 
     // Build and display the menu prompt
     // Exit is cancel has been pressed
@@ -118,7 +123,10 @@ class ContentPipeline {
 
     // Record input from prompt
     const nextFunction = welcomeScreen.buttonPressed;
-    const index = this.#ui.utilities.getIndexFromPromptPicker(welcomeScreen, menuPicker);
+    const index = this.#ui.utilities.getIndexFromPromptPicker(
+      welcomeScreen,
+      menuPicker
+    );
     const record = this.#recent.selectByIndex(index);
 
     this.#activeDoc = this.#document_factory.load(record);
@@ -135,7 +143,10 @@ class ContentPipeline {
     const { docNotFound, recentDocsNotSaved } = this.#settings.openDoc;
 
     if (this.#activeDoc == undefined)
-      this.#activeDoc = this.#document_factory.load({ docID: docID, docIDType: docIDType });
+      this.#activeDoc = this.#document_factory.load({
+        docID: docID,
+        docIDType: docIDType,
+      });
 
     if (this.#activeDoc == undefined)
       return this.#ui.displayErrorMessage({
@@ -159,9 +170,15 @@ class ContentPipeline {
   useCurrentDraft() {
     // Retrieve settings for useCurrentDraft
     const { menuSettings } = this.#ui.settings("useCurrentDraft");
-    if (draft.content == "") return this.#ui.displayInfoMessage({ infoMessage: "Cannot use a blank draft!" });
+    if (draft.content == "")
+      return this.#ui.displayInfoMessage({
+        infoMessage: "Cannot use a blank draft!",
+      });
 
-    this.#activeDoc = this.#document_factory.load({ docID: draft.uuid, docIDType: "DraftsID" });
+    this.#activeDoc = this.#document_factory.load({
+      docID: draft.uuid,
+      docIDType: "DraftsID",
+    });
 
     // Build and display the menu prompt
     // Exit is cancel has been pressed
@@ -262,7 +279,10 @@ class ContentPipeline {
     const { errorMessage, menuSettings } = this.#ui.settings("modifyActiveDoc");
 
     if (this.#activeDoc == undefined)
-      this.#activeDoc = this.#document_factory.load({ docID: docID, docIDType: docIDType });
+      this.#activeDoc = this.#document_factory.load({
+        docID: docID,
+        docIDType: docIDType,
+      });
 
     if (this.#activeDoc == undefined)
       return this.#ui.displayErrorMessage({
@@ -276,9 +296,14 @@ class ContentPipeline {
     if (this.#activeDoc.docIDType == "DraftsID")
       menuSettings.menuItems.push({
         type: "button",
-        data: { name: "Convert Draft to Other Document", value: "convertDraft" },
+        data: {
+          name: "Convert Draft to Other Document",
+          value: "convertDraft",
+        },
       });
-    menuSettings.menuMessage = menuSettings.menuMessage.concat(this.#activeDoc.title);
+    menuSettings.menuMessage = menuSettings.menuMessage.concat(
+      this.#activeDoc.title
+    );
 
     // Prompts for title and status
     const menu = this.#ui.buildMenu(menuSettings);
@@ -292,15 +317,24 @@ class ContentPipeline {
   // * Adds doc to the Productively Pipeline in Airtable
   // **************
   addDocToPipeline(docIDType, docID = undefined) {
-    const { successMessage, errorMessage, docExistsMessage, infoMessage, menuSettings } =
-      this.#ui.settings("addDocToPipeline");
+    const {
+      successMessage,
+      errorMessage,
+      docExistsMessage,
+      infoMessage,
+      menuSettings,
+    } = this.#ui.settings("addDocToPipeline");
 
     // Load document if #activeDoc is not set
     if (this.activeDocIsUndefined)
-      this.#activeDoc = this.#document_factory.load({ docID: docID, docIDType: docIDType });
+      this.#activeDoc = this.#document_factory.load({
+        docID: docID,
+        docIDType: docIDType,
+      });
 
     // Check if doc is already in pipeline
-    if (this.activeDocInPipeline) return this.#ui.displayInfoMessage({ infoMessage: docExistsMessage });
+    if (this.activeDocInPipeline)
+      return this.#ui.displayInfoMessage({ infoMessage: docExistsMessage });
     if (this.databaseError) return this.#throwDBError("addDocToPipeline()");
 
     // Prompt to add doc to pipeline
@@ -310,9 +344,12 @@ class ContentPipeline {
     }
 
     // Select Status & destination
-    if (this.#activeDoc.statusIsNotSet) this.#activeDoc.status = this.#statuses.select(this.#activeDoc.title);
+    if (this.#activeDoc.statusIsNotSet)
+      this.#activeDoc.status = this.#statuses.select(this.#activeDoc.title);
     if (this.#activeDoc.destinationIsNotSet)
-      this.#activeDoc.destination = this.#destinations.select(this.#activeDoc.title);
+      this.#activeDoc.destination = this.#destinations.select(
+        this.#activeDoc.title
+      );
 
     // Update pipeline with activeDoc
     if (this.#updateDatabase() == false)
@@ -352,11 +389,19 @@ class ContentPipeline {
   // **************
   addDefaultNotesToSheet(targetId) {
     // Retrieve settings
-    const { infoMessage, errorMessage1, errorMessage2, successMessage, menuSettings } =
-      this.#ui.settings("addSheetToPipeline");
+    const {
+      infoMessage,
+      errorMessage1,
+      errorMessage2,
+      successMessage,
+      menuSettings,
+    } = this.#ui.settings("addSheetToPipeline");
 
     if (this.#activeDoc == undefined)
-      this.#activeDoc = this.#document_factory.load({ docID: targetId, docIDType: "UlyssesID" });
+      this.#activeDoc = this.#document_factory.load({
+        docID: targetId,
+        docIDType: "UlyssesID",
+      });
 
     // Remove existing note, add default notes to top, then reapply old notes.
     this.#activeDoc.attachDefaultNotes();
@@ -370,14 +415,19 @@ class ContentPipeline {
     const { recentDocsNotSaved } = this.#ui.settings("convertDraft");
 
     if (this.#activeDoc == undefined)
-      this.#activeDoc = this.#document_factory.load({ docID: uuid, docIDType: "DraftsID" });
+      this.#activeDoc = this.#document_factory.load({
+        docID: uuid,
+        docIDType: "DraftsID",
+      });
 
     const record = this.#db.retrieveRecordByDocID(this.#activeDoc);
     if (record == undefined) this.addDocToPipeline();
 
     this.#activeDoc.record = record;
 
-    const { newDocType } = this.#destinations.lookupDocConvertionData(this.#activeDoc.destination);
+    const { newDocType } = this.#destinations.lookupDocConvertionData(
+      this.#activeDoc.destination
+    );
     this.#convertActiveDoc(newDocType);
 
     if (this.recentRecordsUpdated != true)
@@ -386,7 +436,9 @@ class ContentPipeline {
         activeDoc: this.#activeDoc,
       });
 
-    this.#ui.displaySuccessMessage(`Draft has been converted to a ${newDocType}.`);
+    this.#ui.displaySuccessMessage(
+      `Draft has been converted to a ${newDocType}.`
+    );
   }
 
   // **************
@@ -395,9 +447,13 @@ class ContentPipeline {
   // **************
   updateStatusOfDoc(docID, docIDType) {
     const { statusList } = this.#settings;
-    const { errorMessage, errorMessage2, successMessage, menuSettings } = this.#ui.settings("updateStatusOfDoc");
+    const { errorMessage, errorMessage2, successMessage, menuSettings } =
+      this.#ui.settings("updateStatusOfDoc");
     if (this.#activeDoc == undefined)
-      this.#activeDoc = this.#document_factory.load({ docID: docID, docIDType: docIDType });
+      this.#activeDoc = this.#document_factory.load({
+        docID: docID,
+        docIDType: docIDType,
+      });
 
     if (this.#activeDoc == undefined)
       return this.#ui.displayErrorMessage({
@@ -417,13 +473,18 @@ class ContentPipeline {
       });
 
     // Check if doc is already in pipeline and retrieve record
-    if (this.#activeDoc.inPipeline == false && this.addDocToPipeline() == false) return;
+    if (this.#activeDoc.inPipeline == false && this.addDocToPipeline() == false)
+      return;
     this.#activeDoc.record = this.#db.retrieveRecordByDocID(this.#activeDoc);
     if (this.databaseError) return this.#throwDBError("updateStatusOfDoc()");
 
     // Create and show menu
-    menuSettings["menuItems"] = this.#statuses.generateStatusMenuItems(this.#activeDoc.status);
-    menuSettings.menuMessage += `${this.#activeDoc.title} is '${this.#activeDoc.status}.'`;
+    menuSettings["menuItems"] = this.#statuses.generateStatusMenuItems(
+      this.#activeDoc.status
+    );
+    menuSettings.menuMessage += `${this.#activeDoc.title} is '${
+      this.#activeDoc.status
+    }.'`;
     const menu = this.#ui.buildMenu(menuSettings);
     if (menu.show() == false) return context.cancel();
 
@@ -432,10 +493,11 @@ class ContentPipeline {
     if (newStatus == "back") return this.#functionToRunNext("modifyActiveDoc");
     this.#activeDoc.status = newStatus;
 
-    const { covertDoc, newDocType } = this.#destinations.lookupDocConvertionData(
-      this.#activeDoc.destination,
-      newStatus
-    );
+    const { covertDoc, newDocType } =
+      this.#destinations.lookupDocConvertionData(
+        this.#activeDoc.destination,
+        newStatus
+      );
     if (covertDoc) this.#convertActiveDoc(newDocType);
 
     this.#updateRecentRecords();
@@ -473,11 +535,17 @@ class ContentPipeline {
   // * Returns the URL of a post that has been published
   // **************
   getPublishedPostURL(year = new Date().getFullYear()) {
-    const { menuSettings, menuPicker } = this.#ui.settings("getPublishedPostURL");
-    const records = this.#db.retrieveRecordsByField("Status", `Published ${year}✨`, {
-      field: "Publish Date",
-      direction: "desc",
-    });
+    const { menuSettings, menuPicker } = this.#ui.settings(
+      "getPublishedPostURL"
+    );
+    const records = this.#db.retrieveRecordsByField(
+      "Status",
+      `Published ${year}✨`,
+      {
+        field: "Publish Date",
+        direction: "desc",
+      }
+    );
 
     // Build MenuPicker with published posts
     if (menuSettings.menuItems.length > 2) menuSettings.menuItems.pop();

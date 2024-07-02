@@ -4,4 +4,4 @@ gameReportSettings.yaml
 settings.yaml
 attendanceSettings.yaml
 templateSettings.yaml
-bun.lockb
+*.lockb
