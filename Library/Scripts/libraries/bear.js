@@ -1,16 +1,20 @@
-function bearTags() {
-  let tags = draft.tags;
+function bearTags(d = draft) {
+  let tags = d.tags;
 
   tags.forEach((tag, index) => {
     const endText = /\s/.test(tag) ? "#" : "";
-    tags[index] = `#${capitalize(tag)}${endText}`;
+    tags[index] = `#${capitalizeTag(tag)}${endText}`;
   });
   tags.push("#_inbox");
 
-  draft.setTemplateTag("bearTags", tags.join(" "));
+  d.setTemplateTag("bearTags", tags.join(" "));
 }
 
-function updateWikiLinks() {
-  draft.content = draft.content.replace(/\[\[bear:/g, "[[");
-  draft.update();
+function updateWikiLinks(d = draft) {
+  d.content = d.content.replace(/\[\[bear:/g, "[[");
+  d.update();
+}
+
+function capitalizeTag(tag) {
+  return tag.replace(/(?:^|\s|["'([{])+\S/g, (match) => match.toUpperCase());
 }

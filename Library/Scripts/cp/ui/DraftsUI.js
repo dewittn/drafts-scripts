@@ -32,7 +32,8 @@ class DraftsUI {
     const prompt = Prompt.create();
     prompt.title = menuSettings.menuTitle;
     prompt.message = menuSettings.menuMessage;
-    if (menuSettings.isCancellable != undefined) prompt.isCancellable = menuSettings.isCancellable;
+    if (menuSettings.isCancellable != undefined)
+      prompt.isCancellable = menuSettings.isCancellable;
 
     for (const menuItem of menuSettings.menuItems) {
       const {
@@ -120,7 +121,8 @@ class DraftsUI {
 
     const { errorMessage } = stackTrace;
     // Update Draft Log if UUID is found in settings
-    if (this.draftLogUUID != undefined) this.#updateDraftLog(errorMessage, stackTrace);
+    if (this.draftLogUUID != undefined)
+      this.#updateDraftLog(errorMessage, stackTrace);
 
     // Display Error Message
     app.displayErrorMessage(errorMessage);
@@ -133,7 +135,8 @@ class DraftsUI {
 
     const { warningMessage } = stackTrace;
     // Update Draft Log if UUID is found in settings
-    if (this.draftLogUUID != undefined) this.#updateDraftLog(warningMessage, stackTrace);
+    if (this.draftLogUUID != undefined)
+      this.#updateDraftLog(warningMessage, stackTrace);
 
     app.displayWarningMessage(warningMessage);
   }
@@ -143,7 +146,8 @@ class DraftsUI {
 
     const { infoMessage } = stackTrace;
     // Update Error Log if UUID is found in settings
-    if (this.draftLogUUID != undefined) this.#updateDraftLog(infoMessage, stackTrace);
+    if (this.draftLogUUID != undefined)
+      this.#updateDraftLog(infoMessage, stackTrace);
 
     app.displayInfoMessage(infoMessage);
   }

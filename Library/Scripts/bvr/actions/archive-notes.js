@@ -1,2 +1,4 @@
-// Test this is a test
-// another test
+require("bvr/BVR.js");
+
+const team = new Team();
+team.archiveNotes();
