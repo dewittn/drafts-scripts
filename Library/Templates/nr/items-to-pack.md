@@ -25,3 +25,4 @@ Prep for Trip to [[destination]]: @area(Sanity) @tags(Chore) @deadline([[deadlin
   Other:
     - Make sure PiCams are working
     - Set Hue Light to vacation mode
+    - Pack up or put away computer
