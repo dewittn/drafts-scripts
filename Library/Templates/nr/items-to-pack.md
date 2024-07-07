@@ -23,4 +23,5 @@ Prep for Trip to [[destination]]: @area(Sanity) @tags(Chore) @deadline([[deadlin
     - Ear Plugs
     - Nose Strips
   Other:
-    - Make sure PiCam is working
+    - Make sure PiCams are working
+    - Set Hue Light to vacation mode
