@@ -8,6 +8,7 @@ Prep for Trip to [[destination]]: @area(Sanity) @tags(Chore) @deadline([[deadlin
     - Sneakers 👟 
     - Workout Clothes
     - Mobility Tools
+    - Coffee
   Tech Bag:
     - Charge Battery Pack(s) 
     - Check for wall chargers 🔌 
@@ -22,7 +23,7 @@ Prep for Trip to [[destination]]: @area(Sanity) @tags(Chore) @deadline([[deadlin
     - Sleepy Mask
     - Ear Plugs
     - Nose Strips
-  Other:
+  Around the house:
     - Make sure PiCams are working
     - Set Hue Light to vacation mode
     - Pack up or put away computer
