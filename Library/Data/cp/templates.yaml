@@ -3,7 +3,6 @@ authorUpdate:
   draftTags:
     - newsletter
     - drafting
-  nextAction: Add Draft to Pipeline
   templateFile: "cp/innocent-dreams-newsletter.md"
   templateTag: "publish_date"
   workspaceName: "defualt"
@@ -13,3 +12,28 @@ authorUpdate:
         menuTitle: Author Update
         menuMessage: When are you sending out this update?
         menuItems: []
+beyondTheBook:
+  dateFormat: "%B Y"
+  draftTags:
+    - beyond the book
+    - drafting
+  templateFile: "cp/beyond-the-book.md"
+  templateTag: "working_title"
+  workspaceName: "defualt"
+  uiSettings:
+    getTitleFromPrompt:
+      menuSettings:
+        menuTitle: Beyond The Book
+        menuMessage: "What is your working title (no markdown):"
+        isCancellable: false
+        menuItems:
+          - type: button
+            data:
+              name: Go
+              value: go
+              isDefault: true
+          - type: textField
+            data:
+              name: workingTitle
+              label: ""
+              initialText: ""

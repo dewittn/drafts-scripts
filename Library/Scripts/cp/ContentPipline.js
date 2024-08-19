@@ -5,8 +5,9 @@ require("cp/RecentRecords.js");
 require("cp/TextUtilities.js");
 require("cp/ui/DraftsUI.js");
 require("cp/filesystems/CloudFS.js");
-require("cp/documents/document_factory.js");
 require("cp/databases/AirTableDB.js");
+require("cp/documents/document_factory.js");
+require("cp/templates/template_factory.js");
 
 class ContentPipeline {
   static basePath = "/Library/Data/cp/";

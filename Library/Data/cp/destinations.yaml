@@ -15,12 +15,12 @@ Content:
     convertTo: sheet
   newsletter:
     groupID: HUC3AgEJ-StgJgUChjo51g
-    draftAction: Author Update
+    template: authorUpdate
     statusWhenToConvert: writing
     convertTo: sheet
   beyond the book:
     groupID: 82Du-mNX2qy1GvPSQ3I8xA
-    draftAction: Beyond The Book
+    template: beyondTheBook
     scrubText: "Beyond The Book: "
     statusWhenToConvert: writing
     convertTo: sheet
