@@ -44,21 +44,26 @@ class Destinations {
   }
 
   getCurrentDestination(testFunction) {
-    return this.keys.filter((destination) => testFunction(destination)).toString();
+    return this.keys
+      .filter((destination) => testFunction(destination))
+      .toString();
   }
 
   select(title = "") {
     const { menuSettings, menuPicker, errorMessage } = this.#settings;
 
     menuSettings.menuMessage =
-      title == "" ? `${menuSettings.menuMessage} this post.` : `${menuSettings.menuMessage}: ${title}`;
+      title == ""
+        ? `${menuSettings.menuMessage} this post.`
+        : `${menuSettings.menuMessage}: ${title}`;
     menuPicker["columns"] = [this.keys];
     menuSettings.menuItems.push({ type: "picker", data: menuPicker });
 
     const choseDestination = this.#ui.buildMenu(menuSettings);
 
     // Displays prompt and returns chosen Destination
-    if (choseDestination.show() == false) return this.#ui.displayErrorMessage({ errorMessage: errorMessage });
+    if (choseDestination.show() == false)
+      return this.#ui.displayErrorMessage({ errorMessage: errorMessage });
     const selectedDestination = choseDestination.fieldValues[menuPicker.name];
 
     if (selectedDestination == undefined)
@@ -78,6 +83,10 @@ class Destinations {
     return this.data[destination]?.draftAction;
   }
 
+  lookupTemplate(destination) {
+    return this.data[destination]?.template;
+  }
+
   lookupGroupID(destination) {
     return this.data[destination]?.groupID;
   }
@@ -94,7 +103,9 @@ class Destinations {
         destData: destData,
       });
 
-    return destData?.airtableName != undefined ? destData.airtableName : this.#text.titleCase(destination);
+    return destData?.airtableName != undefined
+      ? destData.airtableName
+      : this.#text.titleCase(destination);
   }
 
   // Need to rewrite this in order to implement destination actions
@@ -103,7 +114,8 @@ class Destinations {
   lookupDocConvertionData(destination, status = "") {
     const destData = this.data[destination];
     return {
-      covertDoc: destData?.statusWhenToConvert?.toLowerCase() == status.toLowerCase(),
+      covertDoc:
+        destData?.statusWhenToConvert?.toLowerCase() == status.toLowerCase(),
       newDocType: destData?.convertTo,
     };
   }

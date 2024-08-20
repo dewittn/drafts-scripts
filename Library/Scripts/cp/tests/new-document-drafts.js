@@ -1,25 +1,31 @@
 require("cp/Statuses.js");
+require("cp/ui/DraftsUI.js");
 require("cp/Destinations.js");
 require("cp/RecentRecords.js");
-require("cp/ui/DraftsUI.js");
+require("cp/TextUtilities.js");
 require("cp/documents/document_factory.js");
+require("cp/templates/template_factory.js");
 
 require("cp/databases/TestDB.js");
 require("cp/filesystems/TestFS.js");
+require("cp/filesystems/CloudFS.js");
 
 const destinationsData = {
   table1: {
     inbox: {
       groupID: "hZ7IX2jqKbVmPGlYUXkZjQ",
     },
-    "nr.com": {
+    "Author Update": {
       groupID: "_irtj5J8siY8DXj0E4ckmA",
       draftAction: "Show Alert",
-      airtableName: "NR.com",
+      airtableName: "Newsletter",
+      template: "authorUpdate",
     },
-    "coto.studio": {
+    "Beyond The Book": {
       groupID: "WgLHy2d17CyYfHPp5YqvKw",
       airtableName: "Coto.Studio",
+      template: "beyondTheBook",
+      scrubText: "Beyond The Book: ",
     },
   },
 };
@@ -34,7 +40,14 @@ const settings = {
         menuMessage: "Please select a status for",
       },
     },
-    statusList: ["Developing", "Drafting", "Writing", "Editing", "Polishing", "On Deck"],
+    statusList: [
+      "Developing",
+      "Drafting",
+      "Writing",
+      "Editing",
+      "Polishing",
+      "On Deck",
+    ],
   },
   destinations: {
     destinationsFile: "destinations.json",
@@ -58,7 +71,8 @@ const settings = {
         successMessage: "Success! Darft added to the Pipeline",
         menuSettings: {
           menuTitle: "Working title?",
-          menuMessage: "Please enter a working title for your draft (no markdown):",
+          menuMessage:
+            "Please enter a working title for your draft (no markdown):",
           menuItems: [
             {
               type: "button",
@@ -96,13 +110,17 @@ const record = {
 };
 
 const ui = new DraftsUI();
+ui.debug = true;
+
 const fileSystem = new TestFS(destinationsData);
+const textUltilities = new TextUltilities();
 
 const dependancies = {
   ui: ui,
   fileSystem: fileSystem,
   settings: settings,
   tableName: "table1",
+  textUltilities: textUltilities,
 };
 
 const statuses = new Statuses(dependancies);

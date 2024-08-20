@@ -1,10 +1,10 @@
-class AuthorUpdate {
+class BeyondTheBook {
   static settingsFile = "cp/templates.yaml";
   #settings;
   #ui;
 
   constructor() {
-    this.#settings = new Settings(this.settingsFile, "authorUpdate");
+    this.#settings = new Settings(this.settingsFile, "beyondTheBook");
     this.#ui = new DraftsUI(this.#settings.uiSettings);
 
     this.#createDraft();
@@ -68,32 +68,16 @@ class AuthorUpdate {
     this.draft = Draft.create();
     // draftsTags should be formatted as an array like this: ["tag1", "tag2", "tag3"]
     this.draftTags.forEach((tag) => this.draft.addTag(tag));
-    this.draft.setTemplateTag(this.templateTag, this.#getMonthFromPrompt());
+    this.draft.setTemplateTag(this.templateTag, this.#getTitleFromPrompt());
     this.#processTemplate();
   }
 
-  #getMonthFromPrompt() {
-    const { menuSettings } = this.#ui.settings("getMonthFromPrompt");
-    const months = this.#getMonths();
-    months.forEach((month) =>
-      menuSettings.menuItems.push({ type: "button", data: { name: month } })
-    );
+  #getTitleFromPrompt() {
+    const { menuSettings } = this.#ui.settings("getTitleFromPrompt");
+    const menu = this.#ui.buildMenu(menuSettings);
+    if (menu.show() == false) return context.cancel();
 
-    const monthPrompt = this.#ui.buildMenu(menuSettings);
-    if (monthPrompt.show() == false) return context.cancel();
-
-    return monthPrompt.buttonPressed;
-  }
-
-  #getMonths() {
-    // Get names of current and next month
-    const date = new Date();
-    const currentMonth = date.format(this.dateFormat);
-
-    date.setDate(32);
-    const nextMonth = date.format(this.dateFormat);
-
-    return [nextMonth, currentMonth];
+    return this.#ui.utilities.getTextFieldValueFromMenu(menu);
   }
 
   #processTemplate() {

@@ -5,6 +5,7 @@ class DraftsDoc {
   #settings;
   #statuses;
   #destinations;
+  #template_factory;
 
   #data = {};
   #defaultTag;
@@ -22,22 +23,19 @@ class DraftsDoc {
     this.#statuses = dependancies.statuses;
     this.#destinations = dependancies.destinations;
     this.#text = dependancies.textUltilities;
+    this.#template_factory = new TemplateFactory(dependancies);
 
     this.#record = record;
     this.workingDraft = this.#findOrCreateWorkingDraft();
-    this.#docID = this.#getIdOfDraft();
-    this.#currentDest = this.#getDestinationOfDraft();
-    this.#currentStatus = this.#getStatusOfDraft();
-    this.#currentTitle = this.#getTitleOfDraft();
-    this.#data.scrubedTitle = this.#getScrubedTitleOfDraft();
-    this.#inPipeline = this.#draftIsInPipeline();
   }
 
   get id() {
-    return this.#docID;
+    return this.docID;
   }
 
   get docID() {
+    if (this.#docID == undefined) this.#docID = this.#getIdOfDraft();
+
     return this.#docID;
   }
 
@@ -67,6 +65,9 @@ class DraftsDoc {
   }
 
   get title() {
+    if (this.#currentTitle == undefined)
+      this.#currentTitle = this.#getTitleOfDraft();
+
     return this.#currentTitle;
   }
 
@@ -75,7 +76,17 @@ class DraftsDoc {
   }
 
   get scrubedTitle() {
+    if (this.#data.scrubedTitle == undefined)
+      this.#data.scrubedTitle = this.#getScrubedTitleOfDraft();
+
     return this.#data.scrubedTitle;
+  }
+
+  get slug() {
+    if (this.#data.slug == undefined)
+      this.#data.slug = this.#text.convertTitleToSlug(this.scrubedTitle);
+
+    return this.#data.slug;
   }
 
   get recordID() {
@@ -91,6 +102,9 @@ class DraftsDoc {
   }
 
   get status() {
+    if (this.#currentStatus == undefined)
+      this.#currentStatus = this.#getStatusOfDraft();
+
     return this.#currentStatus;
   }
 
@@ -103,10 +117,13 @@ class DraftsDoc {
   }
 
   get statusIsNotSet() {
-    return this.#currentStatus == "";
+    return this.status == "";
   }
 
   get destination() {
+    if (this.#currentDest == undefined)
+      this.#currentDest = this.#getDestinationOfDraft();
+
     return this.#currentDest;
   }
 
@@ -129,6 +146,9 @@ class DraftsDoc {
   }
 
   get inPipeline() {
+    if (this.#inPipeline == undefined)
+      this.#inPipeline = this.#draftIsInPipeline();
+
     return this.#inPipeline;
   }
 
@@ -168,35 +188,21 @@ class DraftsDoc {
   #findOrCreateWorkingDraft() {
     if (this?.record?.docID != undefined) return Draft.find(this.record.docID);
 
-    const newDraft = new Draft();
-    const dest = this.#destinations.select();
-    if (dest == "") return;
+    this.#currentDest = this.#destinations.select();
+    if (this.destination == "") return;
 
-    const actionName = this.#destinations.lookupAction(dest);
-    if (actionName != undefined && actionName != "") {
-      this.#ui.debugVariable(actionName);
-      const nextAction = Action.find(actionName);
-      app.queueAction(nextAction, newDraft);
-      return newDraft;
-    }
+    const templateDraft = this.#template_factory.create({
+      destination: this.destination,
+      templateName: this.#destinations.lookupTemplate(this.destination),
+    });
 
-    // Prompt for title and status of new draft
-    const { infoMessage, menuSettings } = this.#settings.createNewDraft;
-    const menu = this.#ui.buildMenu(menuSettings);
-    if (menu.show() == false) return context.cancel();
-
-    const title = this.#ui.utilities.getTextFieldValueFromMenu(menu);
-    const status = menu.buttonPressed;
-
-    newDraft.addTag(dest);
-    newDraft.addTag(status);
-    newDraft.content = `# ${title}\n\n`;
-
-    return newDraft;
+    return templateDraft.draft;
   }
 
   #getIdOfDraft() {
-    return this.record?.docID != undefined ? this.record.docID : this.workingDraft?.uuid;
+    return this.record?.docID != undefined
+      ? this.record.docID
+      : this.workingDraft?.uuid;
   }
 
   #getDestinationOfDraft() {
@@ -215,7 +221,9 @@ class DraftsDoc {
 
     const defaultTag = this.#defaultTag;
     const checkStatusFunction = (testDraft) => (status) => {
-      return testDraft.hasTag(`${defaultTag}::${status}`) || testDraft.hasTag(status);
+      return (
+        testDraft.hasTag(`${defaultTag}::${status}`) || testDraft.hasTag(status)
+      );
     };
     const hasStatus = checkStatusFunction(this.workingDraft);
 
@@ -225,13 +233,13 @@ class DraftsDoc {
   #getTitleOfDraft() {
     if (this.workingDraft == undefined) return undefined;
 
-    return this.record?.Title != undefined ? this.record.Title : this.workingDraft.displayTitle;
+    return this.record?.Title != undefined
+      ? this.record.Title
+      : this.workingDraft.displayTitle;
   }
 
   #getScrubedTitleOfDraft() {
-    this.#ui.debugVariable(this.destination, "destination: ");
     const scrubText = this.#destinations.getScrubText(this.destination);
-    this.#ui.debugVariable(scrubText, "ScrubText: ");
     return this.#text.scrubTitle(this.title, scrubText);
   }
 
