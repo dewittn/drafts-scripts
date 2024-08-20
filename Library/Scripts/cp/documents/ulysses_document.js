@@ -73,7 +73,8 @@ class UlyssesDoc {
   }
 
   get title() {
-    if (this.#currentTitle == undefined) this.#currentTitle = this.#getTitleOfSheet();
+    if (this.#currentTitle == undefined)
+      this.#currentTitle = this.#getTitleOfSheet();
 
     return this.#currentTitle;
   }
@@ -84,10 +85,20 @@ class UlyssesDoc {
 
   get scrubedTitle() {
     if (this.#data?.scrubedTitle == undefined) {
-      this.#data.scrubedTitle = this.#text.scrubTitle(this.title, this.#destinations.getScrubText(this.destination));
+      this.#data.scrubedTitle = this.#text.scrubTitle(
+        this.title,
+        this.#destinations.getScrubText(this.destination)
+      );
     }
 
     return this.#data.scrubedTitle;
+  }
+
+  get slug() {
+    if (this.#data.slug == undefined)
+      this.#data.slug = this.#text.convertTitleToSlug(this.scrubedTitle);
+
+    return this.#data.slug;
   }
 
   get UlyssesID() {
@@ -103,26 +114,30 @@ class UlyssesDoc {
   }
 
   get status() {
-    if (this.#currentStatus == undefined) this.#currentStatus = this.#getStatusOfSheet();
+    if (this.#currentStatus == undefined)
+      this.#currentStatus = this.#getStatusOfSheet();
 
     return this.#currentStatus;
   }
 
   set status(newStatus) {
     if (newStatus == undefined) return;
-    if (this.#currentStatus == undefined) this.#currentStatus = this.#getStatusOfSheet();
+    if (this.#currentStatus == undefined)
+      this.#currentStatus = this.#getStatusOfSheet();
     if (this.#currentStatus == newStatus) return;
 
-    if (this.docID != undefined) this.#updateKeywords(this.#currentStatus, newStatus);
+    if (this.docID != undefined)
+      this.#updateKeywords(this.#currentStatus, newStatus);
     this.#currentStatus = newStatus;
   }
 
   get statusIsNotSet() {
-    return this.#currentStatus == "";
+    return this.status == "";
   }
 
   get destination() {
-    if (this.#currentDest == undefined) this.#currentDest = this.#getDestinationOfSheet();
+    if (this.#currentDest == undefined)
+      this.#currentDest = this.#getDestinationOfSheet();
 
     return this.#currentDest;
   }
@@ -133,7 +148,8 @@ class UlyssesDoc {
     if (this.#currentDest == undefined) this.#getDestinationOfSheet();
     if (this.#currentDest == newDest) return;
 
-    if (this.docID != undefined) this.#updateKeywords(this.#currentDest, newDest);
+    if (this.docID != undefined)
+      this.#updateKeywords(this.#currentDest, newDest);
     this.#currentDest = newDest;
   }
 
@@ -146,7 +162,8 @@ class UlyssesDoc {
   }
 
   get inPipeline() {
-    if (this.#inPipeline == undefined) this.#inPipeline = this.#sheetIsInPipeline();
+    if (this.#inPipeline == undefined)
+      this.#inPipeline = this.#sheetIsInPipeline();
 
     return this.#inPipeline;
   }
@@ -185,7 +202,10 @@ class UlyssesDoc {
 
     this.#data.docID = this.sheet.identifier;
 
-    this.#ulysses.attachKeywords(this.docID, `${this.#defaultTag}, ${this.destination}, ${this.status}`);
+    this.#ulysses.attachKeywords(
+      this.docID,
+      `${this.#defaultTag}, ${this.destination}, ${this.status}`
+    );
     this.attachDefaultNotes();
     return true;
   }
@@ -195,7 +215,11 @@ class UlyssesDoc {
   }
 
   attachDefaultNotes() {
-    const { excerptText, darftsCallbackData: cbData, piplineLinks } = this.#settings;
+    const {
+      excerptText,
+      darftsCallbackData: cbData,
+      piplineLinks,
+    } = this.#settings;
     if (this.docID == undefined) return;
 
     this.sheet.notes.forEach((note) => {
@@ -204,7 +228,8 @@ class UlyssesDoc {
     });
 
     // Attach excerpt text
-    if (excerptText != undefined) this.#ulysses.attachNote(this.docID, excerptText);
+    if (excerptText != undefined)
+      this.#ulysses.attachNote(this.docID, excerptText);
 
     // Attach Pipeline links formatted in markdown
     if (piplineLinks != undefined) {
@@ -227,7 +252,8 @@ class UlyssesDoc {
   // * Private Functions
   // **************
   #loadSheet() {
-    if (this.sheet == undefined) this.sheet = this.#ulysses.readSheet(this.docID);
+    if (this.sheet == undefined)
+      this.sheet = this.#ulysses.readSheet(this.docID);
     editor.activate();
   }
 

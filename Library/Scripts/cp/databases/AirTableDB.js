@@ -64,6 +64,7 @@ class AirTableDB {
       docIDType: doc.docIDType,
       Destination: doc.airtableDestination,
       Title: doc.scrubedTitle,
+      slug: doc.slug,
       Status: doc.status,
       Priority: this.#settings.defaultPriority,
     };
@@ -72,7 +73,8 @@ class AirTableDB {
 
     // Scrub Record for fields that could cause an AirTable http 422 error
     Object.keys(recordToSave.fields).forEach((key) => {
-      if (this.#defaultFields.includes(key) == false) recordToSave.removeField(key);
+      if (this.#defaultFields.includes(key) == false)
+        recordToSave.removeField(key);
     });
 
     const sucess = this.#database.saveRecords(recordToSave);
@@ -170,7 +172,8 @@ class AirTableDB {
       return undefined;
     }
 
-    if (this.#database.firstRecord != undefined) return this.#database.firstRecord;
+    if (this.#database.firstRecord != undefined)
+      return this.#database.firstRecord;
 
     if (doc?.docIDType == undefined) {
       this.#throwError({
@@ -183,7 +186,10 @@ class AirTableDB {
 
       return undefined;
     }
-    const findByDocIDType = this.#database.findFirstByField(doc.docIDType, doc.docID);
+    const findByDocIDType = this.#database.findFirstByField(
+      doc.docIDType,
+      doc.docID
+    );
     if (this.databaseError) {
       this.#throwError({
         errorMessage: "AirTable Error",

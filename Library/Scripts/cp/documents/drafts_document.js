@@ -27,19 +27,15 @@ class DraftsDoc {
 
     this.#record = record;
     this.workingDraft = this.#findOrCreateWorkingDraft();
-    this.#docID = this.#getIdOfDraft();
-    this.#currentDest = this.#getDestinationOfDraft();
-    this.#currentStatus = this.#getStatusOfDraft();
-    this.#currentTitle = this.#getTitleOfDraft();
-    this.#data.scrubedTitle = this.#getScrubedTitleOfDraft();
-    this.#inPipeline = this.#draftIsInPipeline();
   }
 
   get id() {
-    return this.#docID;
+    return this.docID;
   }
 
   get docID() {
+    if (this.#docID == undefined) this.#docID = this.#getIdOfDraft();
+
     return this.#docID;
   }
 
@@ -69,6 +65,9 @@ class DraftsDoc {
   }
 
   get title() {
+    if (this.#currentTitle == undefined)
+      this.#currentTitle = this.#getTitleOfDraft();
+
     return this.#currentTitle;
   }
 
@@ -77,7 +76,17 @@ class DraftsDoc {
   }
 
   get scrubedTitle() {
+    if (this.#data.scrubedTitle == undefined)
+      this.#data.scrubedTitle = this.#getScrubedTitleOfDraft();
+
     return this.#data.scrubedTitle;
+  }
+
+  get slug() {
+    if (this.#data.slug == undefined)
+      this.#data.slug = this.#text.convertTitleToSlug(this.scrubedTitle);
+
+    return this.#data.slug;
   }
 
   get recordID() {
@@ -93,6 +102,9 @@ class DraftsDoc {
   }
 
   get status() {
+    if (this.#currentStatus == undefined)
+      this.#currentStatus = this.#getStatusOfDraft();
+
     return this.#currentStatus;
   }
 
@@ -105,10 +117,13 @@ class DraftsDoc {
   }
 
   get statusIsNotSet() {
-    return this.#currentStatus == "";
+    return this.status == "";
   }
 
   get destination() {
+    if (this.#currentDest == undefined)
+      this.#currentDest = this.#getDestinationOfDraft();
+
     return this.#currentDest;
   }
 
@@ -131,6 +146,9 @@ class DraftsDoc {
   }
 
   get inPipeline() {
+    if (this.#inPipeline == undefined)
+      this.#inPipeline = this.#draftIsInPipeline();
+
     return this.#inPipeline;
   }
 
