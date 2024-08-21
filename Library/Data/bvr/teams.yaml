@@ -6,7 +6,7 @@ teamsData:
     sport: ultimate
     season: spring
     startDate: "2024-03-04"
-    calendar: US Ultimate
+    calendar: VUF
     attendanceDraftID: 5E1337A5-F964-4DEC-95A8-091AE789F0B1
     defualtTag: bvr/ultimate/us
   - id: ms-ultimate
@@ -14,7 +14,7 @@ teamsData:
     abbr: MSUF
     sport: ultimate
     season: spring
-    calendar: MS Ultimate
+    calendar: MSUF
     startDate: "2024-02-20"
     attendanceDraftID: "07AFCA9A-F93B-42F3-8E61-39DA3E599032"
     recordDraft: 359AC178-208F-42D9-84F3-935ABA6BB38E
@@ -34,12 +34,13 @@ teamsData:
     abbr: MSGS
     sport: soccer
     season: fall
+    calendar: MSGS
     defualtTag: bvr/soccer
     practicePlan:
       draftTags:
         - bvr/soccer
-    startDate: "2023-09-06"
-    attendanceDraftID: "382D02CF-EDB1-4312-9B90-E469ED50DCD6"
+    startDate: "2024-09-03"
+    attendanceDraftID: "BE66E397-6DDE-44E4-AAF0-31A80DD64B4F"
     attendanceSettings:
       msgConfig:
         type: "Text"

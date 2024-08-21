@@ -10,7 +10,7 @@ messageSettings:
       - op://BVR/CK/cell
     bodyText: "[[game_highlights]]"
 googleFormSettings:
-  url: op://BVR/MSUF/gform-url
+  url: op://BVR/Score Report/MSUF
   postData: true
   fields:
     - key: teamName
