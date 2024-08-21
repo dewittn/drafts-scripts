@@ -1,11 +1,9 @@
 Game Day Checklist: @area(BVR Coaching) @when([[game_date]])
   *Checklist for game [[game_description]]*
   Items to Pack:
-    - AirPods
-    - Clipboard w/Magnets
-    - Ball Pump
+    - AirPods @when([[game_date]])
+    - Clipboard w/Magnets @when([[game_date]])
   Pre-game:
-    - Ask Abby for a VEO Recorder
     - Make sure we have Water
     - Make sure we have Med kit
     - Make sure we have soccer balls
