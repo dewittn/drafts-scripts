@@ -7,7 +7,7 @@ messageSettings:
       - op://BVR/AH/cell
     bodyText: "[[game_summary]]"
 googleFormSettings:
-  url: op://BVR/Score Report/VUF
+  url: op://BVR/Score Report/MSGS
   postData: false
   fields:
     - key: teamName
