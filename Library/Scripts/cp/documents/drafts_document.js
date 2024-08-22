@@ -138,7 +138,7 @@ class DraftsDoc {
   }
 
   get destinationIsNotSet() {
-    return this.#currentDest == "";
+    return this.destination == "" || this.destination == undefined;
   }
 
   get airtableDestination() {
