@@ -4,10 +4,10 @@ class ActionMenu {
 
   constructor(actionGroup) {
     this.#ui = new DraftsUI();
-    this.groupActions = actionGroup != undefined ? actionGroup.actions : [];
+    this.groupActions = actionGroup.actions;
     this.menuSettings = {
-      menuTitle: "Select Next Action",
-      menuMessage: "Which action would you like to run next?",
+      menuTitle: "Selcet action",
+      menuMessage: "Which action would you like to use?",
     };
 
     this.menuSettings.menuItems = this.groupActions.map((action, index) => {
@@ -20,23 +20,15 @@ class ActionMenu {
 
   static createFromGroup(actionGroupName) {
     const actionGroup = ActionGroup.find(actionGroupName);
-    if (actionGroup == undefined) {
-      const ui = new DraftsUI();
-      ui.displayErrorMessage(
-        `Action Group '${actionGroupName}' was not found!"`
-      );
-    }
     return new ActionMenu(actionGroup);
   }
 
   static createFromList(actionList) {
-    const actionGroup = new DynamicActionGroup(actionList);
+    const actionGroup = DynamicActionGroup.create(actionList);
     return new ActionMenu(actionGroup);
   }
 
   select() {
-    if (this.groupActions.length == 0) return;
-
     const linkMenu = this.#ui.buildMenu(this.menuSettings);
     if (linkMenu.show() == false) return;
 
