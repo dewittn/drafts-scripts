@@ -1,21 +1,16 @@
-require("cp/ui/DraftsUI.js");
+require("libraries/ActionMenu.js");
+// helper to test for URL
+function isUrl(s) {
+  var regexp =
+    /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
+  return regexp.test(s);
+}
 
-const ui = new DraftsUI();
-ui.debug = true;
-const linkToolsGroup = ActionGroup.find("Link Tools");
-const linkActions = linkToolsGroup.actions;
+const clipboard = app.getClipboard();
+const actionMenu = ActionMenu.createFromGroup("Link Tools");
 
-menuSettings = {
-  menuTitle: "Selcet action",
-  menuMessage: "Which action would you like to use?",
-};
-
-menuSettings.menuItems = linkActions.map((action, index) => {
-  return { type: "button", data: { name: action.name, value: index } };
-});
-
-const linkMenu = ui.buildMenu(menuSettings);
-if (linkMenu.show()) {
-  const actionSelected = linkActions[linkMenu.buttonPressed];
-  app.queueAction(actionSelected, draft);
+if (isUrl(clipboard)) {
+  actionMenu.selectAction("Markdown Link");
+} else {
+  actionMenu.select();
 }
