@@ -18,25 +18,9 @@ class Attendance {
     this.names = [];
   }
 
-  get absencesMsgConfig() {
-    if (this.#settings.absencesMsgConfig == undefined) return undefined;
-
+  get msgConfig() {
     return {
-      ...this.#settings.absencesMsgConfig,
-      msgTemplateTag: this.msgTeamNameTag,
-      attendaceDraft: this.attendaceDraft,
-      templateTags: {
-        ...this.globalTemplateTags,
-        team_name: this.teamName,
-      },
-    };
-  }
-
-  get noAbsencesMsgConfig() {
-    if (this.#settings.noAbsencesMsgConfig == undefined) return undefined;
-
-    return {
-      ...this.#settings.noAbsencesMsgConfig,
+      ...this.#settings.msgConfig,
       msgTemplateTag: this.msgTeamNameTag,
       attendaceDraft: this.attendaceDraft,
       templateTags: {
@@ -78,7 +62,7 @@ class Attendance {
     return this.#displayMsgs.submitFailure;
   }
 
-  get noOneAbsentMSG() {
+  get noOneAbsent() {
     return this.#displayMsgs.noOneAbsent;
   }
 
@@ -88,10 +72,6 @@ class Attendance {
 
   get globalTemplateTags() {
     return this.#bvr.globalTags;
-  }
-
-  get noOneAbsent() {
-    return this.names.length == 0;
   }
 
   loadDraft() {
@@ -104,7 +84,7 @@ class Attendance {
     if (this.attendaceDraftIsLoaded == false) return false;
 
     if (this.hasBeenSubmitted) {
-      this.#bvr.ui.displayAppMessage("info", this.alreadySubmitted);
+      app.displayInfoMessage(this.alreadySubmitted);
       return false;
     }
 
@@ -125,22 +105,21 @@ class Attendance {
       if (line.match(regEx)) this.names.push(this.#bvr.cleanUpName(line));
     });
 
+    if (this.names.length == 0) {
+      this.submitted();
+      app.displayInfoMessage(this.noOneAbsent);
+
+      return false;
+    }
     return true;
   }
 
   submit() {
-    const msgConfig = this.noOneAbsent
-      ? this.noAbsencesMsgConfig
-      : this.absencesMsgConfig;
+    const message = meesageFactory(this.msgConfig);
+    message.compose(this.names);
 
-    if (msgConfig != undefined) {
-      const message = meesageFactory(msgConfig);
-      message.compose(this.names);
-
-      if (message.send() == false)
-        return this.#bvr.ui.displayAppMessage("error", this.submitFailure);
-    }
-
+    if (message.send() == false)
+      return app.displayErrorMessage(this.submitFailure);
     this.submitted();
   }
 
@@ -167,21 +146,14 @@ class Attendance {
   }
 
   submitted() {
-    this.#runAttendaceShortcut();
     this.attendaceDraft.content = this.attendaceDraft.content
       .replace(/- \[ \] Recorded/g, "- [x] Recorded")
       .replace(/- \[ \] Submitted/g, "- [x] Submitted");
     this.attendaceDraft.update();
+
     this.#bvr.unpinDraft(this.attendaceDraft);
-    this.#bvr.ui.displayAppMessage("success", this.submitSuccess);
+
+    this.#bvr.ui.displaySuccessMessage(this.submitSuccess);
     this.#team.loadPracticePlan();
-  }
-
-  #runAttendaceShortcut() {
-    const shortcutAction = Action.find("Mark Attendace As Complete");
-    const shortcutDraft = new Draft();
-
-    shortcutDraft.content = this.#team.abbr;
-    app.queueAction(shortcutAction, shortcutDraft);
   }
 }
