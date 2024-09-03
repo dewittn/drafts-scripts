@@ -42,7 +42,9 @@ class Team {
   }
 
   get attendanceDraftID() {
-    return this.#teamData.attendanceDraftID;
+    return this.#teamData.attendanceDraftID != undefined
+      ? this.#teamData.attendanceDraftID
+      : this.attendanceSettings.attendanceDraftID;
   }
 
   get tags() {
