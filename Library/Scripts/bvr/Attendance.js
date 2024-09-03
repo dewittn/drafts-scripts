@@ -91,11 +91,15 @@ class Attendance {
     const { menuSettings } = this.#bvr.ui.settings("attendaceIsReady");
     if (this.hasBeenRecorded == false) {
       const takeNow = this.#bvr.ui.buildMenu(menuSettings);
-      if (takeNow.show() == false || takeNow.buttonPressed == "no") return false;
+      if (takeNow.show() == false || takeNow.buttonPressed == "no")
+        return false;
     }
 
     const regEx = /\[ \]/g;
-    const lines = this.attendaceDraft.lines.slice(5, this.attendaceDraft.lines.length); // split into lines
+    const lines = this.attendaceDraft.lines.slice(
+      5,
+      this.attendaceDraft.lines.length
+    ); // split into lines
 
     lines.forEach((line) => {
       if (line.match(regEx)) this.names.push(this.#bvr.cleanUpName(line));
@@ -114,11 +118,16 @@ class Attendance {
     const message = meesageFactory(this.msgConfig);
     message.compose(this.names);
 
-    if (message.send() == false) return app.displayErrorMessage(this.submitFailure);
+    if (message.send() == false)
+      return app.displayErrorMessage(this.submitFailure);
     this.submitted();
   }
 
   #loadAttendaceDraft() {
+    if (this.attendanceDraftID == undefined)
+      return alert(
+        "Error in #loadAttendaceDraft(): attendanceDraftID is undefined!"
+      );
     this.attendaceDraft = Draft.find(this.attendanceDraftID);
 
     const dateMatch = /\d{4}-\d{2}-\d{2}/;
@@ -127,7 +136,9 @@ class Attendance {
     const today = this.#bvr.formatDateYMD(new Date());
 
     if (lastTaken != today) {
-      this.attendaceDraft.content = this.attendaceDraft.content.replace(/\[x\]/g, "[ ]").replace(lastTaken, today);
+      this.attendaceDraft.content = this.attendaceDraft.content
+        .replace(/\[x\]/g, "[ ]")
+        .replace(lastTaken, today);
       this.attendaceDraft.update();
     }
 
