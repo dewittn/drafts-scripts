@@ -7,5 +7,5 @@ msgConfig:
   ccRecipients:
     - op://BVR/AG/email
     - op://BVR/AH/email
-  subjectLine: Attendace for [[team_name]] ([[date|%m-%d-%Y]])
+  subjectLine: Attendance for [[team_name]] ([[date|%m-%d-%Y]])
   bodyText: "Hello,\n\nThese students are absent from [[team_name]] today:\n\n"
