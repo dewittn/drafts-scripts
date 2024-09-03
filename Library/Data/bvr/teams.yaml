@@ -21,14 +21,7 @@ teamsData:
     defualtTag: bvr/ultimate/ms
     practicePlan:
       draftTags:
-        - bvr/ultimate/ms
-        - bvr/ultimate/practice/plan
-    attendanceSettings:
-      msgConfig:
-        type: "Text"
-        recipients:
-          - ""
-        bodyText: "Hey Amber, these students are absent from frisbee today: "
+        - bvr/ultimate/ms/practice/plan
   - id: msg-soccer
     name: MS Girls Soccer
     abbr: MSGS
@@ -38,12 +31,5 @@ teamsData:
     defualtTag: bvr/soccer
     practicePlan:
       draftTags:
-        - bvr/soccer
+        - bvr/soccer/practice/plan
     startDate: "2024-09-03"
-    attendanceDraftID: "BE66E397-6DDE-44E4-AAF0-31A80DD64B4F"
-    attendanceSettings:
-      msgConfig:
-        type: "Text"
-        recipients:
-          - ""
-        bodyText: "Hey Amber, these students are absent from soccer today: "

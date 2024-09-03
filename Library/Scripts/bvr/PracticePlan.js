@@ -65,7 +65,8 @@ class PracticePlan {
   }
 
   get templateFile() {
-    if (this.#ppData.practicePlanFile == undefined) return `${this.teamID}-${this.defaultTemplateFile}`;
+    if (this.#ppData.practicePlanFile == undefined)
+      return `${this.teamID}-${this.defaultTemplateFile}`;
 
     return this.#team.templateFile;
   }
@@ -83,13 +84,18 @@ class PracticePlan {
   }
 
   create() {
-    if (this.ppTmplSettings == undefined) return alert("ppTmplSettings is undefined!");
+    if (this.ppTmplSettings == undefined)
+      return alert("ppTmplSettings is undefined!");
     if (this.practicePlans[this.planID] != undefined) return this.load();
 
     const templateSettings = this.ppTmplSettings;
-    templateSettings.draftTags = [...this.defaultDraftTags, ...templateSettings.draftTags];
+    templateSettings.draftTags = [
+      ...this.defaultDraftTags,
+      ...templateSettings.draftTags,
+    ];
     templateSettings.templateFile = this.ppTemplateFile;
-    if (templateSettings.templateTags == undefined) templateSettings.templateTags = {};
+    if (templateSettings.templateTags == undefined)
+      templateSettings.templateTags = {};
     templateSettings.templateTags[this.weekIDTemplateTag] = this.weekID;
     const newPlan = this.#bvr.createDraftFromTemplate(templateSettings);
 
@@ -98,6 +104,10 @@ class PracticePlan {
   }
 
   load() {
+    if (this.practicePlans == undefined)
+      return this.#bvr.ui.displayInfoMessage({
+        infoMessage: "No practice plan found.",
+      });
     const draftID = this.practicePlans[this.planID];
     const practicePlan = Draft.find(draftID);
 
@@ -113,7 +123,10 @@ class PracticePlan {
     if (linkTxt == undefined) return alert("linkTxt is undefined");
 
     const coachingDraft = Draft.find(this.coachingDraftID);
-    const insertPosision = coachingDraft.lines.findIndex((lineTxt) => lineTxt == `## ${this.teamName}`) + 2;
+    const insertPosision =
+      coachingDraft.lines.findIndex(
+        (lineTxt) => lineTxt == `## ${this.teamName}`
+      ) + 2;
 
     coachingDraft.insert(`[[${linkTxt}]]`, insertPosision);
     coachingDraft.update();
