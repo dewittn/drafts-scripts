@@ -15,9 +15,9 @@ class PracticePlan {
 
     this.#bvr = dependancies.bvr;
     this.#team = dependancies.team;
-    this.#tmplSettings = dependancies.tmplSettings;
 
     this.#ppData = this.#bvr.ppData;
+    this.#tmplSettings = this.#team.templateSettings;
   }
 
   static create() {
@@ -71,8 +71,8 @@ class PracticePlan {
     return this.#team.templateFile;
   }
 
-  get defaultTag() {
-    return this.#team.defaultTag;
+  get defaultDraftTags() {
+    return this.#tmplSettings.defaultDraftTags;
   }
 
   get weekIDTemplateTag() {
@@ -86,15 +86,11 @@ class PracticePlan {
   create() {
     if (this.ppTmplSettings == undefined)
       return alert("ppTmplSettings is undefined!");
-    if (
-      this.practicePlans != undefined &&
-      this.practicePlans[this.planID] != undefined
-    )
-      return this.load();
+    if (this.practicePlans[this.planID] != undefined) return this.load();
 
     const templateSettings = this.ppTmplSettings;
     templateSettings.draftTags = [
-      this.defaultTag,
+      ...this.defaultDraftTags,
       ...templateSettings.draftTags,
     ];
     templateSettings.templateFile = this.ppTemplateFile;
@@ -109,7 +105,9 @@ class PracticePlan {
 
   load() {
     if (this.practicePlans == undefined)
-      return this.#bvr.ui.displayAppMessage("info", "No practice plan found.");
+      return this.#bvr.ui.displayInfoMessage({
+        infoMessage: "No practice plan found.",
+      });
     const draftID = this.practicePlans[this.planID];
     const practicePlan = Draft.find(draftID);
 
@@ -117,17 +115,12 @@ class PracticePlan {
   }
 
   #savePracticePlan(draftID) {
-    if (this.practicePlans == undefined) {
-      this.#ppData[this.teamID] = {};
-    }
-
     this.practicePlans[this.planID] = draftID;
     this.#ppData.save();
   }
 
   #insertPraticePlanLink(linkTxt) {
-    if (linkTxt == undefined)
-      return this.#bvr.ui.displayAppMessage("error", "linkTxt is undefined");
+    if (linkTxt == undefined) return alert("linkTxt is undefined");
 
     const coachingDraft = Draft.find(this.coachingDraftID);
     const insertPosision =

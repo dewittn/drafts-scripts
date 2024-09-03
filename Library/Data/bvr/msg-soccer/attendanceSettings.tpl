@@ -1,12 +1,7 @@
 ---
 attendanceDraftID: BE66E397-6DDE-44E4-AAF0-31A80DD64B4F
-absencesMsgConfig:
+msgConfig:
   type: text
   recipients:
     - op://BVR/CK/cell
-  bodyText: "These students are absent from [[team_name]] today: "
-noAbsencesMsgConfig:
-  type: text
-  recipients:
-    - op://BVR/CK/cell
-  bodyText: "No one is absent from [[team_name]] today."
+  bodyText: "Hey Amber, these students are absent from MSG Soccer today: "
