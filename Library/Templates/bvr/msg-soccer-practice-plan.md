@@ -3,11 +3,11 @@
 
 ## Todos
 
-CK:
-- [ ]
+Alex/CK:
+- [ ] 
 
 Players/Personnel:
-- [ ]
+- [ ] 
 
 Announcements:
 - [ ] 
@@ -28,6 +28,6 @@ Announcements:
 
 - 
 
-## Scrimmage Friday
+## Friday
 
 - 
