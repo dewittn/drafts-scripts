@@ -56,7 +56,9 @@ class TextMessage {
 
   #processBodyText() {
     const tempDraft = Draft.create();
-    this.templateTags.forEach(([key, value]) => tempDraft.setTemplateTag(key, value));
+    this.templateTags.forEach(([key, value]) =>
+      tempDraft.setTemplateTag(key, value)
+    );
     return tempDraft.processTemplate(this.bodyText);
   }
 }

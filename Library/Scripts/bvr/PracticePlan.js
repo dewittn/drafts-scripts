@@ -86,7 +86,11 @@ class PracticePlan {
   create() {
     if (this.ppTmplSettings == undefined)
       return alert("ppTmplSettings is undefined!");
-    if (this.practicePlans[this.planID] != undefined) return this.load();
+    if (
+      this.practicePlans != undefined &&
+      this.practicePlans[this.planID] != undefined
+    )
+      return this.load();
 
     const templateSettings = this.ppTmplSettings;
     templateSettings.draftTags = [
@@ -115,6 +119,10 @@ class PracticePlan {
   }
 
   #savePracticePlan(draftID) {
+    if (this.practicePlans == undefined) {
+      this.#ppData[this.teamID] = {};
+    }
+
     this.practicePlans[this.planID] = draftID;
     this.#ppData.save();
   }
