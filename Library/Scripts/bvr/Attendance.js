@@ -146,14 +146,21 @@ class Attendance {
   }
 
   submitted() {
+    this.#runAttendaceShortcut();
     this.attendaceDraft.content = this.attendaceDraft.content
       .replace(/- \[ \] Recorded/g, "- [x] Recorded")
       .replace(/- \[ \] Submitted/g, "- [x] Submitted");
     this.attendaceDraft.update();
-
     this.#bvr.unpinDraft(this.attendaceDraft);
-
-    this.#bvr.ui.displaySuccessMessage(this.submitSuccess);
     this.#team.loadPracticePlan();
+    this.#bvr.ui.displaySuccessMessage(this.submitSuccess);
+  }
+
+  #runAttendaceShortcut() {
+    const shortcutAction = Action.find("Mark Attendace As Complete");
+    const shortcutDraft = new Draft();
+
+    shortcutDraft.content = this.#team.abbr;
+    app.queueAction(shortcutAction, shortcutDraft);
   }
 }

@@ -29,6 +29,10 @@ class Team {
     return this.#teamData.id;
   }
 
+  get abbr() {
+    return this.#teamData.abbr;
+  }
+
   get plays() {
     return this.#teamData.sport;
   }
