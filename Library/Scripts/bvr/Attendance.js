@@ -18,9 +18,25 @@ class Attendance {
     this.names = [];
   }
 
-  get msgConfig() {
+  get absencesMsgConfig() {
+    if (this.#settings.absencesMsgConfig == undefined) return undefined;
+
     return {
-      ...this.#settings.msgConfig,
+      ...this.#settings.absencesMsgConfig,
+      msgTemplateTag: this.msgTeamNameTag,
+      attendaceDraft: this.attendaceDraft,
+      templateTags: {
+        ...this.globalTemplateTags,
+        team_name: this.teamName,
+      },
+    };
+  }
+
+  get noAbsencesMsgConfig() {
+    if (this.#settings.noAbsencesMsgConfig == undefined) return undefined;
+
+    return {
+      ...this.#settings.noAbsencesMsgConfig,
       msgTemplateTag: this.msgTeamNameTag,
       attendaceDraft: this.attendaceDraft,
       templateTags: {
@@ -62,7 +78,7 @@ class Attendance {
     return this.#displayMsgs.submitFailure;
   }
 
-  get noOneAbsent() {
+  get noOneAbsentMSG() {
     return this.#displayMsgs.noOneAbsent;
   }
 
@@ -72,6 +88,10 @@ class Attendance {
 
   get globalTemplateTags() {
     return this.#bvr.globalTags;
+  }
+
+  get noOneAbsent() {
+    return this.names.length == 0;
   }
 
   loadDraft() {
@@ -105,21 +125,22 @@ class Attendance {
       if (line.match(regEx)) this.names.push(this.#bvr.cleanUpName(line));
     });
 
-    if (this.names.length == 0) {
-      this.submitted();
-      app.displayInfoMessage(this.noOneAbsent);
-
-      return false;
-    }
     return true;
   }
 
   submit() {
-    const message = meesageFactory(this.msgConfig);
-    message.compose(this.names);
+    const msgConfig = this.noOneAbsent
+      ? this.noAbsencesMsgConfig
+      : this.absencesMsgConfig;
 
-    if (message.send() == false)
-      return app.displayErrorMessage(this.submitFailure);
+    if (msgConfig != undefined) {
+      const message = meesageFactory(msgConfig);
+      message.compose(this.names);
+
+      if (message.send() == false)
+        return app.displayErrorMessage(this.submitFailure);
+    }
+
     this.submitted();
   }
 
