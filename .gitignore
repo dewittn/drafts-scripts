@@ -5,4 +5,4 @@ settings.yaml
 attendanceSettings.yaml
 templateSettings.yaml
 *.lockb
-recentRecords.json
+**/Data/**/*.json
