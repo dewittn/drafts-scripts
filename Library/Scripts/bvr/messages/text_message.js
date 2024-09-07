@@ -42,6 +42,8 @@ class TextMessage {
     if (names == undefined) return "";
 
     switch (names.length) {
+      case 0:
+        return "";
       case 1:
         return ` ${names[0]}`;
         break;

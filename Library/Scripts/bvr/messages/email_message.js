@@ -49,6 +49,8 @@ class EmailMessage {
   }
 
   compose(names) {
+    if (names == undefined || names.length == 0) return;
+
     const { bodyText, subjectLine } = this.#processTemplateText();
     this.messageText = `${bodyText}${this.#flattenNames(names)}`;
     this.subjectLine = subjectLine;
@@ -71,7 +73,9 @@ class EmailMessage {
 
   #processTemplateText() {
     const tempDraft = Draft.create();
-    this.templateTags.forEach(([key, value]) => tempDraft.setTemplateTag(key, value));
+    this.templateTags.forEach(([key, value]) =>
+      tempDraft.setTemplateTag(key, value)
+    );
     return {
       bodyText: tempDraft.processTemplate(this.bodyText),
       subjectLine: tempDraft.processTemplate(this.subjectLineTemplate),
