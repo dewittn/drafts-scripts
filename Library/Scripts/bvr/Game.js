@@ -415,7 +415,7 @@ class Game {
   }
 
   #appendToRecordsDraft() {
-    if (this.recordsDraftID == undefined) return;
+    if (this.recordsDraftID == undefined || this.recordsDraftID == "") return;
 
     const recordsDraft = Draft.find(this.recordsDraftID);
     if (recordsDraft == undefined) return;
