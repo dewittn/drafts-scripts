@@ -46,13 +46,26 @@ class Game {
     return this.#team.templateSettings;
   }
 
+  get teamRecord() {
+    if (this.#records[this.teamID] == undefined)
+      this.#records[this.teamID] = {};
+    return this.#records[this.teamID];
+  }
+
+  set teamRecord(seasonRecord) {
+    this.#records[this.teamID] = seasonRecord;
+  }
+
   get seasonRecord() {
-    const record = this.#records[this.teamID][this.yearPlayed];
+    const record = this.teamRecord[this.yearPlayed];
     return record != undefined ? record : [];
   }
 
-  set seasonRecord(value) {
-    this.#records[this.teamID][this.yearPlayed] = value;
+  set seasonRecord(arry) {
+    const seasonRecord = {};
+    seasonRecord[this.yearPlayed] = arry;
+
+    this.teamRecord = seasonRecord;
   }
 
   get selectedRows() {
@@ -134,9 +147,11 @@ class Game {
   get summary() {
     if (this.recorded == false) return "No game recorded.";
 
-    return `${this.teamName} recorded a ${this.result?.toLowerCase()} ${this.locationGrammar} against ${
-      this.opponent
-    }, with a score of ${this.fullScore} on ${this.formattedDate}.`;
+    return `${this.teamName} recorded a ${this.result?.toLowerCase()} ${
+      this.locationGrammar
+    } against ${this.opponent}, with a score of ${this.fullScore} on ${
+      this.formattedDate
+    }.`;
   }
 
   get description() {
@@ -170,7 +185,7 @@ class Game {
   }
 
   get defaultDraftTags() {
-    return [this.#team.defaultTag ,this.#tmplSettings.defaultDraftTags];
+    return [this.#team.defaultTag, this.#tmplSettings.defaultDraftTags];
   }
 
   get globalTemplateTags() {
@@ -223,17 +238,20 @@ class Game {
   }
 
   submitReport() {
-    const index = this.seasonRecord.findIndex((game) => game.draftID == draft.uuid);
+    const index = this.seasonRecord.findIndex(
+      (game) => game.draftID == draft.uuid
+    );
     if (index == -1) return;
 
     this.#loadGameData(index);
     if (this.submitted) return alert("this game has already been submitted!");
 
-    const { modifiedArray: modifiedDraft, sectionText: comments } = this.#extractSection(
-      draft.lines,
-      `## Other/Comments`
+    const { modifiedArray: modifiedDraft, sectionText: comments } =
+      this.#extractSection(draft.lines, `## Other/Comments`);
+    const { sectionText: highlights } = this.#extractSection(
+      modifiedDraft,
+      `## Highlights?`
     );
-    const { sectionText: highlights } = this.#extractSection(modifiedDraft, `## Highlights?`);
 
     this.#gameData.comments = comments;
     this.#gameData.highlights = highlights;
@@ -250,7 +268,9 @@ class Game {
   }
 
   #sendMessages() {
-    this.msgSettings.forEach((msgConfig) => this.#createAndSendMessage(msgConfig));
+    this.msgSettings.forEach((msgConfig) =>
+      this.#createAndSendMessage(msgConfig)
+    );
   }
 
   #createAndSendMessage(msgConfig) {
@@ -275,13 +295,21 @@ class Game {
       googleFormDate: this.googleFormDate,
     };
     this.ui.debugVariable(formData, "formData: ");
-    const dependancies = { settings: this.googleFormSettings, formData: formData };
+    const dependancies = {
+      settings: this.googleFormSettings,
+      formData: formData,
+    };
     const googleForm = new GoogleForm(dependancies);
     googleForm.submit();
   }
 
   record() {
-    const funcsToRun = ["recordDate", "recordOpponent", "recordLocation", "recordScore"];
+    const funcsToRun = [
+      "recordDate",
+      "recordOpponent",
+      "recordLocation",
+      "recordScore",
+    ];
 
     this.#gameData.recorded = funcsToRun.every((fn) => {
       return this[fn]();
@@ -298,7 +326,10 @@ class Game {
     if (dayOfGame.show() == false) return false;
 
     const firstValue = menuSettings.menuItems[0]?.data?.value;
-    this.#gameData.date = dayOfGame.buttonPressed == firstValue ? new Date() : this.#getDateFromPrompt();
+    this.#gameData.date =
+      dayOfGame.buttonPressed == firstValue
+        ? new Date()
+        : this.#getDateFromPrompt();
 
     if (this.date == undefined) return false;
 
@@ -309,7 +340,8 @@ class Game {
 
   recordOpponent() {
     const { menuSettings, textField } = this.#bvr.ui.settings("recordOpponent");
-    if (this.calOpponent != undefined) textField.data.initialText = this.calOpponent;
+    if (this.calOpponent != undefined)
+      textField.data.initialText = this.calOpponent;
 
     menuSettings.menuItems.push(textField);
     const opponentPrompt = this.#bvr.ui.buildMenu(menuSettings);
@@ -321,7 +353,10 @@ class Game {
   }
 
   recordLocation() {
-    this.#gameData.location = this.calLocation != undefined ? this.calLocation : this.#getLocationFromPrompt();
+    this.#gameData.location =
+      this.calLocation != undefined
+        ? this.calLocation
+        : this.#getLocationFromPrompt();
     if (this.#gameData.location == undefined) return false;
 
     return true;
@@ -377,9 +412,12 @@ class Game {
 
   #appendToRecordsDraft() {
     if (this.recordsDraftID == undefined) return;
+
+    const recordsDraft = Draft.find(this.recordsDraftID);
+    if (recordsDraft == undefined) return;
+
     const tmplSettings = this.#generateTmplSettings(this.recordTmplSettings);
     const newTableLine = new Template(tmplSettings);
-    const recordsDraft = Draft.find(this.recordsDraftID);
 
     recordsDraft.append(newTableLine.content);
     recordsDraft.update();
@@ -405,12 +443,17 @@ class Game {
       },
     };
     if (templateSettings.draftTags != undefined)
-      templateSettings.draftTags = [...this.defaultDraftTags, ...templateSettings.draftTags];
+      templateSettings.draftTags = [
+        ...this.defaultDraftTags,
+        ...templateSettings.draftTags,
+      ];
     return templateSettings;
   }
 
   #pickerColumns(maxValue) {
-    const columValues = Array.from({ length: maxValue + 1 }, (e, i) => i.toString());
+    const columValues = Array.from({ length: maxValue + 1 }, (e, i) =>
+      i.toString()
+    );
     return [columValues, columValues];
   }
 
@@ -446,12 +489,17 @@ class Game {
     const cal = Calendar.find(this.#team.calendar);
     if (cal == undefined) return;
 
-    let endDate = new Date(this.date);
-    endDate.setDate(endDate.getDate() + 1);
+    const startDate = adjustDate(this.date, "-12 hours");
+    const endDate = adjustDate(this.date, "+12 hours");
 
-    const events = cal.events(this.date, endDate);
+    const events = cal.events(startDate, endDate);
     const matchEvent = events[0]?.title;
-    if (matchEvent == undefined) return;
+
+    if (matchEvent == undefined || matchEvent.includes("Game") == false) {
+      app.displayInfoMessage("There does not appear to be a game today.");
+      return false;
+    }
+
     const matchDescription = matchEvent.split(":")[1].split("vs");
     const location = matchDescription[0].trim();
 
@@ -465,18 +513,28 @@ class Game {
   }
 
   #lookupDraftID() {
-    if (this.seasonRecord.find((game) => game.draftID == draft.uuid)) return draft.uuid;
+    if (this.seasonRecord.find((game) => game.draftID == draft.uuid))
+      return draft.uuid;
     return "";
     //return this.#getDraftIDFromPrompt();
   }
 
   #extractSection(array, sectionHeader) {
-    const { sectionStart, sectionEnd } = this.#getSectionData(array, sectionHeader);
-    const sectionText = array.splice(sectionStart, sectionEnd).slice(2).join("");
+    const { sectionStart, sectionEnd } = this.#getSectionData(
+      array,
+      sectionHeader
+    );
+    const sectionText = array
+      .splice(sectionStart, sectionEnd)
+      .slice(2)
+      .join("");
     return { modifiedArray: array, sectionText: sectionText };
   }
 
   #getSectionData(array, text) {
-    return { sectionStart: array.findIndex((item) => item == text), sectionEnd: array.length };
+    return {
+      sectionStart: array.findIndex((item) => item == text),
+      sectionEnd: array.length,
+    };
   }
 }
