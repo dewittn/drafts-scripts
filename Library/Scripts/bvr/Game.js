@@ -56,8 +56,15 @@ class Game {
     this.#records[this.teamID] = seasonRecord;
   }
 
+  get seasonData() {
+    return this.teamRecord[this.yearPlayed];
+  }
+
   get seasonRecord() {
-    const record = this.teamRecord[this.yearPlayed];
+    const record = this.seasonData?.seasonRecord;
+    if (record == undefined && typeof this.seasonData == "array")
+      success = this.#migrateSeasonData();
+
     return record != undefined ? record : [];
   }
 
@@ -543,5 +550,9 @@ class Game {
       sectionStart: array.findIndex((item) => item == text),
       sectionEnd: array.length,
     };
+  }
+
+  #migrateSeasonData() {
+    return true;
   }
 }
