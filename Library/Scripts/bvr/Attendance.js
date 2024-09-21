@@ -104,7 +104,7 @@ class Attendance {
     if (this.attendaceDraftIsLoaded == false) return false;
 
     if (this.hasBeenSubmitted) {
-      app.displayInfoMessage(this.alreadySubmitted);
+      this.#bvr.ui.displayAppMessage("info", this.alreadySubmitted);
       return false;
     }
 
@@ -138,7 +138,7 @@ class Attendance {
       message.compose(this.names);
 
       if (message.send() == false)
-        return app.displayErrorMessage(this.submitFailure);
+        return app.displayAppMessage("error", this.submitFailure);
     }
 
     this.submitted();
@@ -174,7 +174,7 @@ class Attendance {
     this.attendaceDraft.update();
     this.#bvr.unpinDraft(this.attendaceDraft);
     this.#team.loadPracticePlan();
-    this.#bvr.ui.displaySuccessMessage(this.submitSuccess);
+    this.#bvr.ui.displayAppMessage("success", this.submitSuccess);
   }
 
   #runAttendaceShortcut() {

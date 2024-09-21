@@ -150,13 +150,13 @@ class ContentPipeline {
       });
 
     if (this.#activeDoc == undefined)
-      return this.#ui.displayErrorMessage({
+      return this.#ui.displayAppMessage("error", docNotFound, {
         errorMessage: docNotFound,
         acticeDoc: this.#activeDoc,
       });
 
     if (this.recentRecordsUpdated != true)
-      this.#ui.displayInfoMessage(recentDocsNotSaved, {
+      this.#ui.displayAppMessage("info", recentDocsNotSaved, {
         recentRecordsUpdated: false,
         activeDoc: this.#activeDoc,
       });
@@ -172,9 +172,7 @@ class ContentPipeline {
     // Retrieve settings for useCurrentDraft
     const { menuSettings } = this.#ui.settings("useCurrentDraft");
     if (draft.content == "")
-      return this.#ui.displayInfoMessage({
-        infoMessage: "Cannot use a blank draft!",
-      });
+      return this.#ui.displayAppMessage("info", "Cannot use a blank draft!");
 
     this.#activeDoc = this.#document_factory.load({
       docID: draft.uuid,
@@ -286,7 +284,7 @@ class ContentPipeline {
       });
 
     if (this.#activeDoc == undefined)
-      return this.#ui.displayErrorMessage({
+      return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "modifyActiveDoc()",
@@ -335,12 +333,12 @@ class ContentPipeline {
 
     // Check if doc is already in pipeline
     if (this.activeDocInPipeline)
-      return this.#ui.displayInfoMessage({ infoMessage: docExistsMessage });
+      return this.#ui.displayAppMessage("info", docExistsMessage);
     if (this.databaseError) return this.#throwDBError("addDocToPipeline()");
 
     // Prompt to add doc to pipeline
     if (this.#ui.yesNoPrompt(menuSettings) === "no") {
-      this.#ui.displayInfoMessage(infoMessage);
+      this.#ui.displayAppMessage("info", infoMessage);
       return false;
     }
 
@@ -354,7 +352,7 @@ class ContentPipeline {
 
     // Update pipeline with activeDoc
     if (this.#updateDatabase() == false)
-      return this.#ui.displayErrorMessage({
+      return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "addDocToPipeline()",
@@ -368,9 +366,10 @@ class ContentPipeline {
 
     // If Airtable responds with a valid record
     // add the record to recent records and return it
+    const warningMessage = "Recent Records could not be saved!";
     if (this.#updateRecentRecords() == false)
-      this.#ui.displayWarningMessage({
-        warningMessage: "Recent Records could not be saved!",
+      this.#ui.displayAppMessage("warning", warningMessage, {
+        warningMessage: warningMessage,
         errorType: "execution",
         class: "AirTableDB",
         function: "updateUsingDoc()",
@@ -380,7 +379,7 @@ class ContentPipeline {
         stackTrace: this.#recent.stackTrace,
       });
 
-    this.#ui.displaySuccessMessage(successMessage);
+    this.#ui.displayAppMessage("success", successMessage);
     return true;
   }
 
@@ -432,12 +431,13 @@ class ContentPipeline {
     this.#convertActiveDoc(newDocType);
 
     if (this.recentRecordsUpdated != true)
-      this.#ui.displayInfoMessage(recentDocsNotSaved, {
+      this.#ui.displayAppMessage("info", recentDocsNotSaved, {
         savedRecent: savedRecent,
         activeDoc: this.#activeDoc,
       });
 
-    this.#ui.displaySuccessMessage(
+    this.#ui.displayAppMessage(
+      "success",
       `Draft has been converted to a ${newDocType}.`
     );
   }
@@ -457,7 +457,7 @@ class ContentPipeline {
       });
 
     if (this.#activeDoc == undefined)
-      return this.#ui.displayErrorMessage({
+      return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "updateStatusOfDoc()",
@@ -466,7 +466,7 @@ class ContentPipeline {
       });
 
     if (this.#activeDoc.title == undefined)
-      return this.#ui.displayErrorMessage({
+      return this.#ui.displayAppMessage("error", errorMessage2, {
         errorMessage: errorMessage2,
         class: "ContentPipeline",
         function: "updateStatusOfDoc()",
@@ -506,7 +506,7 @@ class ContentPipeline {
     if (this.databaseError) return this.#throwDBError("updateStatusOfDoc()");
 
     // Display Success Message when Pipeline has been update
-    app.displaySuccessMessage(successMessage + newStatus);
+    app.displayAppMessage("success", successMessage + newStatus);
     return true;
   }
 
@@ -517,9 +517,11 @@ class ContentPipeline {
   syncStatusOfSheet(targetId) {
     const docData = { docID: targetId, docIDType: "UlyssesID" };
     const record = this.#db.retrieveRecordByDocID(docData);
+    const errorMessage = "No record found with that Target ID!";
+
     if (record == undefined)
-      return this.#ui.displayErrorMessage({
-        errorMessage: "No record found with that Target ID!",
+      return this.#ui.displayAppMessage("error", errorMessage, {
+        errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "syncStatusOfSheet()",
         targetId: targetId,
@@ -574,9 +576,11 @@ class ContentPipeline {
   // * Private Functions
   // **************
   #functionToRunNext(name, args) {
+    const errorMessage = "Function name missing!";
+
     if (name == undefined)
-      return this.#ui.displayErrorMessage({
-        errorMessage: "Function name missing!",
+      return this.#ui.displayAppMessage("error", errorMessage, {
+        errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "#functionToRunNext()",
         name: name,
@@ -589,7 +593,7 @@ class ContentPipeline {
 
   #throwDBError(parentFunction) {
     this.#db.stackTrace["parentFunction"] = parentFunction;
-    this.#ui.displayErrorMessage(this.#db.stackTrace);
+    this.#ui.displayAppMessage("error", "Database Error!", this.#db.stackTrace);
   }
 
   #updateDatabase() {
@@ -602,6 +606,7 @@ class ContentPipeline {
 
   #convertActiveDoc(newDocType) {
     if (this.#activeDoc == undefined || newDocType == undefined) return false;
+    const errorMessage = "Document could not be created!";
 
     // Create New Doc
     const newDoc = this.#document_factory.create(newDocType);
@@ -611,8 +616,8 @@ class ContentPipeline {
     newDoc.destination = this.#activeDoc.destination;
     newDoc.content = this.#activeDoc.content;
     if (newDoc.save() == false)
-      return this.#ui.displayErrorMessage({
-        errorMessage: "Document could not be created!",
+      return this.#ui.displayAppMessage("error", errorMessage, {
+        errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "#convertActiveDoc()",
         docType: newDoc.docIDType,

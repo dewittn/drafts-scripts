@@ -115,4 +115,5 @@ const doc = document_factory.load(secondRecord);
 const saved = recentDocs.save(doc);
 const firstRecord = new RecentRecord(recentDocs.records[0]);
 
-if (firstRecord.docID == secondRecord.docID) ui.displaySuccessMessage("Recent Records were saved correctly!");
+if (firstRecord.docID == secondRecord.docID)
+  ui.displayAppMessage("success", "Recent Records were saved correctly!");

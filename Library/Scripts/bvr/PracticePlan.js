@@ -109,9 +109,7 @@ class PracticePlan {
 
   load() {
     if (this.practicePlans == undefined)
-      return this.#bvr.ui.displayInfoMessage({
-        infoMessage: "No practice plan found.",
-      });
+      return this.#bvr.ui.displayAppMessage("info", "No practice plan found.");
     const draftID = this.practicePlans[this.planID];
     const practicePlan = Draft.find(draftID);
 
@@ -128,7 +126,8 @@ class PracticePlan {
   }
 
   #insertPraticePlanLink(linkTxt) {
-    if (linkTxt == undefined) return alert("linkTxt is undefined");
+    if (linkTxt == undefined)
+      return this.#bvr.ui.displayAppMessage("error", "linkTxt is undefined");
 
     const coachingDraft = Draft.find(this.coachingDraftID);
     const insertPosision =
