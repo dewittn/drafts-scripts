@@ -146,8 +146,7 @@ class DraftsUI {
     app.displaySuccessMessage(successMessage);
   }
 
-  debugVariable(variable, text = "", debug = true) {
-    this.debug = debug;
+  debugVariable(variable, text = "") {
     const message = `${text}${JSON.stringify(variable)}`;
     console.log(message);
     if (this.#debug) alert(message);
@@ -155,7 +154,7 @@ class DraftsUI {
 
   displayAppMessage(type, message, stackTrace) {
     // Update Error Log if UUID is found in settings
-    if (stackTrace != undefined) this.#updateDraftLog(message, stackTrace);
+    if (stackTrace != undefined) this.#updateDraftLog(infoMessage, stackTrace);
 
     switch (type) {
       case "info":
@@ -173,10 +172,7 @@ class DraftsUI {
   }
 
   #updateDraftLog(message, details = {}) {
-    if (this.draftLogUUID == undefined) {
-      console.log(message, JSON.stringify(details));
-      return;
-    }
+    if (this.draftLogUUID != undefined) return;
 
     const draftLog = Draft.find(this.draftLogUUID);
     const timeCode = new Date().toString();

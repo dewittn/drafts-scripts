@@ -244,7 +244,11 @@ class Game {
     if (index == -1) return;
 
     this.#loadGameData(index);
-    if (this.submitted) return alert("this game has already been submitted!");
+    if (this.submitted)
+      return this.#bvr.ui.displayAppMessage(
+        "info",
+        "this game has already been submitted!"
+      );
 
     const { modifiedArray: modifiedDraft, sectionText: comments } =
       this.#extractSection(draft.lines, `## Other/Comments`);
@@ -496,7 +500,10 @@ class Game {
     const matchEvent = events[0]?.title;
 
     if (matchEvent == undefined || matchEvent.includes("Game") == false) {
-      app.displayInfoMessage("There does not appear to be a game today.");
+      this.#bvr.ui.displayAppMessage(
+        "info",
+        "There does not appear to be a game today."
+      );
       return false;
     }
 
