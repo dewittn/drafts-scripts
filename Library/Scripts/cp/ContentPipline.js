@@ -157,7 +157,7 @@ class ContentPipeline {
 
     if (this.recentRecordsUpdated != true)
       this.#ui.displayInfoMessage(recentDocsNotSaved, {
-        savedRecent: savedRecent,
+        recentRecordsUpdated: false,
         activeDoc: this.#activeDoc,
       });
 
