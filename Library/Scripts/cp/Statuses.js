@@ -21,7 +21,9 @@ class Statuses {
     const { menuSettings, errorMessage } = this.#settings.selectStatus;
 
     menuSettings.menuMessage =
-      title == "" ? `${menuSettings.menuMessage} to work with.` : `${menuSettings.menuMessage} for: ${title}`;
+      title == ""
+        ? `${menuSettings.menuMessage} to work with.`
+        : `${menuSettings.menuMessage} for: ${title}`;
     menuSettings.isCancellable = false;
     menuSettings.menuItems = [];
 
@@ -39,20 +41,34 @@ class Statuses {
 
     // Displays prompt and returns chosen status
     if (choseStatus.show() == false)
-      return this.#ui.displayErrorMessage({ errorMessage: errorMessage, class: "Statuses", function: "select" });
+      return this.#ui.displayAppMessage("error", errorMessage, {
+        errorMessage: errorMessage,
+        class: "Statuses",
+        function: "select",
+      });
 
     return choseStatus.buttonPressed;
   }
 
   // Removes the current status from the statusList and generates an options menu
   generateStatusMenuItems(currentStatus) {
-    const index = this.statusList.findIndex((status) => status == currentStatus);
+    const index = this.statusList.findIndex(
+      (status) => status == currentStatus
+    );
     // statusList.splice(0, index + 1);
     return this.statusList
       .slice(index + 1, this.statusList.length)
       .reduce(
-        (obj, status) => [...obj, { type: "button", data: { name: status, value: status } }],
-        [{ type: "button", data: { name: "<< Back", value: "back", isDefault: true } }]
+        (obj, status) => [
+          ...obj,
+          { type: "button", data: { name: status, value: status } },
+        ],
+        [
+          {
+            type: "button",
+            data: { name: "<< Back", value: "back", isDefault: true },
+          },
+        ]
       );
   }
 

@@ -52,9 +52,10 @@ class UlyssesDoc {
   }
 
   set record(record) {
+    const errorMessage = "Record does not have an id!";
     if (record?.docID == undefined)
-      return this.#ui.displayErrorMessage({
-        errorMessage: "Record does not have an id!",
+      return this.#ui.displayAppMessage("error", errorMessage, {
+        errorMessage: errorMessage,
         class: "UlyssesDoc",
         function: "set record()",
         record: record,

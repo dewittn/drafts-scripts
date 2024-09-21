@@ -50,7 +50,8 @@ class Destinations {
   }
 
   select(title = "") {
-    const { menuSettings, menuPicker, errorMessage } = this.#settings;
+    const { menuSettings, menuPicker, errorMessage, errorMessage2 } =
+      this.#settings;
 
     menuSettings.menuMessage =
       title == ""
@@ -63,12 +64,12 @@ class Destinations {
 
     // Displays prompt and returns chosen Destination
     if (choseDestination.show() == false)
-      return this.#ui.displayErrorMessage({ errorMessage: errorMessage });
+      return this.#ui.displayAppMessage("error", errorMessage);
     const selectedDestination = choseDestination.fieldValues[menuPicker.name];
 
     if (selectedDestination == undefined)
-      return this.#ui.displayErrorMessage({
-        errorMessage: "Error selecting destination",
+      return this.#ui.displayAppMessage("error", errorMessage2, {
+        errorMessage: errorMessage2,
         class: "Destinations",
         function: "select()",
         menuSettings: menuSettings,
@@ -92,10 +93,11 @@ class Destinations {
   }
 
   lookupAirTableDestinationName(destination) {
+    const errorMessage = "Destination not found!";
     const destData = this.data[destination.toLowerCase()];
     if (destData == undefined)
-      return this.#ui.displayErrorMessage({
-        errorMessage: "Destination not found!",
+      return this.#ui.displayAppMessage("error", errorMessage, {
+        errorMessage: errorMessage,
         class: "Destinations",
         function: "lookupAirTableDestinationName",
         destination: destination,

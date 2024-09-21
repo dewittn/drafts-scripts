@@ -15,6 +15,7 @@ debug:
 destinations:
   destinationsFile: destinations.yaml
   errorMessage: "Error: You must select a destination!!"
+  errorMessage2: "Error: A destination was not selected."
   menuPicker:
     name: destination
     label: Destination

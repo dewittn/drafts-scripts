@@ -116,13 +116,8 @@ class DraftsUI {
     return yesNo.buttonPressed;
   }
 
-  displayErrorMessage(stackTrace) {
-    if (stackTrace == undefined) return;
-
-    const { errorMessage } = stackTrace;
-    // Update Draft Log if UUID is found in settings
-    if (this.draftLogUUID != undefined)
-      this.#updateDraftLog(errorMessage, stackTrace);
+  displayErrorMessage(errorMessage, stackTrace) {
+    if (stackTrace != undefined) this.#updateDraftLog(errorMessage, stackTrace);
 
     // Display Error Message
     app.displayErrorMessage(errorMessage);
@@ -130,30 +125,25 @@ class DraftsUI {
     return false;
   }
 
-  displayWarningMessage(stackTrace) {
-    if (stackTrace == undefined) return;
-
-    const { warningMessage } = stackTrace;
-    // Update Draft Log if UUID is found in settings
-    if (this.draftLogUUID != undefined)
+  displayWarningMessage(warningMessage, stackTrace) {
+    if (stackTrace != undefined)
       this.#updateDraftLog(warningMessage, stackTrace);
 
     app.displayWarningMessage(warningMessage);
   }
 
-  displayInfoMessage(stackTrace) {
-    if (stackTrace == undefined) return;
-
-    const { infoMessage } = stackTrace;
+  displayInfoMessage(infoMessage, stackTrace) {
     // Update Error Log if UUID is found in settings
-    if (this.draftLogUUID != undefined)
-      this.#updateDraftLog(infoMessage, stackTrace);
+    if (stackTrace != undefined) this.#updateDraftLog(infoMessage, stackTrace);
 
     app.displayInfoMessage(infoMessage);
   }
 
-  displaySuccessMessage(message) {
-    app.displaySuccessMessage(message);
+  displaySuccessMessage(successMessage, stackTrace) {
+    if (stackTrace != undefined)
+      this.#updateDraftLog(successMessage, stackTrace);
+
+    app.displaySuccessMessage(successMessage);
   }
 
   debugVariable(variable, text = "") {
@@ -162,7 +152,28 @@ class DraftsUI {
     if (this.#debug) alert(message);
   }
 
+  displayAppMessage(type, message, stackTrace) {
+    // Update Error Log if UUID is found in settings
+    if (stackTrace != undefined) this.#updateDraftLog(infoMessage, stackTrace);
+
+    switch (type) {
+      case "info":
+        app.displayInfoMessage(message);
+        break;
+      case "warning":
+        app.displayWarningMessage(message);
+        break;
+      case "error":
+        app.displayErrorMessage(message);
+        break;
+      default:
+        app.displaySuccessMessage(message);
+    }
+  }
+
   #updateDraftLog(message, details = {}) {
+    if (this.draftLogUUID != undefined) return;
+
     const draftLog = Draft.find(this.draftLogUUID);
     const timeCode = new Date().toString();
 

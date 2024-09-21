@@ -22,16 +22,19 @@ class DocumentFactory {
   }
 
   load(record) {
+    const errorMessage = "Record is missing docIDType!!";
+    const errorMessage2 = "Document could not be loaded!";
     // const docIDType = record;
     if (record.docIDType == undefined)
-      return this.#ui.displayErrorMessage({
-        errorMessage: "Record is missing docIDType!!",
+      return this.#ui.displayAppMessage("error", errorMessage, {
+        errorMessage: errorMessage,
         class: "DocumentFactory",
         function: "load()",
         record: record,
         docIDType: record.docIDType,
       });
-    if (record?.docID == undefined) record.docID = this.#promptForDocID(record.docIDType);
+    if (record?.docID == undefined)
+      record.docID = this.#promptForDocID(record.docIDType);
 
     let doc = undefined;
     switch (record.docIDType) {
@@ -51,8 +54,8 @@ class DocumentFactory {
     }
 
     if (doc == undefined || doc == false)
-      return this.#ui.displayErrorMessage({
-        errorMessage: "Document could not be loaded!",
+      return this.#ui.displayAppMessage("error", errorMessage2, {
+        errorMessage: errorMessage2,
         class: "DocumentFactory",
         function: "load()",
         record: record,
