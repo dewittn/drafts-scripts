@@ -7,7 +7,7 @@ function isUrl(s) {
 }
 
 const clipboard = app.getClipboard();
-const actionMenu = ActionMenu.createFromGroup("Link Tools");
+const actionMenu = ActionMenu.createFromGroup("Link Actions");
 
 if (isUrl(clipboard)) {
   actionMenu.selectAction("Markdown Link");
