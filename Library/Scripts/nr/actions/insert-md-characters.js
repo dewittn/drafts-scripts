@@ -1,5 +1,5 @@
-if (typeof ActionMenu == "undefined") require("libraries/ActionMenu.js");
-const actionList = [
+require("nr.js");
+var actions = [
   "Markdown Table",
   "Markdown Horizontal",
   "Inline Code (`)",
@@ -7,5 +7,4 @@ const actionList = [
   "Highlight",
 ];
 
-const actionMenu = ActionMenu.createFromList(actionList);
-actionMenu.select();
+actionMenu(actions);
