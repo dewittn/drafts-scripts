@@ -6,8 +6,8 @@ class ActionMenu {
     this.#ui = new DraftsUI();
     this.groupActions = actionGroup.actions;
     this.menuSettings = {
-      menuTitle: "Selcet action",
-      menuMessage: "Which action would you like to use?",
+      menuTitle: "Select Next Action",
+      menuMessage: "Which action would you like to run next?",
     };
 
     this.menuSettings.menuItems = this.groupActions.map((action, index) => {
