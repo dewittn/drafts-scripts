@@ -24,7 +24,7 @@ class ActionMenu {
   }
 
   static createFromList(actionList) {
-    const actionGroup = DynamicActionGroup.create(actionList);
+    const actionGroup = new DynamicActionGroup(actionList);
     return new ActionMenu(actionGroup);
   }
 
