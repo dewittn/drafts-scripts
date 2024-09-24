@@ -1,3 +1,4 @@
+if (typeof CloudFS == "undefined") require("cp/filesystems/CloudFS.js");
 class Template {
   static basePath = "/Library/Templates";
   #fs;
@@ -52,6 +53,10 @@ class Template {
     return Object.entries(this.#settings.templateTags);
   }
 
+  get workspaceName() {
+    return this.#settings.workspaceName;
+  }
+
   save() {
     this.draft.update();
     return this;
@@ -87,7 +92,9 @@ class Template {
     this.draft = Draft.create();
     // draftsTags should be formatted as an array like this: ["tag1", "tag2", "tag3"]
     this.draftTags.forEach((tag) => this.draft.addTag(tag));
-    this.templateTags.forEach(([key, value]) => this.draft.setTemplateTag(key, value));
+    this.templateTags.forEach(([key, value]) =>
+      this.draft.setTemplateTag(key, value)
+    );
 
     this.#processTemplate();
   }

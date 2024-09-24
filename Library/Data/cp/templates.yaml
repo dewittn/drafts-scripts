@@ -13,13 +13,13 @@ authorUpdate:
         menuMessage: When are you sending out this update?
         menuItems: []
 beyondTheBook:
-  dateFormat: "%B Y"
-  draftTags:
-    - beyond the book
-    - drafting
-  templateFile: "cp/beyond-the-book.md"
-  templateTag: "working_title"
-  workspaceName: "defualt"
+  templateSettings:
+    draftTags:
+      - beyond the book
+      - drafting
+    templateFile: "cp/beyond-the-book.md"
+    workspaceName: "defualt"
+    templateTag: "working_title"
   uiSettings:
     getTitleFromPrompt:
       menuSettings:
