@@ -2,7 +2,7 @@ authorUpdate:
   dateFormat: "%B Y"
   templateSettings:
     draftTags:
-      - newsletter
+      - author update
       - drafting
     templateFile: "cp/innocent-dreams-newsletter.md"
     templateTag: "publish_date"
