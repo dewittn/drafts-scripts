@@ -154,7 +154,7 @@ class DraftsUI {
 
   displayAppMessage(type, message, stackTrace) {
     // Update Error Log if UUID is found in settings
-    if (stackTrace != undefined) this.#updateDraftLog(infoMessage, stackTrace);
+    if (stackTrace != undefined) this.#updateDraftLog(message, stackTrace);
 
     switch (type) {
       case "info":

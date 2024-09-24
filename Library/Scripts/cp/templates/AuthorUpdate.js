@@ -47,7 +47,10 @@ class AuthorUpdate {
 
   #createTemplate() {
     const templateTags = {};
-    templateTags[this.templateTag] = this.#getMonthFromPrompt();
+    const updateMonth = this.#getMonthFromPrompt();
+    if (updateMonth == undefined) return context.cancel();
+
+    templateTags[this.templateTag] = updateMonth;
     const settings = {
       templateTags: templateTags,
       ...this.templateSettings,
@@ -64,7 +67,7 @@ class AuthorUpdate {
     );
 
     const monthPrompt = this.#ui.buildMenu(menuSettings);
-    if (monthPrompt.show() == false) return context.cancel();
+    if (monthPrompt.show() == false) return undefined;
 
     return monthPrompt.buttonPressed;
   }

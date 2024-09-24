@@ -13,10 +13,11 @@ Content:
     groupID: f61KZwMNx4207TcoS8U8cg
     statusWhenToConvert: writing
     convertTo: sheet
-  newsletter:
+  author update:
     groupID: HUC3AgEJ-StgJgUChjo51g
     template: authorUpdate
     statusWhenToConvert: writing
+    scrubText: "Innocent Dreams: "
     convertTo: sheet
   beyond the book:
     groupID: 82Du-mNX2qy1GvPSQ3I8xA
