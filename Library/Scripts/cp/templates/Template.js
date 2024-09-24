@@ -40,6 +40,10 @@ class Template {
     return this.#settings.draftTags;
   }
 
+  get nextAction() {
+    return this.#settings.nextAction;
+  }
+
   get templateFile() {
     return this.#settings.templateFile;
   }
@@ -79,7 +83,7 @@ class Template {
     return this;
   }
 
-  addToPipeline() {
+  queueNextAction() {
     if (this.draft == undefined) return;
 
     const nextAction = Action.find(this.nextAction);

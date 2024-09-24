@@ -1,3 +1,7 @@
+if (typeof Template == "undefined") require("cp/templates/Template.js");
+if (typeof Settings == "undefined") require("cp/filesystems/CloudFS.js");
+if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
+
 class AuthorUpdate {
   static settingsFile = "cp/templates.yaml";
   #settings;
@@ -7,23 +11,15 @@ class AuthorUpdate {
     this.#settings = new Settings(this.settingsFile, "authorUpdate");
     this.#ui = new DraftsUI(this.#settings.uiSettings);
 
-    this.#createDraft();
+    this.#createTemplate();
   }
 
   get settingsFile() {
     return this.constructor.settingsFile;
   }
 
-  get workspaceName() {
-    return this.#settings.workspaceName;
-  }
-
-  get nextAction() {
-    return this.#settings.nextAction;
-  }
-
-  get draftTags() {
-    return this.#settings.draftTags;
+  get templateSettings() {
+    return this.#settings.templateSettings;
   }
 
   get dateFormat() {
@@ -31,45 +27,33 @@ class AuthorUpdate {
   }
 
   get templateTag() {
-    return this.#settings.templateTag;
-  }
-
-  get templateFile() {
-    return this.#settings.templateFile;
+    return this.#settings?.templateSettings?.templateTag;
   }
 
   save() {
-    this.draft.update();
+    if (this.template != undefined) this.template.activate();
     return this;
   }
 
   activate() {
-    if (this.draft == undefined) return;
-
-    // find workspace and load it in drafts list
-    const workspace = Workspace.find(this.workspaceName);
-    app.applyWorkspace(workspace);
-
-    editor.load(this.draft);
-    editor.activate();
+    if (this.template != undefined) this.template.activate();
     return this;
   }
 
   addToPipeline() {
-    if (this.draft == undefined) return;
-
-    const nextAction = Action.find(this.nextAction);
-    app.queueAction(nextAction, this.draft);
-
+    if (this.template != undefined) this.template.queueNextAction();
     return this;
   }
 
-  #createDraft() {
-    this.draft = Draft.create();
-    // draftsTags should be formatted as an array like this: ["tag1", "tag2", "tag3"]
-    this.draftTags.forEach((tag) => this.draft.addTag(tag));
-    this.draft.setTemplateTag(this.templateTag, this.#getMonthFromPrompt());
-    this.#processTemplate();
+  #createTemplate() {
+    const templateTags = {};
+    templateTags[this.templateTag] = this.#getMonthFromPrompt();
+    const settings = {
+      templateTags: templateTags,
+      ...this.templateSettings,
+    };
+
+    this.template = new Template(settings);
   }
 
   #getMonthFromPrompt() {
@@ -94,12 +78,5 @@ class AuthorUpdate {
     const nextMonth = date.format(this.dateFormat);
 
     return [nextMonth, currentMonth];
-  }
-
-  #processTemplate() {
-    if (this.templateFile == undefined) return;
-
-    const template = Template.load(this.templateFile);
-    this.draft.content = this.draft.processTemplate(template);
   }
 }
