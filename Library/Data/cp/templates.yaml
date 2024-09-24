@@ -1,13 +1,11 @@
 authorUpdate:
   dateFormat: "%B Y"
-  templateSettings:
-    draftTags:
-      - author update
-      - drafting
-    templateFile: "cp/innocent-dreams-newsletter.md"
-    templateTag: "publish_date"
-    workspaceName: "defualt"
-    nextAction: "Add Draft to Pipeline"
+  draftTags:
+    - newsletter
+    - drafting
+  templateFile: "cp/innocent-dreams-newsletter.md"
+  templateTag: "publish_date"
+  workspaceName: "defualt"
   uiSettings:
     getMonthFromPrompt:
       menuSettings:
@@ -22,7 +20,6 @@ beyondTheBook:
     templateFile: "cp/beyond-the-book.md"
     workspaceName: "defualt"
     templateTag: "working_title"
-    nextAction: "Add Draft to Pipeline"
   uiSettings:
     getTitleFromPrompt:
       menuSettings:

@@ -37,7 +37,7 @@ class BeyondTheBook {
   }
 
   addToPipeline() {
-    this.template.queueNextAction();
+    this.template.addToPipeline();
     return this;
   }
 
