@@ -4,7 +4,7 @@ class ActionMenu {
 
   constructor(actionGroup) {
     this.#ui = new DraftsUI();
-    this.groupActions = actionGroup.actions;
+    this.groupActions = actionGroup != undefined ? actionGroup.actions : [];
     this.menuSettings = {
       menuTitle: "Select Next Action",
       menuMessage: "Which action would you like to run next?",
@@ -20,6 +20,12 @@ class ActionMenu {
 
   static createFromGroup(actionGroupName) {
     const actionGroup = ActionGroup.find(actionGroupName);
+    if (actionGroup == undefined) {
+      const ui = new DraftsUI();
+      ui.displayErrorMessage(
+        `Action Group '${actionGroupName}' was not found!"`
+      );
+    }
     return new ActionMenu(actionGroup);
   }
 
@@ -29,6 +35,8 @@ class ActionMenu {
   }
 
   select() {
+    if (this.groupActions.length == 0) return;
+
     const linkMenu = this.#ui.buildMenu(this.menuSettings);
     if (linkMenu.show() == false) return;
 
