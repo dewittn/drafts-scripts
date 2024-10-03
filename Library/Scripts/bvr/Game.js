@@ -5,6 +5,7 @@ class Game {
   #records;
   #settings;
   #tmplSettings;
+  #currentSeasonID;
 
   constructor(dependancies) {
     if (dependancies == undefined)
@@ -58,6 +59,23 @@ class Game {
 
   get seasonData() {
     return this.teamRecord[this.yearPlayed];
+  }
+
+  get currentSeasonID() {
+    if (this.#currentSeasonID == undefined) {
+      const today = new Date();
+      this.#currentSeasonID = today.getFullYear();
+    }
+
+    return this.#currentSeasonID;
+  }
+
+  get currentSeason() {
+    return this.teamRecord[this.currentSeasonID];
+  }
+
+  set currentSeason(seasonData) {
+    this.teamRecord[this.currentSeasonID] = seasonData;
   }
 
   get seasonRecord() {
@@ -305,11 +323,11 @@ class Game {
       teamName: this.teamName,
       googleFormDate: this.googleFormDate,
     };
-    this.ui.debugVariable(formData, "formData: ");
     const dependancies = {
       settings: this.googleFormSettings,
       formData: formData,
     };
+
     const googleForm = new GoogleForm(dependancies);
     googleForm.submit();
   }
@@ -552,7 +570,34 @@ class Game {
     };
   }
 
-  #migrateSeasonData() {
-    return true;
+  #createRecordsDraft() {
+    const recordsDraft = new Template();
+  }
+
+  migrateCurrentSeason() {
+    this.#migrateSeasonData(this.currentSeasonID);
+  }
+
+  #migrateSeasonData(seasonID) {
+    if (seasonID == undefined) return;
+
+    if (this.teamRecord[seasonID].gameData != undefined)
+      return this.ui.displayAppMessage(
+        "info",
+        "Current season has already been converted."
+      );
+    if (typeof this.teamRecord[seasonID] != "array")
+      return this.ui.displayAppMessage(
+        "error",
+        "The current season is the wrong type and will not be migrated."
+      );
+
+    this.teamRecord[seasonID] = {
+      recordsDraftID: "",
+      gameData: this.currentSeason,
+    };
+
+    this.#records.save();
+    return alert(`The ${this.teamID} ${seasonID} season has been migrated!`);
   }
 }
