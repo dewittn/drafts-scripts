@@ -506,7 +506,7 @@ class ContentPipeline {
     if (this.databaseError) return this.#throwDBError("updateStatusOfDoc()");
 
     // Display Success Message when Pipeline has been update
-    app.displayAppMessage("success", successMessage + newStatus);
+    this.#ui.displayAppMessage("success", successMessage + newStatus);
     return true;
   }
 

@@ -11,6 +11,7 @@ const actionMenu = ActionMenu.createFromGroup("Link Actions");
 
 if (isUrl(clipboard)) {
   actionMenu.selectAction("Markdown Link");
+  app.setClipboard("");
 } else {
   actionMenu.select();
 }
