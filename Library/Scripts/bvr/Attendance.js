@@ -138,7 +138,7 @@ class Attendance {
       message.compose(this.names);
 
       if (message.send() == false)
-        return app.displayAppMessage("error", this.submitFailure);
+        return this.#bvr.ui.displayAppMessage("error", this.submitFailure);
     }
 
     this.submitted();
@@ -173,8 +173,8 @@ class Attendance {
       .replace(/- \[ \] Submitted/g, "- [x] Submitted");
     this.attendaceDraft.update();
     this.#bvr.unpinDraft(this.attendaceDraft);
-    this.#team.loadPracticePlan();
     this.#bvr.ui.displayAppMessage("success", this.submitSuccess);
+    this.#team.loadPracticePlan();
   }
 
   #runAttendaceShortcut() {
