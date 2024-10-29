@@ -11,7 +11,8 @@ const actionMenu = ActionMenu.createFromGroup("Link Actions");
 
 if (isUrl(clipboard)) {
   actionMenu.selectAction("Markdown Link");
-  app.setClipboard("");
+  const clearClipboard = Action.find("Clear Clipboard");
+  app.queueAction(clearClipboard, draft);
 } else {
   actionMenu.select();
 }
