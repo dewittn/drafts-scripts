@@ -5,6 +5,7 @@ Game Day Checklist: @area(BVR Coaching) @when([[game_date]])
     - Clipboard w/Magnets
     - Ball Pump
   Pre-game:
+    - Ask Abby for a VEO Recorder
     - Make sure we have Water
     - Make sure we have Med kit
     - Make sure we have soccer balls
