@@ -28,7 +28,7 @@ teamsData:
     sport: soccer
     season: fall
     calendar: MSGS
-    defualtTag: bvr/soccer
+    defualtTag: bvr/soccer/ms
     practicePlan:
       draftTags:
         - bvr/soccer/practice/plan

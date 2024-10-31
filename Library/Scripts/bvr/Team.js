@@ -186,13 +186,15 @@ class Team {
   }
 
   #getTeamData(teamID) {
-    const teamData = this.teamsData.filter((team) =>
-      draft.hasTag(team.defualtTag)
-    )[0];
+    const teamData = this.#getTeamIDFromTag();
     if (teamData != undefined) return teamData;
 
     const id = teamID == "" ? this.#getTeamIDFromPrompt() : teamID;
     return this.teamsData.filter((team) => team.id == id)[0];
+  }
+
+  #getTeamDataFromTag() {
+    return this.teamsData.filter((team) => draft.hasTag(team.defualtTag))[0];
   }
 
   #getTeamIDFromPrompt() {
