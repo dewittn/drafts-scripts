@@ -4,28 +4,20 @@ class Team {
   #ppData;
   #settings;
   #teamData;
-  #tmplSettings;
 
   constructor(teamID = "") {
     this.#bvr = new BVR();
     this.#settings = new Settings(this.#bvr.teamSettingsFile);
+
     this.#teamData = this.#getTeamData(teamID);
-    this.#tmplSettings = this.#loadTemplateSettings();
 
     this.attendace = new Attendance(this.dependancies);
-    this.season = new Season(this.dependancies);
-  }
-
-  // **********************
-  // Getter/Setter
-  // **********************
-
-  get ui() {
-    return this.#bvr.ui;
+    this.practicePlan = new PracticePlan(this.dependancies);
+    this.game = new Game(this.dependancies);
   }
 
   get dependancies() {
-    return { bvr: this.#bvr, team: this, tmplSettings: this.#tmplSettings };
+    return { bvr: this.#bvr, team: this };
   }
 
   get teamsData() {
@@ -76,8 +68,7 @@ class Team {
   }
 
   get teamTemplateTags() {
-    const teamTags = this.#tmplSettings.teamTemplateTags;
-    return teamTags != undefined ? teamTags : {};
+    return this.#teamData.teamTemplateTags;
   }
 
   get gameReportSettings() {
@@ -102,57 +93,40 @@ class Team {
     return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
   }
 
-  get defaultTag() {
-    return this.#teamData.defaultTag;
+  get templateSettings() {
+    if (this.#teamData.templateSettings != undefined)
+      return this.#teamData.templateSettings;
+
+    const settingsFile =
+      this.#teamData.templateSettingsFile == undefined
+        ? `${this.id}/templateSettings.yaml`
+        : this.#teamData.templateSettingsFile;
+    return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
   }
 
-  get welcomeLetterData() {
-    return this.#tmplSettings.welcomeLetter;
+  get defualtTag() {
+    return this.#teamData.defualtTag;
   }
-
-  get defaultDraftTags() {
-    return [this.defaultTag];
-  }
-
-  get globalTemplateTags() {
-    return this.#bvr.globalTags;
-  }
-
-  get gblTmplSettings() {
-    return {
-      teamName: this.name,
-      teamAbbr: this.abbr,
-      defaultDraftTags: this.defaultDraftTags,
-      globalTemplateTags: this.globalTemplateTags,
-      teamTemplateTags: this.teamTemplateTags,
-      currentSeasonID: this.season.currentSeasonID,
-    };
-  }
-
-  // **********************
-  // Public Functions
-  // **********************
 
   createWelcomeLetter() {
-    if (this.welcomeLetterData == undefined) return;
+    if (this.#teamData.welcomeLetter == undefined) return;
 
-    const tmplSettings = this.welcomeLetterData;
-    const welcomeLetterSettings = new TmplSettings(
-      this.gblTmplSettings,
-      tmplSettings
-    );
-    const welcomeLetter = new Template(welcomeLetterSettings);
-    welcomeLetter.archive().save().activate();
+    const settings = this.#teamData.welcomeLetter;
+    settings.templateTags = {
+      ...this.globatTags,
+      ...this.teamTemplateTags,
+      team_name: this.name,
+    };
+
+    this.#bvr.createDraftFromTemplate(settings);
   }
 
   createPracticePlan() {
-    const practicePlan = new PracticePlan(this.dependancies);
-    practicePlan.create();
+    this.practicePlan.create();
   }
 
   loadPracticePlan() {
-    const practicePlan = new PracticePlan(this.dependancies);
-    practicePlan.load();
+    this.practicePlan.load();
   }
 
   takeAttendace() {
@@ -163,49 +137,22 @@ class Team {
     this.attendace.submit();
   }
 
-  gameRecordResult() {
-    const game = new Game(this.dependancies);
-    game.recordResult();
-    game.generateReport();
+  recordGameScore() {
+    this.game.record();
   }
 
   submitGameReport() {
-    const game = new Game(this.dependancies);
-    game.submitReport();
+    this.game.submitReport();
   }
 
   createGameDayTasks() {
-    if (this.#tmplSettings?.thingsProject == undefined) return;
-
-    const game = new Game(this.dependancies);
-    game.recordDate();
-    game.recordOpponent();
-    game.recordLocation();
-
-    const tmplSettings = game.generateTmplSettings("thingsProject");
-    const projectTemplate = new Template(tmplSettings);
-    const thingsParserAction = Action.find("Things Parser");
-    app.queueAction(thingsParserAction, projectTemplate.draft);
+    this.game.createTasks();
   }
 
   archiveNotes() {
-    const teamNotes = Draft.query("", "archive", this.defaultDraftTags);
-    if (teamNotes == undefined)
-      return this.ui.displayAppMessage("info", "No team drafts were found!");
+    const teamNotes = Draft.query("", "archive", [this.defualtTag]);
     teamNotes.every((note) => this.#processNote(note));
   }
-
-  migrateCurrentSeason() {
-    this.season.migrateCurrentSeason();
-  }
-
-  startNewSeason() {
-    this.season.startNewSeason();
-  }
-
-  // **********************
-  // Private Functions
-  // **********************
 
   #processNote(workingDraft) {
     const { menuSettings, tempMessage } = this.#bvr.ui.settings("notePrompt");
@@ -239,7 +186,7 @@ class Team {
   }
 
   #getTeamData(teamID) {
-    const teamData = this.#getTeamDataFromTag();
+    const teamData = this.#getTeamIDFromTag();
     if (teamData != undefined) return teamData;
 
     const id = teamID == "" ? this.#getTeamIDFromPrompt() : teamID;
@@ -247,7 +194,7 @@ class Team {
   }
 
   #getTeamDataFromTag() {
-    return this.teamsData.filter((team) => draft.hasTag(team.defaultTag))[0];
+    return this.teamsData.filter((team) => draft.hasTag(team.defualtTag))[0];
   }
 
   #getTeamIDFromPrompt() {
@@ -262,16 +209,5 @@ class Team {
 
     selectMenu.show();
     return selectMenu.buttonPressed;
-  }
-
-  #loadTemplateSettings() {
-    if (this.#teamData.templateSettings != undefined)
-      return this.#teamData.templateSettings;
-
-    const settingsFile =
-      this.#teamData.templateSettingsFile == undefined
-        ? `${this.id}/templateSettings.yaml`
-        : this.#teamData.templateSettingsFile;
-    return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
   }
 }
