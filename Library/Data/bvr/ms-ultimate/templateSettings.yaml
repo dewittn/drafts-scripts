@@ -1,6 +1,4 @@
 ---
-defaultDraftTags:
-  - bvr/ultimate/ms
 teamTemplateTags:
   hc_year: 4th
 reportTemplate:
@@ -8,7 +6,7 @@ reportTemplate:
     - bvr/ultimate/ms/game/recap
   templateFile: bvr/game-report.md
 recordTemplate:
-  templateFile: bvr/game-record.md
+  templateFile: bvr/game-record-row.md
 practicePlan:
   draftTags:
     - bvr/ultimate/practice/plan

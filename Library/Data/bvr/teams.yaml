@@ -8,7 +8,7 @@ teamsData:
     startDate: "2024-03-04"
     calendar: VUF
     attendanceDraftID: 5E1337A5-F964-4DEC-95A8-091AE789F0B1
-    defualtTag: bvr/ultimate/us
+    defaultTag: bvr/ultimate/us
   - id: ms-ultimate
     name: "MS Ultimate Frisbee"
     abbr: MSUF
@@ -18,7 +18,7 @@ teamsData:
     startDate: "2024-02-20"
     attendanceDraftID: "07AFCA9A-F93B-42F3-8E61-39DA3E599032"
     recordDraft: 359AC178-208F-42D9-84F3-935ABA6BB38E
-    defualtTag: bvr/ultimate/ms
+    defaultTag: bvr/ultimate/ms
     practicePlan:
       draftTags:
         - bvr/ultimate/ms/practice/plan
@@ -28,7 +28,7 @@ teamsData:
     sport: soccer
     season: fall
     calendar: MSGS
-    defualtTag: bvr/soccer/ms
+    defaultTag: bvr/soccer/ms
     practicePlan:
       draftTags:
         - bvr/soccer/practice/plan

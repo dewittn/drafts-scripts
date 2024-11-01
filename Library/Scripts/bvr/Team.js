@@ -13,6 +13,7 @@ class Team {
 
     this.attendace = new Attendance(this.dependancies);
     this.practicePlan = new PracticePlan(this.dependancies);
+    this.season = new Season(this.dependancies);
     this.game = new Game(this.dependancies);
   }
 
@@ -104,8 +105,8 @@ class Team {
     return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
   }
 
-  get defualtTag() {
-    return this.#teamData.defualtTag;
+  get defaultTag() {
+    return this.#teamData.defaultTag;
   }
 
   createWelcomeLetter() {
@@ -137,8 +138,8 @@ class Team {
     this.attendace.submit();
   }
 
-  recordGameScore() {
-    this.game.record();
+  gameRecordResult() {
+    this.game.recordResult();
   }
 
   submitGameReport() {
@@ -152,6 +153,10 @@ class Team {
   archiveNotes() {
     const teamNotes = Draft.query("", "archive", [this.defualtTag]);
     teamNotes.every((note) => this.#processNote(note));
+  }
+
+  migrateCurrentSeason() {
+    this.season.migrateCurrentSeason();
   }
 
   #processNote(workingDraft) {
@@ -186,7 +191,7 @@ class Team {
   }
 
   #getTeamData(teamID) {
-    const teamData = this.#getTeamIDFromTag();
+    const teamData = this.#getTeamDataFromTag();
     if (teamData != undefined) return teamData;
 
     const id = teamID == "" ? this.#getTeamIDFromPrompt() : teamID;
