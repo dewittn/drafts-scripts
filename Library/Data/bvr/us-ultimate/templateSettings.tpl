@@ -1,6 +1,4 @@
 ---
-defaultDraftTags:
-  - bvr/ultimate/us
 teamTemplateTags:
   hc_year: 4th
   ac_name: "{{ op://BVR/DG/first name }} {{ op://BVR/DG/last name }}"
@@ -11,8 +9,8 @@ reportTemplate:
     - bvr/ultimate/us/game/recap
   templateFile: bvr/game-report.md
 recordTemplate:
-  templateFile: bvr/game-record.md
-thingsProjectTemplate:
+  templateFile: bvr/game-record-row.md
+thingsProject:
   templateFile: bvr/us-ultimate-game-day-project.md
 practicePlan:
   draftTags:
