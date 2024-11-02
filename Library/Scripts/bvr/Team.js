@@ -4,21 +4,29 @@ class Team {
   #ppData;
   #settings;
   #teamData;
+  #tmplSettings;
 
   constructor(teamID = "") {
     this.#bvr = new BVR();
     this.#settings = new Settings(this.#bvr.teamSettingsFile);
-
     this.#teamData = this.#getTeamData(teamID);
+    this.#tmplSettings = this.templateSettings;
 
     this.attendace = new Attendance(this.dependancies);
     this.practicePlan = new PracticePlan(this.dependancies);
     this.season = new Season(this.dependancies);
-    this.game = new Game(this.dependancies);
+  }
+
+  // **********************
+  // Getter/Setter
+  // **********************
+
+  get ui() {
+    return this.#bvr.ui;
   }
 
   get dependancies() {
-    return { bvr: this.#bvr, team: this };
+    return { bvr: this.#bvr, team: this, templateSettings: this.#tmplSettings };
   }
 
   get teamsData() {
@@ -109,6 +117,31 @@ class Team {
     return this.#teamData.defaultTag;
   }
 
+  get thingsProject() {
+    return this.#tmplSettings.thingsProject;
+  }
+
+  get defaultDraftTags() {
+    return [this.defaultTag];
+  }
+
+  get globalTemplateTags() {
+    return this.#bvr.globalTags;
+  }
+
+  get gblTmplSettings() {
+    return {
+      teamName: this.teamName,
+      defaultDraftTags: this.defaultDraftTags,
+      globalTemplateTags: this.globalTemplateTags,
+      currentSeasonID: this.season.currentSeasonID,
+    };
+  }
+
+  // **********************
+  // Public Functions
+  // **********************
+
   createWelcomeLetter() {
     if (this.#teamData.welcomeLetter == undefined) return;
 
@@ -139,15 +172,33 @@ class Team {
   }
 
   gameRecordResult() {
-    this.game.recordResult();
+    const game = new Game(this.dependancies);
+    game.recordResult();
+    game.generateReport();
   }
 
   submitGameReport() {
-    this.game.submitReport();
+    const game = new Game(this.dependancies);
+    game.submitReport();
   }
 
   createGameDayTasks() {
-    this.game.createTasks();
+    if (this.thingsProject == undefined) return;
+
+    const game = new Game(this.dependancies);
+    game.recordDate();
+    game.recordOpponent();
+    game.recordLocation();
+
+    const tmplSettings = new TmplSettings(
+      this.gblTmplSettings,
+      this.thingsProject,
+      game
+    );
+
+    const projectTemplate = new Template(tmplSettings);
+    const thingsParserAction = Action.find("Things Parser");
+    app.queueAction(thingsParserAction, projectTemplate.draft);
   }
 
   archiveNotes() {
@@ -158,6 +209,10 @@ class Team {
   migrateCurrentSeason() {
     this.season.migrateCurrentSeason();
   }
+
+  // **********************
+  // Private Functions
+  // **********************
 
   #processNote(workingDraft) {
     const { menuSettings, tempMessage } = this.#bvr.ui.settings("notePrompt");
@@ -199,7 +254,7 @@ class Team {
   }
 
   #getTeamDataFromTag() {
-    return this.teamsData.filter((team) => draft.hasTag(team.defualtTag))[0];
+    return this.teamsData.filter((team) => draft.hasTag(team.defaultTag))[0];
   }
 
   #getTeamIDFromPrompt() {
