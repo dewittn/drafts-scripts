@@ -146,7 +146,8 @@ class DraftsUI {
     app.displaySuccessMessage(successMessage);
   }
 
-  debugVariable(variable, text = "") {
+  debugVariable(variable, text = "", debug = true) {
+    this.debug = debug;
     const message = `${text}${JSON.stringify(variable)}`;
     console.log(message);
     if (this.#debug) alert(message);
@@ -172,7 +173,10 @@ class DraftsUI {
   }
 
   #updateDraftLog(message, details = {}) {
-    if (this.draftLogUUID != undefined) return;
+    if (this.draftLogUUID == undefined) {
+      console.log(message, JSON.stringify(details));
+      return;
+    }
 
     const draftLog = Draft.find(this.draftLogUUID);
     const timeCode = new Date().toString();
