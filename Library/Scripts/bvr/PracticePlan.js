@@ -15,9 +15,9 @@ class PracticePlan {
 
     this.#bvr = dependancies.bvr;
     this.#team = dependancies.team;
+    this.#tmplSettings = dependancies.tmplSettings;
 
     this.#ppData = this.#bvr.ppData;
-    this.#tmplSettings = this.#team.templateSettings;
   }
 
   static create() {
