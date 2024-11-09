@@ -15,10 +15,10 @@ class Game {
 
     this.#bvr = dependancies.bvr;
     this.#team = dependancies.team;
+    this.#tmplSettings = dependancies.tmplSettings;
 
     this.sport = new Sport(this.teamPlays);
-    this.#settings = this.gameReportSettings;
-    this.#tmplSettings = dependancies.templateSettings;
+    this.#settings = this.#team.gameReportSettings;
     this.#gameData = this.#loadGameDataFromUUID(uuid);
   }
 
@@ -42,18 +42,6 @@ class Game {
     return this.#team.plays;
   }
 
-  get gblTmplSettings() {
-    return this.#team.gblTmplSettings;
-  }
-
-  get templateSettings() {
-    return this.#team.templateSettings;
-  }
-
-  get gameReportSettings() {
-    return this.#team.gameReportSettings;
-  }
-
   get selectedRows() {
     return [this.sport.selectedValue, this.sport.selectedValue];
   }
@@ -74,9 +62,21 @@ class Game {
     this.#gameData.submitted = value;
   }
 
+  get draftID() {
+    return this.#gameData.draftID;
+  }
+
+  set draftID(value) {
+    this.#gameData.draftID = value;
+  }
+
   get date() {
     if (this.#gameData?.date == undefined) return new Date();
     return this.#gameData.date;
+  }
+
+  set date(value) {
+    this.#gameData.date = value;
   }
 
   get formattedDate() {
@@ -184,6 +184,26 @@ class Game {
     return this.#team.season.currentSeasonRecord;
   }
 
+  get recorded() {
+    if (this.#gameData.recorded == undefined) return false;
+
+    return this.#gameData.recorded;
+  }
+
+  set recorded(value) {
+    this.#gameData.recorded = value;
+  }
+
+  get appended() {
+    if (this.#gameData.appended == undefined) return false;
+
+    return this.#gameData.appended;
+  }
+
+  set appended(value) {
+    this.#gameData.appended = value;
+  }
+
   // **********************
   // Templating Getter/Setter
   // **********************
@@ -192,29 +212,25 @@ class Game {
     return this.#bvr.globalTags.hc_name;
   }
 
-  get gameReportTmplSettings() {
-    return this.#tmplSettings.gameReport;
+  get gblTmplSettings() {
+    return this.#team.gblTmplSettings;
+  }
+
+  get tmplSettingsGameReport() {
+    return this.generateTmplSettings("gameReport");
+  }
+
+  get tmplSettingsRecordRow() {
+    return this.generateTmplSettings("recordRow");
+  }
+
+  get tmplSettingsMessage() {
+    return this.generateTmplSettings("Message");
   }
 
   // **********************
   // Public Functions
   // **********************
-
-  updateSeasonRecord() {
-    this.#team.season.updateWith(this);
-  }
-
-  generateReport() {
-    const tmplSettings = this.#generateTmplSettings(this.gameReportSettings);
-    const gameReport = this.#createGameReport(tmplSettings);
-    gameReport.generate();
-  }
-
-  submitReport() {
-    const tmplSettings = this.#generateTmplSettings(this.gameReportSettings);
-    const gameReport = this.#createGameReport(tmplSettings);
-    gameReport.submit();
-  }
 
   recordResult() {
     const funcsToRun = [
@@ -224,7 +240,7 @@ class Game {
       "recordScore",
     ];
 
-    this.#gameData.recorded = funcsToRun.every((fn) => {
+    this.recorded = funcsToRun.every((fn) => {
       return this[fn]();
     });
 
@@ -237,7 +253,7 @@ class Game {
     if (dayOfGame.show() == false) return false;
 
     const firstValue = menuSettings.menuItems[0]?.data?.value;
-    this.#gameData.date =
+    this.date =
       dayOfGame.buttonPressed == firstValue
         ? new Date()
         : this.#getDateFromPrompt();
@@ -298,19 +314,57 @@ class Game {
     return true;
   }
 
+  toJSON() {
+    return {
+      calOpponent: this.calOpponent,
+      calLocation: this.calLocation,
+      opponent: this.opponent,
+      location: this.location,
+      date: this.date,
+      score: this.score,
+      result: this.result,
+      formattedDate: this.formattedDate,
+      descrition: this.descrition,
+      draftID: this.draftID,
+      highlights: this.highlights,
+      comments: this.comments,
+      recorded: this.recorded,
+      appended: this.appended,
+      submitted: this.submitted,
+    };
+  }
+
+  toGoogleFormData() {
+    return {
+      teamName: this.teamName,
+      hcName: this.headCoachName,
+      formattedDate: this.formattedDate,
+      opponent: this.opponent,
+      result: this.result,
+      fullScore: this.fullScore,
+      highlights: this.highlights,
+      reported: "Not applicable (non-varsity team)",
+      comments: this.comments,
+      scoreUs: this.scoreUs,
+      scoreThem: this.scoreThem,
+      googleFormDate: this.googleFormDate,
+    };
+  }
+
   // **********************
   // Private Functions
   // **********************
 
   #loadGameDataFromUUID(uuid) {
     if (uuid == undefined) return {};
+
     const index = this.currentSeasonRecord.findIndex(
       (game) => game.draftID == uuid
     );
     if (index == -1) return {};
 
     const gameData = this.currentSeasonRecord[index];
-    gameData.date = new Date(this.#gameData.date);
+    gameData.date = new Date(gameData.date);
     return gameData;
   }
 
@@ -385,14 +439,101 @@ class Game {
     return validLocations.includes(location.toLowerCase());
   }
 
-  #generateTmplSettings(tmplSettings) {
+  // **********************
+  // Game Report Functions
+  // **********************
+
+  generateReport() {
+    if (this.recorded == false || this.tmplSettingsGameReport == undefined)
+      return;
+
+    const gameReportDraft = new Template(this.tmplSettingsGameReport);
+    gameReportDraft.archive().save().activate();
+    this.draftID = gameReportDraft.draftID;
+    this.submitted = false;
+    this.#updateSeasonRecord();
+  }
+
+  submitReport() {
+    if (this.submitted)
+      return this.ui.displayAppMessage(
+        "info",
+        "this game has already been submitted!"
+      );
+    const gameReportDraft = Draft.find(this.draftID);
+    if (gameReportDraft == undefined)
+      return this.ui.displayAppMessage(
+        "error",
+        "gameReportDraft could not be found",
+        { draftID: this.draftID }
+      );
+
+    const { modifiedArray: modifiedDraft, sectionText: comments } =
+      this.#extractSectionText(gameReportDraft.lines, `## Other/Comments`);
+    const { sectionText: highlights } = this.#extractSectionText(
+      modifiedDraft,
+      `## Highlights?`
+    );
+
+    this.comments = comments;
+    this.highlights = highlights;
+
+    if (this.msgSettings != undefined) this.#sendMessages();
+    if (this.googleFormSettings != undefined) this.#submitGoogleForm();
+    this.submitted = true;
+    this.#updateSeasonRecord();
+  }
+
+  generateTmplSettings(key) {
+    const tmplSettings =
+      this.#tmplSettings[key] != undefined ? this.#tmplSettings[key] : {};
     return new TmplSettings(this.gblTmplSettings, tmplSettings, this);
   }
 
-  #createGameReport(tmplSettings) {
-    return new GameReport({
-      game: this,
-      tmplSettings: tmplSettings,
-    });
+  #updateSeasonRecord() {
+    this.#team.season.updateWith(this);
+  }
+
+  #sendMessages() {
+    this.msgSettings.forEach((msgConfig) =>
+      this.#createAndSendMessage(msgConfig)
+    );
+  }
+
+  #createAndSendMessage(msgConfig) {
+    msgConfig.templateTags = this.tmplSettingsMessage?.templateTags;
+    const message = meesageFactory(msgConfig);
+    message.compose();
+
+    if (message.messageText != "") message.send();
+  }
+
+  #submitGoogleForm() {
+    const dependancies = {
+      settings: this.googleFormSettings,
+      formData: this.toGoogleFormData(),
+    };
+
+    const googleForm = new GoogleForm(dependancies);
+    googleForm.submit();
+  }
+
+  #extractSectionText(array, sectionHeader) {
+    const { sectionStart, sectionEnd } = this.#getSectionStartEnd(
+      array,
+      sectionHeader
+    );
+    const sectionText = array
+      .splice(sectionStart, sectionEnd)
+      .slice(2)
+      .join("");
+    return { modifiedArray: array, sectionText: sectionText };
+  }
+
+  #getSectionStartEnd(array, text) {
+    return {
+      sectionStart: array.findIndex((item) => item == text),
+      sectionEnd: array.length,
+    };
   }
 }
