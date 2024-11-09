@@ -1,4 +1,4 @@
-# [[team_name]]: [[current_season]] Season Record
+# Season Record: [[team_abbr]] [[current_season]] 
 [[BVR Coaching]]
 
 | Date | Team | Location | Result | Us | Them |

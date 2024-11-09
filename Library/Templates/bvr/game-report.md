@@ -1,4 +1,4 @@
-# Game Report: [[team_name]] [[game_date]]
+# Game Report: [[team_abbr]] vs [[game_opponent]] ([[game_date]])
 
 ## Team
 
