@@ -5,6 +5,7 @@ class TmplSettings {
       templateTags: {
         ...gblTmplSettings.globalTemplateTags,
         team_name: gblTmplSettings.teamName,
+        team_abbr: gblTmplSettings.teamAbbr,
         current_season: `${gblTmplSettings.currentSeasonID}`,
         game_date: game.formattedDate,
         game_location: game.location,
