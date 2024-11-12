@@ -184,7 +184,9 @@ class Team {
   }
 
   archiveNotes() {
-    const teamNotes = Draft.query("", "archive", [this.defualtTag]);
+    const teamNotes = Draft.query("", "archive", this.defaultDraftTags);
+    if (teamNotes == undefined)
+      return this.ui.displayAppMessage("info", "No team drafts were found!");
     teamNotes.every((note) => this.#processNote(note));
   }
 
