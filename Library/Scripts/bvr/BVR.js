@@ -4,7 +4,6 @@ require("bvr/Sport.js");
 require("bvr/Season.js");
 require("bvr/utilities.js");
 require("bvr/GoogleForm.js");
-require("bvr/GameReport.js");
 require("bvr/Attendance.js");
 require("bvr/PracticePlan.js");
 require("bvr/TmplSettings.js");
