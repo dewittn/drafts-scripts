@@ -34,7 +34,6 @@ class Destinations {
   getScrubText(key) {
     if (this.isValidKey(key) == false) return undefined;
     const text = this.data[key]["scrubText"];
-    this.#ui.debugVariable(text, "scrubText: ");
     return this.data[key]["scrubText"];
   }
 
