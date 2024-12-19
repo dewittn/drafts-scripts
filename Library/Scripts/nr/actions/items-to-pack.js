@@ -1,6 +1,5 @@
 require("cp/ui/DraftsUI.js");
 require("cp/templates/Template.js");
-require("cp/filesystems/CloudFS.js");
 
 const ui = new DraftsUI();
 ui.debug = true;
