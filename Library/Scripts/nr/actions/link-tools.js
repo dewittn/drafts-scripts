@@ -6,13 +6,21 @@ function isUrl(s) {
   return regexp.test(s);
 }
 
-const clipboard = app.getClipboard();
-const actionMenu = ActionMenu.createFromGroup("Link Actions");
+function main() {
+  const selected = editor.getSelectedText();
+  const clipboard = app.getClipboard();
+  const actionMenu = ActionMenu.createFromGroup("Link Actions");
 
-if (isUrl(clipboard)) {
-  actionMenu.selectAction("Markdown Link");
-  const clearClipboard = Action.find("Clear Clipboard");
-  app.queueAction(clearClipboard, draft);
-} else {
+  if (isUrl(selected)) return actionMenu.selectAction("Insert Website Title");
+
+  if (isUrl(clipboard)) {
+    actionMenu.selectAction("Markdown Link");
+    const clearClipboard = Action.find("Clear Clipboard");
+    app.queueAction(clearClipboard, draft);
+    return;
+  }
+
   actionMenu.select();
 }
+
+main();
