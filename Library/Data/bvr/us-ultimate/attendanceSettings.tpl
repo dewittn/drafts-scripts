@@ -1,6 +1,6 @@
 ---
 attendanceDraftID: 5E1337A5-F964-4DEC-95A8-091AE789F0B1
-msgConfig:
+absencesMsgConfig:
   type: email
   recipients:
     - op://BVR/ATT/email

@@ -5,7 +5,7 @@ teamsData:
     abbr: VUS
     sport: ultimate
     season: spring
-    startDate: "2024-03-04"
+    startDate: "2025-03-02"
     calendar: VUF
     attendanceDraftID: 5E1337A5-F964-4DEC-95A8-091AE789F0B1
     defaultTag: bvr/ultimate/us
@@ -15,7 +15,7 @@ teamsData:
     sport: ultimate
     season: spring
     calendar: MSUF
-    startDate: "2024-02-20"
+    startDate: "2025-03-02"
     attendanceDraftID: "07AFCA9A-F93B-42F3-8E61-39DA3E599032"
     recordDraft: 359AC178-208F-42D9-84F3-935ABA6BB38E
     defaultTag: bvr/ultimate/ms
