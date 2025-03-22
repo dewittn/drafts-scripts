@@ -1,4 +1,4 @@
-require("bvr/Team.js");
+require("bvr/BVR.js");
 
 const team = new Team();
 team.createWelcomeLetter();

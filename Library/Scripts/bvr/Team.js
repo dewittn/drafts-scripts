@@ -76,7 +76,8 @@ class Team {
   }
 
   get teamTemplateTags() {
-    return this.#teamData.teamTemplateTags;
+    const teamTags = this.#tmplSettings.teamTemplateTags;
+    return teamTags != undefined ? teamTags : {};
   }
 
   get gameReportSettings() {
@@ -105,6 +106,10 @@ class Team {
     return this.#teamData.defaultTag;
   }
 
+  get welcomeLetterData() {
+    return this.#tmplSettings.welcomeLetter;
+  }
+
   get defaultDraftTags() {
     return [this.defaultTag];
   }
@@ -119,6 +124,7 @@ class Team {
       teamAbbr: this.abbr,
       defaultDraftTags: this.defaultDraftTags,
       globalTemplateTags: this.globalTemplateTags,
+      teamTemplateTags: this.teamTemplateTags,
       currentSeasonID: this.season.currentSeasonID,
     };
   }
@@ -128,16 +134,15 @@ class Team {
   // **********************
 
   createWelcomeLetter() {
-    if (this.#teamData.welcomeLetter == undefined) return;
+    if (this.welcomeLetterData == undefined) return;
 
-    const settings = this.#teamData.welcomeLetter;
-    settings.templateTags = {
-      ...this.globatTags,
-      ...this.teamTemplateTags,
-      team_name: this.name,
-    };
-
-    this.#bvr.createDraftFromTemplate(settings);
+    const tmplSettings = this.welcomeLetterData;
+    const welcomeLetterSettings = new TmplSettings(
+      this.gblTmplSettings,
+      tmplSettings
+    );
+    const welcomeLetter = new Template(welcomeLetterSettings);
+    welcomeLetter.archive().save().activate();
   }
 
   createPracticePlan() {
