@@ -71,8 +71,8 @@ class PracticePlan {
     return this.#team.templateFile;
   }
 
-  get defaultDraftTags() {
-    return this.#tmplSettings.defaultDraftTags;
+  get defaultTag() {
+    return this.#team.defaultTag;
   }
 
   get weekIDTemplateTag() {
@@ -94,7 +94,7 @@ class PracticePlan {
 
     const templateSettings = this.ppTmplSettings;
     templateSettings.draftTags = [
-      ...this.defaultDraftTags,
+      this.defaultTag,
       ...templateSettings.draftTags,
     ];
     templateSettings.templateFile = this.ppTemplateFile;
