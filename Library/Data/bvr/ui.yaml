@@ -105,3 +105,16 @@ notePrompt:
         data:
           name: Leave in Place
           value: leave
+insertPlayerName:
+  pickerData:
+    name: playerName
+    label: Players
+  menuSettings:
+    menuTitle: Choose Player
+    menuMessage: Pick name of player you wish to insert
+    isCancellable: true
+    menuItems:
+      - type: button
+        data:
+          name: ok
+          value: ok

@@ -203,6 +203,38 @@ class Team {
     this.season.startNewSeason();
   }
 
+  insertPlayerName() {
+    const { menuSettings, pickerData } =
+      this.#bvr.ui.settings("insertPlayerName");
+    this.attendaceDraft = Draft.find(this.attendanceDraftID);
+
+    const regEx = /\[[x ]\]/g;
+    const lines = this.attendaceDraft.lines.slice(
+      5,
+      this.attendaceDraft.lines.length
+    ); // split into lines
+
+    const names = [];
+    lines.forEach((line) => {
+      if (line.match(regEx)) names.push(this.#bvr.cleanUpName(line));
+    });
+
+    pickerData.columns = [names];
+    menuSettings.menuItems.push({
+      type: "picker",
+      data: pickerData,
+    });
+
+    const playerPrompt = this.#bvr.ui.buildMenu(menuSettings);
+    if (playerPrompt.show() == false) return editor.activate();
+
+    const pickerValue = playerPrompt.fieldValues[pickerData.name][0];
+    const playerName = names[pickerValue];
+
+    draft.append(playerName, "");
+    editor.activate();
+  }
+
   // **********************
   // Private Functions
   // **********************
