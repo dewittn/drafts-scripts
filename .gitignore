@@ -7,3 +7,4 @@ templateSettings.yaml
 *.lockb
 **/Data/**/*.json
 /Library/Data/bvr/records.json
+/gform.html
