@@ -33,7 +33,7 @@ Announcements:
 
 - 
 
-## Game Day Wednesday
+## Wednesday
 
 - 
 
@@ -41,6 +41,6 @@ Announcements:
 
 - 
 
-## Game Day Friday
+## Flying Fridays
 
 - 

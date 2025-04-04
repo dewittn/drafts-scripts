@@ -28,6 +28,6 @@ Announcements:
 
 - 
 
-## Game Day Friday
+## Flying Fridays
 
 - 
