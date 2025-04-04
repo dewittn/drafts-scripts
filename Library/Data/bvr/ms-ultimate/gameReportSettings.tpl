@@ -1,5 +1,4 @@
 ---
-recordsDraftID: 359AC178-208F-42D9-84F3-935ABA6BB38E
 messageSettings:
   - type: text
     recipients:

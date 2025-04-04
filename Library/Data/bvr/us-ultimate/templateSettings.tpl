@@ -18,3 +18,11 @@ practicePlan:
     - bvr/ultimate/practice/plan
 welcomeLetter:
   templateFile: bvr/welcome-letter.md
+seasonRecord:
+  templateFile: bvr/game-season-record.md
+gameReport:
+  templateFile: bvr/game-report.md
+  draftTags:
+    - bvr/ultimate/us/game/recap
+recordRow:
+  templateFile: bvr/game-record-row.md

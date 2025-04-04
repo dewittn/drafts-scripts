@@ -199,6 +199,10 @@ class Team {
     this.season.migrateCurrentSeason();
   }
 
+  startNewSeason() {
+    this.season.startNewSeason();
+  }
+
   // **********************
   // Private Functions
   // **********************
