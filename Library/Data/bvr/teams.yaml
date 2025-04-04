@@ -2,7 +2,7 @@
 teamsData:
   - id: us-ultimate
     name: Varsity Ultimate Frisbee
-    abbr: VUS
+    abbr: VUF
     sport: ultimate
     season: spring
     startDate: "2025-03-02"
