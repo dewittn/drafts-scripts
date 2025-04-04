@@ -193,8 +193,8 @@ class Season {
         "Season record could not be saved."
       );
 
-    const index = this.currentSeasonRecord.indexOf(
-      (recordItem) => recordItem.draftID == game.drafID
+    const index = this.currentSeasonRecord.findIndex(
+      (recordItem) => recordItem.draftID == game.draftID
     );
 
     if (index !== -1) {
