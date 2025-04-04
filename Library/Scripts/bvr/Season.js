@@ -15,7 +15,7 @@ class Season {
 
     this.#bvr = dependancies.bvr;
     this.#team = dependancies.team;
-    this.#tmplSettings = this.tmplSettings;
+    this.#tmplSettings = dependancies.tmplSettings;
     this.#schoolSportingHistory = new DataFile(this.recordsFile);
   }
 
@@ -109,6 +109,12 @@ class Season {
     }
   }
 
+  startNewSeason() {
+    if (this.seasonRecordDraftID == undefined) {
+      this.#createSeasonRecordDraft(this.currentSeasonID);
+    }
+  }
+
   // **********************
   // Private Functions
   // **********************
@@ -142,6 +148,8 @@ class Season {
     const seasonRecordDraft = new Template(this.tmplSettingsSeasonRecord);
     seasonRecordDraft.archive().save();
 
+    if (this.teamHistory[seasonID] == undefined)
+      this.teamHistory[seasonID] = {};
     this.teamHistory[seasonID].seasonRecordDraftID = seasonRecordDraft.draftID;
     this.#schoolSportingHistory.save();
 
