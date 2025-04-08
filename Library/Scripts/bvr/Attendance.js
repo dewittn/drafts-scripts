@@ -18,6 +18,10 @@ class Attendance {
     this.names = [];
   }
 
+  get ui() {
+    return this.#bvr.ui;
+  }
+
   get absencesMsgConfig() {
     if (this.#settings.absencesMsgConfig == undefined) return undefined;
 
@@ -103,6 +107,10 @@ class Attendance {
     this.#loadAttendaceDraft();
     if (this.attendaceDraftIsLoaded == false) return false;
 
+    const attendaceDraftReset = this.#resetAttendanceDraft();
+    this.#bvr.pinDraft(this.attendaceDraft);
+    if (attendaceDraftReset) return false;
+
     if (this.hasBeenSubmitted) {
       this.#bvr.ui.displayAppMessage("info", this.alreadySubmitted);
       return false;
@@ -150,20 +158,6 @@ class Attendance {
         "Error in #loadAttendaceDraft(): attendanceDraftID is undefined!"
       );
     this.attendaceDraft = Draft.find(this.attendanceDraftID);
-
-    const dateMatch = /\d{4}-\d{2}-\d{2}/;
-    const dateField = this.attendaceDraft.lines[2];
-    const lastTaken = dateMatch.exec(dateField);
-    const today = this.#bvr.formatDateYMD(new Date());
-
-    if (lastTaken != today) {
-      this.attendaceDraft.content = this.attendaceDraft.content
-        .replace(/\[x\]/g, "[ ]")
-        .replace(lastTaken, today);
-      this.attendaceDraft.update();
-    }
-
-    this.#bvr.pinDraft(this.attendaceDraft);
   }
 
   submitted() {
@@ -183,5 +177,27 @@ class Attendance {
 
     shortcutDraft.content = this.#team.abbr;
     app.queueAction(shortcutAction, shortcutDraft);
+  }
+
+  #resetAttendanceDraft() {
+    const dateMatch = /\d{4}-\d{2}-\d{2}/;
+    const dateField = this.attendaceDraft.lines[2];
+    const lastTaken = dateMatch.exec(dateField);
+    const today = this.#bvr.formatDateYMD(new Date());
+
+    if (lastTaken != today) {
+      this.attendaceDraft.tasks.forEach((task) =>
+        this.attendaceDraft.resetTask(task)
+      );
+      this.attendaceDraft.content = this.attendaceDraft.content.replace(
+        lastTaken,
+        today
+      );
+
+      this.attendaceDraft.update();
+      return true;
+    }
+
+    return false;
   }
 }
