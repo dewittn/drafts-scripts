@@ -479,7 +479,9 @@ class Game {
     this.highlights = highlights;
 
     if (this.msgSettings != undefined) this.#sendMessages();
-    if (this.googleFormSettings != undefined) this.#submitGoogleForm();
+    if (this.googleFormSettings != undefined)
+      this.googleFormSettings.forEach((gform) => this.#submitGoogleForm(gform));
+
     this.submitted = true;
     this.#updateSeasonRecord();
   }
@@ -508,14 +510,18 @@ class Game {
     if (message.messageText != "") message.send();
   }
 
-  #submitGoogleForm() {
+  #submitGoogleForm(gformSettings) {
+    const { menuSettings } = this.ui.settings("submitGoogleForm");
     const dependancies = {
-      settings: this.googleFormSettings,
+      settings: gformSettings,
       formData: this.toGoogleFormData(),
     };
 
     const googleForm = new GoogleForm(dependancies);
     googleForm.submit();
+
+    const formSubmittedPrompt = this.ui.buildMenu(menuSettings);
+    formSubmittedPrompt.show();
   }
 
   #extractSectionText(array, sectionHeader) {

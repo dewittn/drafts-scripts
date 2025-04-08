@@ -118,3 +118,16 @@ insertPlayerName:
         data:
           name: ok
           value: ok
+submitGoogleForm:
+  menuSettings:
+    menuTitle: Google Form Submitted
+    menuMessage: Has google form has been submitted?
+    menuItems:
+      - type: button
+        data:
+          name: Yes
+          value: yes
+      - type: button
+        data:
+          name: No
+          value: no
