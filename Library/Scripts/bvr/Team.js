@@ -208,16 +208,9 @@ class Team {
       this.#bvr.ui.settings("insertPlayerName");
     this.attendaceDraft = Draft.find(this.attendanceDraftID);
 
-    const regEx = /\[[x ]\]/g;
-    const lines = this.attendaceDraft.lines.slice(
-      5,
-      this.attendaceDraft.lines.length
-    ); // split into lines
-
-    const names = [];
-    lines.forEach((line) => {
-      if (line.match(regEx)) names.push(this.#bvr.cleanUpName(line));
-    });
+    const names = this.attendaceDraft.tasks
+      .map((task) => this.#bvr.cleanUpName(task.line))
+      .slice(2);
 
     pickerData.columns = [names];
     menuSettings.menuItems.push({
@@ -231,8 +224,7 @@ class Team {
     const pickerValue = playerPrompt.fieldValues[pickerData.name][0];
     const playerName = names[pickerValue];
 
-    draft.append(playerName, "");
-    editor.activate();
+    this.#insertTextPosAtEnd(`${playerName} `);
   }
 
   // **********************
@@ -305,5 +297,14 @@ class Team {
         ? `${this.id}/templateSettings.yaml`
         : this.#teamData.templateSettingsFile;
     return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
+  }
+
+  #insertTextPosAtEnd(text) {
+    editor.setSelectedText(text);
+    editor.setSelectedRange(
+      editor.getSelectedRange()[0] + editor.getSelectedRange()[1],
+      0
+    );
+    editor.activate();
   }
 }
