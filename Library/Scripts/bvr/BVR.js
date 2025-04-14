@@ -1,17 +1,17 @@
-require("bvr/Team.js");
-require("bvr/Game.js");
-require("bvr/Sport.js");
-require("bvr/Season.js");
-require("bvr/utilities.js");
-require("bvr/GoogleForm.js");
-require("bvr/Attendance.js");
-require("bvr/PracticePlan.js");
-require("bvr/TmplSettings.js");
+if (typeof Team == "undefined") require("bvr/Team.js");
+if (typeof Game == "undefined") require("bvr/Game.js");
+if (typeof Sport == "undefined") require("bvr/Sport.js");
+if (typeof Season == "undefined") require("bvr/Season.js");
+// if (typeof BVRUtilities == "undefined") require("bvr/BVRUtilities.js");
+if (typeof GoogleForm == "undefined") require("bvr/GoogleForm.js");
+if (typeof Attendance == "undefined") require("bvr/Attendance.js");
+if (typeof PracticePlan == "undefined") require("bvr/PracticePlan.js");
+if (typeof TmplSettings == "undefined") require("bvr/TmplSettings.js");
+if (typeof Bear == "undefined") require("libraries/bear.js");
+if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
+if (typeof CloudFS == "undefined") require("cp/filesystems/CloudFS.js");
+if (typeof Template == "undefined") require("cp/templates/Template.js");
 require("bvr/messages/message_factory.js");
-require("libraries/bear.js");
-require("cp/ui/DraftsUI.js");
-require("cp/filesystems/CloudFS.js");
-require("cp/templates/Template.js");
 
 class BVR {
   static settingsFile = "bvr/settings.yaml";
@@ -103,9 +103,9 @@ class BVR {
   }
 
   unpinDraft(workingDraft) {
+    editor.load(workingDraft);
     app.stopLiveActivity(workingDraft);
     editor.pinningEnabled = false;
-    editor.load(workingDraft);
   }
 
   formatDateYMD(date) {
