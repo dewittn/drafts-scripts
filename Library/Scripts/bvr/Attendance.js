@@ -105,7 +105,6 @@ class Attendance {
 
   take() {
     this.#loadAttendaceDraft();
-    if (this.attendaceDraftIsLoaded == false) return false;
 
     const attendaceDraftReset = this.#resetAttendanceDraft();
     this.#bvr.pinDraft(this.attendaceDraft);

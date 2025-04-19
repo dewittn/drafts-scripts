@@ -99,6 +99,7 @@ class BVR {
   pinDraft(workingDraft) {
     editor.load(workingDraft);
     editor.pinningEnabled = true;
+    this.ui.displayAppMessage("info", "Attendance draft loaded.");
   }
 
   unpinDraft(workingDraft) {
