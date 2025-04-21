@@ -255,7 +255,14 @@ class UlyssesDoc {
   #loadSheet() {
     if (this.sheet == undefined)
       this.sheet = this.#ulysses.readSheet(this.docID);
-    editor.activate();
+
+    if (this.#ulysses.error)
+      this.ui.displayAppMessage(
+        "error",
+        `Ulysses Error ${this.#ulysses.errorCode} - ${
+          this.#ulysses.errorMessage
+        } : Sheet not loaded!`
+      );
   }
 
   #getIdOfSheet() {
@@ -275,6 +282,8 @@ class UlyssesDoc {
     if (this.docID == undefined) return "";
 
     this.#loadSheet();
+    if (this.sheet == undefined) return "";
+
     const checkDestFunction = (testSheet) => (dest) => {
       return testSheet.hasKeyword(dest);
     };
@@ -289,6 +298,7 @@ class UlyssesDoc {
     if (this.docID == undefined) return "";
 
     this.#loadSheet();
+    if (this.sheet == undefined) return "";
     const checkStatusFunction = (testSheet) => (status) => {
       return testSheet.hasKeyword(status);
     };

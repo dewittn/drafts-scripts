@@ -35,6 +35,14 @@ class Ulysses {
     return this.#errorCode != undefined;
   }
 
+  get errorCode() {
+    return this.#errorCode;
+  }
+
+  get errorMessage() {
+    return this.errorMessage;
+  }
+
   // ***********
   // * Ulysses API Functions
   // ***********
@@ -394,7 +402,9 @@ class Ulysses {
 
   #openURL(callbackAction, params = {}) {
     const queryString = Object.keys(params)
-      .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+      .map(
+        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`
+      )
       .join("&");
     const url = `${this.callbackURL}${callbackAction}?${queryString}`;
 
@@ -411,12 +421,15 @@ class Ulysses {
     let cb = CallbackURL.create();
     cb.waitForResponse = waitForResponse;
     cb.baseURL = `${this.callbackURL}${callbackAction}`;
-    Object.entries(params).forEach(([key, value]) => cb.addParameter(key, value));
+    Object.entries(params).forEach(([key, value]) =>
+      cb.addParameter(key, value)
+    );
 
     const success = cb.open();
     const response = cb.callbackResponse;
 
-    if (this.#debug) this.#logResponse(callbackAction, params, success, response);
+    if (this.#debug)
+      this.#logResponse(callbackAction, params, success, response);
     if (response?.errorCode != undefined) return this.#processError(response);
 
     return response;
@@ -444,7 +457,10 @@ class Ulysses {
   }
 
   #typeCheckString(variable, location) {
-    const varType = Object.prototype.toString.call(variable).slice(8, -1).toLowerCase();
+    const varType = Object.prototype.toString
+      .call(variable)
+      .slice(8, -1)
+      .toLowerCase();
     if (varType == "string") return true;
     this.#continueWithWarning(
       `Ulysses-v2.js, ${location}: Incorret or missing value!`,
