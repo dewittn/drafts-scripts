@@ -8,3 +8,4 @@ templateSettings.yaml
 **/Data/**/*.json
 /Library/Data/bvr/records.json
 /gform.html
+/Library/Scripts/bvr/tests
