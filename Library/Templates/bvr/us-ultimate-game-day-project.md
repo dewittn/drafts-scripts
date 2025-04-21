@@ -1,4 +1,4 @@
-Game Day Checklist: @area(BVR Coaching) @when([[game_date]])
+Game Day Checklist [[game_opponent]]: @area(BVR Coaching) @when([[game_date]])
   *Checklist for game [[game_description]]*
   Items to Pack:
     - AirPods @when([[game_date]])
@@ -14,5 +14,5 @@ Game Day Checklist: @area(BVR Coaching) @when([[game_date]])
   Post-game:
     - Record Score
       drafts://x-callback-url/runAction?action=Record%20Game%20Score
-    - Report Score @due([[game_date]])
+    - Report Score @due([[game_report_due_date]])
       drafts://x-callback-url/runAction?action=Submit%20Game%20Report

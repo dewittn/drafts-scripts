@@ -1,0 +1,22 @@
+Game Day Checklist - {{game_opponent}}: @area(BVR Coaching) @when({{game_date}})
+  *Checklist for game {{game_description}}*
+  Items to Pack:
+    {{^game_isHome}}
+    - AirPods
+    {{/game_isHome}}
+    - iPad 
+    - tripod 
+    - iPad Mount 
+    - Clipboard w/Magnets
+  Pre-game:
+    - Make sure we have Water
+    - Make sure we have Med kit
+    - Make sure we have discs
+    {{#game_isHome}}
+    - Get Veo Camera from Abby
+    {{/game_isHome}}
+  Post-game:
+    - Record Score
+      drafts://x-callback-url/runAction?action=Record%20Game%20Score
+    - Report Score @due({{ game_report_due_date }})
+      drafts://x-callback-url/runAction?action=Submit%20Game%20Report

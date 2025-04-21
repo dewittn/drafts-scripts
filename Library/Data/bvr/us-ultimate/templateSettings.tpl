@@ -12,7 +12,7 @@ reportTemplate:
 recordTemplate:
   templateFile: bvr/game-record-row.md
 thingsProject:
-  templateFile: bvr/us-ultimate-game-day-project.md
+  templateFile: bvr/us-ultimate-game-day-project.mustache
 practicePlan:
   draftTags:
     - bvr/ultimate/practice/plan

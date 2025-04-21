@@ -57,6 +57,11 @@ class Template {
     return Object.entries(this.#settings.templateTags);
   }
 
+  get mustacheTags() {
+    if (this.#settings.templateTags == undefined) return {};
+    return this.#settings.templateTags;
+  }
+
   get workspaceName() {
     return this.#settings.workspaceName;
   }
@@ -107,6 +112,16 @@ class Template {
     if (this.templateFile == undefined) return;
 
     const template = this.#fs.read(this.templateFile);
-    this.draft.content = this.draft.processTemplate(template);
+
+    if (this.templateFile.endsWith(".md"))
+      this.draft.content = this.draft.processTemplate(template);
+
+    if (this.templateFile.endsWith(".mustache")) {
+      this.draft.content = this.draft.processMustacheTemplate(
+        "text",
+        template,
+        this.mustacheTags
+      );
+    }
   }
 }

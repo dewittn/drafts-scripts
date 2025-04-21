@@ -85,6 +85,12 @@ class Game {
     return this.#gameData.formattedDate;
   }
 
+  get reportDueDate() {
+    if (this.date == undefined) return "";
+
+    return this.#bvr.formatDateMDY(adjustDate(this.date, "+1 day"));
+  }
+
   get googleFormDate() {
     const gameDate = new Date(this.date);
     return this.#bvr.formatDateYMD(gameDate);
@@ -104,6 +110,10 @@ class Game {
     if (this.location == "Home") return `at ${this.location.toLowerCase()}`;
 
     return this.location?.toLowerCase();
+  }
+
+  get isHome() {
+    return this.location == "Home";
   }
 
   get summary() {
