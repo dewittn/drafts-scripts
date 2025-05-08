@@ -80,8 +80,10 @@ class Template {
     if (this.draft == undefined) return;
 
     // find workspace and load it in drafts list
-    const workspace = Workspace.find(this.workspaceName);
-    app.applyWorkspace(workspace);
+    if (this.workspaceName && app.currentWorkspace.name != this.workspaceName) {
+      const workspace = Workspace.find(this.workspaceName);
+      app.applyWorkspace(workspace);
+    }
 
     editor.load(this.draft);
     editor.activate();

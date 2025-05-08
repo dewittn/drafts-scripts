@@ -152,8 +152,8 @@ class BVR {
   }
 
   #loadWorkspace() {
-    const currentWorkspace = app.currentWorkspace;
-    if (currentWorkspace.name == this.workspace) return;
+    if (app.currentWorkspace.name == this.workspace)
+      return this.ui.displayAppMessage("info", "Workspace is already loaded.");
 
     const bvrWorkspace = Workspace.find(this.workspace);
     app.applyWorkspace(bvrWorkspace);
