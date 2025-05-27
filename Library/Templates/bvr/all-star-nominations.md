@@ -1,4 +1,4 @@
-# [[current_season]] All-Star Game Nominations
+# [[team_abbr]] [[current_season]] All-Star Game Nominations
 Form: 
 
 ## Nominee #1: 
