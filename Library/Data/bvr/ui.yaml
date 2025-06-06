@@ -131,3 +131,16 @@ submitGoogleForm:
         data:
           name: No
           value: no
+updateRoster:
+  menuSettings:
+    menuTitle: Please Verify
+    menuMessage: Would you like to update the roster with this content?
+    menuItems:
+      - type: button
+        data:
+          name: "Yes"
+          value: "yes"
+      - type: button
+        data:
+          name: "No"
+          value: "no"

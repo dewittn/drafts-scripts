@@ -227,6 +227,65 @@ class Team {
     this.#insertTextPosAtEnd(`${playerName} `);
   }
 
+  updateRoster() {
+    const { menuSettings } = this.#bvr.ui.settings("updateRoster");
+    const attendaceDraft = Draft.find(this.attendanceDraftID);
+
+    const currentYear = new Date().getFullYear();
+    const yearPattern = new RegExp(`(\\d{4})`);
+    const yearMatch = attendaceDraft.lines[0].match(yearPattern);
+    const foundYear = parseInt(yearMatch[1], 10);
+
+    // Check if the found year matches the current year
+    if (foundYear !== currentYear)
+      return this.ui.displayAppMessage(
+        "info",
+        "Roster has already been updated!"
+      );
+
+    // Increment the year and append "(Potential)"
+    const newYear = foundYear + 1;
+
+    const updatedContent = attendaceDraft.lines
+      .map((line, index) => {
+        if (index === 0)
+          return line.replace(yearPattern, newYear) + " (Potential)";
+
+        // Use a regular expression to find the number in parentheses
+        const gradeMatch = line.match(/\((\d+)\)/);
+
+        if (!gradeMatch) return line;
+
+        // Extract the number, convert it to an integer, and increment it by 1
+        let number = parseInt(gradeMatch[1], 10);
+        number += 1;
+
+        // Replace the original number in the string with the incremented number
+        const updatedLine = line.replace(/\(\d+\)/, `(${number})`);
+        return updatedLine;
+      })
+      .join("\n");
+
+    menuSettings.menuItems.push({
+      type: "label",
+      data: {
+        name: "content",
+        label: updatedContent,
+        options: {
+          textSize: "body",
+        },
+      },
+    });
+    const rosterPrompt = this.ui.buildMenu(menuSettings);
+    if (rosterPrompt.show() == false) return;
+
+    if (rosterPrompt.buttonPressed == "yes") {
+      attendaceDraft.content = updatedContent;
+      attendaceDraft.update();
+      editor.load(attendaceDraft);
+    }
+  }
+
   // **********************
   // Private Functions
   // **********************
