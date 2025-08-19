@@ -35,6 +35,7 @@ Content:
     convertTo: sheet
   application:
     groupID: nIT22BzaSOB7nj1bg5sExA
+    template: Online Application
     statusWhenToConvert: writing
     convertTo: sheet
   medium.com:
