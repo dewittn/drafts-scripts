@@ -483,9 +483,8 @@ class ContentPipeline {
     menuSettings["menuItems"] = this.#statuses.generateStatusMenuItems(
       this.#activeDoc.status
     );
-    menuSettings.menuMessage += `${this.#activeDoc.title} is '${
-      this.#activeDoc.status
-    }.'`;
+    menuSettings.menuMessage += `${this.#activeDoc.title} is '${this.#activeDoc.status
+      }.'`;
     const menu = this.#ui.buildMenu(menuSettings);
     if (menu.show() == false) return context.cancel();
 
