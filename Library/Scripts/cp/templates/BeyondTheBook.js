@@ -14,6 +14,10 @@ class BeyondTheBook {
     this.#createTemplate();
   }
 
+  get draft() {
+    return this.template.draft;
+  }
+
   get settingsFile() {
     return this.constructor.settingsFile;
   }
