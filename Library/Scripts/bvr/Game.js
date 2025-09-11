@@ -465,11 +465,16 @@ class Game {
   }
 
   submitReport() {
-    if (this.submitted)
-      return this.ui.displayAppMessage(
+    if (this.submitted) {
+      this.ui.displayAppMessage(
         "info",
         "this game has already been submitted!"
       );
+      const menuSettings = { menuTitle: "Game Already submitted", menuMessage: "Would you like to submit it anyway?" };
+
+      if (this.ui.yesNoPrompt(menuSettings) == "no") return;
+    }
+
     const gameReportDraft = Draft.find(this.draftID);
     if (gameReportDraft == undefined)
       return this.ui.displayAppMessage(

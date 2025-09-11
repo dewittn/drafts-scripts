@@ -43,6 +43,10 @@ class Season {
     return this.#team.name;
   }
 
+  get schoolSportingHistory() {
+   return this.#schoolSportingHistory;
+  }
+
   get teamHistory() {
     if (this.#schoolSportingHistory[this.teamID] == undefined)
       this.#schoolSportingHistory[this.teamID] = {};
@@ -61,6 +65,10 @@ class Season {
   get currentSeasonData() {
     if (typeof this.teamHistory[this.currentSeasonID] == "array")
       this.migrateCurrentSeason();
+
+    if (this.teamHistory[this.currentSeasonID] == undefined) {
+      this.teamHistory[this.currentSeasonID] = {};
+    } 
 
     return this.teamHistory[this.currentSeasonID];
   }
