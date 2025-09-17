@@ -1,11 +1,12 @@
-const { src, dest, series, watch } = require("gulp");
-const ext_replace = require("gulp-ext-replace");
-const rsync = require("gulp-rsync");
-const gulpExec = require("gulp-exec");
-const exec = require("child_process").exec;
-const log = require("fancy-log");
+import { dest, series, src, watch } from "gulp";
+import ext_replace from "gulp-ext-replace";
+import rsync from "gulp-rsync";
+import gulpExec, { reporter } from "gulp-exec";
+import { exec } from "child_process";
+import log from "fancy-log";
 const srcDir = "./Library";
-const destDir = `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`;
+const destDir =
+  `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`;
 
 function logVaribles(cb) {
   log(`${srcDir}/*`);
@@ -15,7 +16,7 @@ function logVaribles(cb) {
 
 function copyJSONData(cb) {
   exec(
-    `rsync -r --progress --include='*.json' --exclude-from='./exclude-file.txt' '${destDir}/Library/' '${srcDir}'`
+    `rsync -r --progress --include='*.json' --exclude-from='./exclude-file.txt' '${destDir}/Library/' '${srcDir}'`,
   );
   cb();
 }
@@ -30,7 +31,7 @@ function rsyncLibrary(cb) {
       recursive: true,
       incremental: true,
       clean: true,
-    })
+    }),
   );
   cb();
 }
@@ -56,15 +57,17 @@ function injectSecrets(cb) {
   };
   src(`${srcDir}/**/*.tpl`)
     .pipe(gulpExec((file) => `op inject -i ${file.path}`, options))
-    .pipe(gulpExec.reporter(reportOptions))
+    .pipe(reporter(reportOptions))
     .pipe(ext_replace(".yaml"))
     .pipe(dest(`${srcDir}`));
   cb();
 }
 
-exports.default = series(copyJSONData, injectSecrets, rsyncLibrary, watchFiles);
-exports.watch = watchFiles;
-exports.sync = rsyncLibrary;
-exports.debug = logVaribles;
-exports.inject = injectSecrets;
-exports.data = copyJSONData;
+const _default = series(copyJSONData, injectSecrets, rsyncLibrary);
+export { _default as default };
+const _watch = series(copyJSONData, injectSecrets, rsyncLibrary, watchFiles);
+export { _watch as watch };
+export const sync = rsyncLibrary;
+export const debug = logVaribles;
+export const inject = injectSecrets;
+export const data = copyJSONData;

@@ -7,11 +7,12 @@ class Game {
   #currentSeasonID;
 
   constructor(dependancies, uuid = draft.uuid) {
-    if (dependancies == undefined)
+    if (dependancies == undefined) {
       dependancies = {
         bvr: new BVR(),
         team: new Team(),
       };
+    }
 
     this.#bvr = dependancies.bvr;
     this.#team = dependancies.team;
@@ -119,11 +120,7 @@ class Game {
   get summary() {
     if (this.recorded == false) return "No game recorded.";
 
-    return `${this.teamName} recorded a ${this.result?.toLowerCase()} ${
-      this.locationGrammar
-    } against ${this.opponent}, with a score of ${this.fullScore} on ${
-      this.formattedDate
-    }.`;
+    return `${this.teamName} recorded a ${this.result?.toLowerCase()} ${this.locationGrammar} against ${this.opponent}, with a score of ${this.fullScore} on ${this.formattedDate}.`;
   }
 
   get description() {
@@ -263,10 +260,9 @@ class Game {
     if (dayOfGame.show() == false) return false;
 
     const firstValue = menuSettings.menuItems[0]?.data?.value;
-    this.date =
-      dayOfGame.buttonPressed == firstValue
-        ? new Date()
-        : this.#getDateFromPrompt();
+    this.date = dayOfGame.buttonPressed == firstValue
+      ? new Date()
+      : this.#getDateFromPrompt();
 
     if (this.date == undefined) return false;
 
@@ -277,8 +273,9 @@ class Game {
 
   recordOpponent() {
     const { menuSettings, textField } = this.#bvr.ui.settings("recordOpponent");
-    if (this.calOpponent != undefined)
+    if (this.calOpponent != undefined) {
       textField.data.initialText = this.calOpponent;
+    }
 
     menuSettings.menuItems.push(textField);
     const opponentPrompt = this.#bvr.ui.buildMenu(menuSettings);
@@ -290,10 +287,9 @@ class Game {
   }
 
   recordLocation() {
-    this.#gameData.location =
-      this.calLocation != undefined
-        ? this.calLocation
-        : this.#getLocationFromPrompt();
+    this.#gameData.location = this.calLocation != undefined
+      ? this.calLocation
+      : this.#getLocationFromPrompt();
     if (this.#gameData.location == undefined) return false;
 
     return true;
@@ -369,7 +365,7 @@ class Game {
     if (uuid == undefined) return {};
 
     const index = this.currentSeasonRecord.findIndex(
-      (game) => game.draftID == uuid
+      (game) => game.draftID == uuid,
     );
     if (index == -1) return {};
 
@@ -379,14 +375,16 @@ class Game {
   }
 
   #lookupDraftID() {
-    if (this.seasonRecord.find((game) => game.draftID == draft.uuid))
+    if (this.seasonRecord.find((game) => game.draftID == draft.uuid)) {
       return draft.uuid;
+    }
     return "";
   }
 
   #pickerColumns(maxValue) {
-    const columValues = Array.from({ length: maxValue + 1 }, (e, i) =>
-      i.toString()
+    const columValues = Array.from(
+      { length: maxValue + 1 },
+      (e, i) => i.toString(),
     );
     return [columValues, columValues];
   }
@@ -432,7 +430,7 @@ class Game {
     if (matchEvent == undefined || matchEvent.includes("Game") == false) {
       this.#bvr.ui.displayAppMessage(
         "info",
-        "There does not appear to be a game today."
+        "There does not appear to be a game today.",
       );
       return false;
     }
@@ -454,8 +452,9 @@ class Game {
   // **********************
 
   generateReport() {
-    if (this.recorded == false || this.tmplSettingsGameReport == undefined)
+    if (this.recorded == false || this.tmplSettingsGameReport == undefined) {
       return;
+    }
 
     const gameReportDraft = new Template(this.tmplSettingsGameReport);
     gameReportDraft.archive().save().activate();
@@ -468,42 +467,48 @@ class Game {
     if (this.submitted) {
       this.ui.displayAppMessage(
         "info",
-        "this game has already been submitted!"
+        "this game has already been submitted!",
       );
-      const menuSettings = { menuTitle: "Game Already submitted", menuMessage: "Would you like to submit it anyway?" };
+      const menuSettings = {
+        menuTitle: "Game Already submitted",
+        menuMessage: "Would you like to submit it anyway?",
+      };
 
       if (this.ui.yesNoPrompt(menuSettings) == "no") return;
     }
 
     const gameReportDraft = Draft.find(this.draftID);
-    if (gameReportDraft == undefined)
+    if (gameReportDraft == undefined) {
       return this.ui.displayAppMessage(
         "error",
         "gameReportDraft could not be found",
-        { draftID: this.draftID }
+        { draftID: this.draftID },
       );
+    }
 
-    const { modifiedArray: modifiedDraft, sectionText: comments } =
-      this.#extractSectionText(gameReportDraft.lines, `## Other/Comments`);
+    const { modifiedArray: modifiedDraft, sectionText: comments } = this
+      .#extractSectionText(gameReportDraft.lines, `## Other/Comments`);
     const { sectionText: highlights } = this.#extractSectionText(
       modifiedDraft,
-      `## Highlights?`
+      `## Highlights?`,
     );
 
     this.comments = comments;
     this.highlights = highlights;
 
     if (this.msgSettings != undefined) this.#sendMessages();
-    if (this.googleFormSettings != undefined)
+    if (this.googleFormSettings != undefined) {
       this.googleFormSettings.forEach((gform) => this.#submitGoogleForm(gform));
+    }
 
     this.submitted = true;
     this.#updateSeasonRecord();
   }
 
   generateTmplSettings(key) {
-    const tmplSettings =
-      this.#tmplSettings[key] != undefined ? this.#tmplSettings[key] : {};
+    const tmplSettings = this.#tmplSettings[key] != undefined
+      ? this.#tmplSettings[key]
+      : {};
     return new TmplSettings(this.gblTmplSettings, tmplSettings, this);
   }
 
@@ -542,7 +547,7 @@ class Game {
   #extractSectionText(array, sectionHeader) {
     const { sectionStart, sectionEnd } = this.#getSectionStartEnd(
       array,
-      sectionHeader
+      sectionHeader,
     );
     const sectionText = array
       .splice(sectionStart, sectionEnd)

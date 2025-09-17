@@ -1,6 +1,7 @@
 # drafts-scripts
 
-A collection of scripts for use with the [Drafts](https://getdrafts.com) App on iOS and macOS
+A collection of scripts for use with the [Drafts](https://getdrafts.com) App on
+iOS and macOS
 
 ## draftsTable
 
