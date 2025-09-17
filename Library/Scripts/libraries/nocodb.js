@@ -37,9 +37,16 @@ class NocoDB {
     let credential = Credential.create("NocoDB", "NocoDB API");
     credential.addPasswordField("api_token", "API Token");
     credential.addTextField("baseID", "Default Base ID");
+    credential.addTextField("endpoint_url", "Endpoint URL");
     credential.authorize();
     this.#apiToken = credential.getValue("api_token");
     this.#defaultBaseID = credential.getValue("baseID");
+
+    // Use custom endpoint URL if provided, otherwise use default
+    const customEndpoint = credential.getValue("endpoint_url");
+    if (customEndpoint && customEndpoint.trim() !== "") {
+      this.constructor.endPointURL = customEndpoint.trim();
+    }
   }
 
   // Allows BaseIDs to be stored in an iCloud json file.
