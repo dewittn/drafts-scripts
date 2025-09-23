@@ -4,7 +4,7 @@ import rsync from "gulp-rsync";
 import gulpExec, { reporter } from "gulp-exec";
 import { exec } from "child_process";
 import log from "fancy-log";
-import { unlink, readdir, stat } from "fs/promises";
+import { readdir, stat, unlink } from "fs/promises";
 import { join } from "path";
 const srcDir = "./Library";
 const destDir =
@@ -66,38 +66,39 @@ function injectSecrets(cb) {
 }
 
 async function cleanSettings(cb) {
-  const filesToDelete = [
+  const filesToDelete = new Set([
     "gameReportSettings.yaml",
     "settings.yaml",
     "attendanceSettings.yaml",
-    "templateSettings.yaml"
-  ];
+    "templateSettings.yaml",
+  ]);
 
-  async function findAndDeleteFiles(dir) {
+  const deleteFile = async (filePath) => {
     try {
-      const files = await readdir(dir);
-
-      for (const file of files) {
-        const filePath = join(dir, file);
-        const fileStat = await stat(filePath);
-
-        if (fileStat.isDirectory()) {
-          await findAndDeleteFiles(filePath);
-        } else if (filesToDelete.includes(file)) {
-          try {
-            await unlink(filePath);
-            log(`Deleted: ${filePath}`);
-          } catch (err) {
-            log.error(`Error deleting ${filePath}: ${err.message}`);
-          }
-        }
-      }
+      await unlink(filePath);
+      log(`Deleted: ${filePath}`);
     } catch (err) {
-      if (err.code !== 'ENOENT') {
-        log.error(`Error reading directory ${dir}: ${err.message}`);
-      }
+      log.error(`Error deleting ${filePath}: ${err.message}`);
     }
-  }
+  };
+
+  const processEntry = async (dir, entry) => {
+    const filePath = join(dir, entry);
+    const fileStat = await stat(filePath);
+
+    return fileStat.isDirectory()
+      ? findAndDeleteFiles(filePath)
+      : filesToDelete.has(entry) && deleteFile(filePath);
+  };
+
+  const findAndDeleteFiles = async (dir) => {
+    try {
+      const entries = await readdir(dir);
+      await Promise.all(entries.map(entry => processEntry(dir, entry)));
+    } catch (err) {
+      err.code !== "ENOENT" && log.error(`Error reading directory ${dir}: ${err.message}`);
+    }
+  };
 
   await findAndDeleteFiles(join(srcDir, "Data"));
   cb();
