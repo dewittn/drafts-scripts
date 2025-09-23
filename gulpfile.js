@@ -4,6 +4,8 @@ import rsync from "gulp-rsync";
 import gulpExec, { reporter } from "gulp-exec";
 import { exec } from "child_process";
 import log from "fancy-log";
+import { unlink, readdir, stat } from "fs/promises";
+import { join } from "path";
 const srcDir = "./Library";
 const destDir =
   `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`;
@@ -63,6 +65,44 @@ function injectSecrets(cb) {
   cb();
 }
 
+async function cleanSettings(cb) {
+  const filesToDelete = [
+    "gameReportSettings.yaml",
+    "settings.yaml",
+    "attendanceSettings.yaml",
+    "templateSettings.yaml"
+  ];
+
+  async function findAndDeleteFiles(dir) {
+    try {
+      const files = await readdir(dir);
+
+      for (const file of files) {
+        const filePath = join(dir, file);
+        const fileStat = await stat(filePath);
+
+        if (fileStat.isDirectory()) {
+          await findAndDeleteFiles(filePath);
+        } else if (filesToDelete.includes(file)) {
+          try {
+            await unlink(filePath);
+            log(`Deleted: ${filePath}`);
+          } catch (err) {
+            log.error(`Error deleting ${filePath}: ${err.message}`);
+          }
+        }
+      }
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        log.error(`Error reading directory ${dir}: ${err.message}`);
+      }
+    }
+  }
+
+  await findAndDeleteFiles(join(srcDir, "Data"));
+  cb();
+}
+
 const _default = series(copyJSONData, injectSecrets, rsyncLibrary);
 export { _default as default };
 const _watch = series(copyJSONData, injectSecrets, rsyncLibrary, watchFiles);
@@ -71,3 +111,4 @@ export const sync = rsyncLibrary;
 export const debug = logVaribles;
 export const inject = injectSecrets;
 export const data = copyJSONData;
+export const clean = cleanSettings;
