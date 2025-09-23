@@ -25,15 +25,15 @@ const dependencies = {
 };
 
 try {
-  ui.displayMessage("Testing NocoDB Connection...");
+  ui.displayInfoMessage("Testing NocoDB Connection...");
 
   const db = new NocoDBClass(dependencies);
   db.debug = true;
 
-  ui.displayMessage("NocoDB instance created successfully");
+  ui.displayInfoMessage("NocoDB instance created successfully");
 
   // Test 1: Retrieve all records from table
-  ui.displayMessage("Test 1: Retrieving all records...");
+  ui.displayInfoMessage("Test 1: Retrieving all records...");
   const allRecords = db.retrieveRecordsByField("Status", "published");
 
   if (db.databaseError) {
@@ -42,14 +42,14 @@ try {
       errorDetails: db.stackTrace,
     });
   } else {
-    ui.displayMessage(`Found ${allRecords ? allRecords.length : 0} published records`);
+    ui.displayInfoMessage(`Found ${allRecords ? allRecords.length : 0} published records`);
     if (allRecords && allRecords.length > 0) {
       ui.debugVariable(`First record: ${JSON.stringify(allRecords[0], null, 2)}`);
     }
   }
 
   // Test 2: Test document lookup
-  ui.displayMessage("Test 2: Testing document lookup...");
+  ui.displayInfoMessage("Test 2: Testing document lookup...");
   const testDoc = {
     docID: "TEST-DOC-ID-123",
     docIDType: "DraftsID",
@@ -58,11 +58,11 @@ try {
   };
 
   const isInPipeline = db.docIsInPipeline(testDoc);
-  ui.displayMessage(`Document in pipeline: ${isInPipeline}`);
+  ui.displayInfoMessage(`Document in pipeline: ${isInPipeline}`);
 
   // Test 3: Retrieve specific record if it exists
   if (isInPipeline) {
-    ui.displayMessage("Test 3: Retrieving specific document record...");
+    ui.displayInfoMessage("Test 3: Retrieving specific document record...");
     const specificRecord = db.retrieveRecordByDocID(testDoc);
 
     if (db.databaseError) {
@@ -75,7 +75,7 @@ try {
     }
   }
 
-  ui.displayMessage("NocoDB connection test completed successfully!");
+  ui.displaySuccessMessage("NocoDB connection test completed successfully!");
 
 } catch (error) {
   ui.displayErrorMessage({
