@@ -104,7 +104,42 @@ class Settings {
   }
 
   get ui() {
-    if (this.uiSettingsFile) return DataFile.load(`${this.dirPrefix}${this.uiSettingsFile}`);
+    if (this.uiSettingsFile) {
+      return DataFile.load(`${this.dirPrefix}${this.uiSettingsFile}`);
+    }
+
+    return this.uiSettings;
+  }
+
+  static load(fileName) {
+    return DataFile.load(fileName);
+  }
+}
+
+class SettingsV2 {
+  #dataMap;
+
+  constructor(fileName, section) {
+    const data = DataFile.load(fileName);
+    const keys = section == undefined ? data : data[section];
+    // Convert object to Map
+    this.#dataMap = new Map(Object.entries(keys));
+  }
+
+  // Method to retrieve values from the Map
+  load(key) {
+    alert(key);
+    return this.#dataMap.get(key);
+  }
+
+  get basePath() {
+    return this.constructor.basePath;
+  }
+
+  get ui() {
+    if (this.uiSettingsFile) {
+      return DataFile.load(`${this.dirPrefix}${this.uiSettingsFile}`);
+    }
 
     return this.uiSettings;
   }
