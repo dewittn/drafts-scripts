@@ -1,6 +1,7 @@
 require("cp/ui/DraftsUI.js");
 require("cp/databases/NocoDB.js");
 require("cp/records/TestRecentRecords.js");
+require("cp/filesystems/CloudFS.js");
 
 const ui = new DraftsUI({
   draftLogUUID: "F59242F5-8096-44A6-B8DC-529DA4082AAC",
@@ -10,7 +11,7 @@ ui.debug = true;
 const recent = new TestRecentRecords();
 const dependencies = {
   ui: ui,
-  tableId: "m9ltkhp0f85f12m",
+  tableName: "Content",
   settings: {
     nocodb: {
       defaultFields: [

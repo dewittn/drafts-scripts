@@ -5,18 +5,18 @@ class NocoDBClass {
   #text;
   #settings;
   #database;
-  #tableId;
+  #tableName;
   #stackTrace;
   #defaultFields;
   #databaseError = false;
 
   constructor(dependencies) {
     this.#ui = dependencies.ui;
-    this.#tableId = dependencies.tableId;
+    this.#tableName = dependencies.tableName;
     this.#settings = dependencies.settings.nocodb;
     this.#defaultFields = this.#settings.defaultFields;
     this.#text = dependencies.textUtilities;
-    this.#database = new NocoDB().base().table(this.#tableId);
+    this.#database = new NocoDB().base().table(this.#tableName);
   }
 
   get debug() {

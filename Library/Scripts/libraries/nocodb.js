@@ -87,6 +87,7 @@ class NocoBase {
 class NocoTable {
   #nocodb;
   #base;
+  #tableData;
   #tableID;
   #params = {};
   #records = [];
@@ -109,10 +110,11 @@ class NocoTable {
     503: "Service Unavailable",
   };
 
-  constructor(nocodb, base, tableID) {
+  constructor(nocodb, base, tableName) {
     this.#nocodb = nocodb;
     this.#base = base;
-    this.#tableID = tableID;
+    this.#tableData = new SettingsV2("cp/tables.yaml", base.baseID);
+    this.#tableID = this.#tableData.load(tableName);
   }
 
   // *******
