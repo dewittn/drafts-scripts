@@ -2,25 +2,40 @@ require("cp/ui/DraftsUI.js");
 require("cp/databases/NocoDB.js");
 require("cp/records/TestRecentRecords.js");
 
-const ui = new DraftsUI();
-const recent = new TestRecentRecords();
+const ui = new DraftsUI({
+  draftLogUUID: "F59242F5-8096-44A6-B8DC-529DA4082AAC",
+});
+ui.debug = true;
 
+const recent = new TestRecentRecords();
 const dependencies = {
   ui: ui,
-  tableName: "Content",
+  tableId: "m9ltkhp0f85f12m",
   settings: {
     nocodb: {
-      defaultFields: ["Title", "Status", "Destination", "UlyssesID", "DraftsID", "Slug", "Link", "docID", "docIDType"],
+      defaultFields: [
+        "Title",
+        "Status",
+        "Destination",
+        "UlyssesID",
+        "DraftsID",
+        "Slug",
+        "Link",
+        "docID",
+        "docIDType",
+      ],
       defaultPriority: "Low",
     },
   },
   recentRecords: recent,
   textUtilities: {
     // Mock text utilities for testing
-    removeSpecialCharacters: (text) => text.replace(/[^\w\s]/gi, ''),
-    titleCase: (text) => text.replace(/\w\S*/g, (txt) =>
-      txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-    ),
+    removeSpecialCharacters: (text) => text.replace(/[^\w\s]/gi, ""),
+    titleCase: (text) =>
+      text.replace(
+        /\w\S*/g,
+        (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
+      ),
   },
 };
 
@@ -34,7 +49,7 @@ try {
 
   // Test 1: Retrieve all records from table
   ui.displayInfoMessage("Test 1: Retrieving all records...");
-  const allRecords = db.retrieveRecordsByField("Status", "published");
+  const allRecords = db.retrieveRecordsByField("Status", "Writing");
 
   if (db.databaseError) {
     ui.displayErrorMessage({
@@ -42,19 +57,23 @@ try {
       errorDetails: db.stackTrace,
     });
   } else {
-    ui.displayInfoMessage(`Found ${allRecords ? allRecords.length : 0} published records`);
+    ui.displayInfoMessage(
+      `Found ${allRecords ? allRecords.length : 0} published records`,
+    );
     if (allRecords && allRecords.length > 0) {
-      ui.debugVariable(`First record: ${JSON.stringify(allRecords[0], null, 2)}`);
+      ui.debugVariable(
+        `First record: ${JSON.stringify(allRecords[0], null, 2)}`,
+      );
     }
   }
 
   // Test 2: Test document lookup
   ui.displayInfoMessage("Test 2: Testing document lookup...");
   const testDoc = {
-    docID: "TEST-DOC-ID-123",
+    docID: "-LtGawLUBaCipsY2l-Ig0A",
     docIDType: "DraftsID",
-    title: "Test Document",
-    status: "draft"
+    title: "StreetXSW",
+    status: "Drafting",
   };
 
   const isInPipeline = db.docIsInPipeline(testDoc);
@@ -71,17 +90,14 @@ try {
         errorDetails: db.stackTrace,
       });
     } else {
-      ui.debugVariable(`Retrieved record: ${JSON.stringify(specificRecord, null, 2)}`);
+      ui.debugVariable(specificRecord, `Retrieved record:`);
     }
   }
 
   ui.displaySuccessMessage("NocoDB connection test completed successfully!");
-
 } catch (error) {
-  ui.displayErrorMessage({
-    errorMessage: "Test failed with error",
-    errorDetails: error.toString(),
-  });
+  ui.displayErrorMessage(error, "Test failed with error");
 }
 
 script.complete();
+

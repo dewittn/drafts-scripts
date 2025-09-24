@@ -5,19 +5,18 @@
 // * NocoDB Class
 // ***************
 class NocoDB {
-  static endPointURL = "https://app.nocodb.com/api/v2";
+  static endPointDomain = "app.nocodb.com";
   static filesPath = "/Library/Data";
 
   #apiToken;
   #defaultBaseID;
 
-  constructor(token) {
-    this.#apiToken = token;
+  constructor() {
     this.#authorize();
   }
 
-  get endPointURL() {
-    return this.constructor.endPointURL;
+  get endPointDomain() {
+    return this.constructor.endPointDomain;
   }
 
   get filesPath() {
@@ -37,28 +36,28 @@ class NocoDB {
     let credential = Credential.create("NocoDB", "NocoDB API");
     credential.addPasswordField("api_token", "API Token");
     credential.addTextField("baseID", "Default Base ID");
-    credential.addTextField("endpoint_url", "Endpoint URL");
+    credential.addTextField("endpoint_domain", "Endpoint Domain");
     credential.authorize();
     this.#apiToken = credential.getValue("api_token");
     this.#defaultBaseID = credential.getValue("baseID");
 
     // Use custom endpoint URL if provided, otherwise use default
-    const customEndpoint = credential.getValue("endpoint_url");
+    const customEndpoint = credential.getValue("endpoint_domain");
     if (customEndpoint && customEndpoint.trim() !== "") {
-      this.constructor.endPointURL = customEndpoint.trim();
+      this.constructor.endPointDomain = customEndpoint.trim();
     }
   }
 
   // Allows BaseIDs to be stored in an iCloud json file.
   // Default base id is used if no name is specified
-  #baseLookup(baseName) {
-    if (baseName == "default") return this.defaultBaseID;
-
-    // read from file in iCloud
-    let fmCloud = FileManager.createCloud(); // Connect to iCloud storage
-    const bases = fmCloud.readJSON(`${this.filesPath}/bases.json`);
-    return bases[baseName];
-  }
+  //   #baseLookup(baseName) {
+  //     if (baseName == "default") return this.defaultBaseID;
+  //
+  //     // read from file in iCloud
+  //     let fmCloud = FileManager.createCloud(); // Connect to iCloud storage
+  //     const bases = fmCloud.readJSON(`${this.filesPath}/bases.json`);
+  //     return bases[baseName];
+  //   }
 }
 
 // ***************
@@ -153,8 +152,8 @@ class NocoTable {
     return this.constructor.errorCodes;
   }
 
-  get endPointURL() {
-    return this.#nocodb.endPointURL;
+  get endPointDomain() {
+    return this.#nocodb.endPointDomain;
   }
 
   get baseID() {
@@ -221,14 +220,22 @@ class NocoTable {
   // GET Functions
   // *********
   select(params = this.#params) {
-    const response = this.#makeHTTPRequest({ method: "GET", parameters: params });
-    if (response.success) response.data.list.forEach((record) => this.#addRecord(record));
+    const response = this.#makeHTTPRequest({
+      method: "GET",
+      parameters: params,
+    });
+    if (response.success) {
+      response.data.records.forEach((record) => this.#addRecord(record));
+    }
 
     return this.#records;
   }
 
   findById(id) {
-    const response = this.#makeHTTPRequest({ method: "GET", parameters: this.#params }, id);
+    const response = this.#makeHTTPRequest({
+      method: "GET",
+      parameters: this.#params,
+    }, id);
     if (response.success) this.#addRecord(response.data);
 
     return this.#records[0];
@@ -244,7 +251,9 @@ class NocoTable {
     };
 
     const response = this.#makeHTTPRequest(payload);
-    if (response.success) response.data.list.forEach((record) => this.#addRecord(record));
+    if (response.success) {
+      response.data.records.forEach((record) => this.#addRecord(record));
+    }
 
     return this.#records;
   }
@@ -259,7 +268,9 @@ class NocoTable {
       parameters: this.#params,
     };
     const response = this.#makeHTTPRequest(payload);
-    if (response.success && response.data.list[0] != undefined) this.#addRecord(response.data.list[0]);
+    if (response.success && response.data.records[0] != undefined) {
+      this.#addRecord(response.data.records[0]);
+    }
 
     return this.#records[0];
   }
@@ -272,7 +283,9 @@ class NocoTable {
       parameters: this.#params,
     };
     const response = this.#makeHTTPRequest(payload);
-    if (response.success) response.data.list.forEach((record) => this.#addRecord(record));
+    if (response.success) {
+      response.data.records.forEach((record) => this.#addRecord(record));
+    }
 
     return this.#records;
   }
@@ -307,17 +320,13 @@ class NocoTable {
 
   update(records = this.records) {
     if (Array.isArray(records) == false) records = [records];
-    const requestBody = records.map((record) => record.fields);
-    const payload = { method: "PATCH", data: requestBody };
+    // const requestBody = records.map((record) => record.fields);
+    const payload = { method: "PATCH", data: records };
 
-    const response = this.#makeHTTPRequest(payload, records[0].id);
+    const response = this.#makeHTTPRequest(payload);
     if (response.success) {
       // NocoDB returns updated records directly
-      if (Array.isArray(response.data)) {
-        response.data.forEach((record) => this.#addRecord(record));
-      } else {
-        this.#addRecord(response.data);
-      }
+      response.data.forEach((record) => this.#addRecord(record));
     }
 
     return response.success;
@@ -330,17 +339,11 @@ class NocoTable {
   // Delete records by ID
   delete(records) {
     if (!Array.isArray(records)) records = [records];
-
     // For bulk delete, use the bulk delete endpoint
     if (records.length > 1) {
-      const ids = records.map(r => r.id);
+      const ids = records.map((r) => r.id);
       const payload = { method: "DELETE", data: ids };
-      const response = this.#makeHTTPRequest(payload, "bulk");
-      return response.success;
-    } else {
-      // Single record delete
-      const payload = { method: "DELETE" };
-      const response = this.#makeHTTPRequest(payload, records[0].id);
+      const response = this.#makeHTTPRequest(payload);
       return response.success;
     }
   }
@@ -365,7 +368,9 @@ class NocoTable {
       .filter(Boolean);
 
     if (recordsToUpdate?.length > 0) success = this.update(recordsToUpdate);
-    if (recordsToCreate?.length > 0) success = this.createRecords(recordsToCreate);
+    if (recordsToCreate?.length > 0) {
+      success = this.createRecords(recordsToCreate);
+    }
 
     return success;
   }
@@ -388,14 +393,12 @@ class NocoTable {
   }
 
   #makeHTTPRequest(payload, id = "") {
-    let url = `${this.endPointURL}/tables/${this.tableID}/records`;
-    if (id && id !== "bulk") {
-      url += `/${id}`;
-    } else if (id === "bulk") {
-      url = `${this.endPointURL}/tables/${this.tableID}/records/bulk`;
-    }
+    let url =
+      `https://${this.endPointDomain}/api/v3/data/${this.baseID}/${this.tableID}/records`;
+    if (id) url += `/${id}`;
 
-    let debugMessage = `\n---------\nURL: ${url}\n\nPayload: ${JSON.stringify(payload)}`;
+    let debugMessage = `\n---------\nURL: ${url}\n\nPayload: ${JSON.stringify(payload)
+      }`;
 
     const request = Object.assign(
       {
@@ -405,12 +408,14 @@ class NocoTable {
           "Content-Type": "application/json",
         },
       },
-      payload
+      payload,
     );
     const http = HTTP.create();
     const response = http.request(request);
 
-    if (response.success == false) return this.#requestError(response, debugMessage);
+    if (response.success == false) {
+      return this.#requestError(response, debugMessage);
+    }
 
     const results = {
       success: response.success,
@@ -428,7 +433,8 @@ class NocoTable {
 
   #requestError(response, debugMessage) {
     this.#error = true;
-    this.#errorMessage = `NocoDB Error: ${response.statusCode} - ${this.#checkError(response.statusCode)}`;
+    this.#errorMessage = `NocoDB Error: ${response.statusCode} - ${this.#checkError(response.statusCode)
+      }`;
     app.displayErrorMessage(this.#errorMessage);
 
     debugMessage = `${debugMessage}\n\n${this.#errorMessage}`;

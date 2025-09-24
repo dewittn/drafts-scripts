@@ -5,18 +5,18 @@ class NocoDBClass {
   #text;
   #settings;
   #database;
-  #tableName;
+  #tableId;
   #stackTrace;
   #defaultFields;
   #databaseError = false;
 
   constructor(dependencies) {
     this.#ui = dependencies.ui;
-    this.#tableName = dependencies.tableName;
+    this.#tableId = dependencies.tableId;
     this.#settings = dependencies.settings.nocodb;
     this.#defaultFields = this.#settings.defaultFields;
     this.#text = dependencies.textUtilities;
-    this.#database = new NocoDB().base().table(this.#tableName);
+    this.#database = new NocoDB().base().table(this.#tableId);
   }
 
   get debug() {
@@ -73,8 +73,9 @@ class NocoDBClass {
 
     // Scrub Record for fields that could cause a NocoDB http 422 error
     Object.keys(recordToSave.fields).forEach((key) => {
-      if (this.#defaultFields.includes(key) == false)
+      if (this.#defaultFields.includes(key) == false) {
         recordToSave.removeField(key);
+      }
     });
 
     const success = this.#database.saveRecords(recordToSave);
@@ -113,12 +114,12 @@ class NocoDBClass {
       return undefined;
     }
 
-    return this.#database.firstRecord;
+    return this.currentRecord;
   }
 
   retrieveRecordByField(field, value) {
     this.retrieveRecordsByField(field, value);
-    return this.#database.firstRecord;
+    return this.currentRecord;
   }
 
   retrieveRecordsByField(field, value, sort) {
@@ -172,9 +173,13 @@ class NocoDBClass {
       return undefined;
     }
 
-    if (this.#database.firstRecord != undefined)
-      return this.#database.firstRecord;
+    if (this.currentRecord != undefined) {
+      return this.currentRecord;
+    }
 
+    //
+    // If doc cannot be found using docID search again using docIDType
+    //
     if (doc?.docIDType == undefined) {
       this.#throwError({
         errorMessage: "docIDType is missing!",
@@ -188,7 +193,7 @@ class NocoDBClass {
     }
     const findByDocIDType = this.#database.findFirstByField(
       doc.docIDType,
-      doc.docID
+      doc.docID,
     );
     if (this.databaseError) {
       this.#throwError({
@@ -234,3 +239,4 @@ Object.defineProperty(NocoRecord.prototype, "docIDType", {
     return undefined;
   },
 });
+
