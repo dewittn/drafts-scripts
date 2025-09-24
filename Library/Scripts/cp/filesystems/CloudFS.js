@@ -128,7 +128,6 @@ class SettingsV2 {
 
   // Method to retrieve values from the Map
   load(key) {
-    alert(key);
     return this.#dataMap.get(key);
   }
 

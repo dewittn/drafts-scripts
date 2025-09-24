@@ -1,6 +1,6 @@
 require("libraries/nocodb.js");
 
-class NocoDBClass {
+class NocoController {
   #ui;
   #text;
   #settings;
@@ -239,4 +239,3 @@ Object.defineProperty(NocoRecord.prototype, "docIDType", {
     return undefined;
   },
 });
-

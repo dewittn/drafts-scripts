@@ -5,7 +5,7 @@ require("cp/RecentRecords.js");
 require("cp/TextUtilities.js");
 require("cp/ui/DraftsUI.js");
 require("cp/filesystems/CloudFS.js");
-require("cp/databases/AirTableDB.js");
+require("cp/databases/NocoDB.js");
 require("cp/documents/document_factory.js");
 require("cp/templates/template_factory.js");
 
@@ -49,7 +49,7 @@ class ContentPipeline {
     this.#recent = new RecentRecords(dependancies);
     dependancies["recentRecords"] = this.#recent;
 
-    this.#db = new AirTableDB(dependancies);
+    this.#db = new NocoController(dependancies);
     dependancies["database"] = this.#db;
 
     this.#document_factory = new DocumentFactory(dependancies);
@@ -107,14 +107,15 @@ class ContentPipeline {
   // **************
   welcome() {
     // Retrieve settings for welcome prompt
-    const { menuPicker, menuSettings, errorMessage } =
-      this.#ui.settings("welcome");
+    const { menuPicker, menuSettings, errorMessage } = this.#ui.settings(
+      "welcome",
+    );
 
     // Create menuPicker from recent records
     this.#ui.utilities.addRecordColomsToMenuPicker(
       menuPicker,
       menuSettings,
-      this.#recent.records
+      this.#recent.records,
     );
 
     // Build and display the menu prompt
@@ -126,7 +127,7 @@ class ContentPipeline {
     const nextFunction = welcomeScreen.buttonPressed;
     const index = this.#ui.utilities.getIndexFromPromptPicker(
       welcomeScreen,
-      menuPicker
+      menuPicker,
     );
     const record = this.#recent.selectByIndex(index);
 
@@ -143,23 +144,26 @@ class ContentPipeline {
   openDoc(docID, docIDType) {
     const { docNotFound, recentDocsNotSaved } = this.#settings.openDoc;
 
-    if (this.#activeDoc == undefined)
+    if (this.#activeDoc == undefined) {
       this.#activeDoc = this.#document_factory.load({
         docID: docID,
         docIDType: docIDType,
       });
+    }
 
-    if (this.#activeDoc == undefined)
+    if (this.#activeDoc == undefined) {
       return this.#ui.displayAppMessage("error", docNotFound, {
         errorMessage: docNotFound,
         acticeDoc: this.#activeDoc,
       });
+    }
 
-    if (this.recentRecordsUpdated != true)
+    if (this.recentRecordsUpdated != true) {
       this.#ui.displayAppMessage("info", recentDocsNotSaved, {
         recentRecordsUpdated: false,
         activeDoc: this.#activeDoc,
       });
+    }
 
     this.#activeDoc.open();
   }
@@ -171,8 +175,9 @@ class ContentPipeline {
   useCurrentDraft() {
     // Retrieve settings for useCurrentDraft
     const { menuSettings } = this.#ui.settings("useCurrentDraft");
-    if (draft.content == "")
+    if (draft.content == "") {
       return this.#ui.displayAppMessage("info", "Cannot use a blank draft!");
+    }
 
     this.#activeDoc = this.#document_factory.load({
       docID: draft.uuid,
@@ -277,13 +282,14 @@ class ContentPipeline {
   modifyActiveDoc(docIDType, docID) {
     const { errorMessage, menuSettings } = this.#ui.settings("modifyActiveDoc");
 
-    if (this.#activeDoc == undefined)
+    if (this.#activeDoc == undefined) {
       this.#activeDoc = this.#document_factory.load({
         docID: docID,
         docIDType: docIDType,
       });
+    }
 
-    if (this.#activeDoc == undefined)
+    if (this.#activeDoc == undefined) {
       return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
@@ -291,8 +297,9 @@ class ContentPipeline {
         docIDType: docIDType,
         docID: docID,
       });
+    }
 
-    if (this.#activeDoc.docIDType == "DraftsID")
+    if (this.#activeDoc.docIDType == "DraftsID") {
       menuSettings.menuItems.push({
         type: "button",
         data: {
@@ -300,8 +307,9 @@ class ContentPipeline {
           value: "convertDraft",
         },
       });
+    }
     menuSettings.menuMessage = menuSettings.menuMessage.concat(
-      this.#activeDoc.title
+      this.#activeDoc.title,
     );
 
     // Prompts for title and status
@@ -325,15 +333,17 @@ class ContentPipeline {
     } = this.#ui.settings("addDocToPipeline");
 
     // Load document if #activeDoc is not set
-    if (this.activeDocIsUndefined)
+    if (this.activeDocIsUndefined) {
       this.#activeDoc = this.#document_factory.load({
         docID: docID,
         docIDType: docIDType,
       });
+    }
 
     // Check if doc is already in pipeline
-    if (this.activeDocInPipeline)
+    if (this.activeDocInPipeline) {
       return this.#ui.displayAppMessage("info", docExistsMessage);
+    }
     if (this.databaseError) return this.#throwDBError("addDocToPipeline()");
 
     // Prompt to add doc to pipeline
@@ -343,21 +353,24 @@ class ContentPipeline {
     }
 
     // Select Status & destination
-    if (this.#activeDoc.statusIsNotSet)
+    if (this.#activeDoc.statusIsNotSet) {
       this.#activeDoc.status = this.#statuses.select(this.#activeDoc.title);
-    if (this.#activeDoc.destinationIsNotSet)
+    }
+    if (this.#activeDoc.destinationIsNotSet) {
       this.#activeDoc.destination = this.#destinations.select(
-        this.#activeDoc.title
+        this.#activeDoc.title,
       );
+    }
 
     // Update pipeline with activeDoc
-    if (this.#updateDatabase() == false)
+    if (this.#updateDatabase() == false) {
       return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "addDocToPipeline()",
         activeDoc: this.#activeDoc,
       });
+    }
     if (this.databaseError) return this.#throwDBError("addDocToPipeline()");
 
     // Update and save draft
@@ -367,7 +380,7 @@ class ContentPipeline {
     // If Airtable responds with a valid record
     // add the record to recent records and return it
     const warningMessage = "Recent Records could not be saved!";
-    if (this.#updateRecentRecords() == false)
+    if (this.#updateRecentRecords() == false) {
       this.#ui.displayAppMessage("warning", warningMessage, {
         warningMessage: warningMessage,
         errorType: "execution",
@@ -378,6 +391,7 @@ class ContentPipeline {
         savedRecord: savedRecord,
         stackTrace: this.#recent.stackTrace,
       });
+    }
 
     this.#ui.displayAppMessage("success", successMessage);
     return true;
@@ -397,11 +411,12 @@ class ContentPipeline {
       menuSettings,
     } = this.#ui.settings("addSheetToPipeline");
 
-    if (this.#activeDoc == undefined)
+    if (this.#activeDoc == undefined) {
       this.#activeDoc = this.#document_factory.load({
         docID: targetId,
         docIDType: "UlyssesID",
       });
+    }
 
     // Remove existing note, add default notes to top, then reapply old notes.
     this.#activeDoc.attachDefaultNotes();
@@ -414,11 +429,12 @@ class ContentPipeline {
   convertDraft(uuid = draft.uuid) {
     const { recentDocsNotSaved } = this.#ui.settings("convertDraft");
 
-    if (this.#activeDoc == undefined)
+    if (this.#activeDoc == undefined) {
       this.#activeDoc = this.#document_factory.load({
         docID: uuid,
         docIDType: "DraftsID",
       });
+    }
 
     const record = this.#db.retrieveRecordByDocID(this.#activeDoc);
     if (record == undefined) this.addDocToPipeline();
@@ -426,19 +442,20 @@ class ContentPipeline {
     this.#activeDoc.record = record;
 
     const { newDocType } = this.#destinations.lookupDocConvertionData(
-      this.#activeDoc.destination
+      this.#activeDoc.destination,
     );
     this.#convertActiveDoc(newDocType);
 
-    if (this.recentRecordsUpdated != true)
+    if (this.recentRecordsUpdated != true) {
       this.#ui.displayAppMessage("info", recentDocsNotSaved, {
         savedRecent: savedRecent,
         activeDoc: this.#activeDoc,
       });
+    }
 
     this.#ui.displayAppMessage(
       "success",
-      `Draft has been converted to a ${newDocType}.`
+      `Draft has been converted to a ${newDocType}.`,
     );
   }
 
@@ -448,15 +465,16 @@ class ContentPipeline {
   // **************
   updateStatusOfDoc(docID, docIDType) {
     const { statusList } = this.#settings;
-    const { errorMessage, errorMessage2, successMessage, menuSettings } =
-      this.#ui.settings("updateStatusOfDoc");
-    if (this.#activeDoc == undefined)
+    const { errorMessage, errorMessage2, successMessage, menuSettings } = this
+      .#ui.settings("updateStatusOfDoc");
+    if (this.#activeDoc == undefined) {
       this.#activeDoc = this.#document_factory.load({
         docID: docID,
         docIDType: docIDType,
       });
+    }
 
-    if (this.#activeDoc == undefined)
+    if (this.#activeDoc == undefined) {
       return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
@@ -464,27 +482,32 @@ class ContentPipeline {
         docID: docID,
         docIDType: docIDType,
       });
+    }
 
-    if (this.#activeDoc.title == undefined)
+    if (this.#activeDoc.title == undefined) {
       return this.#ui.displayAppMessage("error", errorMessage2, {
         errorMessage: errorMessage2,
         class: "ContentPipeline",
         function: "updateStatusOfDoc()",
         activeDoc: this.#activeDoc,
       });
+    }
 
     // Check if doc is already in pipeline and retrieve record
-    if (this.#activeDoc.inPipeline == false && this.addDocToPipeline() == false)
+    if (
+      this.#activeDoc.inPipeline == false && this.addDocToPipeline() == false
+    ) {
       return;
+    }
     this.#activeDoc.record = this.#db.retrieveRecordByDocID(this.#activeDoc);
     if (this.databaseError) return this.#throwDBError("updateStatusOfDoc()");
 
     // Create and show menu
     menuSettings["menuItems"] = this.#statuses.generateStatusMenuItems(
-      this.#activeDoc.status
+      this.#activeDoc.status,
     );
-    menuSettings.menuMessage += `${this.#activeDoc.title} is '${this.#activeDoc.status
-      }.'`;
+    menuSettings.menuMessage +=
+      `${this.#activeDoc.title} is '${this.#activeDoc.status}.'`;
     const menu = this.#ui.buildMenu(menuSettings);
     if (menu.show() == false) return context.cancel();
 
@@ -493,10 +516,10 @@ class ContentPipeline {
     if (newStatus == "back") return this.#functionToRunNext("modifyActiveDoc");
     this.#activeDoc.status = newStatus;
 
-    const { covertDoc, newDocType } =
-      this.#destinations.lookupDocConvertionData(
+    const { covertDoc, newDocType } = this.#destinations
+      .lookupDocConvertionData(
         this.#activeDoc.destination,
-        newStatus
+        newStatus,
       );
     if (covertDoc) this.#convertActiveDoc(newDocType);
 
@@ -518,7 +541,7 @@ class ContentPipeline {
     const record = this.#db.retrieveRecordByDocID(docData);
     const errorMessage = "No record found with that Target ID!";
 
-    if (record == undefined)
+    if (record == undefined) {
       return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
@@ -527,6 +550,7 @@ class ContentPipeline {
         docData: docData,
         record: record,
       });
+    }
 
     this.#activeDoc = this.#document_factory.load(docData);
     this.#activeDoc.status = record.Status;
@@ -538,7 +562,7 @@ class ContentPipeline {
   // **************
   getPublishedPostURL(year = new Date().getFullYear()) {
     const { menuSettings, menuPicker } = this.#ui.settings(
-      "getPublishedPostURL"
+      "getPublishedPostURL",
     );
     const records = this.#db.retrieveRecordsByField(
       "Status",
@@ -546,7 +570,7 @@ class ContentPipeline {
       {
         field: "Publish Date",
         direction: "desc",
-      }
+      },
     );
 
     // Build MenuPicker with published posts
@@ -577,13 +601,14 @@ class ContentPipeline {
   #functionToRunNext(name, args) {
     const errorMessage = "Function name missing!";
 
-    if (name == undefined)
+    if (name == undefined) {
       return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "#functionToRunNext()",
         name: name,
       });
+    }
     if (Array.isArray(args) == false) args = [args];
     // Log & run function
     console.log(`\n\n#######\nRunning function: ${name}`);
@@ -614,7 +639,7 @@ class ContentPipeline {
     newDoc.status = this.#activeDoc.status;
     newDoc.destination = this.#activeDoc.destination;
     newDoc.content = this.#activeDoc.content;
-    if (newDoc.save() == false)
+    if (newDoc.save() == false) {
       return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
@@ -622,6 +647,7 @@ class ContentPipeline {
         docType: newDoc.docIDType,
         stackTrace: newDoc?.stackTrace,
       });
+    }
 
     // Update Airtable
     newDoc.record = this.#activeDoc.record;

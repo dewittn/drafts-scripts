@@ -43,7 +43,7 @@ const dependencies = {
 try {
   ui.displayInfoMessage("Testing NocoDB Connection...");
 
-  const db = new NocoDBClass(dependencies);
+  const db = new NocoController(dependencies);
   db.debug = true;
 
   ui.displayInfoMessage("NocoDB instance created successfully");
@@ -101,4 +101,3 @@ try {
 }
 
 script.complete();
-
