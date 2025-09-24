@@ -1,4 +1,4 @@
-# Innocent Dreams: Author Update, [[publish_date]]
+# Author Update: [[publish_date]]
 
 ++Newsletter Snippet++
 
@@ -8,7 +8,7 @@
 
 ## 📚What I've Been Reading
 
-
+{==Book you have been reading==}
 
 ## 👨🏽‍💻The Month Ahead
 

@@ -17,7 +17,7 @@ Content:
     groupID: HUC3AgEJ-StgJgUChjo51g
     template: authorUpdate
     statusWhenToConvert: writing
-    scrubText: "Innocent Dreams: "
+    scrubText: "Author Update: "
     convertTo: sheet
   beyond the book:
     groupID: 82Du-mNX2qy1GvPSQ3I8xA

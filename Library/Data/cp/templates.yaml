@@ -4,7 +4,7 @@ authorUpdate:
     draftTags:
       - author update
       - drafting
-    templateFile: "cp/innocent-dreams-newsletter.md"
+    templateFile: "cp/author-update.md"
     templateTag: "publish_date"
     workspaceName: "defualt"
     nextAction: "Add Draft to Pipeline"
