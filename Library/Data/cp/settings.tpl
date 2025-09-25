@@ -1,0 +1,286 @@
+---
+dirPrefix: cp/
+uiSettingsFile: ui.yaml
+draftLogUUID: F59242F5-8096-44A6-B8DC-529DA4082AAC
+defaultTable: Content
+defaultWorkspace: Content Pipeline
+recentDocsFile: recentRecords.json
+defaultTag:
+  Content: Pipeline
+  Test Table: Testing
+defualtTags:
+  - In Pipeline
+debug:
+  errorMessage: "Error: debug can only be set to true or false."
+destinations:
+  destinationsFile: destinations.yaml
+  errorMessage: "Error: You must select a destination!!"
+  errorMessage2: "Error: A destination was not selected."
+  menuPicker:
+    name: destination
+    label: Destination
+  menuSettings:
+    menuTitle: "Chose destination:"
+    menuMessage: Please select a destination for
+    isCancellable: false
+    menuItems:
+      - type: button
+        data:
+          name: "Ok"
+          value: "ok"
+statuses:
+  selectStatus:
+    errorMessage: "Error: You must select a status!!"
+    menuSettings:
+      menuTitle: "Chose Status:"
+      menuMessage: Please select a status for
+  statusList:
+    - Developing
+    - Drafting
+    - Writing
+    - Editing
+    - Polishing
+    - On Deck
+    - Not Publishing
+nocodb:
+  defaultPriority: Low
+  defaultFields:
+    - Title
+    - Status
+    - Destination
+    - UlyssesID
+    - DraftsID
+    - Slug
+    - Link
+    - docID
+    - docIDType
+airTable:
+  defaultPriority: Low
+  defaultFields:
+    - Title
+    - Status
+    - Destination
+    - UlyssesID
+    - DraftsID
+    - Slug
+    - Link
+    - docID
+    - docIDType
+documentFactory:
+  promptForDocID:
+    menuSettings:
+      menuTitle: Enter
+      menuMessage: "Enter the unique identifier of the document you wand to add:"
+      menuItems:
+        - type: button
+          data:
+            name: OK
+            value: ok
+            isDefault: true
+        - type: textField
+          data:
+            name: docID
+            label: ""
+  ulyssesDoc:
+    excerptText: This is a placeholder for the excerpt!!
+    darftsCallbackData:
+      baseURL: "drafts://x-callback-url/"
+      runActionParams: runAction?action=
+      uuidParams: "&text="
+    piplineLinks:
+      - linkText: "Content Pipeline: Update Status"
+        actionName: updateStatusWithUlyssesID
+      - linkText: "Content Pipeline: Sync Status"
+        actionName: syncStatusWithUlyssesID
+  draftsDoc:
+    createNewDraft:
+      infoMessage: Draft cannot be added without a destination!
+      errorMessage: "Error: Draft could not be added to the Pipeline!"
+      successMessage: Success! Darft added to the Pipeline
+      menuSettings:
+        menuTitle: Working title?
+        menuMessage: "Please enter a working title for your draft (no markdown):"
+        menuItems:
+          - type: button
+            data:
+              name: Developing
+              value: Developing
+              isDefault: true
+          - type: button
+            data:
+              name: Drafting
+              value: Drafting
+          - type: textField
+            data:
+              name: workingTitle
+              label: ""
+              initialText: ""
+welcome:
+  errorMessage: Record for this post is missing in AirTable.
+  menuPicker:
+    name: recent
+    label: Recently Used Content
+  menuSettings:
+    menuTitle: Welcome to the Content Pipeline
+    menuMessage: What content would you like to work with?
+    menuItems:
+      - type: button
+        data:
+          name: Open Selected Content
+          value: openDoc
+          isDefault: true
+      - type: button
+        data:
+          name: Update Selected Content
+          value: modifyActiveDoc
+      - type: button
+        data:
+          name: Use Current Draft
+          value: useCurrentDraft
+      - type: button
+        data:
+          name: Create or Add Content
+          value: addContent
+      - type: button
+        data:
+          name: Select Other Content
+          value: selectDocByStatus
+openDoc:
+  docNotFound: "Error: A valid document cannot be found!"
+  recentDocsNotSaved: "Warning: Recent documents was not saved!"
+useCurrentDraft:
+  menuSettings:
+    menuTitle: Modify Current Draft
+    menuMessage: What would you like to do?
+    menuItems:
+      - type: button
+        data:
+          name: Add Current Draft to Pipeline
+          value: addDocToPipeline
+      - type: button
+        data:
+          name: Update Status of Current Draft
+          value: updateStatusOfDoc
+      - type: button
+        data:
+          name: Convert Draft to Other Document
+          value: convertDraft
+      - type: button
+        data:
+          name: << Back
+          value: welcome
+          isDefault: true
+addContent:
+  infoMessage: ""
+  errorMessage: "Error: "
+  successMessage: Success!
+  menuSettings:
+    menuTitle: Add Document to Pipeline
+    menuMessage: "Select the kind of document would you like to add:"
+    menuItems:
+      - type: button
+        data:
+          name: Create New Draft
+          value: createNewDoc
+      - type: button
+        data:
+          name: Add from Ulysses Sheet ID
+          value: addDocToPipeline
+addDocToPipeline:
+  successMessage: Document was added to the Content Pipeline.
+  errorMessage: "Error: Document could not be added to the Content Pipeline!"
+  docExistsMessage: Document already exists in the Content Pipeline.
+  infoMessage: Document will not be added to the Content Pipeline
+  menuSettings:
+    menuTitle: Add to Pipeline
+    menuMessage: "The current Draft is not in the Pipeline, add it now?"
+updateDraft:
+  docNotFound: "Error: A valid document cannot be found!"
+convertDraft:
+  recentDocsNotSaved: "Warning: Recent documents was not saved!"
+modifyActiveDoc:
+  errorMessage: Could not find a document with that ID!
+  errorMessage2: "modifyActiveDoc: Pipeline could not be updated!"
+  menuSettings:
+    menuTitle: Choose Action
+    menuMessage: |
+      What action would you like to perform on:
+    menuItems:
+      - type: button
+        data:
+          name: Update Status of Document
+          value: updateStatusOfDoc
+      - type: button
+        data:
+          name: Open Document
+          value: openDoc
+      - type: button
+        data:
+          name: << Back
+          value: selectDocByStatus
+          isDefault: true
+updateStatusOfDoc:
+  errorMessage: "Success! Status has been updated to: "
+  errorMessage2: "Error! Title of recent record is missing. "
+  successMessage: "Success! Status has been updated to: "
+  menuSettings:
+    menuTitle: Choose New Status
+    menuMessage: "The current status of "
+getPublishedPostURL:
+  menuSettings:
+    menuTitle: Select Content
+    menuMessage: "Please pick content to work with:"
+    menuItems:
+      - type: button
+        data:
+          name: Select
+          value: select
+          isDefault: true
+      - type: button
+        data:
+          name: Choose a different year
+          value: getPublishedPostURL
+  menuPicker:
+    name: recrodIndex
+    label: ""
+selectDocByStatus:
+  menuSettings:
+    menuTitle: Select Content
+    menuMessage: "Please pick content to work with:"
+    menuItems:
+      - type: button
+        data:
+          name: Open Content
+          value: openDoc
+      - type: button
+        data:
+          name: Update Status of Content
+          value: updateStatusOfDoc
+      - type: button
+        data:
+          name: << Back
+          value: selectDocByStatus
+          isDefault: true
+  menuPicker:
+    name: recrodIndex
+    label: ""
+selectYear:
+  infoMessage: ""
+  menuSettings:
+    menuTitle: Choose Year
+    menuMessage: Please Select a different Year
+    menuItems:
+      - type: picker
+        data:
+          name: year
+          label: ""
+          columns:
+            - - "2023"
+              - "2022"
+              - "2021"
+              - "2020"
+      - type: button
+        data:
+          name: OK
+          value: ok
+          isDefault: true
