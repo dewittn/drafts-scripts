@@ -227,7 +227,9 @@ class NocoTable {
       parameters: params,
     });
     if (response.success) {
-      response.data.records.forEach((record) => this.#addRecord(record));
+      response.responseData.records.forEach((record) =>
+        this.#addRecord(record)
+      );
     }
 
     return this.#records;
@@ -238,7 +240,7 @@ class NocoTable {
       method: "GET",
       parameters: this.#params,
     }, id);
-    if (response.success) this.#addRecord(response.data);
+    if (response.success) this.#addRecord(response.responseData);
 
     return this.#records[0];
   }
@@ -254,7 +256,9 @@ class NocoTable {
 
     const response = this.#makeHTTPRequest(payload);
     if (response.success) {
-      response.data.records.forEach((record) => this.#addRecord(record));
+      response.responseData.records.forEach((record) =>
+        this.#addRecord(record)
+      );
     }
 
     return this.#records;
@@ -270,8 +274,8 @@ class NocoTable {
       parameters: this.#params,
     };
     const response = this.#makeHTTPRequest(payload);
-    if (response.success && response.data.records[0] != undefined) {
-      this.#addRecord(response.data.records[0]);
+    if (response.success && response.responseData.records[0] != undefined) {
+      this.#addRecord(response.responseData.records[0]);
     }
 
     return this.#records[0];
@@ -286,7 +290,9 @@ class NocoTable {
     };
     const response = this.#makeHTTPRequest(payload);
     if (response.success) {
-      response.data.records.forEach((record) => this.#addRecord(record));
+      response.responseData.records.forEach((record) =>
+        this.#addRecord(record)
+      );
     }
 
     return this.#records;
@@ -300,20 +306,14 @@ class NocoTable {
   createRecords(records = this.records) {
     if (Array.isArray(records) == false) records = [records];
 
-    const requestBody = records.map((record) => record.fields);
-    const payload = { method: "POST", data: requestBody };
+    return records.every((record) => {
+      const payload = { method: "POST", data: { fields: record.fields } };
 
-    const response = this.#makeHTTPRequest(payload);
-    if (response.success) {
-      // NocoDB returns created records directly
-      if (Array.isArray(response.data)) {
-        response.data.forEach((record) => this.#addRecord(record));
-      } else {
-        this.#addRecord(response.data);
-      }
-    }
+      const response = this.#makeHTTPRequest(payload);
+      if (response.success) this.#addRecord(response.responseData.records);
 
-    return response.success;
+      return response.success;
+    });
   }
 
   // *********
@@ -322,16 +322,17 @@ class NocoTable {
 
   update(records = this.records) {
     if (Array.isArray(records) == false) records = [records];
-    // const requestBody = records.map((record) => record.fields);
-    const payload = { method: "PATCH", data: records };
+    return records.every((record) => {
+      const payload = {
+        method: "PATCH",
+        data: { id: record.id, fields: record.fields },
+      };
 
-    const response = this.#makeHTTPRequest(payload);
-    if (response.success) {
-      // NocoDB returns updated records directly
-      response.data.forEach((record) => this.#addRecord(record));
-    }
+      const response = this.#makeHTTPRequest(payload);
+      if (response.success) this.#addRecord(response.responseData.records);
 
-    return response.success;
+      return response.success;
+    });
   }
 
   // *********
@@ -419,18 +420,13 @@ class NocoTable {
       return this.#requestError(response, debugMessage);
     }
 
-    const results = {
-      success: response.success,
-      data: this.#formatResponseText(response?.responseText),
-    };
-
     debugMessage = `${debugMessage}\n\nResponse: ${response.responseText}`;
     if (this.#debug) console.log(debugMessage);
 
     // Clear params once request is complete
     this.#params = {};
 
-    return results;
+    return response;
   }
 
   #requestError(response, debugMessage) {
@@ -442,12 +438,11 @@ class NocoTable {
     debugMessage = `${debugMessage}\n\n${this.#errorMessage}`;
     if (this.#debug) console.log(debugMessage);
 
-    return false;
+    return response;
   }
 
-  #formatResponseText(text) {
-    const formatedTxt = JSON.parse(text);
-    return formatedTxt;
+  #parseResponteText(text) {
+    return JSON.parse(text);
   }
 
   #checkError(code) {
