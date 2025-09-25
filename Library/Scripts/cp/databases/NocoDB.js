@@ -64,7 +64,7 @@ class NocoController {
       docIDType: doc.docIDType,
       Destination: doc.airtableDestination,
       Title: doc.scrubedTitle,
-      slug: doc.slug,
+      Slug: doc.slug,
       Status: doc.status,
       Priority: this.#settings.defaultPriority,
     };
