@@ -82,7 +82,7 @@ class Template {
     // find workspace and load it in drafts list
     if (this.workspaceName && app.currentWorkspace.name != this.workspaceName) {
       const workspace = Workspace.find(this.workspaceName);
-      app.applyWorkspace(workspace);
+      app.currentWindow.applyWorkspace(workspace);
     }
 
     editor.load(this.draft);
@@ -115,14 +115,15 @@ class Template {
 
     const template = this.#fs.read(this.templateFile);
 
-    if (this.templateFile.endsWith(".md"))
+    if (this.templateFile.endsWith(".md")) {
       this.draft.content = this.draft.processTemplate(template);
+    }
 
     if (this.templateFile.endsWith(".mustache")) {
       this.draft.content = this.draft.processMustacheTemplate(
         "text",
         template,
-        this.mustacheTags
+        this.mustacheTags,
       );
     }
   }

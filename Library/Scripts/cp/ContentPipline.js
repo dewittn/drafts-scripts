@@ -674,6 +674,6 @@ class ContentPipeline {
   #loadWorkspace() {
     const { defaultWorkspace } = this.#settings;
     const workspace = Workspace.find(defaultWorkspace);
-    app.applyWorkspace(workspace);
+    app.currentWindow.applyWorkspace(workspace);
   }
 }

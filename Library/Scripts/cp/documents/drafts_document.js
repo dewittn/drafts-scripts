@@ -48,13 +48,14 @@ class DraftsDoc {
   }
 
   set record(record) {
-    if (record?.docID == undefined)
+    if (record?.docID == undefined) {
       return this.#ui.displayErrorMessage({
         errorMessage: "Record does not have an id!",
         class: "UlyssesDoc",
         function: "set record()",
         record: record,
       });
+    }
 
     if (record.docID != this.docID) {
       record.docID = this.docID;
@@ -65,8 +66,9 @@ class DraftsDoc {
   }
 
   get title() {
-    if (this.#currentTitle == undefined)
+    if (this.#currentTitle == undefined) {
       this.#currentTitle = this.#getTitleOfDraft();
+    }
 
     return this.#currentTitle;
   }
@@ -76,15 +78,17 @@ class DraftsDoc {
   }
 
   get scrubedTitle() {
-    if (this.#data.scrubedTitle == undefined)
+    if (this.#data.scrubedTitle == undefined) {
       this.#data.scrubedTitle = this.#getScrubedTitleOfDraft();
+    }
 
     return this.#data.scrubedTitle;
   }
 
   get slug() {
-    if (this.#data.slug == undefined)
+    if (this.#data.slug == undefined) {
       this.#data.slug = this.#text.convertTitleToSlug(this.scrubedTitle);
+    }
 
     return this.#data.slug;
   }
@@ -102,8 +106,9 @@ class DraftsDoc {
   }
 
   get status() {
-    if (this.#currentStatus == undefined)
+    if (this.#currentStatus == undefined) {
       this.#currentStatus = this.#getStatusOfDraft();
+    }
 
     return this.#currentStatus;
   }
@@ -121,8 +126,9 @@ class DraftsDoc {
   }
 
   get destination() {
-    if (this.#currentDest == undefined)
+    if (this.#currentDest == undefined) {
       this.#currentDest = this.#getDestinationOfDraft();
+    }
 
     return this.#currentDest;
   }
@@ -146,8 +152,9 @@ class DraftsDoc {
   }
 
   get inPipeline() {
-    if (this.#inPipeline == undefined)
+    if (this.#inPipeline == undefined) {
       this.#inPipeline = this.#draftIsInPipeline();
+    }
 
     return this.#inPipeline;
   }
@@ -171,7 +178,7 @@ class DraftsDoc {
 
   open() {
     const workspace = Workspace.find("default");
-    app.applyWorkspace(workspace);
+    app.currentWindow.applyWorkspace(workspace);
     editor.load(this.workingDraft);
     editor.activate();
   }

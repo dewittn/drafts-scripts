@@ -24,7 +24,7 @@ Draft.prototype.activate = function (actionGroup, workspaceName = "default") {
 
   // find workspace and load it in drafts list
   const workspace = Workspace.find(workspaceName);
-  app.applyWorkspace(workspace);
+  app.currentWindow.applyWorkspace(workspace);
 
   if (actionGroup != undefined) {
     const group = ActionGroup.find(actionGroup);
@@ -134,7 +134,7 @@ function hashTags(spaceReplaceChar = "/") {
 function actionMenu(actions) {
   const draftAction = draft.getTemplateTag("draft_action");
   const nextAction = Action.find(
-    draftAction == undefined ? draftAction : chooseAction(actions)
+    draftAction == undefined ? draftAction : chooseAction(actions),
   );
 
   app.queueAction(nextAction, draft);
@@ -155,7 +155,7 @@ function openCallback(
   baseURL,
   params = {},
   waitForResponse = true,
-  message = "Sucess!"
+  message = "Sucess!",
 ) {
   // open and wait for result
   const cb = CallbackURL.create();

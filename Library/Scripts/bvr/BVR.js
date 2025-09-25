@@ -64,10 +64,9 @@ class BVR {
   }
 
   get ppDataFile() {
-    const dataFile =
-      this.#settings.ppDataFile != undefined
-        ? `practicePlans.json`
-        : this.#settings.ppDataFile;
+    const dataFile = this.#settings.ppDataFile != undefined
+      ? `practicePlans.json`
+      : this.#settings.ppDataFile;
 
     return `${this.dirPrefix}${dataFile}`;
   }
@@ -152,10 +151,11 @@ class BVR {
   }
 
   #loadWorkspace() {
-    if (app.currentWorkspace.name == this.workspace)
+    if (app.currentWorkspace.name == this.workspace) {
       return this.ui.displayAppMessage("info", "Workspace is already loaded.");
+    }
 
     const bvrWorkspace = Workspace.find(this.workspace);
-    app.applyWorkspace(bvrWorkspace);
+    app.currentWindow.applyWorkspace(bvrWorkspace);
   }
 }
