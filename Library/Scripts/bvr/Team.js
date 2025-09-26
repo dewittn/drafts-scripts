@@ -81,24 +81,24 @@ class Team {
   }
 
   get gameReportSettings() {
-    if (this.#teamData.gameReportSettings != undefined)
+    if (this.#teamData.gameReportSettings != undefined) {
       return this.#teamData.gameReportSettings;
+    }
 
-    const settingsFile =
-      this.#teamData.gameReportSettingsFile == undefined
-        ? `${this.id}/gameReportSettings.yaml`
-        : this.#teamData.gameReportSettings;
+    const settingsFile = this.#teamData.gameReportSettingsFile == undefined
+      ? `${this.id}/gameReportSettings.yaml`
+      : this.#teamData.gameReportSettings;
     return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
   }
 
   get attendanceSettings() {
-    if (this.#teamData.attendanceSettings != undefined)
+    if (this.#teamData.attendanceSettings != undefined) {
       return this.#teamData.attendanceSettings;
+    }
 
-    const settingsFile =
-      this.#teamData.attendanceSettingsFile == undefined
-        ? `${this.id}/attendanceSettings.yaml`
-        : this.#teamData.attendanceSettingsFile;
+    const settingsFile = this.#teamData.attendanceSettingsFile == undefined
+      ? `${this.id}/attendanceSettings.yaml`
+      : this.#teamData.attendanceSettingsFile;
     return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
   }
 
@@ -139,7 +139,7 @@ class Team {
     const tmplSettings = this.welcomeLetterData;
     const welcomeLetterSettings = new TmplSettings(
       this.gblTmplSettings,
-      tmplSettings
+      tmplSettings,
     );
     const welcomeLetter = new Template(welcomeLetterSettings);
     welcomeLetter.archive().save().activate();
@@ -175,7 +175,9 @@ class Team {
   }
 
   createGameDayTasks() {
-    if (this.#tmplSettings?.thingsProject == undefined) return;
+    if (this.#tmplSettings?.thingsProject == undefined) {
+      return this.ui.displayAppMessage("info", "No game day tasks found.");
+    }
 
     const game = new Game(this.dependancies);
     game.recordDate();
@@ -190,8 +192,9 @@ class Team {
 
   archiveNotes() {
     const teamNotes = Draft.query("", "archive", this.defaultDraftTags);
-    if (teamNotes == undefined)
+    if (teamNotes == undefined) {
       return this.ui.displayAppMessage("info", "No team drafts were found!");
+    }
     teamNotes.every((note) => this.#processNote(note));
   }
 
@@ -204,8 +207,9 @@ class Team {
   }
 
   insertPlayerName() {
-    const { menuSettings, pickerData } =
-      this.#bvr.ui.settings("insertPlayerName");
+    const { menuSettings, pickerData } = this.#bvr.ui.settings(
+      "insertPlayerName",
+    );
     this.attendaceDraft = Draft.find(this.attendanceDraftID);
 
     const names = this.attendaceDraft.tasks
@@ -237,19 +241,21 @@ class Team {
     const foundYear = parseInt(yearMatch[1], 10);
 
     // Check if the found year matches the current year
-    if (foundYear !== currentYear)
+    if (foundYear !== currentYear) {
       return this.ui.displayAppMessage(
         "info",
-        "Roster has already been updated!"
+        "Roster has already been updated!",
       );
+    }
 
     // Increment the year and append "(Potential)"
     const newYear = foundYear + 1;
 
     const updatedContent = attendaceDraft.lines
       .map((line, index) => {
-        if (index === 0)
+        if (index === 0) {
           return line.replace(yearPattern, newYear) + " (Potential)";
+        }
 
         // Use a regular expression to find the number in parentheses
         const gradeMatch = line.match(/\((\d+)\)/);
@@ -348,13 +354,13 @@ class Team {
   }
 
   #loadTemplateSettings() {
-    if (this.#teamData.templateSettings != undefined)
+    if (this.#teamData.templateSettings != undefined) {
       return this.#teamData.templateSettings;
+    }
 
-    const settingsFile =
-      this.#teamData.templateSettingsFile == undefined
-        ? `${this.id}/templateSettings.yaml`
-        : this.#teamData.templateSettingsFile;
+    const settingsFile = this.#teamData.templateSettingsFile == undefined
+      ? `${this.id}/templateSettings.yaml`
+      : this.#teamData.templateSettingsFile;
     return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
   }
 
@@ -362,7 +368,7 @@ class Team {
     editor.setSelectedText(text);
     editor.setSelectedRange(
       editor.getSelectedRange()[0] + editor.getSelectedRange()[1],
-      0
+      0,
     );
     editor.activate();
   }
