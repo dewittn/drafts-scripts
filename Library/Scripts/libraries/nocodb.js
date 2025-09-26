@@ -310,7 +310,11 @@ class NocoTable {
       const payload = { method: "POST", data: { fields: record.fields } };
 
       const response = this.#makeHTTPRequest(payload);
-      if (response.success) this.#addRecord(response.responseData.records);
+      if (response.success) {
+        response.responseData.records.forEach((record) =>
+          this.#addRecord(record)
+        );
+      }
 
       return response.success;
     });
@@ -421,7 +425,7 @@ class NocoTable {
     }
 
     debugMessage = `${debugMessage}\n\nResponse: ${response.responseText}`;
-    if (this.#debug) console.log(debugMessage);
+    if (this.debug) console.log(debugMessage);
 
     // Clear params once request is complete
     this.#params = {};
@@ -466,7 +470,6 @@ class NocoRecord {
   constructor(id, data = {}) {
     this.recordID = id;
     this.data = data;
-
     // Creates a property for each field
     Object.keys(this.data).forEach((method) => {
       const propName = method.replace(/ /g, "");
@@ -482,7 +485,7 @@ class NocoRecord {
   }
 
   static create(record) {
-    return new NocoRecord(record.Id, record);
+    return new NocoRecord(record.id, record.fields);
   }
 
   get fields() {

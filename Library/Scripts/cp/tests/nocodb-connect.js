@@ -84,7 +84,14 @@ try {
   if (isInPipeline) {
     ui.displayInfoMessage("Test 3: Retrieving specific document record...");
     const specificRecord = db.retrieveRecordByDocID(testDoc);
-
+    if (specificRecord?.docID == undefined) {
+      ui.displayAppMessage(
+        "error",
+        "Record retrieved but docID is not accessable.",
+        specificRecord,
+      );
+    }
+    alert(specificRecord.docID);
     if (db.databaseError) {
       ui.displayErrorMessage({
         errorMessage: "Database error retrieving specific record!",

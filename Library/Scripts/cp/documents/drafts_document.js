@@ -49,12 +49,18 @@ class DraftsDoc {
 
   set record(record) {
     if (record?.docID == undefined) {
-      return this.#ui.displayErrorMessage({
-        errorMessage: "Record does not have an id!",
-        class: "UlyssesDoc",
-        function: "set record()",
-        record: record,
-      });
+      return this.#ui.displayAppMessage(
+        "error",
+        "Record does not have an id!",
+        {
+          class: "DraftsDocument",
+          function: "set record()",
+          record: record,
+          methods: Object.getOwnPropertyNames(record),
+          type: record.constructor.name,
+          docID: record.docID,
+        },
+      );
     }
 
     if (record.docID != this.docID) {
