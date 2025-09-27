@@ -55,6 +55,26 @@ useCurrentDraft:
           name: << Back
           value: welcome
           isDefault: true
+delContent:
+  infoMessage: ""
+  errorMessage: "Error: "
+  successMessage: Success!
+  menuSettings:
+    menuTitle: Deletle Document
+    menuMessage: "Where would you like to delete the doncument from?"
+    menuItems:
+      - type: button
+        data:
+          name: Recent Records
+          value: recentRecords
+      - type: button
+        data:
+          name: The Database
+          value: database
+      - type: button
+        data:
+          name: Everywhere
+          value: everywhere
 addContent:
   infoMessage: ""
   errorMessage: "Error: "

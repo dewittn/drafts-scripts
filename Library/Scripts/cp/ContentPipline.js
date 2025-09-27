@@ -61,7 +61,7 @@ class ContentPipeline {
   // **************
   // * Getter and Setter functions
   // **************
-  // Turns on and off debug logging for Ulysses and Airtable
+  // Turns on and off debug logging for Ulysses and the database
   set debug(value) {
     if (value == false) return;
 
@@ -212,11 +212,12 @@ class ContentPipeline {
 
   // **************
   // * deleteContent()
-  // * Removes documents from Recent Records, AirTable, from an app, or everywhere
+  // * Removes documents from Recent Records, the database, from an app, or everywhere
   // **************
   deleteContent() {
+    const delRecentRecord = false, delDBEntry = false, delDoc = false;
     // Retrieve settings
-    const { menuSettings } = this.#ui.settings("addContent");
+    const { menuSettings } = this.#ui.settings("delContent");
     if (this.#activeDoc == undefined) return;
 
     // Build and display the menu prompt
@@ -226,13 +227,25 @@ class ContentPipeline {
 
     switch (menu.buttonPressed) {
       case "everywhere":
-        this.#activeDoc.delete();
+        delDoc = true;
       case "database":
-        this.#db.delete(this.#activeDoc);
-        // How does this get updated if the doc has been deleted?
-        this.#activeDoc.inPipeline = false;
+        delDBEntry = true;
       case "recentRecords":
-        this.#recent.delete(this.#activeDoc);
+        delRecentRecord = true;
+    }
+
+    if (delRecentRecord) {
+      this.#recent.delete(this.#activeDoc);
+      this.ui.displayAppMessage("success", "Doc deleted from Recent Records.");
+    }
+    if (delDBEntry) {
+      this.#db.delete(this.#activeDoc);
+      this.#activeDoc.inPipeline = false;
+      this.ui.displayAppMessage("success", "Doc deleted from the database.");
+    }
+    if (delDoc) {
+      this.#activeDoc.delete();
+      this.ui.displayAppMessage("success", "Doc has been deleted.");
     }
   }
 
@@ -321,7 +334,7 @@ class ContentPipeline {
 
   // **************
   // * addDocToPipeline()
-  // * Adds doc to the Productively Pipeline in Airtable
+  // * Adds doc to the Productively Pipeline in the database
   // **************
   addDocToPipeline(docIDType, docID = undefined) {
     const {
@@ -377,7 +390,7 @@ class ContentPipeline {
     this.#activeDoc.record = this.#db.currentRecord;
     this.#activeDoc.inPipeline = true;
 
-    // If Airtable responds with a valid record
+    // If the database responds with a valid record
     // add the record to recent records and return it
     const warningMessage = "Recent Records could not be saved!";
     if (this.#updateRecentRecords() == false) {
@@ -649,7 +662,7 @@ class ContentPipeline {
       });
     }
 
-    // Update Airtable
+    // Update the database
     newDoc.record = this.#activeDoc.record;
     const success = this.#db.updateUsingDoc(newDoc);
     if (this.databaseError) return this.#throwDBError("convertActiveDoc()");
