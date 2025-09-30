@@ -3,31 +3,59 @@ class Attendance {
   #team;
   #settings;
   #displayMsgs;
+  #dependencies;
 
   constructor(dependencies) {
-    if (dependencies == undefined) {
-      dependencies = {
-        bvr: new BVR(),
-        team: new Team(),
-      };
+    // Store dependencies but don't instantiate if not provided
+    this.#dependencies = dependencies;
+
+    if (dependencies != undefined) {
+      this.#bvr = dependencies.bvr;
+      this.#team = dependencies.team;
     }
 
-    this.#bvr = dependencies.bvr;
-    this.#team = dependencies.team;
-    this.#settings = this.#team.attendanceSettings;
-    this.#displayMsgs = this.#bvr.ui.settings("displayMsgs");
     this.names = [];
   }
 
+  get bvr() {
+    if (!this.#bvr && this.#dependencies == undefined) {
+      if (typeof BVR == "undefined") require("bvr/BVR.js");
+      this.#bvr = new BVR();
+    }
+    return this.#bvr;
+  }
+
+  get team() {
+    if (!this.#team && this.#dependencies == undefined) {
+      if (typeof Team == "undefined") require("bvr/Team.js");
+      this.#team = new Team();
+    }
+    return this.#team;
+  }
+
+  get settings() {
+    if (!this.#settings) {
+      this.#settings = this.team.attendanceSettings;
+    }
+    return this.#settings;
+  }
+
+  get displayMsgs() {
+    if (!this.#displayMsgs) {
+      this.#displayMsgs = this.bvr.ui.settings("displayMsgs");
+    }
+    return this.#displayMsgs;
+  }
+
   get ui() {
-    return this.#bvr.ui;
+    return this.bvr.ui;
   }
 
   get absencesMsgConfig() {
-    if (this.#settings.absencesMsgConfig == undefined) return undefined;
+    if (this.settings.absencesMsgConfig == undefined) return undefined;
 
     return {
-      ...this.#settings.absencesMsgConfig,
+      ...this.settings.absencesMsgConfig,
       msgTemplateTag: this.msgTeamNameTag,
       attendaceDraft: this.attendaceDraft,
       templateTags: {
@@ -38,10 +66,10 @@ class Attendance {
   }
 
   get noAbsencesMsgConfig() {
-    if (this.#settings.noAbsencesMsgConfig == undefined) return undefined;
+    if (this.settings.noAbsencesMsgConfig == undefined) return undefined;
 
     return {
-      ...this.#settings.noAbsencesMsgConfig,
+      ...this.settings.noAbsencesMsgConfig,
       msgTemplateTag: this.msgTeamNameTag,
       attendaceDraft: this.attendaceDraft,
       templateTags: {
@@ -52,15 +80,15 @@ class Attendance {
   }
 
   get msgTeamNameTag() {
-    return this.#bvr.msgTeamNameTag;
+    return this.bvr.msgTeamNameTag;
   }
 
   get teamName() {
-    return this.#team.name;
+    return this.team.name;
   }
 
   get attendanceDraftID() {
-    return this.#team.attendanceDraftID;
+    return this.team.attendanceDraftID;
   }
 
   get hasBeenRecorded() {
@@ -76,23 +104,23 @@ class Attendance {
   }
 
   get submitSuccess() {
-    return this.#displayMsgs.submitSuccess;
+    return this.displayMsgs.submitSuccess;
   }
 
   get submitFailure() {
-    return this.#displayMsgs.submitFailure;
+    return this.displayMsgs.submitFailure;
   }
 
   get noOneAbsentMSG() {
-    return this.#displayMsgs.noOneAbsent;
+    return this.displayMsgs.noOneAbsent;
   }
 
   get alreadySubmitted() {
-    return this.#displayMsgs.alreadySubmitted;
+    return this.displayMsgs.alreadySubmitted;
   }
 
   get globalTemplateTags() {
-    return this.#bvr.globalTags;
+    return this.bvr.globalTags;
   }
 
   get noOneAbsent() {
@@ -108,17 +136,17 @@ class Attendance {
     this.#loadAttendaceDraft();
 
     const attendaceDraftReset = this.#resetAttendanceDraft();
-    this.#bvr.pinDraft(this.attendaceDraft);
+    this.bvr.pinDraft(this.attendaceDraft);
     if (attendaceDraftReset) return false;
 
     if (this.hasBeenSubmitted) {
-      this.#bvr.ui.displayAppMessage("info", this.alreadySubmitted);
+      this.bvr.ui.displayAppMessage("info", this.alreadySubmitted);
       return false;
     }
 
-    const { menuSettings } = this.#bvr.ui.settings("attendaceIsReady");
+    const { menuSettings } = this.bvr.ui.settings("attendaceIsReady");
     if (this.hasBeenRecorded == false) {
-      const takeNow = this.#bvr.ui.buildMenu(menuSettings);
+      const takeNow = this.bvr.ui.buildMenu(menuSettings);
       if (takeNow.show() == false || takeNow.buttonPressed == "no") {
         return false;
       }
@@ -131,7 +159,7 @@ class Attendance {
     ); // split into lines
 
     lines.forEach((line) => {
-      if (line.match(regEx)) this.names.push(this.#bvr.cleanUpName(line));
+      if (line.match(regEx)) this.names.push(this.bvr.cleanUpName(line));
     });
 
     return true;
@@ -147,7 +175,7 @@ class Attendance {
       message.compose(this.names);
 
       if (message.send() == false) {
-        return this.#bvr.ui.displayAppMessage("error", this.submitFailure);
+        return this.bvr.ui.displayAppMessage("error", this.submitFailure);
       }
     }
 
@@ -169,16 +197,16 @@ class Attendance {
       .replace(/- \[ \] Recorded/g, "- [x] Recorded")
       .replace(/- \[ \] Submitted/g, "- [x] Submitted");
     this.attendaceDraft.update();
-    this.#bvr.unpinDraft(this.attendaceDraft);
-    this.#bvr.ui.displayAppMessage("success", this.submitSuccess);
-    this.#team.loadPracticePlan();
+    this.bvr.unpinDraft(this.attendaceDraft);
+    this.bvr.ui.displayAppMessage("success", this.submitSuccess);
+    this.team.loadPracticePlan();
   }
 
   #runAttendaceShortcut() {
     const shortcutAction = Action.find("Mark Attendace As Complete");
     const shortcutDraft = new Draft();
 
-    shortcutDraft.content = this.#team.abbr;
+    shortcutDraft.content = this.team.abbr;
     app.queueAction(shortcutAction, shortcutDraft);
   }
 
@@ -186,7 +214,7 @@ class Attendance {
     const dateMatch = /\d{4}-\d{2}-\d{2}/;
     const dateField = this.attendaceDraft.lines[2];
     const lastTaken = dateMatch.exec(dateField);
-    const today = this.#bvr.formatDateYMD(new Date());
+    const today = this.bvr.formatDateYMD(new Date());
 
     if (lastTaken != today) {
       this.attendaceDraft.tasks.forEach((task) =>

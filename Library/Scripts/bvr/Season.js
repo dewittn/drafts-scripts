@@ -5,54 +5,72 @@ class Season {
   #tmplSettings;
   #currentSeasonID;
   #schoolSportingHistory;
+  #dependencies;
 
   constructor(dependencies) {
-    if (dependencies == undefined) {
-      dependencies = {
-        bvr: new BVR(),
-        team: new Team(),
-      };
+    // Store dependencies but don't instantiate if not provided
+    this.#dependencies = dependencies;
+
+    if (dependencies != undefined) {
+      this.#bvr = dependencies.bvr;
+      this.#team = dependencies.team;
+      this.#tmplSettings = dependencies.tmplSettings;
     }
-
-    this.#bvr = dependencies.bvr;
-    this.#team = dependencies.team;
-    this.#tmplSettings = dependencies.tmplSettings;
-    this.#schoolSportingHistory = new DataFile(this.recordsFile);
   }
 
-  get ui() {
-    return this.#bvr.ui;
+  get bvr() {
+    if (!this.#bvr && this.#dependencies == undefined) {
+      if (typeof BVR == "undefined") require("bvr/BVR.js");
+      this.#bvr = new BVR();
+    }
+    return this.#bvr;
   }
 
-  get globalTemplateTags() {
-    return this.#bvr.globalTags;
-  }
-
-  get defaultDraftTags() {
-    return [this.#team.defaultTag];
-  }
-
-  get recordsFile() {
-    return this.#bvr.recordsFile;
-  }
-
-  get teamID() {
-    return this.#team.id;
-  }
-
-  get teamName() {
-    return this.#team.name;
+  get team() {
+    if (!this.#team && this.#dependencies == undefined) {
+      if (typeof Team == "undefined") require("bvr/Team.js");
+      this.#team = new Team();
+    }
+    return this.#team;
   }
 
   get schoolSportingHistory() {
+    if (!this.#schoolSportingHistory) {
+      if (typeof DataFile == "undefined") require("libraries/DataFile.js");
+      this.#schoolSportingHistory = new DataFile(this.recordsFile);
+    }
     return this.#schoolSportingHistory;
   }
 
+  get ui() {
+    return this.bvr.ui;
+  }
+
+  get globalTemplateTags() {
+    return this.bvr.globalTags;
+  }
+
+  get defaultDraftTags() {
+    return [this.team.defaultTag];
+  }
+
+  get recordsFile() {
+    return this.bvr.recordsFile;
+  }
+
+  get teamID() {
+    return this.team.id;
+  }
+
+  get teamName() {
+    return this.team.name;
+  }
+
   get teamHistory() {
-    if (this.#schoolSportingHistory[this.teamID] == undefined) {
-      this.#schoolSportingHistory[this.teamID] = {};
+    if (this.schoolSportingHistory[this.teamID] == undefined) {
+      this.schoolSportingHistory[this.teamID] = {};
     }
-    return this.#schoolSportingHistory[this.teamID];
+    return this.schoolSportingHistory[this.teamID];
   }
 
   get currentSeasonID() {
@@ -90,13 +108,14 @@ class Season {
   }
 
   get gblTmplSettings() {
-    return this.#team.gblTmplSettings;
+    return this.team.gblTmplSettings;
   }
 
   get tmplSettingsSeasonRecord() {
+    if (typeof TmplSettings == "undefined") require("bvr/TmplSettings.js");
     return new TmplSettings(
       this.gblTmplSettings,
-      this.#tmplSettings.seasonRecord,
+      this.#tmplSettings?.seasonRecord,
     );
   }
 
@@ -159,6 +178,7 @@ class Season {
   #createSeasonRecordDraft(seasonID) {
     if (seasonID == undefined) return;
 
+    if (typeof Template == "undefined") require("cp/templates/Template.js");
     const seasonRecordDraft = new Template(this.tmplSettingsSeasonRecord);
     seasonRecordDraft.archive().save();
 
@@ -166,7 +186,7 @@ class Season {
       this.teamHistory[seasonID] = {};
     }
     this.teamHistory[seasonID].seasonRecordDraftID = seasonRecordDraft.draftID;
-    this.#schoolSportingHistory.save();
+    this.schoolSportingHistory.save();
 
     return this.ui.displayAppMessage("success", "Season record draft created.");
   }
@@ -196,6 +216,7 @@ class Season {
       this.recordsDraft = Draft.find(this.seasonRecordDraftID);
     }
 
+    if (typeof Template == "undefined") require("cp/templates/Template.js");
     const newTableLine = new Template(game.tmplSettingsRecordRow);
     this.recordsDraft.append(newTableLine.content);
     this.recordsDraft.update();
@@ -220,7 +241,7 @@ class Season {
       this.currentSeasonRecord = [...this.currentSeasonRecord, game.toJSON()];
     }
 
-    this.#schoolSportingHistory.save();
+    this.schoolSportingHistory.save();
   }
 
   #loadGameDataFromUUID(uuid = draft.uuid) {

@@ -5,20 +5,40 @@ class PracticePlan {
   #tmplSettings;
   #weekID;
   #ppData;
+  #dependencies;
 
   constructor(dependencies) {
-    if (dependencies == undefined) {
-      dependencies = {
-        bvr: new BVR(),
-        team: new Team(),
-      };
+    // Store dependencies but don't instantiate if not provided
+    this.#dependencies = dependencies;
+
+    if (dependencies != undefined) {
+      this.#bvr = dependencies.bvr;
+      this.#team = dependencies.team;
+      this.#tmplSettings = dependencies.tmplSettings;
     }
+  }
 
-    this.#bvr = dependencies.bvr;
-    this.#team = dependencies.team;
-    this.#tmplSettings = dependencies.tmplSettings;
+  get bvr() {
+    if (!this.#bvr && this.#dependencies == undefined) {
+      if (typeof BVR == "undefined") require("bvr/BVR.js");
+      this.#bvr = new BVR();
+    }
+    return this.#bvr;
+  }
 
-    this.#ppData = this.#bvr.ppData;
+  get team() {
+    if (!this.#team && this.#dependencies == undefined) {
+      if (typeof Team == "undefined") require("bvr/Team.js");
+      this.#team = new Team();
+    }
+    return this.#team;
+  }
+
+  get ppData() {
+    if (!this.#ppData) {
+      this.#ppData = this.bvr.ppData;
+    }
+    return this.#ppData;
   }
 
   static create() {
@@ -26,19 +46,19 @@ class PracticePlan {
   }
 
   get settingsFile() {
-    return this.#bvr.ppSettingsFile;
+    return this.bvr.ppSettingsFile;
   }
 
   get ppTmplSettings() {
-    return this.#tmplSettings.practicePlan;
+    return this.#tmplSettings?.practicePlan;
   }
 
   get practicePlans() {
-    return this.#ppData[this.teamID];
+    return this.ppData[this.teamID];
   }
 
   get planID() {
-    return `${this.#bvr.getYear()}${this.weekID}`;
+    return `${this.bvr.getYear()}${this.weekID}`;
   }
 
   get weekID() {
@@ -47,42 +67,42 @@ class PracticePlan {
   }
 
   get teamID() {
-    return this.#team.id;
+    return this.team.id;
   }
 
   get teamName() {
-    return this.#team.name;
+    return this.team.name;
   }
   get teamStartDate() {
-    return this.#team.startDate;
+    return this.team.startDate;
   }
 
   get ppTemplateFile() {
-    return `${this.#bvr.dirPrefix}${this.templateFile}`;
+    return `${this.bvr.dirPrefix}${this.templateFile}`;
   }
 
   get defaultTemplateFile() {
-    return this.#bvr.defaultTemplateFile;
+    return this.bvr.defaultTemplateFile;
   }
 
   get templateFile() {
-    if (this.#ppData.practicePlanFile == undefined) {
+    if (this.ppData.practicePlanFile == undefined) {
       return `${this.teamID}-${this.defaultTemplateFile}`;
     }
 
-    return this.#team.templateFile;
+    return this.team.templateFile;
   }
 
   get defaultTag() {
-    return this.#team.defaultTag;
+    return this.team.defaultTag;
   }
 
   get weekIDTemplateTag() {
-    return this.#bvr.weekIDTemplateTag;
+    return this.bvr.weekIDTemplateTag;
   }
 
   get coachingDraftID() {
-    return this.#bvr.coachingDraftID;
+    return this.bvr.coachingDraftID;
   }
 
   create() {
@@ -106,7 +126,7 @@ class PracticePlan {
       templateSettings.templateTags = {};
     }
     templateSettings.templateTags[this.weekIDTemplateTag] = this.weekID;
-    const newPlan = this.#bvr.createDraftFromTemplate(templateSettings);
+    const newPlan = this.bvr.createDraftFromTemplate(templateSettings);
 
     this.#savePracticePlan(newPlan.draftID);
     this.#insertPraticePlanLink(newPlan.displayTitle);
@@ -114,26 +134,26 @@ class PracticePlan {
 
   load() {
     if (this.practicePlans == undefined) {
-      return this.#bvr.ui.displayAppMessage("info", "No practice plan found.");
+      return this.bvr.ui.displayAppMessage("info", "No practice plan found.");
     }
     const draftID = this.practicePlans[this.planID];
     const practicePlan = Draft.find(draftID);
 
-    this.#bvr.pinDraft(practicePlan);
+    this.bvr.pinDraft(practicePlan);
   }
 
   #savePracticePlan(draftID) {
     if (this.practicePlans == undefined) {
-      this.#ppData[this.teamID] = {};
+      this.ppData[this.teamID] = {};
     }
 
     this.practicePlans[this.planID] = draftID;
-    this.#ppData.save();
+    this.ppData.save();
   }
 
   #insertPraticePlanLink(linkTxt) {
     if (linkTxt == undefined) {
-      return this.#bvr.ui.displayAppMessage("error", "linkTxt is undefined");
+      return this.bvr.ui.displayAppMessage("error", "linkTxt is undefined");
     }
 
     const coachingDraft = Draft.find(this.coachingDraftID);

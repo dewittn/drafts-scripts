@@ -5,22 +5,56 @@ class Game {
   #settings;
   #tmplSettings;
   #currentSeasonID;
+  #sport;
+  #dependencies;
 
   constructor(dependencies, uuid = draft.uuid) {
-    if (dependencies == undefined) {
-      dependencies = {
-        bvr: new BVR(),
-        team: new Team(),
-      };
+    // Store dependencies but don't instantiate BVR/Team if not provided
+    // This allows lazy initialization
+    this.#dependencies = dependencies;
+
+    if (dependencies != undefined) {
+      this.#bvr = dependencies.bvr;
+      this.#team = dependencies.team;
+      this.#tmplSettings = dependencies.tmplSettings;
     }
 
-    this.#bvr = dependencies.bvr;
-    this.#team = dependencies.team;
-    this.#tmplSettings = dependencies.tmplSettings;
-
-    this.sport = new Sport(this.teamPlays);
-    this.#settings = this.#team.gameReportSettings;
     this.#gameData = this.#loadGameDataFromUUID(uuid);
+  }
+
+  get bvr() {
+    if (!this.#bvr && this.#dependencies == undefined) {
+      if (typeof BVR == "undefined") require("bvr/BVR.js");
+      this.#bvr = new BVR();
+    }
+    return this.#bvr;
+  }
+
+  get team() {
+    if (!this.#team && this.#dependencies == undefined) {
+      if (typeof Team == "undefined") require("bvr/Team.js");
+      this.#team = new Team();
+    }
+    return this.#team;
+  }
+
+  get sport() {
+    if (!this.#sport) {
+      if (typeof Sport == "undefined") require("bvr/Sport.js");
+      this.#sport = new Sport(this.teamPlays);
+    }
+    return this.#sport;
+  }
+
+  set sport(value) {
+    this.#sport = value;
+  }
+
+  get settings() {
+    if (!this.#settings) {
+      this.#settings = this.team.gameReportSettings;
+    }
+    return this.#settings;
   }
 
   // **********************
@@ -28,19 +62,19 @@ class Game {
   // **********************
 
   get ui() {
-    return this.#bvr.ui;
+    return this.bvr.ui;
   }
 
   get teamID() {
-    return this.#team.id;
+    return this.team.id;
   }
 
   get teamName() {
-    return this.#team.name;
+    return this.team.name;
   }
 
   get teamPlays() {
-    return this.#team.plays;
+    return this.team.plays;
   }
 
   get selectedRows() {
@@ -89,12 +123,12 @@ class Game {
   get reportDueDate() {
     if (this.date == undefined) return "";
 
-    return this.#bvr.formatDateMDY(adjustDate(this.date, "+1 day"));
+    return this.bvr.formatDateMDY(adjustDate(this.date, "+1 day"));
   }
 
   get googleFormDate() {
     const gameDate = new Date(this.date);
-    return this.#bvr.formatDateYMD(gameDate);
+    return this.bvr.formatDateYMD(gameDate);
   }
 
   get yearPlayed() {
@@ -142,11 +176,11 @@ class Game {
   }
 
   get googleFormSettings() {
-    return this.#settings.googleFormSettings;
+    return this.settings.googleFormSettings;
   }
 
   get msgSettings() {
-    return this.#settings.messageSettings;
+    return this.settings.messageSettings;
   }
 
   get highlights() {
@@ -188,7 +222,7 @@ class Game {
   }
 
   get currentSeasonRecord() {
-    return this.#team.season.currentSeasonRecord;
+    return this.team.season.currentSeasonRecord;
   }
 
   get recorded() {
@@ -216,11 +250,11 @@ class Game {
   // **********************
 
   get headCoachName() {
-    return this.#bvr.globalTags.hc_name;
+    return this.bvr.globalTags.hc_name;
   }
 
   get gblTmplSettings() {
-    return this.#team.gblTmplSettings;
+    return this.team.gblTmplSettings;
   }
 
   get tmplSettingsGameReport() {
@@ -255,8 +289,8 @@ class Game {
   }
 
   recordDate() {
-    const { menuSettings } = this.#bvr.ui.settings("recordDate");
-    const dayOfGame = this.#bvr.ui.buildMenu(menuSettings);
+    const { menuSettings } = this.bvr.ui.settings("recordDate");
+    const dayOfGame = this.bvr.ui.buildMenu(menuSettings);
     if (dayOfGame.show() == false) return false;
 
     const firstValue = menuSettings.menuItems[0]?.data?.value;
@@ -266,19 +300,19 @@ class Game {
 
     if (this.date == undefined) return false;
 
-    this.#gameData.formattedDate = this.#bvr.formatDateMDY(this.date);
+    this.#gameData.formattedDate = this.bvr.formatDateMDY(this.date);
     this.#readCalendarData();
     return true;
   }
 
   recordOpponent() {
-    const { menuSettings, textField } = this.#bvr.ui.settings("recordOpponent");
+    const { menuSettings, textField } = this.bvr.ui.settings("recordOpponent");
     if (this.calOpponent != undefined) {
       textField.data.initialText = this.calOpponent;
     }
 
     menuSettings.menuItems.push(textField);
-    const opponentPrompt = this.#bvr.ui.buildMenu(menuSettings);
+    const opponentPrompt = this.bvr.ui.buildMenu(menuSettings);
 
     if (opponentPrompt.show() == false) return false;
 
@@ -296,7 +330,7 @@ class Game {
   }
 
   recordScore() {
-    const { menuSettings, pickerData } = this.#bvr.ui.settings("recordScore");
+    const { menuSettings, pickerData } = this.bvr.ui.settings("recordScore");
     const pickerColums = this.#pickerColumns(this.sport.maxScore);
 
     // Build score picker prompt
@@ -307,7 +341,7 @@ class Game {
       data: pickerData,
     });
 
-    const scorePrompt = this.#bvr.ui.buildMenu(menuSettings);
+    const scorePrompt = this.bvr.ui.buildMenu(menuSettings);
     if (scorePrompt.show() == false) return false;
 
     // Record score and result
@@ -399,8 +433,8 @@ class Game {
   }
 
   #getDateFromPrompt() {
-    const { menuSettings } = this.#bvr.ui.settings("getDateFromPrompt");
-    const datePrompt = this.#bvr.ui.buildMenu(menuSettings);
+    const { menuSettings } = this.bvr.ui.settings("getDateFromPrompt");
+    const datePrompt = this.bvr.ui.buildMenu(menuSettings);
 
     if (datePrompt.show() == false) return undefined;
 
@@ -409,8 +443,8 @@ class Game {
   }
 
   #getLocationFromPrompt() {
-    const { menuSettings } = this.#bvr.ui.settings("getLocationFromPrompt");
-    const locationPrompt = this.#bvr.ui.buildMenu(menuSettings);
+    const { menuSettings } = this.bvr.ui.settings("getLocationFromPrompt");
+    const locationPrompt = this.bvr.ui.buildMenu(menuSettings);
 
     locationPrompt.show();
 
@@ -418,7 +452,7 @@ class Game {
   }
 
   #readCalendarData() {
-    const cal = Calendar.find(this.#team.calendar);
+    const cal = Calendar.find(this.team.calendar);
     if (cal == undefined) return;
 
     const startDate = adjustDate(this.date, "-12 hours");
@@ -428,7 +462,7 @@ class Game {
     const matchEvent = events[0]?.title;
 
     if (matchEvent == undefined || matchEvent.includes("Game") == false) {
-      this.#bvr.ui.displayAppMessage(
+      this.bvr.ui.displayAppMessage(
         "info",
         "There does not appear to be a game today.",
       );
@@ -506,14 +540,15 @@ class Game {
   }
 
   generateTmplSettings(key) {
-    const tmplSettings = this.#tmplSettings[key] != undefined
+    const tmplSettings = this.#tmplSettings?.[key] != undefined
       ? this.#tmplSettings[key]
       : {};
+    if (typeof TmplSettings == "undefined") require("bvr/TmplSettings.js");
     return new TmplSettings(this.gblTmplSettings, tmplSettings, this);
   }
 
   #updateSeasonRecord() {
-    this.#team.season.updateWith(this);
+    this.team.season.updateWith(this);
   }
 
   #sendMessages() {
