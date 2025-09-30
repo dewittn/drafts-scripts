@@ -1,0 +1,274 @@
+---
+# Action System Configuration
+# Defines triggers and actions for each destination in the content pipeline
+
+Content:
+  # Example destination with multiple triggers
+  nr.com:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+          - type: "log"
+            params:
+              message: "Document converted to sheet for nr.com"
+
+  inbox:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  storytelling:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  "author update":
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  "beyond the book":
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  coto.studio:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  portfolio:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  application:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  medium.com:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  kickstarterguide.com:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  script:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  cabin23:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  "social media":
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  "book review":
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "note"
+
+# Test Table destinations
+Test Table:
+  inbox:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  nr.com:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  coto.studio:
+    triggers:
+      - id: "convert-on-editing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "editing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+  newsletter:
+    triggers:
+      - id: "convert-on-writing"
+        type: "status_change"
+        condition:
+          field: "status"
+          operator: "equals"
+          value: "writing"
+        actions:
+          - type: "convert_document"
+            params:
+              targetType: "sheet"
+
+# Action type definitions (metadata for documentation and validation)
+actionTypes:
+  convert_document:
+    description: "Convert document to another type"
+    requiredParams: ["targetType"]
+    async: false
+
+  notification:
+    description: "Display notification to user"
+    requiredParams: ["title", "message"]
+    optionalParams: ["level"]
+    async: false
+
+  webhook:
+    description: "Call external webhook"
+    requiredParams: ["url"]
+    optionalParams: ["method", "body", "headers"]
+    async: true
+
+  archive_document:
+    description: "Move document to archive"
+    requiredParams: ["location"]
+    async: false
+
+  log:
+    description: "Log message to console"
+    requiredParams: ["message"]
+    optionalParams: ["level"]
+    async: false
