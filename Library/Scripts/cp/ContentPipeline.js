@@ -8,6 +8,7 @@ require("cp/filesystems/CloudFS.js");
 require("cp/databases/NocoDB.js");
 require("cp/documents/document_factory.js");
 require("cp/templates/template_factory.js");
+if (typeof ServiceContainer == "undefined") require("core/ServiceContainer.js");
 
 class ContentPipeline {
   static basePath = "/Library/Data/cp/";
@@ -23,39 +24,136 @@ class ContentPipeline {
   #activeDoc;
   #destinations;
   #document_factory;
+  #services;
 
   constructor(table = "Content") {
     this.#tableName = table;
-    this.#fs = new CloudFS(this.basePath);
-    this.#settings = new Settings(this.settingsFile);
-    this.#ui = new DraftsUI(this.#settings.ui);
-    this.#text = new TextUltilities();
-
-    const dependencies = {
-      ui: this.#ui,
-      fileSystem: this.#fs,
-      settings: this.#settings,
-      tableName: this.#tableName,
-      defaultTag: this.#settings.defaultTag[table],
-      textUltilities: this.#text,
-    };
-
-    this.#statuses = new Statuses(dependencies);
-    dependencies["statuses"] = this.#statuses;
-
-    this.#destinations = new Destinations(dependencies);
-    dependencies["destinations"] = this.#destinations;
-
-    this.#recent = new RecentRecords(dependencies);
-    dependencies["recentRecords"] = this.#recent;
-
-    this.#db = new NocoController(dependencies);
-    dependencies["database"] = this.#db;
-
-    this.#document_factory = new DocumentFactory(dependencies);
+    this.#services = ServiceContainer.getInstance();
     this.#activeDoc = null;
 
+    // Register services if not already registered
+    this.#registerServices(table);
+
     this.#loadWorkspace();
+  }
+
+  #registerServices(table) {
+    // Settings
+    if (!this.#services.has('cpSettings')) {
+      this.#services.register('cpSettings', () => {
+        if (typeof Settings == "undefined") require("libraries/Settings.js");
+        return new Settings(this.settingsFile);
+      }, true);
+    }
+
+    // File System
+    if (!this.#services.has('cpFileSystem')) {
+      this.#services.register('cpFileSystem', () => {
+        if (typeof CloudFS == "undefined") require("cp/filesystems/CloudFS.js");
+        return new CloudFS(this.basePath);
+      }, true);
+    }
+
+    // UI
+    if (!this.#services.has('cpUI')) {
+      this.#services.register('cpUI', (c) => {
+        if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
+        const settings = c.get('cpSettings');
+        return new DraftsUI(settings.ui);
+      }, true);
+    }
+
+    // Text Utilities
+    if (!this.#services.has('textUtilities')) {
+      this.#services.register('textUtilities', () => {
+        if (typeof TextUtilities == "undefined") require("cp/TextUtilities.js");
+        return new TextUtilities();
+      }, true);
+    }
+  }
+
+  // Lazy getters for all dependencies
+  get settings() {
+    if (!this.#settings) {
+      this.#settings = this.#services.get('cpSettings');
+    }
+    return this.#settings;
+  }
+
+  get fs() {
+    if (!this.#fs) {
+      this.#fs = this.#services.get('cpFileSystem');
+    }
+    return this.#fs;
+  }
+
+  get ui() {
+    if (!this.#ui) {
+      this.#ui = this.#services.get('cpUI');
+    }
+    return this.#ui;
+  }
+
+  get text() {
+    if (!this.#text) {
+      this.#text = this.#services.get('textUtilities');
+    }
+    return this.#text;
+  }
+
+  get statuses() {
+    if (!this.#statuses) {
+      if (typeof Statuses == "undefined") require("cp/Statuses.js");
+      this.#statuses = new Statuses(this.#getDependencies());
+    }
+    return this.#statuses;
+  }
+
+  get destinations() {
+    if (!this.#destinations) {
+      if (typeof Destinations == "undefined") require("cp/Destinations.js");
+      this.#destinations = new Destinations(this.#getDependencies());
+    }
+    return this.#destinations;
+  }
+
+  get recent() {
+    if (!this.#recent) {
+      if (typeof RecentRecords == "undefined") require("cp/RecentRecords.js");
+      this.#recent = new RecentRecords(this.#getDependencies());
+    }
+    return this.#recent;
+  }
+
+  get db() {
+    if (!this.#db) {
+      if (typeof NocoController == "undefined") require("cp/databases/NocoDB.js");
+      this.#db = new NocoController(this.#getDependencies());
+    }
+    return this.#db;
+  }
+
+  get document_factory() {
+    if (!this.#document_factory) {
+      if (typeof DocumentFactory == "undefined") require("cp/documents/document_factory.js");
+      this.#document_factory = new DocumentFactory(this.#getDependencies());
+    }
+    return this.#document_factory;
+  }
+
+  #getDependencies() {
+    return {
+      ui: this.ui,
+      fileSystem: this.fs,
+      settings: this.settings,
+      tableName: this.#tableName,
+      defaultTag: this.settings.defaultTag[this.#tableName],
+      textUtilities: this.text,
+      statuses: this.#statuses,
+      destinations: this.#destinations,
+      recentRecords: this.#recent,
+      database: this.#db,
+    };
   }
 
   // **************
@@ -65,8 +163,8 @@ class ContentPipeline {
   set debug(value) {
     if (value == false) return;
 
-    this.#db.debug = true;
-    this.#ui.debug = true;
+    this.db.debug = true;
+    this.ui.debug = true;
   }
 
   get tableName() {
@@ -78,7 +176,7 @@ class ContentPipeline {
   }
 
   get dirPrefix() {
-    return this.#settings.dirPrefix;
+    return this.settings.dirPrefix;
   }
 
   get basePath() {
@@ -86,11 +184,11 @@ class ContentPipeline {
   }
 
   get databaseError() {
-    return this.#db.databaseError;
+    return this.db.databaseError;
   }
 
   get activeDocInPipeline() {
-    return this.#db.docIsInPipeline(this.#activeDoc);
+    return this.db.docIsInPipeline(this.#activeDoc);
   }
 
   get activeDocIsUndefined() {
@@ -98,7 +196,7 @@ class ContentPipeline {
   }
 
   get recentRecordsUpdated() {
-    return this.#recent.save(this.#activeDoc);
+    return this.recent.save(this.#activeDoc);
   }
 
   // **************
@@ -107,31 +205,31 @@ class ContentPipeline {
   // **************
   welcome() {
     // Retrieve settings for welcome prompt
-    const { menuPicker, menuSettings, errorMessage } = this.#ui.settings(
+    const { menuPicker, menuSettings, errorMessage } = this.ui.settings(
       "welcome",
     );
 
     // Create menuPicker from recent records
-    this.#ui.utilities.addRecordColomsToMenuPicker(
+    this.ui.utilities.addRecordColomsToMenuPicker(
       menuPicker,
       menuSettings,
-      this.#recent.records,
+      this.recent.records,
     );
 
     // Build and display the menu prompt
     // Exit is cancel has been pressed
-    const welcomeScreen = this.#ui.buildMenu(menuSettings);
+    const welcomeScreen = this.ui.buildMenu(menuSettings);
     if (welcomeScreen.show() == false) return context.cancel();
 
     // Record input from prompt
     const nextFunction = welcomeScreen.buttonPressed;
-    const index = this.#ui.utilities.getIndexFromPromptPicker(
+    const index = this.ui.utilities.getIndexFromPromptPicker(
       welcomeScreen,
       menuPicker,
     );
-    const record = this.#recent.selectByIndex(index);
+    const record = this.recent.selectByIndex(index);
 
-    this.#activeDoc = this.#document_factory.load(record);
+    this.#activeDoc = this.document_factory.load(record);
 
     // Calls the next function using the value returned by welcomeScreen.buttonPressed
     this.#functionToRunNext(nextFunction);
@@ -142,24 +240,24 @@ class ContentPipeline {
   // * Open content in Drafts or Ulysses
   // **************
   openDoc(docID, docIDType) {
-    const { docNotFound, recentDocsNotSaved } = this.#settings.openDoc;
+    const { docNotFound, recentDocsNotSaved } = this.settings.openDoc;
 
     if (this.#activeDoc == undefined) {
-      this.#activeDoc = this.#document_factory.load({
+      this.#activeDoc = this.document_factory.load({
         docID: docID,
         docIDType: docIDType,
       });
     }
 
     if (this.#activeDoc == undefined) {
-      return this.#ui.displayAppMessage("error", docNotFound, {
+      return this.ui.displayAppMessage("error", docNotFound, {
         errorMessage: docNotFound,
         acticeDoc: this.#activeDoc,
       });
     }
 
     if (this.recentRecordsUpdated != true) {
-      this.#ui.displayAppMessage("info", recentDocsNotSaved, {
+      this.ui.displayAppMessage("info", recentDocsNotSaved, {
         recentRecordsUpdated: false,
         activeDoc: this.#activeDoc,
       });
@@ -174,19 +272,19 @@ class ContentPipeline {
   // **************
   useCurrentDraft() {
     // Retrieve settings for useCurrentDraft
-    const { menuSettings } = this.#ui.settings("useCurrentDraft");
+    const { menuSettings } = this.ui.settings("useCurrentDraft");
     if (draft.content == "") {
-      return this.#ui.displayAppMessage("info", "Cannot use a blank draft!");
+      return this.ui.displayAppMessage("info", "Cannot use a blank draft!");
     }
 
-    this.#activeDoc = this.#document_factory.load({
+    this.#activeDoc = this.document_factory.load({
       docID: draft.uuid,
       docIDType: "DraftsID",
     });
 
     // Build and display the menu prompt
     // Exit is cancel has been pressed
-    const menu = this.#ui.buildMenu(menuSettings);
+    const menu = this.ui.buildMenu(menuSettings);
     if (menu.show() == false) return context.cancel();
 
     // Calls the next function using the value returned by .buttonPressed
@@ -199,11 +297,11 @@ class ContentPipeline {
   // **************
   addContent() {
     // Retrieve settings
-    const { menuSettings } = this.#ui.settings("addContent");
+    const { menuSettings } = this.ui.settings("addContent");
 
     // Build and display the menu prompt
     // Exit is cancel has been pressed
-    const menu = this.#ui.buildMenu(menuSettings);
+    const menu = this.ui.buildMenu(menuSettings);
     if (menu.show() == false) return context.cancel();
 
     // Calls the next function using the value returned by welcomeScreen.buttonPressed
@@ -217,12 +315,12 @@ class ContentPipeline {
   deleteContent() {
     const delRecentRecord = false, delDBEntry = false, delDoc = false;
     // Retrieve settings
-    const { menuSettings } = this.#ui.settings("delContent");
+    const { menuSettings } = this.ui.settings("delContent");
     if (this.#activeDoc == undefined) return;
 
     // Build and display the menu prompt
     // Exit is cancel has been pressed
-    const menu = this.#ui.buildMenu(menuSettings);
+    const menu = this.ui.buildMenu(menuSettings);
     if (menu.show() == false) return context.cancel();
 
     switch (menu.buttonPressed) {
@@ -235,11 +333,11 @@ class ContentPipeline {
     }
 
     if (delRecentRecord) {
-      this.#recent.delete(this.#activeDoc);
+      this.recent.delete(this.#activeDoc);
       this.ui.displayAppMessage("success", "Doc deleted from Recent Records.");
     }
     if (delDBEntry) {
-      this.#db.delete(this.#activeDoc);
+      this.db.delete(this.#activeDoc);
       this.#activeDoc.inPipeline = false;
       this.ui.displayAppMessage("success", "Doc deleted from the database.");
     }
@@ -254,7 +352,7 @@ class ContentPipeline {
   // * Creates a new Document from a template or a black with a destination tag
   // **************
   createNewDoc() {
-    this.#activeDoc = this.#document_factory.create("draft");
+    this.#activeDoc = this.document_factory.create("draft");
     this.#activeDoc.save();
 
     this.addDocToPipeline();
@@ -266,25 +364,25 @@ class ContentPipeline {
   // * Pick a post to work with based off a Status
   // **************
   selectDocByStatus() {
-    const { menuSettings, menuPicker } = this.#ui.settings("selectDocByStatus");
+    const { menuSettings, menuPicker } = this.ui.settings("selectDocByStatus");
 
     // Check or ask for status and retrieve corresponding records
-    const status = this.#statuses.select();
+    const status = this.statuses.select();
 
     if (menuSettings.menuItems.length > 3) menuSettings.menuItems.pop();
-    const records = this.#db.retrieveRecordsByField("Status", status);
+    const records = this.db.retrieveRecordsByField("Status", status);
     if (this.databaseError) return this.#throwDBError("selectDocByStatus()");
 
-    menuPicker["columns"] = this.#ui.utilities.createPickerFromRecords(records);
+    menuPicker["columns"] = this.ui.utilities.createPickerFromRecords(records);
     menuSettings.menuItems.push({ type: "picker", data: menuPicker });
 
     // Prompts for title and status
-    const menu = this.#ui.buildMenu(menuSettings);
+    const menu = this.ui.buildMenu(menuSettings);
     if (menu.show() == false) return context.cancel();
 
     // Set _activeRecord to the selected record and run next function
     const index = menu.fieldValues[menuPicker.name];
-    this.#activeDoc = this.#document_factory.load(records[index]);
+    this.#activeDoc = this.document_factory.load(records[index]);
     this.#functionToRunNext(menu.buttonPressed);
   }
 
@@ -293,17 +391,17 @@ class ContentPipeline {
   // * Prompts to perform action on this.#activeDoc
   // **************
   modifyActiveDoc(docIDType, docID) {
-    const { errorMessage, menuSettings } = this.#ui.settings("modifyActiveDoc");
+    const { errorMessage, menuSettings } = this.ui.settings("modifyActiveDoc");
 
     if (this.#activeDoc == undefined) {
-      this.#activeDoc = this.#document_factory.load({
+      this.#activeDoc = this.document_factory.load({
         docID: docID,
         docIDType: docIDType,
       });
     }
 
     if (this.#activeDoc == undefined) {
-      return this.#ui.displayAppMessage("error", errorMessage, {
+      return this.ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "modifyActiveDoc()",
@@ -326,7 +424,7 @@ class ContentPipeline {
     );
 
     // Prompts for title and status
-    const menu = this.#ui.buildMenu(menuSettings);
+    const menu = this.ui.buildMenu(menuSettings);
     if (menu.show() == false) return context.cancel();
 
     this.#functionToRunNext(menu.buttonPressed);
@@ -343,11 +441,11 @@ class ContentPipeline {
       docExistsMessage,
       infoMessage,
       menuSettings,
-    } = this.#ui.settings("addDocToPipeline");
+    } = this.ui.settings("addDocToPipeline");
 
     // Load document if #activeDoc is not set
     if (this.activeDocIsUndefined) {
-      this.#activeDoc = this.#document_factory.load({
+      this.#activeDoc = this.document_factory.load({
         docID: docID,
         docIDType: docIDType,
       });
@@ -355,29 +453,29 @@ class ContentPipeline {
 
     // Check if doc is already in pipeline
     if (this.activeDocInPipeline) {
-      return this.#ui.displayAppMessage("info", docExistsMessage);
+      return this.ui.displayAppMessage("info", docExistsMessage);
     }
     if (this.databaseError) return this.#throwDBError("addDocToPipeline()");
 
     // Prompt to add doc to pipeline
-    if (this.#ui.yesNoPrompt(menuSettings) === "no") {
-      this.#ui.displayAppMessage("info", infoMessage);
+    if (this.ui.yesNoPrompt(menuSettings) === "no") {
+      this.ui.displayAppMessage("info", infoMessage);
       return false;
     }
 
     // Select Status & destination
     if (this.#activeDoc.statusIsNotSet) {
-      this.#activeDoc.status = this.#statuses.select(this.#activeDoc.title);
+      this.#activeDoc.status = this.statuses.select(this.#activeDoc.title);
     }
     if (this.#activeDoc.destinationIsNotSet) {
-      this.#activeDoc.destination = this.#destinations.select(
+      this.#activeDoc.destination = this.destinations.select(
         this.#activeDoc.title,
       );
     }
 
     // Update pipeline with activeDoc
     if (this.#updateDatabase() == false) {
-      return this.#ui.displayAppMessage("error", errorMessage, {
+      return this.ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "addDocToPipeline()",
@@ -387,14 +485,14 @@ class ContentPipeline {
     if (this.databaseError) return this.#throwDBError("addDocToPipeline()");
 
     // Update and save draft
-    this.#activeDoc.record = this.#db.currentRecord;
+    this.#activeDoc.record = this.db.currentRecord;
     this.#activeDoc.inPipeline = true;
 
     // If the database responds with a valid record
     // add the record to recent records and return it
     const warningMessage = "Recent Records could not be saved!";
     if (this.#updateRecentRecords() == false) {
-      this.#ui.displayAppMessage("warning", warningMessage, {
+      this.ui.displayAppMessage("warning", warningMessage, {
         warningMessage: warningMessage,
         errorType: "execution",
         class: "AirTableDB",
@@ -402,11 +500,11 @@ class ContentPipeline {
         doc: doc,
         record: doc.record,
         savedRecord: savedRecord,
-        stackTrace: this.#recent.stackTrace,
+        stackTrace: this.recent.stackTrace,
       });
     }
 
-    this.#ui.displayAppMessage("success", successMessage);
+    this.ui.displayAppMessage("success", successMessage);
     return true;
   }
 
@@ -422,10 +520,10 @@ class ContentPipeline {
       errorMessage2,
       successMessage,
       menuSettings,
-    } = this.#ui.settings("addSheetToPipeline");
+    } = this.ui.settings("addSheetToPipeline");
 
     if (this.#activeDoc == undefined) {
-      this.#activeDoc = this.#document_factory.load({
+      this.#activeDoc = this.document_factory.load({
         docID: targetId,
         docIDType: "UlyssesID",
       });
@@ -440,33 +538,33 @@ class ContentPipeline {
   // * Adds draft to Ulysses, Updates Pipeline, and moves draft into trash
   // **************
   convertDraft(uuid = draft.uuid) {
-    const { recentDocsNotSaved } = this.#ui.settings("convertDraft");
+    const { recentDocsNotSaved } = this.ui.settings("convertDraft");
 
     if (this.#activeDoc == undefined) {
-      this.#activeDoc = this.#document_factory.load({
+      this.#activeDoc = this.document_factory.load({
         docID: uuid,
         docIDType: "DraftsID",
       });
     }
 
-    const record = this.#db.retrieveRecordByDocID(this.#activeDoc);
+    const record = this.db.retrieveRecordByDocID(this.#activeDoc);
     if (record == undefined) this.addDocToPipeline();
 
     this.#activeDoc.record = record;
 
-    const { newDocType } = this.#destinations.lookupDocConvertionData(
+    const { newDocType } = this.destinations.lookupDocConvertionData(
       this.#activeDoc.destination,
     );
     this.#convertActiveDoc(newDocType);
 
     if (this.recentRecordsUpdated != true) {
-      this.#ui.displayAppMessage("info", recentDocsNotSaved, {
+      this.ui.displayAppMessage("info", recentDocsNotSaved, {
         savedRecent: savedRecent,
         activeDoc: this.#activeDoc,
       });
     }
 
-    this.#ui.displayAppMessage(
+    this.ui.displayAppMessage(
       "success",
       `Draft has been converted to a ${newDocType}.`,
     );
@@ -477,18 +575,18 @@ class ContentPipeline {
   // * Updates the status of a document
   // **************
   updateStatusOfDoc(docID, docIDType) {
-    const { statusList } = this.#settings;
+    const { statusList } = this.settings;
     const { errorMessage, errorMessage2, successMessage, menuSettings } = this
-      .#ui.settings("updateStatusOfDoc");
+      .ui.settings("updateStatusOfDoc");
     if (this.#activeDoc == undefined) {
-      this.#activeDoc = this.#document_factory.load({
+      this.#activeDoc = this.document_factory.load({
         docID: docID,
         docIDType: docIDType,
       });
     }
 
     if (this.#activeDoc == undefined) {
-      return this.#ui.displayAppMessage("error", errorMessage, {
+      return this.ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "updateStatusOfDoc()",
@@ -498,7 +596,7 @@ class ContentPipeline {
     }
 
     if (this.#activeDoc.title == undefined) {
-      return this.#ui.displayAppMessage("error", errorMessage2, {
+      return this.ui.displayAppMessage("error", errorMessage2, {
         errorMessage: errorMessage2,
         class: "ContentPipeline",
         function: "updateStatusOfDoc()",
@@ -512,16 +610,16 @@ class ContentPipeline {
     ) {
       return;
     }
-    this.#activeDoc.record = this.#db.retrieveRecordByDocID(this.#activeDoc);
+    this.#activeDoc.record = this.db.retrieveRecordByDocID(this.#activeDoc);
     if (this.databaseError) return this.#throwDBError("updateStatusOfDoc()");
 
     // Create and show menu
-    menuSettings["menuItems"] = this.#statuses.generateStatusMenuItems(
+    menuSettings["menuItems"] = this.statuses.generateStatusMenuItems(
       this.#activeDoc.status,
     );
     menuSettings.menuMessage +=
       `${this.#activeDoc.title} is '${this.#activeDoc.status}.'`;
-    const menu = this.#ui.buildMenu(menuSettings);
+    const menu = this.ui.buildMenu(menuSettings);
     if (menu.show() == false) return context.cancel();
 
     // Save button choice as newStatus
@@ -529,7 +627,7 @@ class ContentPipeline {
     if (newStatus == "back") return this.#functionToRunNext("modifyActiveDoc");
     this.#activeDoc.status = newStatus;
 
-    const { covertDoc, newDocType } = this.#destinations
+    const { covertDoc, newDocType } = this.destinations
       .lookupDocConvertionData(
         this.#activeDoc.destination,
         newStatus,
@@ -541,7 +639,7 @@ class ContentPipeline {
     if (this.databaseError) return this.#throwDBError("updateStatusOfDoc()");
 
     // Display Success Message when Pipeline has been update
-    this.#ui.displayAppMessage("success", successMessage + newStatus);
+    this.ui.displayAppMessage("success", successMessage + newStatus);
     return true;
   }
 
@@ -551,11 +649,11 @@ class ContentPipeline {
   // **************
   syncStatusOfSheet(targetId) {
     const docData = { docID: targetId, docIDType: "UlyssesID" };
-    const record = this.#db.retrieveRecordByDocID(docData);
+    const record = this.db.retrieveRecordByDocID(docData);
     const errorMessage = "No record found with that Target ID!";
 
     if (record == undefined) {
-      return this.#ui.displayAppMessage("error", errorMessage, {
+      return this.ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "syncStatusOfSheet()",
@@ -565,7 +663,7 @@ class ContentPipeline {
       });
     }
 
-    this.#activeDoc = this.#document_factory.load(docData);
+    this.#activeDoc = this.document_factory.load(docData);
     this.#activeDoc.status = record.Status;
   }
 
@@ -574,10 +672,10 @@ class ContentPipeline {
   // * Returns the URL of a post that has been published
   // **************
   getPublishedPostURL(year = new Date().getFullYear()) {
-    const { menuSettings, menuPicker } = this.#ui.settings(
+    const { menuSettings, menuPicker } = this.ui.settings(
       "getPublishedPostURL",
     );
-    const records = this.#db.retrieveRecordsByField(
+    const records = this.db.retrieveRecordsByField(
       "Status",
       `Published ${year}✨`,
       {
@@ -588,11 +686,11 @@ class ContentPipeline {
 
     // Build MenuPicker with published posts
     if (menuSettings.menuItems.length > 2) menuSettings.menuItems.pop();
-    menuPicker["columns"] = this.#ui.utilities.createPickerFromRecords(records);
+    menuPicker["columns"] = this.ui.utilities.createPickerFromRecords(records);
     menuSettings.menuItems.push({ type: "picker", data: menuPicker });
 
     // Display menu to select a post
-    const menu = this.#ui.buildMenu(menuSettings);
+    const menu = this.ui.buildMenu(menuSettings);
     if (menu.show() == false) return context.cancel();
 
     const nextFunction = menu.buttonPressed;
@@ -615,7 +713,7 @@ class ContentPipeline {
     const errorMessage = "Function name missing!";
 
     if (name == undefined) {
-      return this.#ui.displayAppMessage("error", errorMessage, {
+      return this.ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "#functionToRunNext()",
@@ -629,16 +727,16 @@ class ContentPipeline {
   }
 
   #throwDBError(parentFunction) {
-    this.#db.stackTrace["parentFunction"] = parentFunction;
-    this.#ui.displayAppMessage("error", "Database Error!", this.#db.stackTrace);
+    this.db.stackTrace["parentFunction"] = parentFunction;
+    this.ui.displayAppMessage("error", "Database Error!", this.db.stackTrace);
   }
 
   #updateDatabase() {
-    return this.#db.updateUsingDoc(this.#activeDoc);
+    return this.db.updateUsingDoc(this.#activeDoc);
   }
 
   #updateRecentRecords() {
-    return this.#recent.save(this.#activeDoc);
+    return this.recent.save(this.#activeDoc);
   }
 
   #convertActiveDoc(newDocType) {
@@ -646,14 +744,14 @@ class ContentPipeline {
     const errorMessage = "Document could not be created!";
 
     // Create New Doc
-    const newDoc = this.#document_factory.create(newDocType);
+    const newDoc = this.document_factory.create(newDocType);
     if (newDoc == undefined || newDoc == false) return false;
 
     newDoc.status = this.#activeDoc.status;
     newDoc.destination = this.#activeDoc.destination;
     newDoc.content = this.#activeDoc.content;
     if (newDoc.save() == false) {
-      return this.#ui.displayAppMessage("error", errorMessage, {
+      return this.ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "ContentPipeline",
         function: "#convertActiveDoc()",
@@ -664,7 +762,7 @@ class ContentPipeline {
 
     // Update the database
     newDoc.record = this.#activeDoc.record;
-    const success = this.#db.updateUsingDoc(newDoc);
+    const success = this.db.updateUsingDoc(newDoc);
     if (this.databaseError) return this.#throwDBError("convertActiveDoc()");
 
     // Delete old doc and update activeDoc
@@ -675,8 +773,8 @@ class ContentPipeline {
   }
 
   #selectYear() {
-    const { infoMessage, menuSettings } = this.#ui.settings("selectYear");
-    const chooseYear = this.#ui.buildMenu(menuSettings);
+    const { infoMessage, menuSettings } = this.ui.settings("selectYear");
+    const chooseYear = this.ui.buildMenu(menuSettings);
     chooseYear.show();
 
     // Return string of selected year
@@ -685,7 +783,7 @@ class ContentPipeline {
   }
 
   #loadWorkspace() {
-    const { defaultWorkspace } = this.#settings;
+    const { defaultWorkspace } = this.settings;
     const workspace = Workspace.find(defaultWorkspace);
     app.currentWindow.applyWorkspace(workspace);
   }
