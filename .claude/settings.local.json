@@ -4,7 +4,10 @@
       "WebFetch(domain:nocodb.com)",
       "WebSearch",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:docs.kutt.it)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:publicapi.dev)"
     ],
     "deny": [],
     "ask": []
