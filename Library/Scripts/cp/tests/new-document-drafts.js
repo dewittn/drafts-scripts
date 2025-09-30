@@ -115,7 +115,7 @@ ui.debug = true;
 const fileSystem = new TestFS(destinationsData);
 const textUltilities = new TextUltilities();
 
-const dependancies = {
+const dependencies = {
   ui: ui,
   fileSystem: fileSystem,
   settings: settings,
@@ -123,13 +123,13 @@ const dependancies = {
   textUltilities: textUltilities,
 };
 
-const statuses = new Statuses(dependancies);
-dependancies["statuses"] = statuses;
+const statuses = new Statuses(dependencies);
+dependencies["statuses"] = statuses;
 
-const dests = new Destinations(dependancies);
-dependancies["destinations"] = dests;
+const dests = new Destinations(dependencies);
+dependencies["destinations"] = dests;
 
-const document_factory = new DocumentFactory(dependancies);
+const document_factory = new DocumentFactory(dependencies);
 
 // const testDraft = document_factory.load(record);
 const testDraft = document_factory.create("draft");

@@ -4,15 +4,16 @@ class Attendance {
   #settings;
   #displayMsgs;
 
-  constructor(dependancies) {
-    if (dependancies == undefined)
-      dependancies = {
+  constructor(dependencies) {
+    if (dependencies == undefined) {
+      dependencies = {
         bvr: new BVR(),
         team: new Team(),
       };
+    }
 
-    this.#bvr = dependancies.bvr;
-    this.#team = dependancies.team;
+    this.#bvr = dependencies.bvr;
+    this.#team = dependencies.team;
     this.#settings = this.#team.attendanceSettings;
     this.#displayMsgs = this.#bvr.ui.settings("displayMsgs");
     this.names = [];
@@ -118,14 +119,15 @@ class Attendance {
     const { menuSettings } = this.#bvr.ui.settings("attendaceIsReady");
     if (this.hasBeenRecorded == false) {
       const takeNow = this.#bvr.ui.buildMenu(menuSettings);
-      if (takeNow.show() == false || takeNow.buttonPressed == "no")
+      if (takeNow.show() == false || takeNow.buttonPressed == "no") {
         return false;
+      }
     }
 
     const regEx = /\[ \]/g;
     const lines = this.attendaceDraft.lines.slice(
       5,
-      this.attendaceDraft.lines.length
+      this.attendaceDraft.lines.length,
     ); // split into lines
 
     lines.forEach((line) => {
@@ -144,18 +146,20 @@ class Attendance {
       const message = meesageFactory(msgConfig);
       message.compose(this.names);
 
-      if (message.send() == false)
+      if (message.send() == false) {
         return this.#bvr.ui.displayAppMessage("error", this.submitFailure);
+      }
     }
 
     this.submitted();
   }
 
   #loadAttendaceDraft() {
-    if (this.attendanceDraftID == undefined)
+    if (this.attendanceDraftID == undefined) {
       return alert(
-        "Error in #loadAttendaceDraft(): attendanceDraftID is undefined!"
+        "Error in #loadAttendaceDraft(): attendanceDraftID is undefined!",
       );
+    }
     this.attendaceDraft = Draft.find(this.attendanceDraftID);
   }
 
@@ -190,7 +194,7 @@ class Attendance {
       );
       this.attendaceDraft.content = this.attendaceDraft.content.replace(
         lastTaken,
-        today
+        today,
       );
 
       this.attendaceDraft.update();

@@ -6,16 +6,17 @@ class PracticePlan {
   #weekID;
   #ppData;
 
-  constructor(dependancies) {
-    if (dependancies == undefined)
-      dependancies = {
+  constructor(dependencies) {
+    if (dependencies == undefined) {
+      dependencies = {
         bvr: new BVR(),
         team: new Team(),
       };
+    }
 
-    this.#bvr = dependancies.bvr;
-    this.#team = dependancies.team;
-    this.#tmplSettings = dependancies.tmplSettings;
+    this.#bvr = dependencies.bvr;
+    this.#team = dependencies.team;
+    this.#tmplSettings = dependencies.tmplSettings;
 
     this.#ppData = this.#bvr.ppData;
   }
@@ -65,8 +66,9 @@ class PracticePlan {
   }
 
   get templateFile() {
-    if (this.#ppData.practicePlanFile == undefined)
+    if (this.#ppData.practicePlanFile == undefined) {
       return `${this.teamID}-${this.defaultTemplateFile}`;
+    }
 
     return this.#team.templateFile;
   }
@@ -84,13 +86,15 @@ class PracticePlan {
   }
 
   create() {
-    if (this.ppTmplSettings == undefined)
+    if (this.ppTmplSettings == undefined) {
       return alert("ppTmplSettings is undefined!");
+    }
     if (
       this.practicePlans != undefined &&
       this.practicePlans[this.planID] != undefined
-    )
+    ) {
       return this.load();
+    }
 
     const templateSettings = this.ppTmplSettings;
     templateSettings.draftTags = [
@@ -98,8 +102,9 @@ class PracticePlan {
       ...templateSettings.draftTags,
     ];
     templateSettings.templateFile = this.ppTemplateFile;
-    if (templateSettings.templateTags == undefined)
+    if (templateSettings.templateTags == undefined) {
       templateSettings.templateTags = {};
+    }
     templateSettings.templateTags[this.weekIDTemplateTag] = this.weekID;
     const newPlan = this.#bvr.createDraftFromTemplate(templateSettings);
 
@@ -108,8 +113,9 @@ class PracticePlan {
   }
 
   load() {
-    if (this.practicePlans == undefined)
+    if (this.practicePlans == undefined) {
       return this.#bvr.ui.displayAppMessage("info", "No practice plan found.");
+    }
     const draftID = this.practicePlans[this.planID];
     const practicePlan = Draft.find(draftID);
 
@@ -126,14 +132,14 @@ class PracticePlan {
   }
 
   #insertPraticePlanLink(linkTxt) {
-    if (linkTxt == undefined)
+    if (linkTxt == undefined) {
       return this.#bvr.ui.displayAppMessage("error", "linkTxt is undefined");
+    }
 
     const coachingDraft = Draft.find(this.coachingDraftID);
-    const insertPosision =
-      coachingDraft.lines.findIndex(
-        (lineTxt) => lineTxt == `## ${this.teamName}`
-      ) + 2;
+    const insertPosision = coachingDraft.lines.findIndex(
+      (lineTxt) => lineTxt == `## ${this.teamName}`,
+    ) + 2;
 
     coachingDraft.insert(`[[${linkTxt}]]`, insertPosision);
     coachingDraft.update();

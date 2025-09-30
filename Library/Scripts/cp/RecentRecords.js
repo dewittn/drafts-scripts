@@ -7,12 +7,12 @@ class RecentRecords {
   #recentDocuments;
   #stackTrace;
 
-  constructor(dependancies) {
-    this.#ui = dependancies.ui;
-    this.#db = dependancies.database;
-    this.#fs = dependancies.fileSystem;
-    this.#table = dependancies.tableName;
-    this.#recentDocsFile = dependancies.settings.recentDocsFile;
+  constructor(dependencies) {
+    this.#ui = dependencies.ui;
+    this.#db = dependencies.database;
+    this.#fs = dependencies.fileSystem;
+    this.#table = dependencies.tableName;
+    this.#recentDocsFile = dependencies.settings.recentDocsFile;
     this.#recentDocuments = this.loadRecent();
   }
 
@@ -57,19 +57,11 @@ class RecentRecords {
       },
     };
 
-    this.records = this.records
-      // Moves currentRecord to the first spot in the array
-      .reduce(
-        (updatedRecords, record) => {
-          return record.id != currentRecord.id ? [...updatedRecords, record] : updatedRecords;
-        },
-        [currentRecord]
-      )
-      // Remove null objects
-      .filter((record) => record != null)
-      // Truncates records to the first 15
-      .splice(0, 15);
-
+    this.records = this.records.filter((r) =>
+      r != null && r.id !== currentRecord.id
+    );
+    this.records.unshift(currentRecord);
+    this.records = this.records.slice(0, 15);
     // Return the status of the file that was written
     return this.#fs.write(this.#recentDocsFile, this.allRecords);
   }
@@ -85,14 +77,18 @@ class RecentRecords {
       return false;
     }
 
-    this.records = this.records.filter((record) => record.id != activeDoc?.recordID);
+    this.records = this.records.filter((record) =>
+      record.id != activeDoc?.recordID
+    );
 
     return this.#fs.write(this.#recentDocsFile, this.allRecords);
   }
 
   loadRecent() {
     const documents = this.#fs.read(this.#recentDocsFile);
-    return documents != undefined ? documents : this.retrieveRecentFromDatabase();
+    return documents != undefined
+      ? documents
+      : this.retrieveRecentFromDatabase();
   }
 
   retrieveRecentFromDatabase() {
@@ -142,14 +138,23 @@ class RecentRecord {
   }
 
   getDocData() {
-    if (this.recordData?.fields?.docIDType != undefined)
-      return { docID: this.recordData.fields.docID, docIDType: this.recordData.fields.docIDType };
+    if (this.recordData?.fields?.docIDType != undefined) {
+      return {
+        docID: this.recordData.fields.docID,
+        docIDType: this.recordData.fields.docIDType,
+      };
+    }
 
-    if (this.recordData?.fields?.DraftsID != undefined)
+    if (this.recordData?.fields?.DraftsID != undefined) {
       return { docID: this.recordData.fields.DraftsID, docIDType: "DraftsID" };
+    }
 
-    if (this.recordData?.fields?.UlyssesID != undefined)
-      return { docID: this.recordData.fields.UlyssesID, docIDType: "UlyssesID" };
+    if (this.recordData?.fields?.UlyssesID != undefined) {
+      return {
+        docID: this.recordData.fields.UlyssesID,
+        docIDType: "UlyssesID",
+      };
+    }
 
     return undefined;
   }

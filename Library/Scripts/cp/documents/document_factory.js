@@ -5,19 +5,19 @@ require("cp/documents/test_document.js");
 class DocumentFactory {
   #ui;
   #settings;
-  #docDependancies;
+  #docdependencies;
 
-  constructor(dependancies) {
-    this.#ui = dependancies.ui;
-    this.#settings = dependancies.settings.documentFactory;
+  constructor(dependencies) {
+    this.#ui = dependencies.ui;
+    this.#settings = dependencies.settings.documentFactory;
 
-    this.#docDependancies = {
-      ui: dependancies.ui,
-      destinations: dependancies.destinations,
-      statuses: dependancies.statuses,
-      tableName: dependancies.tableName,
-      textUltilities: dependancies.textUltilities,
-      defaultTag: dependancies.defaultTag,
+    this.#docdependencies = {
+      ui: dependencies.ui,
+      destinations: dependencies.destinations,
+      statuses: dependencies.statuses,
+      tableName: dependencies.tableName,
+      textUltilities: dependencies.textUltilities,
+      defaultTag: dependencies.defaultTag,
     };
   }
 
@@ -25,7 +25,7 @@ class DocumentFactory {
     const errorMessage = "Record is missing docIDType!!";
     const errorMessage2 = "Document could not be loaded!";
     // const docIDType = record;
-    if (record.docIDType == undefined)
+    if (record.docIDType == undefined) {
       return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "DocumentFactory",
@@ -33,18 +33,20 @@ class DocumentFactory {
         record: record,
         docIDType: record.docIDType,
       });
-    if (record?.docID == undefined)
+    }
+    if (record?.docID == undefined) {
       record.docID = this.#promptForDocID(record.docIDType);
+    }
 
     let doc = undefined;
     switch (record.docIDType) {
       case "DraftsID":
-        this.#docDependancies["settings"] = this.#settings.draftsDoc;
-        doc = new DraftsDoc(this.#docDependancies, record);
+        this.#docdependencies["settings"] = this.#settings.draftsDoc;
+        doc = new DraftsDoc(this.#docdependencies, record);
         break;
       case "UlyssesID":
-        this.#docDependancies["settings"] = this.#settings.ulyssesDoc;
-        doc = new UlyssesDoc(this.#docDependancies, record);
+        this.#docdependencies["settings"] = this.#settings.ulyssesDoc;
+        doc = new UlyssesDoc(this.#docdependencies, record);
         break;
       case "BearID":
         doc = new TestDoc(record);
@@ -53,7 +55,7 @@ class DocumentFactory {
         doc = new TestDoc(record);
     }
 
-    if (doc == undefined || doc == false)
+    if (doc == undefined || doc == false) {
       return this.#ui.displayAppMessage("error", errorMessage2, {
         errorMessage: errorMessage2,
         class: "DocumentFactory",
@@ -62,6 +64,7 @@ class DocumentFactory {
         docIDType: record?.docIDType,
         doc: doc,
       });
+    }
 
     return doc;
   }
@@ -69,12 +72,12 @@ class DocumentFactory {
   create(type) {
     switch (type.toLowerCase()) {
       case "draft":
-        this.#docDependancies["settings"] = this.#settings.draftsDoc;
-        return new DraftsDoc(this.#docDependancies);
+        this.#docdependencies["settings"] = this.#settings.draftsDoc;
+        return new DraftsDoc(this.#docdependencies);
         break;
       case "sheet":
-        this.#docDependancies["settings"] = this.#settings.ulyssesDoc;
-        return new UlyssesDoc(this.#docDependancies);
+        this.#docdependencies["settings"] = this.#settings.ulyssesDoc;
+        return new UlyssesDoc(this.#docdependencies);
         break;
       case "note":
         return new TestDoc(record);

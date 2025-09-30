@@ -91,7 +91,7 @@ const fileSystem1 = new TestFS(destinationsData);
 const fileSystem2 = new TestFS(testData);
 const database = new TestDB(testData["table1"]);
 
-const dependancies = {
+const dependencies = {
   ui: ui,
   batabase: database,
   fileSystem: fileSystem1,
@@ -99,21 +99,23 @@ const dependancies = {
   tableName: "table1",
 };
 
-const dests = new Destinations(dependancies);
+const dests = new Destinations(dependencies);
 
-dependancies["destinations"] = dests;
-dependancies["fileSystem"] = fileSystem2;
+dependencies["destinations"] = dests;
+dependencies["fileSystem"] = fileSystem2;
 
-const recentDocs = new RecentRecords(dependancies);
+const recentDocs = new RecentRecords(dependencies);
 
 const secondRecord = new RecentRecord(recentDocs.records[1]);
 
-const document_factory = new DocumentFactory(dependancies);
+const document_factory = new DocumentFactory(dependencies);
 
 const doc = document_factory.load(secondRecord);
 
 const saved = recentDocs.save(doc);
 const firstRecord = new RecentRecord(recentDocs.records[0]);
 
-if (firstRecord.docID == secondRecord.docID)
+if (firstRecord.docID == secondRecord.docID) {
   ui.displayAppMessage("success", "Recent Records were saved correctly!");
+}
+

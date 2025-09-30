@@ -12,8 +12,8 @@ class Team {
     this.#teamData = this.#getTeamData(teamID);
     this.#tmplSettings = this.#loadTemplateSettings();
 
-    this.attendace = new Attendance(this.dependancies);
-    this.season = new Season(this.dependancies);
+    this.attendace = new Attendance(this.dependencies);
+    this.season = new Season(this.dependencies);
   }
 
   // **********************
@@ -24,7 +24,7 @@ class Team {
     return this.#bvr.ui;
   }
 
-  get dependancies() {
+  get dependencies() {
     return { bvr: this.#bvr, team: this, tmplSettings: this.#tmplSettings };
   }
 
@@ -146,12 +146,12 @@ class Team {
   }
 
   createPracticePlan() {
-    const practicePlan = new PracticePlan(this.dependancies);
+    const practicePlan = new PracticePlan(this.dependencies);
     practicePlan.create();
   }
 
   loadPracticePlan() {
-    const practicePlan = new PracticePlan(this.dependancies);
+    const practicePlan = new PracticePlan(this.dependencies);
     practicePlan.load();
   }
 
@@ -164,13 +164,13 @@ class Team {
   }
 
   gameRecordResult() {
-    const game = new Game(this.dependancies);
+    const game = new Game(this.dependencies);
     game.recordResult();
     game.generateReport();
   }
 
   submitGameReport() {
-    const game = new Game(this.dependancies);
+    const game = new Game(this.dependencies);
     game.submitReport();
   }
 
@@ -179,7 +179,7 @@ class Team {
       return this.ui.displayAppMessage("info", "No game day tasks found.");
     }
 
-    const game = new Game(this.dependancies);
+    const game = new Game(this.dependencies);
     game.recordDate();
     game.recordOpponent();
     game.recordLocation();

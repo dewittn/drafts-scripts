@@ -34,7 +34,14 @@ const settings = {
         menuMessage: "Please select a status for",
       },
     },
-    statusList: ["Developing", "Drafting", "Writing", "Editing", "Polishing", "On Deck"],
+    statusList: [
+      "Developing",
+      "Drafting",
+      "Writing",
+      "Editing",
+      "Polishing",
+      "On Deck",
+    ],
   },
   destinations: {
     destinationsFile: "destinations.json",
@@ -58,7 +65,8 @@ const settings = {
         successMessage: "Success! Darft added to the Pipeline",
         menuSettings: {
           menuTitle: "Working title?",
-          menuMessage: "Please enter a working title for your draft (no markdown):",
+          menuMessage:
+            "Please enter a working title for your draft (no markdown):",
           menuItems: [
             {
               type: "button",
@@ -98,20 +106,20 @@ const record = {
 const ui = new DraftsUI();
 const fileSystem = new TestFS(destinationsData);
 
-const dependancies = {
+const dependencies = {
   ui: ui,
   fileSystem: fileSystem,
   settings: settings,
   tableName: "table1",
 };
 
-const statuses = new Statuses(dependancies);
-dependancies["statuses"] = statuses;
+const statuses = new Statuses(dependencies);
+dependencies["statuses"] = statuses;
 
-const dests = new Destinations(dependancies);
-dependancies["destinations"] = dests;
+const dests = new Destinations(dependencies);
+dependencies["destinations"] = dests;
 
-const document_factory = new DocumentFactory(dependancies);
+const document_factory = new DocumentFactory(dependencies);
 
 const testDraft = document_factory.load(record);
 

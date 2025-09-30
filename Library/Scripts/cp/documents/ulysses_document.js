@@ -18,13 +18,13 @@ class UlyssesDoc {
   #currentStatus;
   #currentTitle;
 
-  constructor(dependancies, record = {}) {
-    this.#ui = dependancies.ui;
-    this.#text = dependancies.textUltilities;
-    this.#settings = dependancies.settings;
-    this.#statuses = dependancies.statuses;
-    this.#destinations = dependancies.destinations;
-    this.#defaultTag = dependancies.defaultTag;
+  constructor(dependencies, record = {}) {
+    this.#ui = dependencies.ui;
+    this.#text = dependencies.textUltilities;
+    this.#settings = dependencies.settings;
+    this.#statuses = dependencies.statuses;
+    this.#destinations = dependencies.destinations;
+    this.#defaultTag = dependencies.defaultTag;
     this.#ulysses = new Ulysses();
 
     this.#data.record = record;
@@ -53,13 +53,14 @@ class UlyssesDoc {
 
   set record(record) {
     const errorMessage = "Record does not have an id!";
-    if (record?.docID == undefined)
+    if (record?.docID == undefined) {
       return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "UlyssesDoc",
         function: "set record()",
         record: record,
       });
+    }
 
     if (record.docID != this.docID) {
       record.docID = this.docID;
@@ -74,8 +75,9 @@ class UlyssesDoc {
   }
 
   get title() {
-    if (this.#currentTitle == undefined)
+    if (this.#currentTitle == undefined) {
       this.#currentTitle = this.#getTitleOfSheet();
+    }
 
     return this.#currentTitle;
   }
@@ -88,7 +90,7 @@ class UlyssesDoc {
     if (this.#data?.scrubedTitle == undefined) {
       this.#data.scrubedTitle = this.#text.scrubTitle(
         this.title,
-        this.#destinations.getScrubText(this.destination)
+        this.#destinations.getScrubText(this.destination),
       );
     }
 
@@ -96,8 +98,9 @@ class UlyssesDoc {
   }
 
   get slug() {
-    if (this.#data.slug == undefined)
+    if (this.#data.slug == undefined) {
       this.#data.slug = this.#text.convertTitleToSlug(this.scrubedTitle);
+    }
 
     return this.#data.slug;
   }
@@ -115,20 +118,23 @@ class UlyssesDoc {
   }
 
   get status() {
-    if (this.#currentStatus == undefined)
+    if (this.#currentStatus == undefined) {
       this.#currentStatus = this.#getStatusOfSheet();
+    }
 
     return this.#currentStatus;
   }
 
   set status(newStatus) {
     if (newStatus == undefined) return;
-    if (this.#currentStatus == undefined)
+    if (this.#currentStatus == undefined) {
       this.#currentStatus = this.#getStatusOfSheet();
+    }
     if (this.#currentStatus == newStatus) return;
 
-    if (this.docID != undefined)
+    if (this.docID != undefined) {
       this.#updateKeywords(this.#currentStatus, newStatus);
+    }
     this.#currentStatus = newStatus;
   }
 
@@ -137,8 +143,9 @@ class UlyssesDoc {
   }
 
   get destination() {
-    if (this.#currentDest == undefined)
+    if (this.#currentDest == undefined) {
       this.#currentDest = this.#getDestinationOfSheet();
+    }
 
     return this.#currentDest;
   }
@@ -149,8 +156,9 @@ class UlyssesDoc {
     if (this.#currentDest == undefined) this.#getDestinationOfSheet();
     if (this.#currentDest == newDest) return;
 
-    if (this.docID != undefined)
+    if (this.docID != undefined) {
       this.#updateKeywords(this.#currentDest, newDest);
+    }
     this.#currentDest = newDest;
   }
 
@@ -163,8 +171,9 @@ class UlyssesDoc {
   }
 
   get inPipeline() {
-    if (this.#inPipeline == undefined)
+    if (this.#inPipeline == undefined) {
       this.#inPipeline = this.#sheetIsInPipeline();
+    }
 
     return this.#inPipeline;
   }
@@ -205,7 +214,7 @@ class UlyssesDoc {
 
     this.#ulysses.attachKeywords(
       this.docID,
-      `${this.#defaultTag}, ${this.destination}, ${this.status}`
+      `${this.#defaultTag}, ${this.destination}, ${this.status}`,
     );
     this.attachDefaultNotes();
     return true;
@@ -229,15 +238,16 @@ class UlyssesDoc {
     });
 
     // Attach excerpt text
-    if (excerptText != undefined)
+    if (excerptText != undefined) {
       this.#ulysses.attachNote(this.docID, excerptText);
+    }
 
     // Attach Pipeline links formatted in markdown
     if (piplineLinks != undefined) {
       const markdownNote = piplineLinks
         .map(
           (link) =>
-            `[${link.linkText}](${cbData.baseURL}${cbData.runActionParams}${link.actionName}${cbData.uuidParams}${this.docID})`
+            `[${link.linkText}](${cbData.baseURL}${cbData.runActionParams}${link.actionName}${cbData.uuidParams}${this.docID})`,
         )
         .join("\n");
       this.#ulysses.attachNote(this.docID, markdownNote);
@@ -253,16 +263,16 @@ class UlyssesDoc {
   // * Private Functions
   // **************
   #loadSheet() {
-    if (this.sheet == undefined)
+    if (this.sheet == undefined) {
       this.sheet = this.#ulysses.readSheet(this.docID);
+    }
 
-    if (this.#ulysses.error)
+    if (this.#ulysses.error) {
       this.ui.displayAppMessage(
         "error",
-        `Ulysses Error ${this.#ulysses.errorCode} - ${
-          this.#ulysses.errorMessage
-        } : Sheet not loaded!`
+        `Ulysses Error ${this.#ulysses.errorCode} - ${this.#ulysses.errorMessage} : Sheet not loaded!`,
       );
+    }
   }
 
   #getIdOfSheet() {

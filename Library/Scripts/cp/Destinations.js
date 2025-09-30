@@ -6,12 +6,12 @@ class Destinations {
   #settings;
   #data;
 
-  constructor(dependancies) {
-    this.#ui = dependancies.ui;
-    this.#fs = dependancies.fileSystem;
-    this.#table = dependancies.tableName;
-    this.#settings = dependancies.settings.destinations;
-    this.#text = dependancies.textUltilities;
+  constructor(dependencies) {
+    this.#ui = dependencies.ui;
+    this.#fs = dependencies.fileSystem;
+    this.#table = dependencies.tableName;
+    this.#settings = dependencies.settings.destinations;
+    this.#text = dependencies.textUltilities;
     this.#data = this.#fs.read(this.#settings.destinationsFile);
   }
 
@@ -52,21 +52,21 @@ class Destinations {
     const { menuSettings, menuPicker, errorMessage, errorMessage2 } =
       this.#settings;
 
-    menuSettings.menuMessage =
-      title == ""
-        ? `${menuSettings.menuMessage} this post.`
-        : `${menuSettings.menuMessage}: ${title}`;
+    menuSettings.menuMessage = title == ""
+      ? `${menuSettings.menuMessage} this post.`
+      : `${menuSettings.menuMessage}: ${title}`;
     menuPicker["columns"] = [this.keys];
     menuSettings.menuItems.push({ type: "picker", data: menuPicker });
 
     const choseDestination = this.#ui.buildMenu(menuSettings);
 
     // Displays prompt and returns chosen Destination
-    if (choseDestination.show() == false)
+    if (choseDestination.show() == false) {
       return this.#ui.displayAppMessage("error", errorMessage);
+    }
     const selectedDestination = choseDestination.fieldValues[menuPicker.name];
 
-    if (selectedDestination == undefined)
+    if (selectedDestination == undefined) {
       return this.#ui.displayAppMessage("error", errorMessage2, {
         errorMessage: errorMessage2,
         class: "Destinations",
@@ -75,6 +75,7 @@ class Destinations {
         fieldValues: choseDestination.fieldValues,
         selectedDestination: selectedDestination,
       });
+    }
 
     return this.keys[selectedDestination];
   }
@@ -94,7 +95,7 @@ class Destinations {
   lookupAirTableDestinationName(destination) {
     const errorMessage = "Destination not found!";
     const destData = this.data[destination.toLowerCase()];
-    if (destData == undefined)
+    if (destData == undefined) {
       return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "Destinations",
@@ -103,6 +104,7 @@ class Destinations {
         data: this.data,
         destData: destData,
       });
+    }
 
     return destData?.airtableName != undefined
       ? destData.airtableName

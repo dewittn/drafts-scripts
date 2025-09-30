@@ -4,9 +4,9 @@ class GoogleForm {
   #settings;
   #formData;
 
-  constructor(dependancies) {
-    this.#settings = dependancies.settings;
-    this.#formData = dependancies.formData;
+  constructor(dependencies) {
+    this.#settings = dependencies.settings;
+    this.#formData = dependencies.formData;
   }
 
   get fields() {
@@ -47,11 +47,14 @@ class GoogleForm {
     const queryString = this.fields
       .map((feild) => {
         const fieldData = this.#formData[feild.key];
-        if (fieldData != undefined) return `entry.${feild.entryID}=${encodeURIComponent(fieldData)}`;
+        if (fieldData != undefined) {
+          return `entry.${feild.entryID}=${encodeURIComponent(fieldData)}`;
+        }
       })
       .join("&");
 
-    const submitURL = `${this.formURL}/${this.urlPath}?${this.submitString}usp=pp_url&${queryString}`;
+    const submitURL =
+      `${this.formURL}/${this.urlPath}?${this.submitString}usp=pp_url&${queryString}`;
     app.openURL(submitURL);
   }
 }

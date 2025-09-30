@@ -6,16 +6,17 @@ class Season {
   #currentSeasonID;
   #schoolSportingHistory;
 
-  constructor(dependancies) {
-    if (dependancies == undefined)
-      dependancies = {
+  constructor(dependencies) {
+    if (dependencies == undefined) {
+      dependencies = {
         bvr: new BVR(),
         team: new Team(),
       };
+    }
 
-    this.#bvr = dependancies.bvr;
-    this.#team = dependancies.team;
-    this.#tmplSettings = dependancies.tmplSettings;
+    this.#bvr = dependencies.bvr;
+    this.#team = dependencies.team;
+    this.#tmplSettings = dependencies.tmplSettings;
     this.#schoolSportingHistory = new DataFile(this.recordsFile);
   }
 
@@ -44,12 +45,13 @@ class Season {
   }
 
   get schoolSportingHistory() {
-   return this.#schoolSportingHistory;
+    return this.#schoolSportingHistory;
   }
 
   get teamHistory() {
-    if (this.#schoolSportingHistory[this.teamID] == undefined)
+    if (this.#schoolSportingHistory[this.teamID] == undefined) {
       this.#schoolSportingHistory[this.teamID] = {};
+    }
     return this.#schoolSportingHistory[this.teamID];
   }
 
@@ -63,12 +65,13 @@ class Season {
   }
 
   get currentSeasonData() {
-    if (typeof this.teamHistory[this.currentSeasonID] == "array")
+    if (typeof this.teamHistory[this.currentSeasonID] == "array") {
       this.migrateCurrentSeason();
+    }
 
     if (this.teamHistory[this.currentSeasonID] == undefined) {
       this.teamHistory[this.currentSeasonID] = {};
-    } 
+    }
 
     return this.teamHistory[this.currentSeasonID];
   }
@@ -93,7 +96,7 @@ class Season {
   get tmplSettingsSeasonRecord() {
     return new TmplSettings(
       this.gblTmplSettings,
-      this.#tmplSettings.seasonRecord
+      this.#tmplSettings.seasonRecord,
     );
   }
 
@@ -102,8 +105,9 @@ class Season {
   // **********************
 
   updateWith(game) {
-    if (game == undefined)
+    if (game == undefined) {
       this.ui.displayAppMessage("error", "Game data missing!");
+    }
     game.appended = this.#appendToRecordsDraft(game);
     this.#saveRecordsData(game);
   }
@@ -130,16 +134,18 @@ class Season {
   #migrateSeasonData(seasonID) {
     if (seasonID == undefined) return;
 
-    if (this.teamHistory[seasonID].seasonRecordData != undefined)
+    if (this.teamHistory[seasonID].seasonRecordData != undefined) {
       return this.ui.displayAppMessage(
         "info",
-        "Current season has already been migrated."
+        "Current season has already been migrated.",
       );
-    if (Array.isArray(this.teamHistory[seasonID]) == false)
+    }
+    if (Array.isArray(this.teamHistory[seasonID]) == false) {
       return this.ui.displayAppMessage(
         "error",
-        "The current season is the wrong type and will not be migrated."
+        "The current season is the wrong type and will not be migrated.",
       );
+    }
 
     this.teamHistory[seasonID] = {
       seasonRecordDraftID: "",
@@ -156,8 +162,9 @@ class Season {
     const seasonRecordDraft = new Template(this.tmplSettingsSeasonRecord);
     seasonRecordDraft.archive().save();
 
-    if (this.teamHistory[seasonID] == undefined)
+    if (this.teamHistory[seasonID] == undefined) {
       this.teamHistory[seasonID] = {};
+    }
     this.teamHistory[seasonID].seasonRecordDraftID = seasonRecordDraft.draftID;
     this.#schoolSportingHistory.save();
 
@@ -171,7 +178,7 @@ class Season {
     });
     return this.ui.displayAppMessage(
       "success",
-      "Season record draft populated with games."
+      "Season record draft populated with games.",
     );
   }
 
@@ -185,8 +192,9 @@ class Season {
       return false;
     }
 
-    if (this.recordsDraft == undefined)
+    if (this.recordsDraft == undefined) {
       this.recordsDraft = Draft.find(this.seasonRecordDraftID);
+    }
 
     const newTableLine = new Template(game.tmplSettingsRecordRow);
     this.recordsDraft.append(newTableLine.content);
@@ -195,14 +203,15 @@ class Season {
   }
 
   #saveRecordsData(game) {
-    if (game == undefined)
+    if (game == undefined) {
       return this.ui.displayAppMessage(
         "error",
-        "Season record could not be saved."
+        "Season record could not be saved.",
       );
+    }
 
     const index = this.currentSeasonRecord.findIndex(
-      (recordItem) => recordItem.draftID == game.draftID
+      (recordItem) => recordItem.draftID == game.draftID,
     );
 
     if (index !== -1) {
@@ -216,7 +225,7 @@ class Season {
 
   #loadGameDataFromUUID(uuid = draft.uuid) {
     const index = this.currentSeasonRecord.findIndex(
-      (game) => game.draftID == uuid
+      (game) => game.draftID == uuid,
     );
     if (index == -1) return undefined;
 

@@ -6,18 +6,26 @@ const id = "recqSJM6WAqfkuSkl";
 const recent = new TestRecentRecords();
 const ui = new DraftsUI();
 
-const dependancies = {
+const dependencies = {
   ui: ui,
   tableName: "Test Table",
   settings: {
     settings: {
-      defaultFields: ["Title", "Status", "Destination", "UlyssesID", "DraftsID", "Slug", "Link"],
+      defaultFields: [
+        "Title",
+        "Status",
+        "Destination",
+        "UlyssesID",
+        "DraftsID",
+        "Slug",
+        "Link",
+      ],
     },
     recentRecords: recent,
   },
 };
 
-const db = new AirTableDB(dependancies);
+const db = new AirTableDB(dependencies);
 db.debug = true;
 
 let record = db.retrieveRecordById(id);

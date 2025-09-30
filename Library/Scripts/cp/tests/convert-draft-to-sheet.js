@@ -35,7 +35,14 @@ const settings = {
         menuMessage: "Please select a status for",
       },
     },
-    statusList: ["Developing", "Drafting", "Writing", "Editing", "Polishing", "On Deck"],
+    statusList: [
+      "Developing",
+      "Drafting",
+      "Writing",
+      "Editing",
+      "Polishing",
+      "On Deck",
+    ],
   },
   destinations: {
     destinationsFile: "destinations.json",
@@ -59,7 +66,8 @@ const settings = {
         successMessage: "Success! Darft added to the Pipeline",
         menuSettings: {
           menuTitle: "Working title?",
-          menuMessage: "Please enter a working title for your draft (no markdown):",
+          menuMessage:
+            "Please enter a working title for your draft (no markdown):",
           menuItems: [
             {
               type: "button",
@@ -96,8 +104,14 @@ const settings = {
         uuidParams: "&text=",
       },
       piplineLinks: [
-        { linkText: "Content Pipeline: Update Status", actionName: "updateStatusWithUlyssesID" },
-        { linkText: "Content Pipeline: Sync Status", actionName: "syncStatusWithUlyssesID" },
+        {
+          linkText: "Content Pipeline: Update Status",
+          actionName: "updateStatusWithUlyssesID",
+        },
+        {
+          linkText: "Content Pipeline: Sync Status",
+          actionName: "syncStatusWithUlyssesID",
+        },
       ],
     },
   },
@@ -107,7 +121,7 @@ const ui = new DraftsUI();
 const fileSystem = new TestFS(destinationsData);
 const textUltilities = new TextUltilities();
 
-const dependancies = {
+const dependencies = {
   ui: ui,
   fileSystem: fileSystem,
   settings: settings,
@@ -115,20 +129,21 @@ const dependancies = {
   textUltilities: textUltilities,
 };
 
-const statuses = new Statuses(dependancies);
-dependancies["statuses"] = statuses;
+const statuses = new Statuses(dependencies);
+dependencies["statuses"] = statuses;
 
-const dests = new Destinations(dependancies);
-dependancies["destinations"] = dests;
+const dests = new Destinations(dependencies);
+dependencies["destinations"] = dests;
 
-const document_factory = new DocumentFactory(dependancies);
+const document_factory = new DocumentFactory(dependencies);
 const timeCode = new Date().toString();
 const testDraft = new Draft();
 
 testDraft.addTag(settings.defaultTag);
 testDraft.addTag("Writing");
 testDraft.addTag("Inbox");
-testDraft.content = `# Testing Covert Draft to Sheet\n\nThis is a test draft created: ${timeCode}.\n\n And [this is a markdown link](https://www.google.com).`;
+testDraft.content =
+  `# Testing Covert Draft to Sheet\n\nThis is a test draft created: ${timeCode}.\n\n And [this is a markdown link](https://www.google.com).`;
 testDraft.update();
 
 const record = { docID: testDraft.uuid, docIDType: "DraftsID" };

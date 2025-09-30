@@ -6,9 +6,9 @@ class TemplateFactory {
   #ui;
   #settings;
 
-  constructor(dependancies) {
-    this.#ui = dependancies.ui;
-    this.#settings = dependancies.settings;
+  constructor(dependencies) {
+    this.#ui = dependencies.ui;
+    this.#settings = dependencies.settings;
   }
 
   create(settings) {

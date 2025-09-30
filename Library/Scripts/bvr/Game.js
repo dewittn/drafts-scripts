@@ -6,17 +6,17 @@ class Game {
   #tmplSettings;
   #currentSeasonID;
 
-  constructor(dependancies, uuid = draft.uuid) {
-    if (dependancies == undefined) {
-      dependancies = {
+  constructor(dependencies, uuid = draft.uuid) {
+    if (dependencies == undefined) {
+      dependencies = {
         bvr: new BVR(),
         team: new Team(),
       };
     }
 
-    this.#bvr = dependancies.bvr;
-    this.#team = dependancies.team;
-    this.#tmplSettings = dependancies.tmplSettings;
+    this.#bvr = dependencies.bvr;
+    this.#team = dependencies.team;
+    this.#tmplSettings = dependencies.tmplSettings;
 
     this.sport = new Sport(this.teamPlays);
     this.#settings = this.#team.gameReportSettings;
@@ -532,12 +532,12 @@ class Game {
 
   #submitGoogleForm(gformSettings) {
     const { menuSettings } = this.ui.settings("submitGoogleForm");
-    const dependancies = {
+    const dependencies = {
       settings: gformSettings,
       formData: this.toGoogleFormData(),
     };
 
-    const googleForm = new GoogleForm(dependancies);
+    const googleForm = new GoogleForm(dependencies);
     googleForm.submit();
 
     const formSubmittedPrompt = this.ui.buildMenu(menuSettings);

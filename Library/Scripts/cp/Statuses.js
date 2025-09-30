@@ -3,9 +3,9 @@ class Statuses {
   #settings;
   #statusList;
 
-  constructor(dependancies) {
-    this.#ui = dependancies.ui;
-    this.#settings = dependancies.settings.statuses;
+  constructor(dependencies) {
+    this.#ui = dependencies.ui;
+    this.#settings = dependencies.settings.statuses;
     this.#statusList = this.#settings.statusList;
   }
 
@@ -20,10 +20,9 @@ class Statuses {
   select(title = "") {
     const { menuSettings, errorMessage } = this.#settings.selectStatus;
 
-    menuSettings.menuMessage =
-      title == ""
-        ? `${menuSettings.menuMessage} to work with.`
-        : `${menuSettings.menuMessage} for: ${title}`;
+    menuSettings.menuMessage = title == ""
+      ? `${menuSettings.menuMessage} to work with.`
+      : `${menuSettings.menuMessage} for: ${title}`;
     menuSettings.isCancellable = false;
     menuSettings.menuItems = [];
 
@@ -40,12 +39,13 @@ class Statuses {
     const choseStatus = this.#ui.buildMenu(menuSettings);
 
     // Displays prompt and returns chosen status
-    if (choseStatus.show() == false)
+    if (choseStatus.show() == false) {
       return this.#ui.displayAppMessage("error", errorMessage, {
         errorMessage: errorMessage,
         class: "Statuses",
         function: "select",
       });
+    }
 
     return choseStatus.buttonPressed;
   }
@@ -53,7 +53,7 @@ class Statuses {
   // Removes the current status from the statusList and generates an options menu
   generateStatusMenuItems(currentStatus) {
     const index = this.statusList.findIndex(
-      (status) => status == currentStatus
+      (status) => status == currentStatus,
     );
     // statusList.splice(0, index + 1);
     return this.statusList
@@ -68,7 +68,7 @@ class Statuses {
             type: "button",
             data: { name: "<< Back", value: "back", isDefault: true },
           },
-        ]
+        ],
       );
   }
 

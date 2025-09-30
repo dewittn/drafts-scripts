@@ -16,14 +16,14 @@ class DraftsDoc {
   #currentTitle;
   #inPipeline;
 
-  constructor(dependancies, record = {}) {
-    this.#ui = dependancies.ui;
-    this.#settings = dependancies.settings;
-    this.#defaultTag = dependancies.defaultTag;
-    this.#statuses = dependancies.statuses;
-    this.#destinations = dependancies.destinations;
-    this.#text = dependancies.textUltilities;
-    this.#template_factory = new TemplateFactory(dependancies);
+  constructor(dependencies, record = {}) {
+    this.#ui = dependencies.ui;
+    this.#settings = dependencies.settings;
+    this.#defaultTag = dependencies.defaultTag;
+    this.#statuses = dependencies.statuses;
+    this.#destinations = dependencies.destinations;
+    this.#text = dependencies.textUltilities;
+    this.#template_factory = new TemplateFactory(dependencies);
 
     this.#record = record;
     this.workingDraft = this.#findOrCreateWorkingDraft();

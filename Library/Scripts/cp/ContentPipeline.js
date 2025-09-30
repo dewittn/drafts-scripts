@@ -31,7 +31,7 @@ class ContentPipeline {
     this.#ui = new DraftsUI(this.#settings.ui);
     this.#text = new TextUltilities();
 
-    const dependancies = {
+    const dependencies = {
       ui: this.#ui,
       fileSystem: this.#fs,
       settings: this.#settings,
@@ -40,19 +40,19 @@ class ContentPipeline {
       textUltilities: this.#text,
     };
 
-    this.#statuses = new Statuses(dependancies);
-    dependancies["statuses"] = this.#statuses;
+    this.#statuses = new Statuses(dependencies);
+    dependencies["statuses"] = this.#statuses;
 
-    this.#destinations = new Destinations(dependancies);
-    dependancies["destinations"] = this.#destinations;
+    this.#destinations = new Destinations(dependencies);
+    dependencies["destinations"] = this.#destinations;
 
-    this.#recent = new RecentRecords(dependancies);
-    dependancies["recentRecords"] = this.#recent;
+    this.#recent = new RecentRecords(dependencies);
+    dependencies["recentRecords"] = this.#recent;
 
-    this.#db = new NocoController(dependancies);
-    dependancies["database"] = this.#db;
+    this.#db = new NocoController(dependencies);
+    dependencies["database"] = this.#db;
 
-    this.#document_factory = new DocumentFactory(dependancies);
+    this.#document_factory = new DocumentFactory(dependencies);
     this.#activeDoc = null;
 
     this.#loadWorkspace();

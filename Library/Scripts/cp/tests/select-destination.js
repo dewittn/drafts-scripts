@@ -44,14 +44,14 @@ const destData = {
 const ui = new DraftsUI();
 const fs = new TestFS(destData);
 
-const dependancies = {
+const dependencies = {
   ui: ui,
   fileSystem: fs,
   settings: settings,
   tableName: "Content",
 };
 
-const destinations = new Destinations(dependancies);
+const destinations = new Destinations(dependencies);
 
 const selectedDest = destinations.select();
 ui.debugVariable(selectedDest);

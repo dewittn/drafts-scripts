@@ -25,19 +25,26 @@ const settings = {
         label: "",
       },
     },
-    statusList: ["Developing", "Drafting", "Writing", "Editing", "Polishing", "On Deck"],
+    statusList: [
+      "Developing",
+      "Drafting",
+      "Writing",
+      "Editing",
+      "Polishing",
+      "On Deck",
+    ],
   },
 };
 
 const ui = new DraftsUI();
 
-const dependancies = {
+const dependencies = {
   ui: ui,
   settings: settings,
   tableName: "Content",
 };
 
-const statuses = new Statuses(dependancies);
+const statuses = new Statuses(dependencies);
 
 const selectedStatus = statuses.select();
 ui.debugVariable(selectedStatus);
