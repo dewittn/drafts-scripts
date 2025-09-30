@@ -1,258 +1,357 @@
-class KuttItAPI {
+// Kutt.it URL Shortener by Nelson/Roberto (@dewittn)
+// A Kutt.it API wrapper for Drafts
+
+// ***************
+// * Kutt Class
+// ***************
+class Kutt {
+  static filesPath = "/Library/Data";
+
+  #apiKey;
+  #domain;
+  #endPointURL;
+
   constructor() {
     this.#authorize();
-    this.baseURL = `${this.domain}/api/v2`;
+    this.#endPointURL = `${this.#domain}/api/v2`;
   }
 
-  async request(endpoint, method = "GET", data = null) {
-    const headers = {
-      "Content-Type": "application/json",
-      "X-API-KEY": this.apiKey,
-    };
-
-    let options = {
-      method: method,
-      headers: headers,
-    };
-
-    if (data && ["POST", "PATCH"].includes(method)) {
-      options.body = JSON.stringify(data);
-    }
-
-    const response = await fetch(`${this.baseURL}${endpoint}`, options);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response.json();
+  get endPointURL() {
+    return this.#endPointURL;
   }
 
-  // Health Check
-  async getHealth() {
-    return this.request("/health");
+  get filesPath() {
+    return this.constructor.filesPath;
   }
 
-  // Links
-  async getLinks(limit = 10, skip = 0, all = false) {
-    const params = new URLSearchParams({ limit, skip, all });
-    return this.request(`/links?${params.toString()}`);
+  get apiKey() {
+    return this.#apiKey;
   }
 
-  async createLink(
-    target,
-    description = "",
-    expire_in = "",
-    password = "",
-    customurl = "",
-    reuse = false,
-    domain = ""
-  ) {
-    return this.request("/links", "POST", {
-      target,
-      description,
-      expire_in,
-      password,
-      customurl,
-      reuse,
-      domain,
-    });
-  }
-
-  async deleteLink(id) {
-    return this.request(`/links/${id}`, "DELETE");
-  }
-
-  async updateLink(id, target, address) {
-    return this.request(`/links/${id}`, "PATCH", { target, address });
-  }
-
-  async getLinkStats(id) {
-    return this.request(`/links/${id}/stats`);
-  }
-
-  // Domains
-  async createDomain(address, homepage = "") {
-    return this.request("/domains", "POST", { address, homepage });
-  }
-
-  async deleteDomain(id) {
-    return this.request(`/domains/${id}`, "DELETE");
-  }
-
-  // Users
-  async getUserInfo() {
-    return this.request("/users");
+  get domain() {
+    return this.#domain;
   }
 
   // Setup & Store Credentials
   #authorize() {
-    const credential = Credential.create("Kutt", "Kutt API");
-    credential.addTextField("domain", "Domain of Kutt");
+    let credential = Credential.create("Kutt", "Kutt.it API");
+    credential.addTextField("domain", "Domain (e.g., https://kutt.it)");
     credential.addPasswordField("api_key", "API Key");
     credential.authorize();
-    this.domain = credential.getValue("domain");
-    this.apiKey = credential.getValue("api_key");
+    this.#domain = credential.getValue("domain") || "https://kutt.it";
+    this.#apiKey = credential.getValue("api_key");
   }
 
-  #makeHTTPRequest(payload, id = "") {
-    const url = `${this.endPointURL}/${this.baseID}/${this.URLSafeName}/${id}`;
-    if (this.offset) payload.parameters["offset"] = this.offset;
-
-    let debugMessage = `\n---------\nURL: ${url}\n\nPayload: ${JSON.stringify(
-      payload
-    )}`;
-
-    const request = Object.assign(
-      {
-        url: url,
-        headers: {
-          Authorization: `Bearer ${this.#airtable.apiKey}`,
-          "Content-Type": "application/json",
-        },
-      },
-      payload
-    );
-    const http = HTTP.create();
-    const response = http.request(request);
-
-    if (response.success == false)
-      return this.#requestError(response, debugMessage);
-
-    const results = {
-      success: response.success,
-      data: this.#formatResponseText(response?.responseText),
+  // Create a short link
+  createLink(target, options = {}) {
+    const url = `${this.#endPointURL}/links`;
+    const body = {
+      target: target,
+      ...options
     };
 
-    debugMessage = `${debugMessage}\n\nResponse: ${response.responseText}`;
-    if (this.#debug) console.log(debugMessage);
+    let http = HTTP.create();
+    let response = http.request({
+      url: url,
+      method: "POST",
+      headers: {
+        "X-API-Key": this.#apiKey,
+        "Content-Type": "application/json"
+      },
+      data: body
+    });
 
-    // save offset and clear params once request is complete
-    this.offset = results.offset;
-    this.#params = {};
+    if (!response.success) {
+      return this.#requestError(response, "Create Link Failed");
+    }
 
-    return results;
+    return JSON.parse(response.responseText);
+  }
+
+  // Get all links
+  getLinks(params = {}) {
+    // Set defaults for pagination
+    const queryParams = {
+      limit: params.limit || 50,
+      skip: params.skip || 0,
+      all: params.all || false
+    };
+
+    let queryString = "?" + Object.entries(queryParams)
+      .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
+      .join("&");
+
+    const url = `${this.#endPointURL}/links${queryString}`;
+
+    let http = HTTP.create();
+    let response = http.request({
+      url: url,
+      method: "GET",
+      headers: {
+        "X-API-Key": this.#apiKey
+      }
+    });
+
+    if (!response.success) {
+      return this.#requestError(response, "Get Links Failed");
+    }
+
+    return JSON.parse(response.responseText);
+  }
+
+  // Get link by ID
+  getLink(id) {
+    const url = `${this.#endPointURL}/links/${id}`;
+
+    let http = HTTP.create();
+    let response = http.request({
+      url: url,
+      method: "GET",
+      headers: {
+        "X-API-Key": this.#apiKey
+      }
+    });
+
+    if (!response.success) {
+      return this.#requestError(response, "Get Link Failed");
+    }
+
+    return JSON.parse(response.responseText);
+  }
+
+  // Update link by ID
+  updateLink(id, target, address) {
+    const url = `${this.#endPointURL}/links/${id}`;
+
+    let http = HTTP.create();
+    let response = http.request({
+      url: url,
+      method: "PATCH",
+      headers: {
+        "X-API-Key": this.#apiKey,
+        "Content-Type": "application/json"
+      },
+      data: { target, address }
+    });
+
+    if (!response.success) {
+      return this.#requestError(response, "Update Link Failed");
+    }
+
+    return JSON.parse(response.responseText);
+  }
+
+  // Delete link by ID
+  deleteLink(id) {
+    const url = `${this.#endPointURL}/links/${id}`;
+
+    let http = HTTP.create();
+    let response = http.request({
+      url: url,
+      method: "DELETE",
+      headers: {
+        "X-API-Key": this.#apiKey
+      }
+    });
+
+    if (!response.success) {
+      return this.#requestError(response, "Delete Link Failed");
+    }
+
+    return { success: true };
+  }
+
+  // Get link statistics
+  getLinkStats(id) {
+    const url = `${this.#endPointURL}/links/${id}/stats`;
+
+    let http = HTTP.create();
+    let response = http.request({
+      url: url,
+      method: "GET",
+      headers: {
+        "X-API-Key": this.#apiKey
+      }
+    });
+
+    if (!response.success) {
+      return this.#requestError(response, "Get Stats Failed");
+    }
+
+    return JSON.parse(response.responseText);
+  }
+
+  // Get user info
+  getUserInfo() {
+    const url = `${this.#endPointURL}/users`;
+
+    let http = HTTP.create();
+    let response = http.request({
+      url: url,
+      method: "GET",
+      headers: {
+        "X-API-Key": this.#apiKey
+      }
+    });
+
+    if (!response.success) {
+      return this.#requestError(response, "Get User Info Failed");
+    }
+
+    return JSON.parse(response.responseText);
+  }
+
+  // Error handling
+  #requestError(response, message) {
+    const errorMessage = `Kutt Error: ${response.statusCode} - ${message}`;
+    app.displayErrorMessage(errorMessage);
+    console.log(`${errorMessage}\n${response.responseText}`);
+    return { success: false, error: errorMessage, statusCode: response.statusCode };
   }
 }
 
-// const fs = require("fs").promises;
-// const path = require("path");
-//
-// class KuttItManager {
-// constructor(apiKey, filePath) {
-//   this.apiClient = new KuttItAPI(apiKey);
-//   this.filePath = filePath;
-//   this.linksMap = new Map();
-// }
-//
-// // Method to retrieve all links and save them in a JSON file
-// async fetchAndSaveLinks() {
-//   try {
-//     const response = await this.apiClient.getLinks(); // Fetching all links
-//     const linksData = response.data;
-//
-//     // Creating a map where URL is the key and link data is the value
-//     const linksMap = new Map();
-//     linksData.forEach((link) => {
-//       linksMap.set(link.target, link);
-//     });
-//
-//     // Saving the map to a JSON file
-//     await fs.writeFile(
-//       this.filePath,
-//       JSON.stringify(Object.fromEntries(linksMap), null, 2)
-//     );
-//     this.linksMap = linksMap;
-//   } catch (error) {
-//     console.error("Error fetching and saving links:", error);
-//   }
-// }
-//
-// // Method to load the JSON file into a map object
-// async loadLinksFromFile() {
-//   try {
-//     const fileExists = await fs
-//       .access(this.filePath, fs.constants.F_OK)
-//       .then(() => true)
-//       .catch(() => false);
-//
-//     if (!fileExists) {
-//       console.log("File does not exist. Fetching and saving links...");
-//       await this.fetchAndSaveLinks();
-//     }
-//
-//     const data = await fs.readFile(this.filePath, "utf8");
-//     const linksObject = JSON.parse(data);
-//     this.linksMap = new Map(Object.entries(linksObject));
-//   } catch (error) {
-//     console.error("Error loading links from file:", error);
-//   }
-// }
-//
-// // Method to create a new link with a check in the map object
-// async createLink(
-//   target,
-//   description = "",
-//   expire_in = "",
-//   password = "",
-//   customurl = "",
-//   reuse = false,
-//   domain = ""
-// ) {
-//   try {
-//     if (this.linksMap.has(target)) {
-//       console.log("Link already exists for this URL:", target);
-//       return this.linksMap.get(target);
-//     }
-//
-//     const newLink = await this.apiClient.createLink(
-//       target,
-//       description,
-//       expire_in,
-//       password,
-//       customurl,
-//       reuse,
-//       domain
-//     );
-//     this.linksMap.set(newLink.target, newLink);
-//
-//     // Optionally, update the JSON file with the new link
-//     await fs.writeFile(
-//       this.filePath,
-//       JSON.stringify(Object.fromEntries(this.linksMap), null, 2)
-//     );
-//
-//     return newLink;
-//   } catch (error) {
-//     console.error("Error creating link:", error);
-//   }
-// }
-// }
-//
-// // Example usage:
-// (async () => {
-// const apiKey = "your_api_key_here";
-// const filePath = path.join(__dirname, "links.json");
-// const kuttItManager = new KuttItManager(apiKey, filePath);
-//
-// try {
-//   // Fetch and save links
-//   await kuttItManager.fetchAndSaveLinks();
-//   console.log("Links fetched and saved.");
-//
-//   // Load links from file
-//   await kuttItManager.loadLinksFromFile();
-//   console.log("Links loaded from file.");
-//
-//   // Create a new link
-//   const newLink = await kuttItManager.createLink(
-//     "https://example.com",
-//     "Example link"
-//   );
-//   if (newLink) {
-//     console.log("New link created:", newLink);
-//   }
-// } catch (error) {
-//   console.error("Error in KuttItManager operations:", error);
-// }
-// })();
+// ***************
+// * LinkShortener Class
+// ***************
+class LinkShortener {
+  #kutt;
+  #cache;
+  #cacheFile = "/Library/Data/links.json";
+  #fmCloud;
+
+  constructor() {
+    this.#kutt = new Kutt();
+    this.#fmCloud = FileManager.createCloud();
+    this.#cache = new Map();
+    this.loadCache();
+  }
+
+  // Load cached links from JSON file
+  loadCache() {
+    try {
+      if (this.#fmCloud.exists(this.#cacheFile)) {
+        const data = this.#fmCloud.readJSON(this.#cacheFile);
+        if (data && typeof data === "object") {
+          // Convert object to Map
+          for (const [key, value] of Object.entries(data)) {
+            this.#cache.set(key, value);
+          }
+          console.log(`Loaded ${this.#cache.size} links from cache`);
+        }
+      } else {
+        console.log("Cache file does not exist. Starting with empty cache.");
+      }
+    } catch (error) {
+      console.log(`Error loading cache: ${error}`);
+      // Initialize with empty cache if file doesn't exist or is invalid
+      this.#cache = new Map();
+    }
+  }
+
+  // Save cache to JSON file
+  #saveCache() {
+    try {
+      // Convert Map to plain object for JSON
+      const cacheObject = Object.fromEntries(this.#cache);
+      this.#fmCloud.writeJSON(this.#cacheFile, cacheObject);
+      console.log(`Saved ${this.#cache.size} links to cache`);
+    } catch (error) {
+      console.log(`Error saving cache: ${error}`);
+    }
+  }
+
+  // Shorten a URL (check cache first)
+  shorten(target, options = {}) {
+    // Check cache first
+    if (this.#cache.has(target)) {
+      console.log(`Cache hit for: ${target}`);
+      return this.#cache.get(target);
+    }
+
+    // Not in cache, call API
+    console.log(`Cache miss for: ${target}, calling API`);
+    const result = this.#kutt.createLink(target, options);
+
+    if (result && !result.error && result.link) {
+      // Add to cache using target URL as key
+      this.#cache.set(target, result);
+      this.#saveCache();
+    }
+
+    return result;
+  }
+
+  // Sync all links from API and update cache
+  sync() {
+    console.log("Syncing links from API...");
+
+    // Fetch all links by setting all=true
+    const result = this.#kutt.getLinks({ all: true });
+
+    if (result && result.data && Array.isArray(result.data)) {
+      // Clear existing cache
+      this.#cache.clear();
+
+      // Add all links to cache, using target URL as key
+      for (const link of result.data) {
+        if (link.target) {
+          this.#cache.set(link.target, link);
+        }
+      }
+
+      // Save updated cache
+      this.#saveCache();
+      console.log(`Synced ${result.data.length} links to cache`);
+      return { success: true, count: result.data.length };
+    }
+
+    return { success: false, error: "Failed to sync links" };
+  }
+
+  // Get a link from cache by target URL
+  getFromCache(target) {
+    return this.#cache.get(target);
+  }
+
+  // Check if a URL is in cache
+  isCached(target) {
+    return this.#cache.has(target);
+  }
+
+  // Get all cached links
+  getAllCached() {
+    return Array.from(this.#cache.values());
+  }
+
+  // Get cache size
+  getCacheSize() {
+    return this.#cache.size;
+  }
+
+  // Clear cache
+  clearCache() {
+    this.#cache.clear();
+    this.#saveCache();
+    console.log("Cache cleared");
+  }
+
+  // Delete a link (from API and cache)
+  deleteLink(id, target) {
+    const result = this.#kutt.deleteLink(id);
+
+    if (result && result.success) {
+      // Remove from cache if target URL is provided
+      if (target && this.#cache.has(target)) {
+        this.#cache.delete(target);
+        this.#saveCache();
+      }
+    }
+
+    return result;
+  }
+
+  // Get direct access to Kutt instance for advanced operations
+  getKuttInstance() {
+    return this.#kutt;
+  }
+}
