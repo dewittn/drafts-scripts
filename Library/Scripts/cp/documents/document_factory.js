@@ -1,5 +1,6 @@
 require("cp/documents/ulysses_document.js");
 require("cp/documents/drafts_document.js");
+require("cp/documents/bear_document.js");
 require("cp/documents/test_document.js");
 
 class DocumentFactory {
@@ -49,7 +50,8 @@ class DocumentFactory {
         doc = new UlyssesDoc(this.#docdependencies, record);
         break;
       case "BearID":
-        doc = new TestDoc(record);
+        this.#docdependencies["settings"] = this.#settings.bearDoc;
+        doc = new BearDoc(this.#docdependencies, record);
         break;
       case "TestID":
         doc = new TestDoc(record);
@@ -80,7 +82,8 @@ class DocumentFactory {
         return new UlyssesDoc(this.#docdependencies);
         break;
       case "note":
-        return new TestDoc(record);
+        this.#docdependencies["settings"] = this.#settings.bearDoc;
+        return new BearDoc(this.#docdependencies);
         break;
       default:
         return this.#ui.displayErrorMessage({
@@ -115,6 +118,7 @@ class DocumentFactory {
     if (record.docIDType != undefined) return record.docIDType;
     if (record.fields?.DraftsID != undefined) return "DraftsID";
     if (record.fields?.UlyssesID != undefined) return "UlyssesID";
+    if (record.fields?.BearID != undefined) return "BearID";
 
     return undefined;
   }
