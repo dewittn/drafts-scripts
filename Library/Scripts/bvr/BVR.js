@@ -11,18 +11,54 @@ if (typeof Bear == "undefined") require("libraries/bear.js");
 if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
 if (typeof CloudFS == "undefined") require("cp/filesystems/CloudFS.js");
 if (typeof Template == "undefined") require("cp/templates/Template.js");
+if (typeof ServiceContainer == "undefined") require("core/ServiceContainer.js");
 require("bvr/messages/message_factory.js");
 
 class BVR {
   static settingsFile = "bvr/settings.yaml";
   #settings;
+  #ui;
+  #services;
 
   constructor() {
-    this.#settings = new Settings(this.settingsFile);
-    this.ui = new DraftsUI(this.uiSettings);
+    this.#services = ServiceContainer.getInstance();
 
-    this.ui.debug = true;
+    // Register services if not already registered
+    if (!this.#services.has('bvrSettings')) {
+      this.#services.register('bvrSettings', () => {
+        if (typeof Settings == "undefined") require("libraries/Settings.js");
+        return new Settings(this.settingsFile);
+      }, true);
+    }
+
+    if (!this.#services.has('bvrUI')) {
+      this.#services.register('bvrUI', (c) => {
+        if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
+        const settings = c.get('bvrSettings');
+        return new DraftsUI(settings.ui);
+      }, true);
+    }
+
     this.#loadWorkspace();
+  }
+
+  get settings() {
+    if (!this.#settings) {
+      this.#settings = this.#services.get('bvrSettings');
+    }
+    return this.#settings;
+  }
+
+  get ui() {
+    if (!this.#ui) {
+      this.#ui = this.#services.get('bvrUI');
+      this.#ui.debug = true;
+    }
+    return this.#ui;
+  }
+
+  set ui(value) {
+    this.#ui = value;
   }
 
   get settingsFile() {
@@ -30,63 +66,63 @@ class BVR {
   }
 
   get uiSettings() {
-    return this.#settings.ui;
+    return this.settings.ui;
   }
 
   get dirPrefix() {
-    return this.#settings.dirPrefix != undefined
-      ? this.#settings.dirPrefix
+    return this.settings.dirPrefix != undefined
+      ? this.settings.dirPrefix
       : "";
   }
 
   get teamSettingsFile() {
-    return `${this.dirPrefix}${this.#settings.teamSettingsFile}`;
+    return `${this.dirPrefix}${this.settings.teamSettingsFile}`;
   }
 
   get ppSettingsFile() {
-    return `${this.dirPrefix}${this.#settings.ppSettingsFile}`;
+    return `${this.dirPrefix}${this.settings.ppSettingsFile}`;
   }
 
   get defaultTemplateFile() {
-    return this.#settings.defaultTemplateFile;
+    return this.settings.defaultTemplateFile;
   }
 
   get msgTeamNameTag() {
-    return this.#settings.msgTeamNameTag;
+    return this.settings.msgTeamNameTag;
   }
 
   get weekIDTemplateTag() {
-    return this.#settings.weekIDTemplateTag;
+    return this.settings.weekIDTemplateTag;
   }
 
   get workspace() {
-    return this.#settings.workspace;
+    return this.settings.workspace;
   }
 
   get ppDataFile() {
-    const dataFile = this.#settings.ppDataFile != undefined
+    const dataFile = this.settings.ppDataFile != undefined
       ? `practicePlans.json`
-      : this.#settings.ppDataFile;
+      : this.settings.ppDataFile;
 
     return `${this.dirPrefix}${dataFile}`;
   }
 
   get ppData() {
-    if (this.#settings.ppData != undefined) return this.#settings.ppData;
+    if (this.settings.ppData != undefined) return this.settings.ppData;
 
     return new DataFile(this.ppDataFile);
   }
 
   get coachingDraftID() {
-    return this.#settings.coachingDraftID;
+    return this.settings.coachingDraftID;
   }
 
   get recordsFile() {
-    return `${this.dirPrefix}${this.#settings.recordsFile}`;
+    return `${this.dirPrefix}${this.settings.recordsFile}`;
   }
 
   get globalTags() {
-    return this.#settings.globalTemplateTags;
+    return this.settings.globalTemplateTags;
   }
 
   createDraftFromTemplate(settings) {
