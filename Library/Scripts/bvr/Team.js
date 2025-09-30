@@ -1,3 +1,5 @@
+if (typeof ServiceContainer == "undefined") require("core/ServiceContainer.js");
+
 class Team {
   #bvr;
   #weekID;
@@ -5,15 +7,69 @@ class Team {
   #settings;
   #teamData;
   #tmplSettings;
+  #services;
+  #attendance;
+  #season;
 
   constructor(teamID = "") {
-    this.#bvr = new BVR();
-    this.#settings = new Settings(this.#bvr.teamSettingsFile);
-    this.#teamData = this.#getTeamData(teamID);
-    this.#tmplSettings = this.#loadTemplateSettings();
+    this.#services = ServiceContainer.getInstance();
 
-    this.attendace = new Attendance(this.dependencies);
-    this.season = new Season(this.dependencies);
+    // Register BVR service if not already registered
+    if (!this.#services.has('bvr')) {
+      this.#services.register('bvr', () => {
+        if (typeof BVR == "undefined") require("bvr/BVR.js");
+        return new BVR();
+      }, true);
+    }
+
+    this.#teamData = this.#getTeamData(teamID);
+  }
+
+  // Lazy getters for dependencies
+  get bvr() {
+    if (!this.#bvr) {
+      this.#bvr = this.#services.get('bvr');
+    }
+    return this.#bvr;
+  }
+
+  get settings() {
+    if (!this.#settings) {
+      if (typeof Settings == "undefined") require("libraries/Settings.js");
+      this.#settings = new Settings(this.bvr.teamSettingsFile);
+    }
+    return this.#settings;
+  }
+
+  get tmplSettings() {
+    if (!this.#tmplSettings) {
+      this.#tmplSettings = this.#loadTemplateSettings();
+    }
+    return this.#tmplSettings;
+  }
+
+  get attendace() {
+    if (!this.#attendance) {
+      if (typeof Attendance == "undefined") require("bvr/Attendance.js");
+      this.#attendance = new Attendance(this.dependencies);
+    }
+    return this.#attendance;
+  }
+
+  set attendace(value) {
+    this.#attendance = value;
+  }
+
+  get season() {
+    if (!this.#season) {
+      if (typeof Season == "undefined") require("bvr/Season.js");
+      this.#season = new Season(this.dependencies);
+    }
+    return this.#season;
+  }
+
+  set season(value) {
+    this.#season = value;
   }
 
   // **********************
@@ -21,15 +77,15 @@ class Team {
   // **********************
 
   get ui() {
-    return this.#bvr.ui;
+    return this.bvr.ui;
   }
 
   get dependencies() {
-    return { bvr: this.#bvr, team: this, tmplSettings: this.#tmplSettings };
+    return { bvr: this.bvr, team: this, tmplSettings: this.tmplSettings };
   }
 
   get teamsData() {
-    return this.#settings.teamsData;
+    return this.settings.teamsData;
   }
 
   // Team Settings
@@ -88,7 +144,8 @@ class Team {
     const settingsFile = this.#teamData.gameReportSettingsFile == undefined
       ? `${this.id}/gameReportSettings.yaml`
       : this.#teamData.gameReportSettings;
-    return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
+    if (typeof Settings == "undefined") require("libraries/Settings.js");
+    return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 
   get attendanceSettings() {
@@ -99,7 +156,8 @@ class Team {
     const settingsFile = this.#teamData.attendanceSettingsFile == undefined
       ? `${this.id}/attendanceSettings.yaml`
       : this.#teamData.attendanceSettingsFile;
-    return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
+    if (typeof Settings == "undefined") require("libraries/Settings.js");
+    return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 
   get defaultTag() {
@@ -175,16 +233,18 @@ class Team {
   }
 
   createGameDayTasks() {
-    if (this.#tmplSettings?.thingsProject == undefined) {
+    if (this.tmplSettings?.thingsProject == undefined) {
       return this.ui.displayAppMessage("info", "No game day tasks found.");
     }
 
+    if (typeof Game == "undefined") require("bvr/Game.js");
     const game = new Game(this.dependencies);
     game.recordDate();
     game.recordOpponent();
     game.recordLocation();
 
     const tmplSettings = game.generateTmplSettings("thingsProject");
+    if (typeof Template == "undefined") require("cp/templates/Template.js");
     const projectTemplate = new Template(tmplSettings);
     const thingsParserAction = Action.find("Things Parser");
     app.queueAction(thingsParserAction, projectTemplate.draft);
@@ -207,13 +267,13 @@ class Team {
   }
 
   insertPlayerName() {
-    const { menuSettings, pickerData } = this.#bvr.ui.settings(
+    const { menuSettings, pickerData } = this.bvr.ui.settings(
       "insertPlayerName",
     );
     this.attendaceDraft = Draft.find(this.attendanceDraftID);
 
     const names = this.attendaceDraft.tasks
-      .map((task) => this.#bvr.cleanUpName(task.line))
+      .map((task) => this.bvr.cleanUpName(task.line))
       .slice(2);
 
     pickerData.columns = [names];
@@ -222,7 +282,7 @@ class Team {
       data: pickerData,
     });
 
-    const playerPrompt = this.#bvr.ui.buildMenu(menuSettings);
+    const playerPrompt = this.bvr.ui.buildMenu(menuSettings);
     if (playerPrompt.show() == false) return editor.activate();
 
     const pickerValue = playerPrompt.fieldValues[pickerData.name][0];
@@ -232,7 +292,7 @@ class Team {
   }
 
   updateRoster() {
-    const { menuSettings } = this.#bvr.ui.settings("updateRoster");
+    const { menuSettings } = this.bvr.ui.settings("updateRoster");
     const attendaceDraft = Draft.find(this.attendanceDraftID);
 
     const currentYear = new Date().getFullYear();
@@ -297,16 +357,17 @@ class Team {
   // **********************
 
   #processNote(workingDraft) {
-    const { menuSettings, tempMessage } = this.#bvr.ui.settings("notePrompt");
+    const { menuSettings, tempMessage } = this.bvr.ui.settings("notePrompt");
     menuSettings.menuMessage = `${tempMessage}\n\n${workingDraft.displayTitle}`;
 
-    const notePrompt = this.#bvr.ui.buildMenu(menuSettings);
+    const notePrompt = this.bvr.ui.buildMenu(menuSettings);
 
     if (notePrompt.show() == false) return false;
     if (notePrompt.buttonPressed == "leave") return true;
 
     bearTags(workingDraft);
     updateWikiLinks(workingDraft);
+    if (typeof Template == "undefined") require("cp/templates/Template.js");
     const bearTemplate = Template.load("bear-note.md");
     const bearNote = workingDraft.processTemplate(bearTemplate);
 
@@ -340,14 +401,14 @@ class Team {
   }
 
   #getTeamIDFromPrompt() {
-    const { menuSettings } = this.#bvr.ui.settings("getTeamIDFromPrompt");
+    const { menuSettings } = this.bvr.ui.settings("getTeamIDFromPrompt");
     this.teamsData.forEach((team) =>
       menuSettings.menuItems.push({
         type: "button",
         data: { name: team.name, value: team.id },
       })
     );
-    const selectMenu = this.#bvr.ui.buildMenu(menuSettings);
+    const selectMenu = this.bvr.ui.buildMenu(menuSettings);
 
     selectMenu.show();
     return selectMenu.buttonPressed;
@@ -361,7 +422,8 @@ class Team {
     const settingsFile = this.#teamData.templateSettingsFile == undefined
       ? `${this.id}/templateSettings.yaml`
       : this.#teamData.templateSettingsFile;
-    return new Settings(`${this.#bvr.dirPrefix}${settingsFile}`);
+    if (typeof Settings == "undefined") require("libraries/Settings.js");
+    return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 
   #insertTextPosAtEnd(text) {
