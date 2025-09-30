@@ -109,9 +109,11 @@ class Destinations {
       : this.#text.titleCase(destination);
   }
 
-  // Need to rewrite this in order to implement destination actions
+  // LEGACY: Need to rewrite this in order to implement destination actions
   // Specifically the convertDoc logic will need to be changed.
   // Also should create a default action to fire when the status is writing
+  // NOTE: This method is maintained for backward compatibility with destinations
+  // that have not been migrated to the action system
   lookupDocConvertionData(destination, status = "") {
     const destData = this.data[destination];
     return {
@@ -119,5 +121,11 @@ class Destinations {
         destData?.statusWhenToConvert?.toLowerCase() == status.toLowerCase(),
       newDocType: destData?.convertTo,
     };
+  }
+
+  // Check if destination has actions enabled
+  hasActionsEnabled(destination) {
+    const destData = this.data[destination];
+    return destData?.actionsEnabled === true;
   }
 }

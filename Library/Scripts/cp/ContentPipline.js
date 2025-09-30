@@ -8,6 +8,7 @@ require("cp/filesystems/CloudFS.js");
 require("cp/databases/AirTableDB.js");
 require("cp/documents/document_factory.js");
 require("cp/templates/template_factory.js");
+require("cp/actions/ActionSystem.js");
 
 class ContentPipeline {
   static basePath = "/Library/Data/cp/";
@@ -23,6 +24,7 @@ class ContentPipeline {
   #activeDoc;
   #destinations;
   #document_factory;
+  #actionSystem;
 
   constructor(table = "Content") {
     this.#tableName = table;
@@ -53,6 +55,9 @@ class ContentPipeline {
     dependancies["database"] = this.#db;
 
     this.#document_factory = new DocumentFactory(dependancies);
+    dependancies["documentFactory"] = this.#document_factory;
+
+    this.#actionSystem = new ActionSystem(dependancies);
     this.#activeDoc = null;
 
     this.#loadWorkspace();
@@ -99,6 +104,10 @@ class ContentPipeline {
 
   get recentRecordsUpdated() {
     return this.#recent.save(this.#activeDoc);
+  }
+
+  get actionSystem() {
+    return this.#actionSystem;
   }
 
   // **************
@@ -446,7 +455,7 @@ class ContentPipeline {
   // * updateStatusOfDoc()
   // * Updates the status of a document
   // **************
-  updateStatusOfDoc(docID, docIDType) {
+  async updateStatusOfDoc(docID, docIDType) {
     const { statusList } = this.#settings;
     const { errorMessage, errorMessage2, successMessage, menuSettings } =
       this.#ui.settings("updateStatusOfDoc");
@@ -491,14 +500,37 @@ class ContentPipeline {
     // Save button choice as newStatus
     const newStatus = menu.buttonPressed;
     if (newStatus == "back") return this.#functionToRunNext("modifyActiveDoc");
+
+    const oldStatus = this.#activeDoc.status;
     this.#activeDoc.status = newStatus;
 
-    const { covertDoc, newDocType } =
-      this.#destinations.lookupDocConvertionData(
-        this.#activeDoc.destination,
-        newStatus
-      );
-    if (covertDoc) this.#convertActiveDoc(newDocType);
+    // NEW: Evaluate triggers for status change
+    const actionResults = await this.#actionSystem.evaluateTriggers(
+      this.#activeDoc,
+      "status_change",
+      { oldStatus, newStatus }
+    );
+
+    // LEGACY: Fallback to old conversion logic if no actions configured
+    if (actionResults.length === 0 && !this.#actionSystem.hasActionsForDestination(this.#activeDoc.destination)) {
+      const { covertDoc, newDocType } =
+        this.#destinations.lookupDocConvertionData(
+          this.#activeDoc.destination,
+          newStatus
+        );
+      if (covertDoc) this.#convertActiveDoc(newDocType);
+    }
+
+    // If document was converted, update activeDoc reference
+    const convertedDoc = actionResults.find(r => r.success && r.newDocID);
+    if (convertedDoc) {
+      // Update activeDoc to the converted document
+      this.#activeDoc = this.#document_factory.load({
+        docID: convertedDoc.newDocID,
+        docIDType: convertedDoc.newDocIDType,
+      });
+      this.#activeDoc.record = this.#db.retrieveRecordByDocID(this.#activeDoc);
+    }
 
     this.#updateRecentRecords();
     this.#updateDatabase();

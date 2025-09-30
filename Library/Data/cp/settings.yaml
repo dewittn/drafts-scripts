@@ -28,6 +28,11 @@ destinations:
         data:
           name: "Ok"
           value: "ok"
+actionSystem:
+  actionsFile: actions.yaml
+  historyFile: action_history.yaml
+  maxHistoryEntries: 1000
+  enableLogging: true
 statuses:
   selectStatus:
     errorMessage: "Error: You must select a status!!"
