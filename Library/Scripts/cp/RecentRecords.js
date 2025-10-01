@@ -7,12 +7,12 @@ class RecentRecords {
   #recentDocuments;
   #stackTrace;
 
-  constructor(dependencies) {
-    this.#ui = dependencies.ui;
-    this.#db = dependencies.database;
-    this.#fs = dependencies.fileSystem;
-    this.#table = dependencies.tableName;
-    this.#recentDocsFile = dependencies.settings.recentDocsFile;
+  constructor(dependencyProvider) {
+    this.#ui = dependencyProvider.ui;
+    this.#db = dependencyProvider.database;
+    this.#fs = dependencyProvider.fileSystem;
+    this.#table = dependencyProvider.tableName;
+    this.#recentDocsFile = dependencyProvider.settings.recentDocsFile;
     this.#recentDocuments = this.loadRecent();
   }
 

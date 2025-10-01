@@ -6,12 +6,12 @@ class Destinations {
   #settings;
   #data;
 
-  constructor(dependencies) {
-    this.#ui = dependencies.ui;
-    this.#fs = dependencies.fileSystem;
-    this.#table = dependencies.tableName;
-    this.#settings = dependencies.settings.destinations;
-    this.#text = dependencies.textUltilities;
+  constructor(dependencyProvider) {
+    this.#ui = dependencyProvider.ui;
+    this.#fs = dependencyProvider.fileSystem;
+    this.#table = dependencyProvider.tableName;
+    this.#settings = dependencyProvider.settings.destinations;
+    this.#text = dependencyProvider.textUltilities;
     this.#data = this.#fs.read(this.#settings.destinationsFile);
   }
 

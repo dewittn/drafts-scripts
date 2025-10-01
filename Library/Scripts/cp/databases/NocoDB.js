@@ -10,12 +10,12 @@ class NocoController {
   #defaultFields;
   #databaseError = false;
 
-  constructor(dependencies) {
-    this.#ui = dependencies.ui;
-    this.#tableName = dependencies.tableName;
-    this.#settings = dependencies.settings.nocodb;
+  constructor(dependencyProvider) {
+    this.#ui = dependencyProvider.ui;
+    this.#tableName = dependencyProvider.tableName;
+    this.#settings = dependencyProvider.settings.nocodb;
     this.#defaultFields = this.#settings.defaultFields;
-    this.#text = dependencies.textUtilities;
+    this.#text = dependencyProvider.textUltilities;
     this.#database = new NocoDB().base().table(this.#tableName);
   }
 

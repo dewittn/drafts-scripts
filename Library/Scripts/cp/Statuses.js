@@ -3,9 +3,9 @@ class Statuses {
   #settings;
   #statusList;
 
-  constructor(dependencies) {
-    this.#ui = dependencies.ui;
-    this.#settings = dependencies.settings.statuses;
+  constructor(dependencyProvider) {
+    this.#ui = dependencyProvider.ui;
+    this.#settings = dependencyProvider.settings.statuses;
     this.#statusList = this.#settings.statusList;
   }
 
