@@ -1,3 +1,4 @@
+require("core/SimpleDependencyProvider.js");
 require("cp/Statuses.js");
 require("cp/Destinations.js");
 require("cp/RecentRecords.js");
@@ -106,20 +107,28 @@ const record = {
 const ui = new DraftsUI();
 const fileSystem = new TestFS(destinationsData);
 
-const dependencies = {
+// Create lazy dependency provider
+let statusesInstance, destsInstance;
+const dependencyProvider = new SimpleDependencyProvider({
   ui: ui,
   fileSystem: fileSystem,
   settings: settings,
   tableName: "table1",
-};
+  defaultTag: settings.defaultTag,
+  textUltilities: undefined,
+  statuses: () => statusesInstance,
+  destinations: () => destsInstance,
+  recentRecords: undefined,
+  database: undefined,
+});
 
-const statuses = new Statuses(dependencies);
-dependencies["statuses"] = statuses;
+const statuses = new Statuses(dependencyProvider);
+statusesInstance = statuses;
 
-const dests = new Destinations(dependencies);
-dependencies["destinations"] = dests;
+const dests = new Destinations(dependencyProvider);
+destsInstance = dests;
 
-const document_factory = new DocumentFactory(dependencies);
+const document_factory = new DocumentFactory(dependencyProvider);
 
 const testDraft = document_factory.load(record);
 
