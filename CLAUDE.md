@@ -15,6 +15,7 @@ The project uses Gulp for build automation and file synchronization:
 - `npm run debug` - Display sync paths for debugging
 - `gulp inject` - Process template files (.tpl) using 1Password CLI to inject secrets
 - `gulp data` - Copy JSON data files from iCloud to local Library
+- `gulp yaml2json` - Convert YAML config files to JSON (runs automatically during build)
 
 ## Architecture
 
@@ -48,10 +49,12 @@ The project uses Gulp for build automation and file synchronization:
 
 ### Configuration System
 
-The project uses YAML files in `Library/Data/` for configuration:
+The project uses a build-time compilation approach for configuration:
 - Template files (`.tpl`) contain secrets managed by 1Password CLI
-- Settings files (`.yaml`) store processed configuration
-- JSON files store structured data like base IDs and destinations
+- YAML files (`.yaml`) are human-friendly source files for configuration
+- JSON files (`.json`) are build artifacts generated from YAML files at build time
+- Scripts load JSON files at runtime (no YAML parsing overhead)
+- YAML files should be edited for configuration changes; JSON files are auto-generated
 
 ### Sync Workflow
 
@@ -60,9 +63,10 @@ Files are developed locally in `Library/` and synchronized to the iCloud Drafts 
 
 The sync process:
 1. Copies JSON data from iCloud to local
-2. Processes template files to inject secrets
-3. Syncs all files to iCloud Drafts directory
-4. Optionally watches for changes in development mode
+2. Processes template files to inject secrets (`.tpl` → `.yaml`)
+3. Converts YAML config files to JSON (`.yaml` → `.json`)
+4. Syncs all files to iCloud Drafts directory
+5. Optionally watches for changes in development mode
 
 ## Secret Management
 

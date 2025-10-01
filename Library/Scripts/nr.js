@@ -1,4 +1,3 @@
-require("libraries/js-yaml.js");
 // NR Scripts for Drafts App
 // This is a test
 //------------
@@ -216,5 +215,6 @@ function getWorkingTitle() {
 
 function loadSettings(file) {
   const fmCloud = FileManager.createCloud(); // iCloud
-  return YAML.parse(fmCloud.readString(`/Library/Data/${file}`));
+  const jsonFile = file.replace(/\.yaml$/, ".json");
+  return fmCloud.readJSON(`/Library/Data/${jsonFile}`);
 }

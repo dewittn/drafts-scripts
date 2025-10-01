@@ -1,5 +1,3 @@
-require("libraries/js-yaml.js");
-
 class CloudFS {
   static regEx = /[^\\]*\.(\w+)$/;
   #fmCloud;
@@ -26,11 +24,13 @@ class CloudFS {
     if (fileName == undefined) return undefined;
 
     const extention = this.regEx.exec(fileName)[1];
-    const filePath = `${this.basePath}/${fileName}`;
+    let filePath = `${this.basePath}/${fileName}`;
 
     switch (extention) {
       case "yaml":
-        return YAML.parse(this.#fmCloud.readString(filePath));
+        // YAML files are converted to JSON at build time
+        filePath = filePath.replace(/\.yaml$/, ".json");
+        return this.#fmCloud.readJSON(filePath);
         break;
       case "json":
         return this.#fmCloud.readJSON(filePath);
@@ -43,12 +43,14 @@ class CloudFS {
 
   write(fileName, data) {
     const extention = this.regEx.exec(fileName)[1];
-    const filePath = `${this.basePath}/${fileName}`;
+    let filePath = `${this.basePath}/${fileName}`;
 
     switch (extention) {
       case "yaml":
-        const yamlData = YAML.parse(data);
-        return this.#fmCloud.writeString(filePath, yamlData);
+        // YAML files are converted to JSON at build time
+        filePath = filePath.replace(/\.yaml$/, ".json");
+        const scrubbedYamlData = JSON.parse(JSON.stringify(data));
+        return this.#fmCloud.writeJSON(filePath, scrubbedYamlData);
         break;
       case "json":
         // fix to prevent JSONSerialization from crashing

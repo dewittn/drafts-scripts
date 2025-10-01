@@ -6,6 +6,9 @@ import { exec } from "child_process";
 import log from "fancy-log";
 import { readdir, stat, unlink } from "fs/promises";
 import { join } from "path";
+import yaml from "js-yaml";
+import { readFileSync, writeFileSync } from "fs";
+import { readdirSync, statSync } from "fs";
 const srcDir = "./Library";
 const destDir =
   `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`;
@@ -104,12 +107,52 @@ async function cleanSettings(cb) {
   cb();
 }
 
-const _default = series(copyJSONData, injectSecrets, rsyncLibrary);
+function convertYamlToJson(cb) {
+  const convertFile = (filePath) => {
+    try {
+      const yamlContent = readFileSync(filePath, "utf8");
+      const jsonData = yaml.load(yamlContent);
+      const jsonFilePath = filePath.replace(/\.yaml$/, ".json");
+      writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2));
+      log(`Converted: ${filePath} → ${jsonFilePath}`);
+    } catch (err) {
+      log.error(`Error converting ${filePath}: ${err.message}`);
+    }
+  };
+
+  const processEntry = (dir, entry) => {
+    const filePath = join(dir, entry);
+    const fileStat = statSync(filePath);
+
+    if (fileStat.isDirectory()) {
+      findAndConvertYaml(filePath);
+    } else if (entry.endsWith(".yaml")) {
+      convertFile(filePath);
+    }
+  };
+
+  const findAndConvertYaml = (dir) => {
+    try {
+      const entries = readdirSync(dir);
+      entries.forEach(entry => processEntry(dir, entry));
+    } catch (err) {
+      if (err.code !== "ENOENT") {
+        log.error(`Error reading directory ${dir}: ${err.message}`);
+      }
+    }
+  };
+
+  findAndConvertYaml(join(srcDir, "Data"));
+  cb();
+}
+
+const _default = series(copyJSONData, injectSecrets, convertYamlToJson, rsyncLibrary);
 export { _default as default };
-const _watch = series(copyJSONData, injectSecrets, rsyncLibrary, watchFiles);
+const _watch = series(copyJSONData, injectSecrets, convertYamlToJson, rsyncLibrary, watchFiles);
 export { _watch as watch };
 export const sync = rsyncLibrary;
 export const debug = logVaribles;
 export const inject = injectSecrets;
 export const data = copyJSONData;
 export const clean = cleanSettings;
+export const yaml2json = convertYamlToJson;
