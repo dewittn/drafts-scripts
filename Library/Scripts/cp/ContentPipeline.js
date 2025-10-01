@@ -1,8 +1,8 @@
 // Content Pipeline Files
+require("cp/DependencyProvider.js");
 require("cp/Statuses.js");
 require("cp/Destinations.js");
 require("cp/RecentRecords.js");
-require("cp/TextUtilities.js");
 require("cp/ui/DraftsUI.js");
 require("cp/filesystems/CloudFS.js");
 require("cp/databases/NocoDB.js");
@@ -25,6 +25,7 @@ class ContentPipeline {
   #destinations;
   #document_factory;
   #services;
+  #dependencyProvider;
 
   constructor(table = "Content") {
     this.#tableName = table;
@@ -34,40 +35,49 @@ class ContentPipeline {
     // Register services if not already registered
     this.#registerServices(table);
 
+    // Create dependency provider for lazy dependency injection
+    this.#dependencyProvider = new DependencyProvider(
+      this,
+      this.#tableName,
+      this.settings.defaultTag[this.#tableName]
+    );
+
     this.#loadWorkspace();
   }
 
   #registerServices(table) {
     // Settings
-    if (!this.#services.has('cpSettings')) {
-      this.#services.register('cpSettings', () => {
+    if (!this.#services.has("cpSettings")) {
+      this.#services.register("cpSettings", () => {
         if (typeof Settings == "undefined") require("libraries/Settings.js");
         return new Settings(this.settingsFile);
       }, true);
     }
 
     // File System
-    if (!this.#services.has('cpFileSystem')) {
-      this.#services.register('cpFileSystem', () => {
+    if (!this.#services.has("cpFileSystem")) {
+      this.#services.register("cpFileSystem", () => {
         if (typeof CloudFS == "undefined") require("cp/filesystems/CloudFS.js");
         return new CloudFS(this.basePath);
       }, true);
     }
 
     // UI
-    if (!this.#services.has('cpUI')) {
-      this.#services.register('cpUI', (c) => {
+    if (!this.#services.has("cpUI")) {
+      this.#services.register("cpUI", (c) => {
         if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
-        const settings = c.get('cpSettings');
+        const settings = c.get("cpSettings");
         return new DraftsUI(settings.ui);
       }, true);
     }
 
     // Text Utilities
-    if (!this.#services.has('textUtilities')) {
-      this.#services.register('textUtilities', () => {
-        if (typeof TextUtilities == "undefined") require("cp/TextUtilities.js");
-        return new TextUtilities();
+    if (!this.#services.has("textUtilities")) {
+      this.#services.register("textUtilities", () => {
+        if (typeof TextUltilities == "undefined") {
+          require("cp/TextUtilities.js");
+        }
+        return new TextUltilities();
       }, true);
     }
   }
@@ -75,28 +85,28 @@ class ContentPipeline {
   // Lazy getters for all dependencies
   get settings() {
     if (!this.#settings) {
-      this.#settings = this.#services.get('cpSettings');
+      this.#settings = this.#services.get("cpSettings");
     }
     return this.#settings;
   }
 
   get fs() {
     if (!this.#fs) {
-      this.#fs = this.#services.get('cpFileSystem');
+      this.#fs = this.#services.get("cpFileSystem");
     }
     return this.#fs;
   }
 
   get ui() {
     if (!this.#ui) {
-      this.#ui = this.#services.get('cpUI');
+      this.#ui = this.#services.get("cpUI");
     }
     return this.#ui;
   }
 
   get text() {
     if (!this.#text) {
-      this.#text = this.#services.get('textUtilities');
+      this.#text = this.#services.get("textUtilities");
     }
     return this.#text;
   }
@@ -104,7 +114,7 @@ class ContentPipeline {
   get statuses() {
     if (!this.#statuses) {
       if (typeof Statuses == "undefined") require("cp/Statuses.js");
-      this.#statuses = new Statuses(this.#getDependencies());
+      this.#statuses = new Statuses(this.#dependencyProvider);
     }
     return this.#statuses;
   }
@@ -112,7 +122,7 @@ class ContentPipeline {
   get destinations() {
     if (!this.#destinations) {
       if (typeof Destinations == "undefined") require("cp/Destinations.js");
-      this.#destinations = new Destinations(this.#getDependencies());
+      this.#destinations = new Destinations(this.#dependencyProvider);
     }
     return this.#destinations;
   }
@@ -120,40 +130,29 @@ class ContentPipeline {
   get recent() {
     if (!this.#recent) {
       if (typeof RecentRecords == "undefined") require("cp/RecentRecords.js");
-      this.#recent = new RecentRecords(this.#getDependencies());
+      this.#recent = new RecentRecords(this.#dependencyProvider);
     }
     return this.#recent;
   }
 
   get db() {
     if (!this.#db) {
-      if (typeof NocoController == "undefined") require("cp/databases/NocoDB.js");
-      this.#db = new NocoController(this.#getDependencies());
+      if (typeof NocoController == "undefined") {
+        require("cp/databases/NocoDB.js");
+      }
+      this.#db = new NocoController(this.#dependencyProvider);
     }
     return this.#db;
   }
 
   get document_factory() {
     if (!this.#document_factory) {
-      if (typeof DocumentFactory == "undefined") require("cp/documents/document_factory.js");
-      this.#document_factory = new DocumentFactory(this.#getDependencies());
+      if (typeof DocumentFactory == "undefined") {
+        require("cp/documents/document_factory.js");
+      }
+      this.#document_factory = new DocumentFactory(this.#dependencyProvider);
     }
     return this.#document_factory;
-  }
-
-  #getDependencies() {
-    return {
-      ui: this.ui,
-      fileSystem: this.fs,
-      settings: this.settings,
-      tableName: this.#tableName,
-      defaultTag: this.settings.defaultTag[this.#tableName],
-      textUtilities: this.text,
-      statuses: this.#statuses,
-      destinations: this.#destinations,
-      recentRecords: this.#recent,
-      database: this.#db,
-    };
   }
 
   // **************
