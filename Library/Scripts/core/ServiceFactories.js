@@ -96,114 +96,52 @@ function setupContentPipelineServices() {
     return new TextUtilities();
   }, true);
 
-  // Statuses - depends on multiple services
-  container.register('cpStatuses', (c) => {
-    if (typeof Statuses == "undefined") require("cp/Statuses.js");
-    const settings = c.get('cpSettings');
-    const ui = c.get('cpUI');
-    const fs = c.get('cpFileSystem');
-    const textUtil = c.get('textUtilities');
+  // Dependency Provider - provides lazy access to all CP dependencies
+  container.register('cpDependencyProvider', (c) => {
+    if (typeof SimpleDependencyProvider == "undefined") require("core/SimpleDependencyProvider.js");
 
-    return new Statuses({
-      ui: ui,
-      fileSystem: fs,
-      settings: settings,
+    return new SimpleDependencyProvider({
+      ui: () => c.get('cpUI'),
+      fileSystem: () => c.get('cpFileSystem'),
+      settings: () => c.get('cpSettings'),
+      textUltilities: () => c.get('textUtilities'),
       tableName: "Content",
-      defaultTag: settings.defaultTag["Content"],
-      textUtilities: textUtil,
+      defaultTag: () => c.get('cpSettings').defaultTag["Content"],
+      statuses: () => c.get('cpStatuses'),
+      destinations: () => c.get('cpDestinations'),
+      recentRecords: () => c.get('cpRecentRecords'),
+      database: () => c.get('cpDatabase'),
     });
   }, true);
 
-  // Destinations - depends on multiple services
+  // Statuses - depends on dependency provider
+  container.register('cpStatuses', (c) => {
+    if (typeof Statuses == "undefined") require("cp/Statuses.js");
+    return new Statuses(c.get('cpDependencyProvider'));
+  }, true);
+
+  // Destinations - depends on dependency provider
   container.register('cpDestinations', (c) => {
     if (typeof Destinations == "undefined") require("cp/Destinations.js");
-    const settings = c.get('cpSettings');
-    const ui = c.get('cpUI');
-    const fs = c.get('cpFileSystem');
-    const textUtil = c.get('textUtilities');
-    const statuses = c.get('cpStatuses');
-
-    return new Destinations({
-      ui: ui,
-      fileSystem: fs,
-      settings: settings,
-      tableName: "Content",
-      defaultTag: settings.defaultTag["Content"],
-      textUtilities: textUtil,
-      statuses: statuses,
-    });
+    return new Destinations(c.get('cpDependencyProvider'));
   }, true);
 
   // Recent Records
   container.register('cpRecentRecords', (c) => {
     if (typeof RecentRecords == "undefined") require("cp/RecentRecords.js");
-    const settings = c.get('cpSettings');
-    const ui = c.get('cpUI');
-    const fs = c.get('cpFileSystem');
-    const textUtil = c.get('textUtilities');
-    const statuses = c.get('cpStatuses');
-    const destinations = c.get('cpDestinations');
-
-    return new RecentRecords({
-      ui: ui,
-      fileSystem: fs,
-      settings: settings,
-      tableName: "Content",
-      defaultTag: settings.defaultTag["Content"],
-      textUtilities: textUtil,
-      statuses: statuses,
-      destinations: destinations,
-    });
+    return new RecentRecords(c.get('cpDependencyProvider'));
   }, true);
 
   // Database
   container.register('cpDatabase', (c) => {
     if (typeof NocoController == "undefined") require("cp/databases/NocoDB.js");
-    const settings = c.get('cpSettings');
-    const ui = c.get('cpUI');
-    const fs = c.get('cpFileSystem');
-    const textUtil = c.get('textUtilities');
-    const statuses = c.get('cpStatuses');
-    const destinations = c.get('cpDestinations');
-    const recent = c.get('cpRecentRecords');
-
-    return new NocoController({
-      ui: ui,
-      fileSystem: fs,
-      settings: settings,
-      tableName: "Content",
-      defaultTag: settings.defaultTag["Content"],
-      textUtilities: textUtil,
-      statuses: statuses,
-      destinations: destinations,
-      recentRecords: recent,
-    });
+    return new NocoController(c.get('cpDependencyProvider'));
   }, true);
 
   // Document Factory
   container.register('cpDocumentFactory', (c) => {
     if (typeof DocumentFactory == "undefined") require("cp/documents/document_factory.js");
-    const settings = c.get('cpSettings');
-    const ui = c.get('cpUI');
-    const fs = c.get('cpFileSystem');
-    const textUtil = c.get('textUtilities');
-    const statuses = c.get('cpStatuses');
-    const destinations = c.get('cpDestinations');
-    const recent = c.get('cpRecentRecords');
-    const db = c.get('cpDatabase');
-
-    return new DocumentFactory({
-      ui: ui,
-      fileSystem: fs,
-      settings: settings,
-      tableName: "Content",
-      defaultTag: settings.defaultTag["Content"],
-      textUtilities: textUtil,
-      statuses: statuses,
-      destinations: destinations,
-      recentRecords: recent,
-      database: db,
-    });
+    return new DocumentFactory(c.get('cpDependencyProvider'));
   }, true);
 }
 
