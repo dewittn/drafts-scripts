@@ -12,7 +12,7 @@ class TemplateFactory {
   }
 
   create(settings) {
-    const { destination, templateName } = settings;
+    const { destination, templateName, uiSettings } = settings;
 
     switch (templateName) {
       case "authorUpdate":
@@ -21,7 +21,7 @@ class TemplateFactory {
         return new BeyondTheBook();
       default:
         // Prompt for title and status of new draft
-        const { infoMessage, menuSettings } = this.#settings.createNewDraft;
+        const { infoMessage, menuSettings } = uiSettings;
         const menu = this.#ui.buildMenu(menuSettings);
         if (menu.show() == false) return context.cancel();
 

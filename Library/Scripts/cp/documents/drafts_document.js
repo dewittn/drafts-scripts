@@ -212,6 +212,7 @@ class DraftsDoc {
     const templateDraft = this.#template_factory.create({
       destination: this.destination,
       templateName: this.#destinations.lookupTemplate(this.destination),
+      uiSettings: this.#settings.createNewDraft,
     });
 
     return templateDraft.draft;
