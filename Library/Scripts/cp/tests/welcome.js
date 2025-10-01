@@ -1,5 +1,5 @@
 // Content Pipeline Open
-require("cp/ContentPipline.js");
+require("cp/ContentPipeline.js");
 
 const cp = new ContentPipeline("Test Table");
 cp.debug = true;

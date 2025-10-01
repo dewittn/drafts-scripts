@@ -1,4 +1,4 @@
 // Content Pipeline Open
-require("cp/ContentPipline.js");
+require("cp/ContentPipeline.js");
 const cp = new ContentPipeline();
 cp.addDocToPipeline("DraftsID", draft.uuid);

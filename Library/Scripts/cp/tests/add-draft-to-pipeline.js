@@ -1,4 +1,4 @@
-require("cp/ContentPipline.js");
+require("cp/ContentPipeline.js");
 
 const cp = new ContentPipeline("Test Table");
 // cp.addDocToPipeline("DraftsID", draft.uuid);
