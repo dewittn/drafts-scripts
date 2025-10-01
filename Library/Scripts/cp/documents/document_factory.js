@@ -6,20 +6,12 @@ require("cp/documents/test_document.js");
 class DocumentFactory {
   #ui;
   #settings;
-  #docdependencies;
+  #dependencyProvider;
 
-  constructor(dependencies) {
-    this.#ui = dependencies.ui;
-    this.#settings = dependencies.settings.documentFactory;
-
-    this.#docdependencies = {
-      ui: dependencies.ui,
-      destinations: dependencies.destinations,
-      statuses: dependencies.statuses,
-      tableName: dependencies.tableName,
-      textUltilities: dependencies.textUltilities,
-      defaultTag: dependencies.defaultTag,
-    };
+  constructor(dependencyProvider) {
+    this.#dependencyProvider = dependencyProvider;
+    this.#ui = dependencyProvider.ui;
+    this.#settings = dependencyProvider.settings.documentFactory;
   }
 
   load(record) {
@@ -42,16 +34,13 @@ class DocumentFactory {
     let doc = undefined;
     switch (record.docIDType) {
       case "DraftsID":
-        this.#docdependencies["settings"] = this.#settings.draftsDoc;
-        doc = new DraftsDoc(this.#docdependencies, record);
+        doc = new DraftsDoc(this.#dependencyProvider, this.#settings.draftsDoc, record);
         break;
       case "UlyssesID":
-        this.#docdependencies["settings"] = this.#settings.ulyssesDoc;
-        doc = new UlyssesDoc(this.#docdependencies, record);
+        doc = new UlyssesDoc(this.#dependencyProvider, this.#settings.ulyssesDoc, record);
         break;
       case "BearID":
-        this.#docdependencies["settings"] = this.#settings.bearDoc;
-        doc = new BearDoc(this.#docdependencies, record);
+        doc = new BearDoc(this.#dependencyProvider, this.#settings.bearDoc, record);
         break;
       case "TestID":
         doc = new TestDoc(record);
@@ -74,16 +63,13 @@ class DocumentFactory {
   create(type) {
     switch (type.toLowerCase()) {
       case "draft":
-        this.#docdependencies["settings"] = this.#settings.draftsDoc;
-        return new DraftsDoc(this.#docdependencies);
+        return new DraftsDoc(this.#dependencyProvider, this.#settings.draftsDoc);
         break;
       case "sheet":
-        this.#docdependencies["settings"] = this.#settings.ulyssesDoc;
-        return new UlyssesDoc(this.#docdependencies);
+        return new UlyssesDoc(this.#dependencyProvider, this.#settings.ulyssesDoc);
         break;
       case "note":
-        this.#docdependencies["settings"] = this.#settings.bearDoc;
-        return new BearDoc(this.#docdependencies);
+        return new BearDoc(this.#dependencyProvider, this.#settings.bearDoc);
         break;
       default:
         return this.#ui.displayErrorMessage({

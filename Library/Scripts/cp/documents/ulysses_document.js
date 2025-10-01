@@ -2,13 +2,11 @@ require("libraries/ulysses-v2.js");
 
 class UlyssesDoc {
   static docIDType = "UlyssesID";
+  #dependencyProvider;
   #ui;
   #text;
   #ulysses;
   #settings;
-  #statuses;
-  #defaultTag;
-  #destinations;
 
   #data = {};
   #content;
@@ -18,17 +16,28 @@ class UlyssesDoc {
   #currentStatus;
   #currentTitle;
 
-  constructor(dependencies, record = {}) {
-    this.#ui = dependencies.ui;
-    this.#text = dependencies.textUltilities;
-    this.#settings = dependencies.settings;
-    this.#statuses = dependencies.statuses;
-    this.#destinations = dependencies.destinations;
-    this.#defaultTag = dependencies.defaultTag;
+  constructor(dependencyProvider, settings, record = {}) {
+    this.#dependencyProvider = dependencyProvider;
+    this.#ui = dependencyProvider.ui;
+    this.#text = dependencyProvider.textUltilities;
+    this.#settings = settings;
     this.#ulysses = new Ulysses();
 
     this.#data.record = record;
     this.#data.docID = this.#getIdOfSheet();
+  }
+
+  // Lazy getters for dependencies
+  get #statuses() {
+    return this.#dependencyProvider.statuses;
+  }
+
+  get #destinations() {
+    return this.#dependencyProvider.destinations;
+  }
+
+  get #defaultTag() {
+    return this.#dependencyProvider.defaultTag;
   }
 
   get stackTrace() {
@@ -183,10 +192,6 @@ class UlyssesDoc {
 
     if (value) this.#ulysses.attachKeywords(this.docID, this.#defaultTag);
     this.#inPipeline = value;
-  }
-
-  static load(dests, record) {
-    return new UlyssesDoc(dests, record);
   }
 
   open() {

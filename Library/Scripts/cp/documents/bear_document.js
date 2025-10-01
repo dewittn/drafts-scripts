@@ -2,13 +2,11 @@ require("libraries/bear.js");
 
 class BearDoc {
   static docIDType = "BearID";
+  #dependencyProvider;
   #ui;
   #text;
   #bear;
   #settings;
-  #statuses;
-  #defaultTag;
-  #destinations;
 
   #data = {};
   #content;
@@ -18,17 +16,28 @@ class BearDoc {
   #currentStatus;
   #currentTitle;
 
-  constructor(dependencies, record = {}) {
-    this.#ui = dependencies.ui;
-    this.#text = dependencies.textUltilities;
-    this.#settings = dependencies.settings;
-    this.#statuses = dependencies.statuses;
-    this.#destinations = dependencies.destinations;
-    this.#defaultTag = dependencies.defaultTag;
+  constructor(dependencyProvider, settings, record = {}) {
+    this.#dependencyProvider = dependencyProvider;
+    this.#ui = dependencyProvider.ui;
+    this.#text = dependencyProvider.textUltilities;
+    this.#settings = settings;
     this.#bear = new Bear();
 
     this.#data.record = record;
     this.#data.docID = this.#getIdOfNote();
+  }
+
+  // Lazy getters for dependencies
+  get #statuses() {
+    return this.#dependencyProvider.statuses;
+  }
+
+  get #destinations() {
+    return this.#dependencyProvider.destinations;
+  }
+
+  get #defaultTag() {
+    return this.#dependencyProvider.defaultTag;
   }
 
   get stackTrace() {
@@ -190,10 +199,6 @@ class BearDoc {
       }
     }
     this.#inPipeline = value;
-  }
-
-  static load(dests, record) {
-    return new BearDoc(dests, record);
   }
 
   open() {

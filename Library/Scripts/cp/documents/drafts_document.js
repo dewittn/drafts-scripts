@@ -1,14 +1,12 @@
 class DraftsDoc {
   static docIDType = "DraftsID";
+  #dependencyProvider;
   #ui;
   #text;
   #settings;
-  #statuses;
-  #destinations;
   #template_factory;
 
   #data = {};
-  #defaultTag;
   #docID;
   #record;
   #currentDest;
@@ -16,17 +14,28 @@ class DraftsDoc {
   #currentTitle;
   #inPipeline;
 
-  constructor(dependencies, record = {}) {
-    this.#ui = dependencies.ui;
-    this.#settings = dependencies.settings;
-    this.#defaultTag = dependencies.defaultTag;
-    this.#statuses = dependencies.statuses;
-    this.#destinations = dependencies.destinations;
-    this.#text = dependencies.textUltilities;
-    this.#template_factory = new TemplateFactory(dependencies);
+  constructor(dependencyProvider, settings, record = {}) {
+    this.#dependencyProvider = dependencyProvider;
+    this.#ui = dependencyProvider.ui;
+    this.#text = dependencyProvider.textUltilities;
+    this.#settings = settings;
+    this.#template_factory = new TemplateFactory(dependencyProvider);
 
     this.#record = record;
     this.workingDraft = this.#findOrCreateWorkingDraft();
+  }
+
+  // Lazy getters for dependencies
+  get #statuses() {
+    return this.#dependencyProvider.statuses;
+  }
+
+  get #destinations() {
+    return this.#dependencyProvider.destinations;
+  }
+
+  get #defaultTag() {
+    return this.#dependencyProvider.defaultTag;
   }
 
   get id() {
@@ -176,10 +185,6 @@ class DraftsDoc {
       this.workingDraft.update();
     }
     this.#inPipeline = value;
-  }
-
-  static load(dests, record) {
-    return new DraftsDoc(dests, record);
   }
 
   open() {
