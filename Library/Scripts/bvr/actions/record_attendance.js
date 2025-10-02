@@ -1,12 +1,3 @@
-const oneSecond = 10000;
-const recentlyCreated = new Date() - draft.createdAt < oneSecond;
-const teamID = recentlyCreated ? draft.content : "";
-
-if (typeof BVR == "undefined") require("bvr/BVR.js");
-
-const team = new Team(teamID);
-
-const submitAttendace = team.takeAttendace();
-if (submitAttendace) team.submitAttendace();
-
-delete team;
+// DEPRECATED: This file has moved. Remove this linking file after migration is complete.
+require("../../Actions/bvr/record-attendance.js");
+alert("File 'Scripts/bvr/actions/record_attendance.js' has moved to 'Actions/bvr/record-attendance.js'. Please update your Drafts action!");

@@ -1,10 +1,3 @@
-if (typeof ActionMenu == "undefined") require("libraries/ActionMenu.js");
-const actionList = [
-  "Record Attendace",
-  "Record Game Score",
-  "Submit Game Report",
-  "Create Practice Plan",
-];
-
-const actionMenu = ActionMenu.createFromList(actionList);
-actionMenu.select();
+// DEPRECATED: This file has moved. Remove this linking file after migration is complete.
+require("../../Actions/bvr/bvr-action-menu.js");
+alert("File 'Scripts/bvr/actions/bvr-action-menu.js' has moved to 'Actions/bvr/bvr-action-menu.js'. Please update your Drafts action!");
