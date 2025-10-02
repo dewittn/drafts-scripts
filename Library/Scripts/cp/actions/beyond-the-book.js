@@ -1,5 +1,3 @@
-// Create New 'Beyond The Book' Draft
-require("cp/templates/BeyondTheBook.js");
-
-const draft = new BeyondTheBook();
-draft.save().activate().addToPipeline();
+// DEPRECATED: This file has moved. Remove this linking file after migration is complete.
+require("../../Actions/cp/beyond-the-book.js");
+alert("File 'Scripts/cp/actions/beyond-the-book.js' has moved to 'Actions/cp/beyond-the-book.js'. Please update your Drafts action!");

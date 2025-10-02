@@ -1,11 +1,3 @@
-require("cp/contentPipline.js");
-
-const cp = new ContentPipeline();
-const link = cp.getPublishedPostURL();
-
-app.setClipboard(link);
-
-if (draft.selectionLength > 0) {
-  nextAction = Action.find("Markdown Link");
-  app.queueAction(nextAction, draft);
-}
+// DEPRECATED: This file has moved. Remove this linking file after migration is complete.
+require("../../Actions/cp/get-url.js");
+alert("File 'Scripts/cp/actions/get-url.js' has moved to 'Actions/cp/get-url.js'. Please update your Drafts action!");
