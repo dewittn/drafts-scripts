@@ -1,20 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:nocodb.com)",
-      "WebSearch",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "WebFetch(domain:docs.kutt.it)",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:publicapi.dev)",
-      "Bash(npm install:*)",
-      "Bash(npm run gulp:*)",
-      "Bash(tree:*)",
-      "Bash(awk:*)",
-      "Bash(mkdir:*)",
-      "Bash(find:*)",
-      "Bash(git mv:*)"
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
