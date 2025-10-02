@@ -6,7 +6,7 @@ require("modules/cp/core/RecentRecords.js");
 require("shared/libraries/DraftsUI.js");
 require("modules/cp/filesystems/CloudFS.js");
 require("modules/cp/databases/NocoDB.js");
-require("modules/cp/documents/document_factory.js");
+require("modules/cp/documents/DocumentFactory.js");
 require("modules/cp/templates/template_factory.js");
 if (typeof ServiceContainer == "undefined") require("shared/core/ServiceContainer.js");
 
@@ -49,7 +49,7 @@ class ContentPipeline {
     // Settings
     if (!this.#services.has("cpSettings")) {
       this.#services.register("cpSettings", () => {
-        if (typeof Settings == "undefined") require("shared/libraries/Settings.js");
+        if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
         return new Settings(this.settingsFile);
       }, true);
     }
@@ -148,7 +148,7 @@ class ContentPipeline {
   get document_factory() {
     if (!this.#document_factory) {
       if (typeof DocumentFactory == "undefined") {
-        require("modules/cp/documents/document_factory.js");
+        require("modules/cp/documents/DocumentFactory.js");
       }
       this.#document_factory = new DocumentFactory(this.#dependencyProvider);
     }

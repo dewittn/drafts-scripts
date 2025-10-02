@@ -26,7 +26,7 @@ class BVR {
     // Register services if not already registered
     if (!this.#services.has('bvrSettings')) {
       this.#services.register('bvrSettings', () => {
-        if (typeof Settings == "undefined") require("shared/libraries/Settings.js");
+        if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
         return new Settings(this.settingsFile);
       }, true);
     }

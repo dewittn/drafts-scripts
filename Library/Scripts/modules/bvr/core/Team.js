@@ -35,7 +35,7 @@ class Team {
 
   get settings() {
     if (!this.#settings) {
-      if (typeof Settings == "undefined") require("shared/libraries/Settings.js");
+      if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
       this.#settings = new Settings(this.bvr.teamSettingsFile);
     }
     return this.#settings;
@@ -144,7 +144,7 @@ class Team {
     const settingsFile = this.#teamData.gameReportSettingsFile == undefined
       ? `${this.id}/gameReportSettings.yaml`
       : this.#teamData.gameReportSettings;
-    if (typeof Settings == "undefined") require("shared/libraries/Settings.js");
+    if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
     return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 
@@ -156,7 +156,7 @@ class Team {
     const settingsFile = this.#teamData.attendanceSettingsFile == undefined
       ? `${this.id}/attendanceSettings.yaml`
       : this.#teamData.attendanceSettingsFile;
-    if (typeof Settings == "undefined") require("shared/libraries/Settings.js");
+    if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
     return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 
@@ -422,7 +422,7 @@ class Team {
     const settingsFile = this.#teamData.templateSettingsFile == undefined
       ? `${this.id}/templateSettings.yaml`
       : this.#teamData.templateSettingsFile;
-    if (typeof Settings == "undefined") require("shared/libraries/Settings.js");
+    if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
     return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 

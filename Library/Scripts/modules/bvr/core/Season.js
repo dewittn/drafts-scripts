@@ -36,7 +36,7 @@ class Season {
 
   get schoolSportingHistory() {
     if (!this.#schoolSportingHistory) {
-      if (typeof DataFile == "undefined") require("shared/libraries/DataFile.js");
+      if (typeof DataFile == "undefined") require("modules/cp/filesystems/CloudFS.js");
       this.#schoolSportingHistory = new DataFile(this.recordsFile);
     }
     return this.#schoolSportingHistory;
