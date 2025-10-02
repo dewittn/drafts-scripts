@@ -1,4 +1,4 @@
-require("../ui/UIUtilities.js");
+require("./UIUtilities.js");
 
 class DraftsUI {
   #settings;
