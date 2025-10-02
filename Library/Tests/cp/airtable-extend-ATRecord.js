@@ -1,4 +1,4 @@
-require("../Scripts/modules/cp/ui/DraftsUI.js");
+require("../Scripts/shared/libraries/DraftsUI.js");
 require("../Scripts/modules/cp/databases/AirTableDB.js");
 require("../Scripts/modules/cp/records/TestRecentRecords.js");
 

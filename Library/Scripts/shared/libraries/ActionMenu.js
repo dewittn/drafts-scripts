@@ -1,4 +1,4 @@
-if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
+if (typeof DraftsUI == "undefined") require("./DraftsUI.js");
 class ActionMenu {
   #ui;
 

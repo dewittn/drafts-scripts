@@ -1,4 +1,4 @@
-require("../Scripts/modules/cp/ui/DraftsUI.js");
+require("../Scripts/shared/libraries/DraftsUI.js");
 require("../Scripts/modules/cp/templates/Template.js");
 
 const ui = new DraftsUI();

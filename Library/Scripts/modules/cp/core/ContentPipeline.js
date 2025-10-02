@@ -3,7 +3,7 @@ require("./DependencyProvider.js");
 require("./Statuses.js");
 require("./Destinations.js");
 require("./RecentRecords.js");
-require("../ui/DraftsUI.js");
+require("../../../shared/libraries/DraftsUI.js");
 require("../filesystems/CloudFS.js");
 require("../databases/NocoDB.js");
 require("../documents/document_factory.js");
@@ -65,7 +65,7 @@ class ContentPipeline {
     // UI
     if (!this.#services.has("cpUI")) {
       this.#services.register("cpUI", (c) => {
-        if (typeof DraftsUI == "undefined") require("../ui/DraftsUI.js");
+        if (typeof DraftsUI == "undefined") require("../../../shared/libraries/DraftsUI.js");
         const settings = c.get("cpSettings");
         return new DraftsUI(settings.ui);
       }, true);

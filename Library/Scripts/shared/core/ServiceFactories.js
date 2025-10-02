@@ -22,7 +22,7 @@ function setupBVRServices() {
 
   // UI Service - depends on settings
   container.register('bvrUI', (c) => {
-    if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
+    if (typeof DraftsUI == "undefined") require("./DraftsUI.js");
     const settings = c.get('bvrSettings');
     return new DraftsUI(settings.ui);
   }, true);
@@ -85,7 +85,7 @@ function setupContentPipelineServices() {
 
   // UI for CP
   container.register('cpUI', (c) => {
-    if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
+    if (typeof DraftsUI == "undefined") require("./DraftsUI.js");
     const settings = c.get('cpSettings');
     return new DraftsUI(settings.ui);
   }, true);

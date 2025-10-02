@@ -1,6 +1,6 @@
 require("../Scripts/modules/cp/Statuses.js");
 require("../Scripts/modules/cp/Destinations.js");
-require("../Scripts/modules/cp/ui/DraftsUI.js");
+require("../Scripts/shared/libraries/DraftsUI.js");
 require("../Scripts/modules/cp/documents/document_factory.js");
 require("../Scripts/modules/cp/filesystems/TestFS.js");
 

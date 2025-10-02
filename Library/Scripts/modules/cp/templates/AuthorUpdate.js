@@ -1,6 +1,6 @@
 if (typeof Template == "undefined") require("../templates/Template.js");
 if (typeof Settings == "undefined") require("../filesystems/CloudFS.js");
-if (typeof DraftsUI == "undefined") require("../ui/DraftsUI.js");
+if (typeof DraftsUI == "undefined") require("../../../shared/libraries/DraftsUI.js");
 
 class AuthorUpdate {
   static settingsFile = "cp/templates.yaml";

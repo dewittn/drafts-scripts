@@ -8,7 +8,7 @@ if (typeof Attendance == "undefined") require("./Attendance.js");
 if (typeof PracticePlan == "undefined") require("./PracticePlan.js");
 if (typeof TmplSettings == "undefined") require("../utils/TmplSettings.js");
 if (typeof Bear == "undefined") require("../../../shared/libraries/bear.js");
-if (typeof DraftsUI == "undefined") require("../../cp/ui/DraftsUI.js");
+if (typeof DraftsUI == "undefined") require("../../../shared/libraries/DraftsUI.js");
 if (typeof CloudFS == "undefined") require("../../cp/filesystems/CloudFS.js");
 if (typeof Template == "undefined") require("../../cp/templates/Template.js");
 if (typeof ServiceContainer == "undefined") require("../../../shared/core/ServiceContainer.js");
@@ -33,7 +33,7 @@ class BVR {
 
     if (!this.#services.has('bvrUI')) {
       this.#services.register('bvrUI', (c) => {
-        if (typeof DraftsUI == "undefined") require("../../cp/ui/DraftsUI.js");
+        if (typeof DraftsUI == "undefined") require("../../../shared/libraries/DraftsUI.js");
         const settings = c.get('bvrSettings');
         return new DraftsUI(settings.ui);
       }, true);
