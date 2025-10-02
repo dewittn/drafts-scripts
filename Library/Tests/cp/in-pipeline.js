@@ -1,25 +1,25 @@
-require("../../modules/cp/Statuses.js");
-require("../../modules/cp/Destinations.js");
-require("../../modules/cp/RecentRecords.js");
-require("../../modules/cp/TextUtilities.js");
-require("../../modules/cp/ui/DraftsUI.js");
-require("../../modules/cp/documents/document_factory.js");
+require("../Scripts/shared/core/SimpleDependencyProvider.js");
+require("../Scripts/modules/cp/Statuses.js");
+require("../Scripts/modules/cp/Destinations.js");
+require("../Scripts/modules/cp/RecentRecords.js");
+require("../Scripts/modules/cp/ui/DraftsUI.js");
+require("../Scripts/modules/cp/documents/document_factory.js");
 
-require("../../modules/cp/databases/TestDB.js");
-require("../../modules/cp/filesystems/TestFS.js");
+require("../Scripts/modules/cp/databases/TestDB.js");
+require("../Scripts/modules/cp/filesystems/TestFS.js");
 
 const destinationsData = {
   table1: {
     inbox: {
-      groupID: "TeSuU_iiO34xep0iJh1Y_w",
+      groupID: "hZ7IX2jqKbVmPGlYUXkZjQ",
     },
     "nr.com": {
-      groupID: "bXiakMoD-YIoezcRDpXAgg",
+      groupID: "_irtj5J8siY8DXj0E4ckmA",
       draftAction: "Show Alert",
       airtableName: "NR.com",
     },
     "coto.studio": {
-      groupID: "CVxnVTM9Zn-mbxkoeqNPcA",
+      groupID: "WgLHy2d17CyYfHPp5YqvKw",
       airtableName: "Coto.Studio",
     },
   },
@@ -96,74 +96,40 @@ const settings = {
         },
       },
     },
-    ulyssesDoc: {
-      excerptText: "This is a placeholder for the excerpt!!",
-      darftsCallbackData: {
-        baseURL: "drafts://x-callback-url/",
-        runActionParams: "runAction?action=",
-        uuidParams: "&text=",
-      },
-      piplineLinks: [
-        {
-          linkText: "Content Pipeline: Update Status",
-          actionName: "updateStatusWithUlyssesID",
-        },
-        {
-          linkText: "Content Pipeline: Sync Status",
-          actionName: "syncStatusWithUlyssesID",
-        },
-      ],
-    },
   },
+};
+
+const record = {
+  docID: "B3C6CB1B-CD76-4BB5-BAE4-EBAB34A6E5C1",
+  docIDType: "DraftsID",
 };
 
 const ui = new DraftsUI();
 const fileSystem = new TestFS(destinationsData);
-const textUltilities = new TextUltilities();
 
-const dependencies = {
+// Create lazy dependency provider
+let statusesInstance, destsInstance;
+const dependencyProvider = new SimpleDependencyProvider({
   ui: ui,
   fileSystem: fileSystem,
   settings: settings,
   tableName: "table1",
-  textUltilities: textUltilities,
-};
+  defaultTag: settings.defaultTag,
+  textUltilities: undefined,
+  statuses: () => statusesInstance,
+  destinations: () => destsInstance,
+  recentRecords: undefined,
+  database: undefined,
+});
 
-const statuses = new Statuses(dependencies);
-dependencies["statuses"] = statuses;
+const statuses = new Statuses(dependencyProvider);
+statusesInstance = statuses;
 
-const dests = new Destinations(dependencies);
-dependencies["destinations"] = dests;
+const dests = new Destinations(dependencyProvider);
+destsInstance = dests;
 
-const document_factory = new DocumentFactory(dependencies);
-const timeCode = new Date().toString();
-const testDraft = new Draft();
+const document_factory = new DocumentFactory(dependencyProvider);
 
-testDraft.addTag(settings.defaultTag);
-testDraft.addTag("Writing");
-testDraft.addTag("Inbox");
-testDraft.content =
-  `# Testing Covert Draft to Sheet\n\nThis is a test draft created: ${timeCode}.\n\n And [this is a markdown link](https://www.google.com).`;
-testDraft.update();
+const testDraft = document_factory.load(record);
 
-const record = { docID: testDraft.uuid, docIDType: "DraftsID" };
-
-let activeDoc = document_factory.load(record);
-activeDoc.inPipeline = true;
-
-// Create New Doc
-const newDoc = document_factory.create("sheet");
-newDoc.status = activeDoc.status;
-newDoc.destination = activeDoc.destination;
-newDoc.content = activeDoc.content;
-newDoc.save();
-
-// Save new doc
-newDoc.record = record;
-alert(newDoc.docID);
-alert(JSON.stringify(record));
-alert(JSON.stringify(newDoc.record));
-
-// Delete old doc and update activeDoc
-activeDoc.delete();
-// activeDoc = newDoc;
+ui.debugVariable(testDraft.inPipeline);

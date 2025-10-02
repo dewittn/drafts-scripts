@@ -1,4 +1,4 @@
-require("../../modules/cp/TextUtilities.js");
+require("../Scripts/modules/cp/TextUtilities.js");
 
 const text = new TextUltilities();
 const tags = ["test1", "test2", "socail media"];
