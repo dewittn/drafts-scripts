@@ -1,5 +1,3 @@
-require("cp/ContentPipeline.js");
-
-const cp = new ContentPipeline("Test Table");
-// cp.addDocToPipeline("DraftsID", draft.uuid);
-cp.addDocToPipeline("DraftsID");
+// DEPRECATED: This file has moved. Remove this linking file after migration is complete.
+require("../../Tests/cp/add-draft-to-pipeline.js");
+alert("File 'Scripts/cp/tests/add-draft-to-pipeline.js' has moved to 'Scripts/Tests/cp/add-draft-to-pipeline.js'. Please update your Drafts action!");
