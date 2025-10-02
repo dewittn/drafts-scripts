@@ -1,2 +1,3 @@
-require("libraries/ulysses-v2.js");
-alert("File ulysses-v2.js' has moved to 'libraries/ulysses-v2.js'. Please update your script!");
+// DEPRECATED: This file has moved. Remove this linking file after migration is complete.
+require("shared/libraries/ulysses-v2.js");
+alert("File 'Scripts/ulysses-v2.js' has moved to 'Scripts/shared/libraries/ulysses-v2.js'. Please update your script!");
