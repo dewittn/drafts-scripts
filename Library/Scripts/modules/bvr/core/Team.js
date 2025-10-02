@@ -1,6 +1,8 @@
 if (typeof ServiceContainer == "undefined") require("shared/core/ServiceContainer.js");
 
 class Team {
+  static #instances = new Map(); // One instance per teamID
+  static #constructorWarningShown = false;
   #bvr;
   #weekID;
   #ppData;
@@ -11,14 +13,51 @@ class Team {
   #attendance;
   #season;
 
+  /**
+   * Get singleton instance of Team
+   * @param {string} teamID - Team identifier
+   * @returns {Team} Singleton instance for the team
+   */
+  static getInstance(teamID = "") {
+    // Use empty string as key for default team
+    const key = teamID || '_default';
+
+    if (!Team.#instances.has(key)) {
+      console.log(`[Team] Creating singleton instance for team: ${key}`);
+      Team.#instances.set(key, new Team(teamID));
+    } else {
+      console.log(`[Team] Reusing singleton instance for team: ${key}`);
+    }
+    return Team.#instances.get(key);
+  }
+
+  /**
+   * Reset singleton instances (for testing)
+   * @param {string} teamID - Optional team to reset, or all if omitted
+   */
+  static resetInstance(teamID = null) {
+    if (teamID !== null) {
+      const key = teamID || '_default';
+      Team.#instances.delete(key);
+    } else {
+      Team.#instances.clear();
+    }
+  }
+
   constructor(teamID = "") {
+    // Deprecation warning
+    if (!Team.#constructorWarningShown) {
+      console.log('[DEPRECATION] Direct instantiation of Team is deprecated. Use Team.getInstance() instead.');
+      Team.#constructorWarningShown = true;
+    }
+
     this.#services = ServiceContainer.getInstance();
 
     // Register BVR service if not already registered
     if (!this.#services.has('bvr')) {
       this.#services.register('bvr', () => {
         if (typeof BVR == "undefined") require("modules/bvr/core/BVR.js");
-        return new BVR();
+        return BVR.getInstance();
       }, true);
     }
 

@@ -13,6 +13,8 @@ if (typeof ServiceContainer == "undefined") require("shared/core/ServiceContaine
 class ContentPipeline {
   static basePath = "/Library/Data/cp/";
   static settingsFile = "cp/settings.yaml";
+  static #instances = new Map(); // One instance per table
+  static #constructorWarningShown = false;
   #fs;
   #ui;
   #db;
@@ -27,7 +29,39 @@ class ContentPipeline {
   #services;
   #dependencyProvider;
 
+  /**
+   * Get singleton instance of ContentPipeline
+   * @param {string} table - Table name (default: "Content")
+   * @returns {ContentPipeline} Singleton instance for the table
+   */
+  static getInstance(table = "Content") {
+    if (!ContentPipeline.#instances.has(table)) {
+      console.log(`[ContentPipeline] Creating singleton instance for table: ${table}`);
+      ContentPipeline.#instances.set(table, new ContentPipeline(table));
+    } else {
+      console.log(`[ContentPipeline] Reusing singleton instance for table: ${table}`);
+    }
+    return ContentPipeline.#instances.get(table);
+  }
+
+  /**
+   * Reset singleton instances (for testing)
+   */
+  static resetInstance(table = null) {
+    if (table) {
+      ContentPipeline.#instances.delete(table);
+    } else {
+      ContentPipeline.#instances.clear();
+    }
+  }
+
   constructor(table = "Content") {
+    // Deprecation warning
+    if (!ContentPipeline.#constructorWarningShown) {
+      console.log('[DEPRECATION] Direct instantiation of ContentPipeline is deprecated. Use ContentPipeline.getInstance() instead.');
+      ContentPipeline.#constructorWarningShown = true;
+    }
+
     this.#tableName = table;
     this.#services = ServiceContainer.getInstance();
     this.#activeDoc = null;

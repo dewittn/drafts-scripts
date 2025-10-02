@@ -16,11 +16,40 @@ require("modules/bvr/messages/message_factory.js");
 
 class BVR {
   static settingsFile = "bvr/settings.yaml";
+  static #instance = null;
+  static #constructorWarningShown = false;
   #settings;
   #ui;
   #services;
 
+  /**
+   * Get singleton instance of BVR
+   * @returns {BVR} Singleton instance
+   */
+  static getInstance() {
+    if (!BVR.#instance) {
+      console.log('[BVR] Creating singleton instance');
+      BVR.#instance = new BVR();
+    } else {
+      console.log('[BVR] Reusing singleton instance');
+    }
+    return BVR.#instance;
+  }
+
+  /**
+   * Reset singleton instance (for testing)
+   */
+  static resetInstance() {
+    BVR.#instance = null;
+  }
+
   constructor() {
+    // Deprecation warning
+    if (!BVR.#constructorWarningShown) {
+      console.log('[DEPRECATION] Direct instantiation of BVR is deprecated. Use BVR.getInstance() instead.');
+      BVR.#constructorWarningShown = true;
+    }
+
     this.#services = ServiceContainer.getInstance();
 
     // Register services if not already registered
