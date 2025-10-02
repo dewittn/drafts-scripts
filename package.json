@@ -31,6 +31,7 @@
   ],
   "license": "ISC",
   "scripts": {
+    "claude": "gulp clean && claude",
     "gulp": "gulp",
     "sync": "gulp sync",
     "watch": "gulp watch",

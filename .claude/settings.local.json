@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(node:*)",
+      "Bash(/tmp/analyze_requires.js)",
+      "Bash(find:*)",
+      "Bash({} ;)",
+      "Bash(sed:*)",
+      "Bash(Library/Scripts/shared/core/ServiceFactories.js)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\n🔧 Remove ../Scripts/ prefix from all Actions and Tests files\n\nSince Library/Scripts/ is the base path for ALL require statements\n(regardless of file location), files in Actions/ and Tests/ should\nnot use ../Scripts/ prefix.\n\nChanges:\n- Library/Actions/: Remove ../Scripts/ from all require paths\n- Library/Tests/: Remove ../Scripts/ from all require paths\n- Fix module paths to use correct locations:\n  - ContentPipeline.js → modules/cp/core/ContentPipeline.js\n  - BVR.js → modules/bvr/core/BVR.js\n  - Statuses.js → modules/cp/core/Statuses.js\n  - Destinations.js → modules/cp/core/Destinations.js\n  - RecentRecords.js → modules/cp/core/RecentRecords.js\n  - TextUtilities.js → modules/cp/utils/TextUtilities.js\n  - document_factory.js → documents/DocumentFactory.js\n\nAll require paths now correctly use Library/Scripts/ as the base.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
