@@ -1,5 +1,5 @@
-require("cp/ui/DraftsUI.js");
-require("cp/templates/Template.js");
+require("../Scripts/modules/cp/ui/DraftsUI.js");
+require("../Scripts/modules/cp/templates/Template.js");
 
 const ui = new DraftsUI();
 ui.debug = true;

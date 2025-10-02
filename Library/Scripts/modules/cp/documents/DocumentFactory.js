@@ -1,7 +1,7 @@
-require("cp/documents/ulysses_document.js");
-require("cp/documents/drafts_document.js");
-require("cp/documents/bear_document.js");
-require("cp/documents/test_document.js");
+require("../documents/ulysses_document.js");
+require("../documents/drafts_document.js");
+require("../documents/bear_document.js");
+require("../documents/test_document.js");
 
 class DocumentFactory {
   #ui;

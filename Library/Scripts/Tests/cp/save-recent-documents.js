@@ -1,10 +1,10 @@
-require("cp/Destinations.js");
-require("cp/RecentRecords.js");
-require("cp/ui/DraftsUI.js");
-require("cp/documents/document_factory.js");
+require("../../modules/cp/Destinations.js");
+require("../../modules/cp/RecentRecords.js");
+require("../../modules/cp/ui/DraftsUI.js");
+require("../../modules/cp/documents/document_factory.js");
 
-require("cp/filesystems/TestFS.js");
-require("cp/databases/TestDB.js");
+require("../../modules/cp/filesystems/TestFS.js");
+require("../../modules/cp/databases/TestDB.js");
 
 const testData = {
   table1: [

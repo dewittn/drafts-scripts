@@ -1,4 +1,4 @@
-require("libraries/kutt.js");
+require("../Scripts/shared/libraries/kutt.js");
 // Usage Example:
 (async () => {
   const kuttItApi = new KuttItAPI();

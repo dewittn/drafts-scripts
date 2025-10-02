@@ -20,7 +20,7 @@ class Season {
 
   get bvr() {
     if (!this.#bvr && this.#dependencies == undefined) {
-      if (typeof BVR == "undefined") require("bvr/BVR.js");
+      if (typeof BVR == "undefined") require("./BVR.js");
       this.#bvr = new BVR();
     }
     return this.#bvr;
@@ -28,7 +28,7 @@ class Season {
 
   get team() {
     if (!this.#team && this.#dependencies == undefined) {
-      if (typeof Team == "undefined") require("bvr/Team.js");
+      if (typeof Team == "undefined") require("./Team.js");
       this.#team = new Team();
     }
     return this.#team;
@@ -36,7 +36,7 @@ class Season {
 
   get schoolSportingHistory() {
     if (!this.#schoolSportingHistory) {
-      if (typeof DataFile == "undefined") require("libraries/DataFile.js");
+      if (typeof DataFile == "undefined") require("../../../shared/libraries/DataFile.js");
       this.#schoolSportingHistory = new DataFile(this.recordsFile);
     }
     return this.#schoolSportingHistory;
@@ -112,7 +112,7 @@ class Season {
   }
 
   get tmplSettingsSeasonRecord() {
-    if (typeof TmplSettings == "undefined") require("bvr/TmplSettings.js");
+    if (typeof TmplSettings == "undefined") require("../utils/TmplSettings.js");
     return new TmplSettings(
       this.gblTmplSettings,
       this.#tmplSettings?.seasonRecord,
@@ -178,7 +178,7 @@ class Season {
   #createSeasonRecordDraft(seasonID) {
     if (seasonID == undefined) return;
 
-    if (typeof Template == "undefined") require("cp/templates/Template.js");
+    if (typeof Template == "undefined") require("../../cp/templates/Template.js");
     const seasonRecordDraft = new Template(this.tmplSettingsSeasonRecord);
     seasonRecordDraft.archive().save();
 
@@ -216,7 +216,7 @@ class Season {
       this.recordsDraft = Draft.find(this.seasonRecordDraftID);
     }
 
-    if (typeof Template == "undefined") require("cp/templates/Template.js");
+    if (typeof Template == "undefined") require("../../cp/templates/Template.js");
     const newTableLine = new Template(game.tmplSettingsRecordRow);
     this.recordsDraft.append(newTableLine.content);
     this.recordsDraft.update();

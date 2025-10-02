@@ -1,7 +1,7 @@
-require("cp/ui/DraftsUI.js");
-require("cp/databases/NocoDB.js");
-require("cp/records/TestRecentRecords.js");
-require("cp/filesystems/CloudFS.js");
+require("../../modules/cp/ui/DraftsUI.js");
+require("../../modules/cp/databases/NocoDB.js");
+require("../../modules/cp/records/TestRecentRecords.js");
+require("../../modules/cp/filesystems/CloudFS.js");
 
 const ui = new DraftsUI({
   draftLogUUID: "F59242F5-8096-44A6-B8DC-529DA4082AAC",

@@ -1,14 +1,14 @@
 // Content Pipeline Files
-require("cp/DependencyProvider.js");
-require("cp/Statuses.js");
-require("cp/Destinations.js");
-require("cp/RecentRecords.js");
-require("cp/ui/DraftsUI.js");
-require("cp/filesystems/CloudFS.js");
-require("cp/databases/NocoDB.js");
-require("cp/documents/document_factory.js");
-require("cp/templates/template_factory.js");
-if (typeof ServiceContainer == "undefined") require("core/ServiceContainer.js");
+require("./DependencyProvider.js");
+require("./Statuses.js");
+require("./Destinations.js");
+require("./RecentRecords.js");
+require("../ui/DraftsUI.js");
+require("../filesystems/CloudFS.js");
+require("../databases/NocoDB.js");
+require("../documents/document_factory.js");
+require("../templates/template_factory.js");
+if (typeof ServiceContainer == "undefined") require("../../../shared/core/ServiceContainer.js");
 
 class ContentPipeline {
   static basePath = "/Library/Data/cp/";
@@ -49,7 +49,7 @@ class ContentPipeline {
     // Settings
     if (!this.#services.has("cpSettings")) {
       this.#services.register("cpSettings", () => {
-        if (typeof Settings == "undefined") require("libraries/Settings.js");
+        if (typeof Settings == "undefined") require("../../../shared/libraries/Settings.js");
         return new Settings(this.settingsFile);
       }, true);
     }
@@ -57,7 +57,7 @@ class ContentPipeline {
     // File System
     if (!this.#services.has("cpFileSystem")) {
       this.#services.register("cpFileSystem", () => {
-        if (typeof CloudFS == "undefined") require("cp/filesystems/CloudFS.js");
+        if (typeof CloudFS == "undefined") require("../filesystems/CloudFS.js");
         return new CloudFS(this.basePath);
       }, true);
     }
@@ -65,7 +65,7 @@ class ContentPipeline {
     // UI
     if (!this.#services.has("cpUI")) {
       this.#services.register("cpUI", (c) => {
-        if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
+        if (typeof DraftsUI == "undefined") require("../ui/DraftsUI.js");
         const settings = c.get("cpSettings");
         return new DraftsUI(settings.ui);
       }, true);
@@ -75,7 +75,7 @@ class ContentPipeline {
     if (!this.#services.has("textUtilities")) {
       this.#services.register("textUtilities", () => {
         if (typeof TextUltilities == "undefined") {
-          require("cp/TextUtilities.js");
+          require("../utils/TextUtilities.js");
         }
         return new TextUltilities();
       }, true);
@@ -113,7 +113,7 @@ class ContentPipeline {
 
   get statuses() {
     if (!this.#statuses) {
-      if (typeof Statuses == "undefined") require("cp/Statuses.js");
+      if (typeof Statuses == "undefined") require("./Statuses.js");
       this.#statuses = new Statuses(this.#dependencyProvider);
     }
     return this.#statuses;
@@ -121,7 +121,7 @@ class ContentPipeline {
 
   get destinations() {
     if (!this.#destinations) {
-      if (typeof Destinations == "undefined") require("cp/Destinations.js");
+      if (typeof Destinations == "undefined") require("./Destinations.js");
       this.#destinations = new Destinations(this.#dependencyProvider);
     }
     return this.#destinations;
@@ -129,7 +129,7 @@ class ContentPipeline {
 
   get recent() {
     if (!this.#recent) {
-      if (typeof RecentRecords == "undefined") require("cp/RecentRecords.js");
+      if (typeof RecentRecords == "undefined") require("./RecentRecords.js");
       this.#recent = new RecentRecords(this.#dependencyProvider);
     }
     return this.#recent;
@@ -138,7 +138,7 @@ class ContentPipeline {
   get db() {
     if (!this.#db) {
       if (typeof NocoController == "undefined") {
-        require("cp/databases/NocoDB.js");
+        require("../databases/NocoDB.js");
       }
       this.#db = new NocoController(this.#dependencyProvider);
     }
@@ -148,7 +148,7 @@ class ContentPipeline {
   get document_factory() {
     if (!this.#document_factory) {
       if (typeof DocumentFactory == "undefined") {
-        require("cp/documents/document_factory.js");
+        require("../documents/document_factory.js");
       }
       this.#document_factory = new DocumentFactory(this.#dependencyProvider);
     }

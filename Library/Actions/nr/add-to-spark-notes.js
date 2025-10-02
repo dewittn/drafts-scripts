@@ -1,5 +1,5 @@
-require("nr.js");
-require("libraries/bear.js");
+require("../Scripts/vendor/nr.js");
+require("../Scripts/shared/libraries/bear.js");
 
 const templateName = "spark-note.md";
 const bearURL = `bear://x-callback-url/create`;

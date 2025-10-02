@@ -1,5 +1,5 @@
 // Meat inventory
-require("nr.js");
+require("../Scripts/vendor/nr.js");
 const settings = loadSettings("nr-settings.yaml");
 const { actionGroup, taskChoices, meatsDraftUUID, defaultTags, thingsListName } = settings.meats;
 

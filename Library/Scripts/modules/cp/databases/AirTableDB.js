@@ -1,4 +1,4 @@
-require("libraries/airtable-v2.js");
+require("../../../shared/libraries/airtable-v2.js");
 
 class AirTableDB {
   #ui;

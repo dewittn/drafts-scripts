@@ -1,7 +1,7 @@
-require("cp/Statuses.js");
-require("cp/ui/DraftsUI.js");
+require("../../modules/cp/Statuses.js");
+require("../../modules/cp/ui/DraftsUI.js");
 
-require("cp/filesystems/TestFS.js");
+require("../../modules/cp/filesystems/TestFS.js");
 
 const settings = {
   statuses: {

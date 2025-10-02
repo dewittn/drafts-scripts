@@ -1,4 +1,4 @@
-if (typeof ActionMenu == "undefined") require("libraries/ActionMenu.js");
+if (typeof ActionMenu == "undefined") require("../Scripts/shared/libraries/ActionMenu.js");
 const actionList = [
   "Record Attendace",
   "Record Game Score",

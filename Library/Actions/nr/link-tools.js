@@ -1,4 +1,4 @@
-require("libraries/ActionMenu.js");
+require("../Scripts/shared/libraries/ActionMenu.js");
 // helper to test for URL
 function isUrl(s) {
   var regexp =

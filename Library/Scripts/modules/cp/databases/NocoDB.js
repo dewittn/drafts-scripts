@@ -1,4 +1,4 @@
-require("libraries/nocodb.js");
+require("../../../shared/libraries/nocodb.js");
 
 class NocoController {
   #ui;

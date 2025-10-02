@@ -1,12 +1,12 @@
-require("cp/Statuses.js");
-require("cp/Destinations.js");
-require("cp/RecentRecords.js");
-require("cp/TextUtilities.js");
-require("cp/ui/DraftsUI.js");
-require("cp/documents/document_factory.js");
+require("../../modules/cp/Statuses.js");
+require("../../modules/cp/Destinations.js");
+require("../../modules/cp/RecentRecords.js");
+require("../../modules/cp/TextUtilities.js");
+require("../../modules/cp/ui/DraftsUI.js");
+require("../../modules/cp/documents/document_factory.js");
 
-require("cp/databases/TestDB.js");
-require("cp/filesystems/TestFS.js");
+require("../../modules/cp/databases/TestDB.js");
+require("../../modules/cp/filesystems/TestFS.js");
 
 const destinationsData = {
   table1: {

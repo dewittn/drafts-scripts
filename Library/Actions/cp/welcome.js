@@ -1,5 +1,5 @@
 // Content Pipeline Open
-require("cp/ContentPipeline.js");
+require("../Scripts/modules/cp/ContentPipeline.js");
 
 const cp = new ContentPipeline();
 cp.welcome();

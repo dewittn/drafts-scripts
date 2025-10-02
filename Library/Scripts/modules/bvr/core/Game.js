@@ -24,7 +24,7 @@ class Game {
 
   get bvr() {
     if (!this.#bvr && this.#dependencies == undefined) {
-      if (typeof BVR == "undefined") require("bvr/BVR.js");
+      if (typeof BVR == "undefined") require("./BVR.js");
       this.#bvr = new BVR();
     }
     return this.#bvr;
@@ -32,7 +32,7 @@ class Game {
 
   get team() {
     if (!this.#team && this.#dependencies == undefined) {
-      if (typeof Team == "undefined") require("bvr/Team.js");
+      if (typeof Team == "undefined") require("./Team.js");
       this.#team = new Team();
     }
     return this.#team;
@@ -40,7 +40,7 @@ class Game {
 
   get sport() {
     if (!this.#sport) {
-      if (typeof Sport == "undefined") require("bvr/Sport.js");
+      if (typeof Sport == "undefined") require("./Sport.js");
       this.#sport = new Sport(this.teamPlays);
     }
     return this.#sport;
@@ -543,7 +543,7 @@ class Game {
     const tmplSettings = this.#tmplSettings?.[key] != undefined
       ? this.#tmplSettings[key]
       : {};
-    if (typeof TmplSettings == "undefined") require("bvr/TmplSettings.js");
+    if (typeof TmplSettings == "undefined") require("../utils/TmplSettings.js");
     return new TmplSettings(this.gblTmplSettings, tmplSettings, this);
   }
 

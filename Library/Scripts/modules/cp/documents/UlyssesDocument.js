@@ -1,4 +1,4 @@
-require("libraries/ulysses-v2.js");
+require("../../../shared/libraries/ulysses-v2.js");
 
 class UlyssesDoc {
   static docIDType = "UlyssesID";

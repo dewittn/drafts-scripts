@@ -1,6 +1,6 @@
-require("cp/templates/Template.js");
-require("cp/templates/AuthorUpdate.js");
-require("cp/templates/BeyondTheBook.js");
+require("../templates/Template.js");
+require("../templates/AuthorUpdate.js");
+require("../templates/BeyondTheBook.js");
 
 class TemplateFactory {
   #ui;

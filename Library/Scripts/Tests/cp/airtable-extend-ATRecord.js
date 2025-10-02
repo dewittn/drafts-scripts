@@ -1,6 +1,6 @@
-require("cp/ui/DraftsUI.js");
-require("cp/databases/AirTableDB.js");
-require("cp/records/TestRecentRecords.js");
+require("../../modules/cp/ui/DraftsUI.js");
+require("../../modules/cp/databases/AirTableDB.js");
+require("../../modules/cp/records/TestRecentRecords.js");
 
 const id = "recqSJM6WAqfkuSkl";
 const recent = new TestRecentRecords();

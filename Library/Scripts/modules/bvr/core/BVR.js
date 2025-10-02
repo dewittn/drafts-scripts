@@ -1,18 +1,18 @@
-if (typeof Team == "undefined") require("bvr/Team.js");
-if (typeof Game == "undefined") require("bvr/Game.js");
-if (typeof Sport == "undefined") require("bvr/Sport.js");
-if (typeof Season == "undefined") require("bvr/Season.js");
-// if (typeof BVRUtilities == "undefined") require("bvr/BVRUtilities.js");
-if (typeof GoogleForm == "undefined") require("bvr/GoogleForm.js");
-if (typeof Attendance == "undefined") require("bvr/Attendance.js");
-if (typeof PracticePlan == "undefined") require("bvr/PracticePlan.js");
-if (typeof TmplSettings == "undefined") require("bvr/TmplSettings.js");
-if (typeof Bear == "undefined") require("libraries/bear.js");
-if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
-if (typeof CloudFS == "undefined") require("cp/filesystems/CloudFS.js");
-if (typeof Template == "undefined") require("cp/templates/Template.js");
-if (typeof ServiceContainer == "undefined") require("core/ServiceContainer.js");
-require("bvr/messages/message_factory.js");
+if (typeof Team == "undefined") require("./Team.js");
+if (typeof Game == "undefined") require("./Game.js");
+if (typeof Sport == "undefined") require("./Sport.js");
+if (typeof Season == "undefined") require("./Season.js");
+// if (typeof BVRUtilities == "undefined") require("../utils/BVRUtilities.js");
+if (typeof GoogleForm == "undefined") require("../services/GoogleForm.js");
+if (typeof Attendance == "undefined") require("./Attendance.js");
+if (typeof PracticePlan == "undefined") require("./PracticePlan.js");
+if (typeof TmplSettings == "undefined") require("../utils/TmplSettings.js");
+if (typeof Bear == "undefined") require("../../../shared/libraries/bear.js");
+if (typeof DraftsUI == "undefined") require("../../cp/ui/DraftsUI.js");
+if (typeof CloudFS == "undefined") require("../../cp/filesystems/CloudFS.js");
+if (typeof Template == "undefined") require("../../cp/templates/Template.js");
+if (typeof ServiceContainer == "undefined") require("../../../shared/core/ServiceContainer.js");
+require("../messages/message_factory.js");
 
 class BVR {
   static settingsFile = "bvr/settings.yaml";
@@ -26,14 +26,14 @@ class BVR {
     // Register services if not already registered
     if (!this.#services.has('bvrSettings')) {
       this.#services.register('bvrSettings', () => {
-        if (typeof Settings == "undefined") require("libraries/Settings.js");
+        if (typeof Settings == "undefined") require("../../../shared/libraries/Settings.js");
         return new Settings(this.settingsFile);
       }, true);
     }
 
     if (!this.#services.has('bvrUI')) {
       this.#services.register('bvrUI', (c) => {
-        if (typeof DraftsUI == "undefined") require("cp/ui/DraftsUI.js");
+        if (typeof DraftsUI == "undefined") require("../../cp/ui/DraftsUI.js");
         const settings = c.get('bvrSettings');
         return new DraftsUI(settings.ui);
       }, true);

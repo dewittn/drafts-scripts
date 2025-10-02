@@ -1,4 +1,4 @@
-require("nr/PushoverAlert.js");
+require("../Scripts/modules/nr/PushoverAlert.js");
 
 const pushover = new PushoverAlert();
 
