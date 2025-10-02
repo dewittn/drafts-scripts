@@ -1,4 +1,4 @@
-require("../Scripts/vendor/nr.js");
+require("vendor/nr.js");
 const defaultTag = "morning pages";
 
 Draft.prototype.isMorningPage = (tagName = defaultTag) => draft.hasTag(tagName);

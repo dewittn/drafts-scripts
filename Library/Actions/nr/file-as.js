@@ -1,4 +1,4 @@
-require("../Scripts/shared/libraries/ActionMenu.js");
+require("shared/libraries/ActionMenu.js");
 
 const actionMenu = ActionMenu.createFromGroup("File As Actions");
 actionMenu.select();

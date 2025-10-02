@@ -1,5 +1,5 @@
-require("../Scripts/shared/libraries/DraftsUI.js");
-require("../Scripts/modules/cp/templates/Template.js");
+require("shared/libraries/DraftsUI.js");
+require("modules/cp/templates/Template.js");
 
 const ui = new DraftsUI();
 ui.debug = true;

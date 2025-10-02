@@ -1,4 +1,4 @@
-if (typeof ActionMenu == "undefined") require("../Scripts/shared/libraries/ActionMenu.js");
+if (typeof ActionMenu == "undefined") require("shared/libraries/ActionMenu.js");
 const actionList = [
   "Markdown Table",
   "Markdown Horizontal",

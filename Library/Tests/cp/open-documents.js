@@ -1,8 +1,8 @@
-require("../Scripts/modules/cp/Statuses.js");
-require("../Scripts/modules/cp/Destinations.js");
-require("../Scripts/shared/libraries/DraftsUI.js");
-require("../Scripts/modules/cp/documents/document_factory.js");
-require("../Scripts/modules/cp/filesystems/TestFS.js");
+require("modules/cp/core/Statuses.js");
+require("modules/cp/core/Destinations.js");
+require("shared/libraries/DraftsUI.js");
+require("modules/cp/documents/DocumentFactory.js");
+require("modules/cp/filesystems/TestFS.js");
 
 const destinationsData = {
   table1: {

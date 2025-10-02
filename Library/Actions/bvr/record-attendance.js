@@ -2,7 +2,7 @@ const oneSecond = 10000;
 const recentlyCreated = new Date() - draft.createdAt < oneSecond;
 const teamID = recentlyCreated ? draft.content : "";
 
-if (typeof BVR == "undefined") require("../Scripts/modules/bvr/BVR.js");
+if (typeof BVR == "undefined") require("modules/bvr/core/BVR.js");
 
 const team = new Team(teamID);
 

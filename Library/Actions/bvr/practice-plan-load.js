@@ -1,4 +1,4 @@
-require("../Scripts/modules/bvr/BVR.js");
+require("modules/bvr/core/BVR.js");
 
 const team = new Team();
 team.loadPracticePlan();

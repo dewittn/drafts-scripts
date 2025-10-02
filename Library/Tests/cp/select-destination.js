@@ -1,7 +1,7 @@
-require("../Scripts/modules/cp/Destinations.js");
-require("../Scripts/shared/libraries/DraftsUI.js");
+require("modules/cp/core/Destinations.js");
+require("shared/libraries/DraftsUI.js");
 
-require("../Scripts/modules/cp/filesystems/TestFS.js");
+require("modules/cp/filesystems/TestFS.js");
 
 const settings = {
   destinations: {
