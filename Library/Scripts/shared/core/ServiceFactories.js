@@ -31,13 +31,13 @@ function setupBVRServices() {
   container.register('bvr', (c) => {
     if (typeof BVR == "undefined") require("modules/bvr/core/BVR.js");
     // BVR will use container internally
-    return new BVR();
+    return BVR.getInstance();
   }, true);
 
   // Team Service - factory function that takes teamID
   container.register('teamFactory', (c) => {
     if (typeof Team == "undefined") require("modules/bvr/core/Team.js");
-    return (teamID = "") => new Team(teamID);
+    return (teamID = "") => Team.getInstance(teamID);
   }, true);
 
   // Sport Service - factory function
@@ -142,6 +142,21 @@ function setupContentPipelineServices() {
   container.register('cpDocumentFactory', (c) => {
     if (typeof DocumentFactory == "undefined") require("modules/cp/documents/DocumentFactory.js");
     return new DocumentFactory(c.get('cpDependencyProvider'));
+  }, true);
+
+  // Ulysses shared instance
+  container.register('ulysses', (c) => {
+    if (typeof Ulysses == "undefined") require("shared/libraries/ulysses-v2.js");
+    return new Ulysses();
+  }, true);
+
+  // Airtable shared instance (if API key available)
+  container.register('airtable', (c) => {
+    if (typeof Airtable == "undefined") require("shared/libraries/airtable-v2.js");
+    // Note: Airtable constructor requires API key
+    // This should be injected from settings or credentials
+    const settings = c.get('cpSettings');
+    return new Airtable(settings.airtableApiKey);
   }, true);
 }
 

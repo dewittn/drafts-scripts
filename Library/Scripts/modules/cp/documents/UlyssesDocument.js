@@ -21,7 +21,8 @@ class UlyssesDoc {
     this.#ui = dependencyProvider.ui;
     this.#text = dependencyProvider.textUltilities;
     this.#settings = settings;
-    this.#ulysses = new Ulysses();
+    // Use shared Ulysses instance from DependencyProvider
+    this.#ulysses = dependencyProvider.ulysses;
 
     this.#data.record = record;
     this.#data.docID = this.#getIdOfSheet();
