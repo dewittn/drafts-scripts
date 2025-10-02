@@ -1,4 +1,4 @@
-if (typeof CloudFS == "undefined") require("../filesystems/CloudFS.js");
+if (typeof CloudFS == "undefined") require("modules/cp/filesystems/CloudFS.js");
 class Template {
   static basePath = "/Library/Templates";
   #fs;

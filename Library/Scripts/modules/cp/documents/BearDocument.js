@@ -1,4 +1,4 @@
-require("../../../shared/libraries/bear.js");
+require("shared/libraries/bear.js");
 
 class BearDoc {
   static docIDType = "BearID";

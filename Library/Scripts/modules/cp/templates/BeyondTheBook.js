@@ -1,6 +1,6 @@
-if (typeof Template == "undefined") require("../templates/Template.js");
-if (typeof Settings == "undefined") require("../filesystems/CloudFS.js");
-if (typeof DraftsUI == "undefined") require("../../../shared/libraries/DraftsUI.js");
+if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
+if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
+if (typeof DraftsUI == "undefined") require("shared/libraries/DraftsUI.js");
 
 class BeyondTheBook {
   static settingsFile = "cp/templates.yaml";
