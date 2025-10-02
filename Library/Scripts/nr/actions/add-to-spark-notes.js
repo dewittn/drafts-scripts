@@ -1,15 +1,3 @@
-require("nr.js");
-require("libraries/bear.js");
-
-const templateName = "spark-note.md";
-const bearURL = `bear://x-callback-url/create`;
-
-// Read template from file in iCloud
-const fmCloud = FileManager.createCloud(); // iCloud
-const template = fmCloud.readString(`/Library/Templates/${templateName}`);
-
-// Construct openCallBack URL
-const params = { text: draft.processTemplate(template) };
-openCallback(bearURL, params, false);
-
-draft.trash();
+// DEPRECATED: This file has moved. Remove this linking file after migration is complete.
+require("../../Actions/nr/add-to-spark-notes.js");
+alert("File 'Scripts/nr/actions/add-to-spark-notes.js' has moved to 'Actions/nr/add-to-spark-notes.js'. Please update your Drafts action!");

@@ -1,11 +1,3 @@
-if (typeof ActionMenu == "undefined") require("libraries/ActionMenu.js");
-const actionList = [
-  "Markdown Table",
-  "Markdown Horizontal",
-  "Inline Code (`)",
-  "Code Block (```)",
-  "Highlight",
-];
-
-const actionMenu = ActionMenu.createFromList(actionList);
-actionMenu.select();
+// DEPRECATED: This file has moved. Remove this linking file after migration is complete.
+require("../../Actions/nr/insert-md-characters.js");
+alert("File 'Scripts/nr/actions/insert-md-characters.js' has moved to 'Actions/nr/insert-md-characters.js'. Please update your Drafts action!");

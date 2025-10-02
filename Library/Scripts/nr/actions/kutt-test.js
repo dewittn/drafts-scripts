@@ -1,18 +1,3 @@
-require("libraries/kutt.js");
-// Usage Example:
-(async () => {
-  const kuttItApi = new KuttItAPI();
-
-  try {
-    console.log("Health Check:", await kuttItApi.getHealth());
-    console.log("Links:", await kuttItApi.getLinks(10, 0, false));
-    // console.log(
-    //   "Create Link:",
-    //   await kuttItApi.createLink("https://example.com", "Example link")
-    // );
-    // ... other methods
-  } catch (error) {
-    console.error("Error:", error);
-  }
-  script.complete();
-})();
+// DEPRECATED: This file has moved. Remove this linking file after migration is complete.
+require("../../Actions/nr/kutt-test.js");
+alert("File 'Scripts/nr/actions/kutt-test.js' has moved to 'Actions/nr/kutt-test.js'. Please update your Drafts action!");
