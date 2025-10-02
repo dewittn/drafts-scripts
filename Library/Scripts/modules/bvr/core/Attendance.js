@@ -20,7 +20,7 @@ class Attendance {
   get bvr() {
     if (!this.#bvr && this.#dependencies == undefined) {
       if (typeof BVR == "undefined") require("modules/bvr/core/BVR.js");
-      this.#bvr = new BVR();
+      this.#bvr = BVR.getInstance();
     }
     return this.#bvr;
   }
@@ -28,7 +28,7 @@ class Attendance {
   get team() {
     if (!this.#team && this.#dependencies == undefined) {
       if (typeof Team == "undefined") require("modules/bvr/core/Team.js");
-      this.#team = new Team();
+      this.#team = Team.getInstance();
     }
     return this.#team;
   }

@@ -1,4 +1,4 @@
-require("modules/bvr/core/BVR.js");
+if (typeof Team == "undefined") require("modules/bvr/core/Team.js");
 
-const team = new Team();
+const team = Team.getInstance();
 team.archiveNotes();

@@ -1,6 +1,6 @@
 require("modules/cp/core/ContentPipeline.js");
 
-const cp = new ContentPipeline();
+const cp = ContentPipeline.getInstance();
 const link = cp.getPublishedPostURL();
 
 app.setClipboard(link);
