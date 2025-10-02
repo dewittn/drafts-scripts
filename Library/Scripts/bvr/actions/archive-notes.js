@@ -1,3 +1,3 @@
 // DEPRECATED: This file has moved. Remove this linking file after migration is complete.
-require("../../Actions/bvr/archive-notes.js");
+require("../Actions/bvr/archive-notes.js");
 alert("File 'Scripts/bvr/actions/archive-notes.js' has moved to 'Actions/bvr/archive-notes.js'. Please update your Drafts action!");
