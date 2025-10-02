@@ -1,4 +1,4 @@
-if (typeof ServiceContainer == "undefined") require("../../../shared/core/ServiceContainer.js");
+if (typeof ServiceContainer == "undefined") require("shared/core/ServiceContainer.js");
 
 class Team {
   #bvr;
@@ -17,7 +17,7 @@ class Team {
     // Register BVR service if not already registered
     if (!this.#services.has('bvr')) {
       this.#services.register('bvr', () => {
-        if (typeof BVR == "undefined") require("./BVR.js");
+        if (typeof BVR == "undefined") require("modules/bvr/core/BVR.js");
         return new BVR();
       }, true);
     }
@@ -35,7 +35,7 @@ class Team {
 
   get settings() {
     if (!this.#settings) {
-      if (typeof Settings == "undefined") require("../../../shared/libraries/Settings.js");
+      if (typeof Settings == "undefined") require("shared/libraries/Settings.js");
       this.#settings = new Settings(this.bvr.teamSettingsFile);
     }
     return this.#settings;
@@ -50,7 +50,7 @@ class Team {
 
   get attendace() {
     if (!this.#attendance) {
-      if (typeof Attendance == "undefined") require("./Attendance.js");
+      if (typeof Attendance == "undefined") require("modules/bvr/core/Attendance.js");
       this.#attendance = new Attendance(this.dependencies);
     }
     return this.#attendance;
@@ -62,7 +62,7 @@ class Team {
 
   get season() {
     if (!this.#season) {
-      if (typeof Season == "undefined") require("./Season.js");
+      if (typeof Season == "undefined") require("modules/bvr/core/Season.js");
       this.#season = new Season(this.dependencies);
     }
     return this.#season;
@@ -144,7 +144,7 @@ class Team {
     const settingsFile = this.#teamData.gameReportSettingsFile == undefined
       ? `${this.id}/gameReportSettings.yaml`
       : this.#teamData.gameReportSettings;
-    if (typeof Settings == "undefined") require("../../../shared/libraries/Settings.js");
+    if (typeof Settings == "undefined") require("shared/libraries/Settings.js");
     return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 
@@ -156,7 +156,7 @@ class Team {
     const settingsFile = this.#teamData.attendanceSettingsFile == undefined
       ? `${this.id}/attendanceSettings.yaml`
       : this.#teamData.attendanceSettingsFile;
-    if (typeof Settings == "undefined") require("../../../shared/libraries/Settings.js");
+    if (typeof Settings == "undefined") require("shared/libraries/Settings.js");
     return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 
@@ -237,14 +237,14 @@ class Team {
       return this.ui.displayAppMessage("info", "No game day tasks found.");
     }
 
-    if (typeof Game == "undefined") require("./Game.js");
+    if (typeof Game == "undefined") require("modules/bvr/core/Game.js");
     const game = new Game(this.dependencies);
     game.recordDate();
     game.recordOpponent();
     game.recordLocation();
 
     const tmplSettings = game.generateTmplSettings("thingsProject");
-    if (typeof Template == "undefined") require("../../cp/templates/Template.js");
+    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
     const projectTemplate = new Template(tmplSettings);
     const thingsParserAction = Action.find("Things Parser");
     app.queueAction(thingsParserAction, projectTemplate.draft);
@@ -367,7 +367,7 @@ class Team {
 
     bearTags(workingDraft);
     updateWikiLinks(workingDraft);
-    if (typeof Template == "undefined") require("../../cp/templates/Template.js");
+    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
     const bearTemplate = Template.load("bear-note.md");
     const bearNote = workingDraft.processTemplate(bearTemplate);
 
@@ -422,7 +422,7 @@ class Team {
     const settingsFile = this.#teamData.templateSettingsFile == undefined
       ? `${this.id}/templateSettings.yaml`
       : this.#teamData.templateSettingsFile;
-    if (typeof Settings == "undefined") require("../../../shared/libraries/Settings.js");
+    if (typeof Settings == "undefined") require("shared/libraries/Settings.js");
     return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 
