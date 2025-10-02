@@ -1,7 +1,7 @@
 // Test script for SettingsV2 with Map and Proxy implementation
 
 // Load the CloudFS module
-require("../filesystems/CloudFS.js");
+require("../Scripts/modules/cp/filesystems/CloudFS.js");
 
 // Test with nr-settings.yaml
 const settings = new SettingsV2("nr-settings.yaml", "meats");
