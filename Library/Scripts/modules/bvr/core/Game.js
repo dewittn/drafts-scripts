@@ -534,6 +534,11 @@ class Game {
     if (this.googleFormSettings != undefined) {
       this.googleFormSettings.forEach((gform) => this.#submitGoogleForm(gform));
     }
+    // Run Shortcut to mark tasks as complete in things.
+    if (!this.submitted) {
+      const shortcut = Shortcut.create("Complete Game Day Tasks");
+      shortcut.run();
+    }
 
     this.submitted = true;
     this.#updateSeasonRecord();
@@ -543,7 +548,9 @@ class Game {
     const tmplSettings = this.#tmplSettings?.[key] != undefined
       ? this.#tmplSettings[key]
       : {};
-    if (typeof TmplSettings == "undefined") require("modules/bvr/utils/TmplSettings.js");
+    if (typeof TmplSettings == "undefined") {
+      require("modules/bvr/utils/TmplSettings.js");
+    }
     return new TmplSettings(this.gblTmplSettings, tmplSettings, this);
   }
 
