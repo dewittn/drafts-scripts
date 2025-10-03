@@ -212,9 +212,10 @@ class NocoTable {
 
   // Sort by field and direction
   // Direction can either be "asc" or "desc"
-  sort(field, direction = "asc") {
-    if (field == undefined) return;
-    this.#params["sort"] = `${field},${direction}`;
+  sort(sortObj) {
+    if (sortObj == undefined) return;
+
+    this.#params["sort"] = JSON.stringify(sortObj);
     return this;
   }
 
@@ -248,7 +249,7 @@ class NocoTable {
   // Returns an array of records by a field value
   findByField(field, value) {
     this.#records = [];
-    this.#params["where"] = `(${field},eq,${value})`;
+    this.#params["where"] = `('${field}',eq,'${value}')`;
     let payload = {
       method: "GET",
       parameters: this.#params,
@@ -404,8 +405,9 @@ class NocoTable {
       `https://${this.endPointDomain}/api/v3/data/${this.baseID}/${this.tableID}/records`;
     if (id) url += `/${id}`;
 
-    let debugMessage = `\n---------\nURL: ${url}\n\nPayload: ${JSON.stringify(payload)
-      }`;
+    let debugMessage = `\n---------\nURL: ${url}\n\nPayload: ${
+      JSON.stringify(payload)
+    }`;
 
     const request = Object.assign(
       {
@@ -424,7 +426,9 @@ class NocoTable {
       return this.#requestError(response, debugMessage);
     }
 
-    debugMessage = `${debugMessage}\n\nResponse: ${response.responseText}`;
+    debugMessage = `${debugMessage}\n\nHeaders: ${
+      JSON.stringify(response.headers)
+    }\n\nResponse: ${response.responseText}`;
     if (this.debug) console.log(debugMessage);
 
     // Clear params once request is complete
@@ -435,8 +439,9 @@ class NocoTable {
 
   #requestError(response, debugMessage) {
     this.#error = true;
-    this.#errorMessage = `NocoDB Error: ${response.statusCode} - ${this.#checkError(response.statusCode)
-      }`;
+    this.#errorMessage = `NocoDB Error: ${response.statusCode} - ${
+      this.#checkError(response.statusCode)
+    }`;
     app.displayErrorMessage(this.#errorMessage);
 
     debugMessage = `${debugMessage}\n\n${this.#errorMessage}`;

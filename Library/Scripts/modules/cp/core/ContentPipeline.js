@@ -8,7 +8,9 @@ require("modules/cp/filesystems/CloudFS.js");
 require("modules/cp/databases/NocoDB.js");
 require("modules/cp/documents/DocumentFactory.js");
 require("modules/cp/templates/template_factory.js");
-if (typeof ServiceContainer == "undefined") require("shared/core/ServiceContainer.js");
+if (typeof ServiceContainer == "undefined") {
+  require("shared/core/ServiceContainer.js");
+}
 
 class ContentPipeline {
   static basePath = "/Library/Data/cp/";
@@ -36,10 +38,14 @@ class ContentPipeline {
    */
   static getInstance(table = "Content") {
     if (!ContentPipeline.#instances.has(table)) {
-      console.log(`[ContentPipeline] Creating singleton instance for table: ${table}`);
+      console.log(
+        `[ContentPipeline] Creating singleton instance for table: ${table}`,
+      );
       ContentPipeline.#instances.set(table, new ContentPipeline(table));
     } else {
-      console.log(`[ContentPipeline] Reusing singleton instance for table: ${table}`);
+      console.log(
+        `[ContentPipeline] Reusing singleton instance for table: ${table}`,
+      );
     }
     return ContentPipeline.#instances.get(table);
   }
@@ -58,7 +64,9 @@ class ContentPipeline {
   constructor(table = "Content") {
     // Deprecation warning
     if (!ContentPipeline.#constructorWarningShown) {
-      console.log('[DEPRECATION] Direct instantiation of ContentPipeline is deprecated. Use ContentPipeline.getInstance() instead.');
+      console.log(
+        "[DEPRECATION] Direct instantiation of ContentPipeline is deprecated. Use ContentPipeline.getInstance() instead.",
+      );
       ContentPipeline.#constructorWarningShown = true;
     }
 
@@ -73,7 +81,7 @@ class ContentPipeline {
     this.#dependencyProvider = new DependencyProvider(
       this,
       this.#tableName,
-      this.settings.defaultTag[this.#tableName]
+      this.settings.defaultTag[this.#tableName],
     );
 
     this.#loadWorkspace();
@@ -83,7 +91,9 @@ class ContentPipeline {
     // Settings
     if (!this.#services.has("cpSettings")) {
       this.#services.register("cpSettings", () => {
-        if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
+        if (typeof Settings == "undefined") {
+          require("modules/cp/filesystems/CloudFS.js");
+        }
         return new Settings(this.settingsFile);
       }, true);
     }
@@ -91,7 +101,9 @@ class ContentPipeline {
     // File System
     if (!this.#services.has("cpFileSystem")) {
       this.#services.register("cpFileSystem", () => {
-        if (typeof CloudFS == "undefined") require("modules/cp/filesystems/CloudFS.js");
+        if (typeof CloudFS == "undefined") {
+          require("modules/cp/filesystems/CloudFS.js");
+        }
         return new CloudFS(this.basePath);
       }, true);
     }
@@ -99,7 +111,9 @@ class ContentPipeline {
     // UI
     if (!this.#services.has("cpUI")) {
       this.#services.register("cpUI", (c) => {
-        if (typeof DraftsUI == "undefined") require("shared/libraries/DraftsUI.js");
+        if (typeof DraftsUI == "undefined") {
+          require("shared/libraries/DraftsUI.js");
+        }
         const settings = c.get("cpSettings");
         return new DraftsUI(settings.ui);
       }, true);
@@ -147,7 +161,9 @@ class ContentPipeline {
 
   get statuses() {
     if (!this.#statuses) {
-      if (typeof Statuses == "undefined") require("modules/cp/core/Statuses.js");
+      if (typeof Statuses == "undefined") {
+        require("modules/cp/core/Statuses.js");
+      }
       this.#statuses = new Statuses(this.#dependencyProvider);
     }
     return this.#statuses;
@@ -155,7 +171,9 @@ class ContentPipeline {
 
   get destinations() {
     if (!this.#destinations) {
-      if (typeof Destinations == "undefined") require("modules/cp/core/Destinations.js");
+      if (typeof Destinations == "undefined") {
+        require("modules/cp/core/Destinations.js");
+      }
       this.#destinations = new Destinations(this.#dependencyProvider);
     }
     return this.#destinations;
@@ -163,7 +181,9 @@ class ContentPipeline {
 
   get recent() {
     if (!this.#recent) {
-      if (typeof RecentRecords == "undefined") require("modules/cp/core/RecentRecords.js");
+      if (typeof RecentRecords == "undefined") {
+        require("modules/cp/core/RecentRecords.js");
+      }
       this.#recent = new RecentRecords(this.#dependencyProvider);
     }
     return this.#recent;
