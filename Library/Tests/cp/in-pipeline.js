@@ -115,7 +115,7 @@ const dependencyProvider = new SimpleDependencyProvider({
   settings: settings,
   tableName: "table1",
   defaultTag: settings.defaultTag,
-  textUltilities: undefined,
+  textUtilities: undefined,
   statuses: () => statusesInstance,
   destinations: () => destsInstance,
   recentRecords: undefined,

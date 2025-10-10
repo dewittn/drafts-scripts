@@ -11,7 +11,7 @@ class Destinations {
     this.#fs = dependencyProvider.fileSystem;
     this.#table = dependencyProvider.tableName;
     this.#settings = dependencyProvider.settings.destinations;
-    this.#text = dependencyProvider.textUltilities;
+    this.#text = dependencyProvider.textUtilities;
     this.#data = this.#fs.read(this.#settings.destinationsFile);
   }
 

@@ -32,7 +32,7 @@ class DependencyProvider {
     return this.#context.settings;
   }
 
-  get textUltilities() {
+  get textUtilities() {
     return this.#context.text;
   }
 

@@ -29,10 +29,10 @@ class SimpleDependencyProvider {
       : this.#factories.settings;
   }
 
-  get textUltilities() {
-    return typeof this.#factories.textUltilities === 'function'
-      ? this.#factories.textUltilities()
-      : this.#factories.textUltilities;
+  get textUtilities() {
+    return typeof this.#factories.textUtilities === 'function'
+      ? this.#factories.textUtilities()
+      : this.#factories.textUtilities;
   }
 
   get tableName() {

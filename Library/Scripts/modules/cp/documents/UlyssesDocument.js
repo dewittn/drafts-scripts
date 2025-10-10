@@ -19,7 +19,7 @@ class UlyssesDoc {
   constructor(dependencyProvider, settings, record = {}) {
     this.#dependencyProvider = dependencyProvider;
     this.#ui = dependencyProvider.ui;
-    this.#text = dependencyProvider.textUltilities;
+    this.#text = dependencyProvider.textUtilities;
     this.#settings = settings;
     // Use shared Ulysses instance from DependencyProvider
     this.#ulysses = dependencyProvider.ulysses;

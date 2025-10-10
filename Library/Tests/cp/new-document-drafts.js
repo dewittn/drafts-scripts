@@ -113,14 +113,14 @@ const ui = new DraftsUI();
 ui.debug = true;
 
 const fileSystem = new TestFS(destinationsData);
-const textUltilities = new TextUltilities();
+const textUtilities = new TextUtilities();
 
 const dependencies = {
   ui: ui,
   fileSystem: fileSystem,
   settings: settings,
   tableName: "table1",
-  textUltilities: textUltilities,
+  textUtilities: textUtilities,
 };
 
 const statuses = new Statuses(dependencies);

@@ -19,7 +19,7 @@ class BearDoc {
   constructor(dependencyProvider, settings, record = {}) {
     this.#dependencyProvider = dependencyProvider;
     this.#ui = dependencyProvider.ui;
-    this.#text = dependencyProvider.textUltilities;
+    this.#text = dependencyProvider.textUtilities;
     this.#settings = settings;
     this.#bear = new Bear();
 

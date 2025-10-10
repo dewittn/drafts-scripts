@@ -104,7 +104,7 @@ function setupContentPipelineServices() {
       ui: () => c.get('cpUI'),
       fileSystem: () => c.get('cpFileSystem'),
       settings: () => c.get('cpSettings'),
-      textUltilities: () => c.get('textUtilities'),
+      textUtilities: () => c.get('textUtilities'),
       tableName: "Content",
       defaultTag: () => c.get('cpSettings').defaultTag["Content"],
       statuses: () => c.get('cpStatuses'),

@@ -1,3 +1,5 @@
+require("modules/cp/templates/template_factory.js");
+
 class DraftsDoc {
   static docIDType = "DraftsID";
   #dependencyProvider;
@@ -17,7 +19,7 @@ class DraftsDoc {
   constructor(dependencyProvider, settings, record = {}) {
     this.#dependencyProvider = dependencyProvider;
     this.#ui = dependencyProvider.ui;
-    this.#text = dependencyProvider.textUltilities;
+    this.#text = dependencyProvider.textUtilities;
     this.#settings = settings;
     this.#template_factory = new TemplateFactory(dependencyProvider);
 
@@ -117,7 +119,7 @@ class DraftsDoc {
   }
 
   get content() {
-    return this.workingDraft.content;
+    return this.workingDraft?.content;
   }
 
   get status() {
@@ -130,6 +132,12 @@ class DraftsDoc {
 
   set status(newStatus) {
     this.#currentStatus = newStatus;
+
+    // Check if workingDraft exists before trying to modify it
+    if (this.workingDraft == undefined) {
+      console.log('[DraftsDoc] Cannot set status: workingDraft is undefined');
+      return;
+    }
 
     if (this.inPipeline) newStatus = `${this.#defaultTag}::${newStatus}`;
     this.workingDraft.addTag(newStatus);
@@ -151,6 +159,12 @@ class DraftsDoc {
   set destination(newDest) {
     // Check if newDest exists in Destinations
     if (this.#destinations.isValidKey(newDest) == false) return;
+
+    // Check if workingDraft exists before trying to modify it
+    if (this.workingDraft == undefined) {
+      console.log('[DraftsDoc] Cannot set destination: workingDraft is undefined');
+      return;
+    }
 
     // If it does add it as a tag
     this.workingDraft.addTag(newDest);
@@ -177,6 +191,12 @@ class DraftsDoc {
   set inPipeline(value) {
     if (typeof value !== "boolean") return;
 
+    // Check if workingDraft exists before trying to modify it
+    if (this.workingDraft == undefined) {
+      console.log('[DraftsDoc] Cannot set inPipeline: workingDraft is undefined');
+      return;
+    }
+
     if (value) {
       this.workingDraft.removeTag(this.#defaultTag);
       this.workingDraft.removeTag(this.status);
@@ -188,6 +208,10 @@ class DraftsDoc {
   }
 
   open() {
+    if (this.workingDraft == undefined) {
+      console.log('[DraftsDoc] Cannot open: workingDraft is undefined');
+      return;
+    }
     const workspace = Workspace.find("default");
     app.currentWindow.applyWorkspace(workspace);
     editor.load(this.workingDraft);
@@ -195,10 +219,18 @@ class DraftsDoc {
   }
 
   save() {
+    if (this.workingDraft == undefined) {
+      console.log('[DraftsDoc] Cannot save: workingDraft is undefined');
+      return;
+    }
     this.workingDraft.update();
   }
 
   delete() {
+    if (this.workingDraft == undefined) {
+      console.log('[DraftsDoc] Cannot delete: workingDraft is undefined');
+      return;
+    }
     this.workingDraft.isTrashed = true;
     this.workingDraft.update();
   }

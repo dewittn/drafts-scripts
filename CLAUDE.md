@@ -26,7 +26,42 @@ The project uses Gulp for build automation and file synchronization:
   - `Templates/` - Markdown templates for various use cases
   - `Data/` - YAML/JSON configuration and data files
   - `Themes/` - Drafts theme files
+  - `Tests/` - Test suite (unit and integration tests)
 - `gulpfile.js` - Build configuration that syncs files to iCloud Drafts directory
+
+### Module Path Convention
+
+**IMPORTANT**: All `require()` statements use `Library/Scripts/` as the base path, regardless of the file's location.
+
+This means:
+- Files in `Library/Scripts/modules/cp/core/` use paths like `modules/cp/utils/TextUtilities.js`
+- Files in `Library/Scripts/shared/core/` use paths like `shared/core/ServiceContainer.js`
+- Files in `Library/Tests/unit/cp/` use paths like `../Tests/fixtures/assertions.js`
+- Files in `Library/Actions/` use paths like `modules/cp/core/ContentPipeline.js`
+
+**Examples:**
+
+```javascript
+// From Library/Scripts/modules/cp/core/ContentPipeline.js
+require("modules/cp/utils/TextUtilities.js");           // ✅ Correct
+require("shared/core/ServiceContainer.js");             // ✅ Correct
+require("../utils/TextUtilities.js");                   // ❌ Wrong - don't use relative paths
+
+// From Library/Tests/unit/cp/text-utilities-test.js
+require("../Tests/fixtures/assertions.js");             // ✅ Correct (relative to Library/Scripts/)
+require("modules/cp/utils/TextUtilities.js");           // ✅ Correct
+require("../../fixtures/assertions.js");                // ❌ Wrong - base is always Library/Scripts/
+
+// From Library/Actions/cp/add-to-pipeline.js
+require("modules/cp/core/ContentPipeline.js");          // ✅ Correct
+require("shared/core/ServiceInitializer.js");           // ✅ Correct
+```
+
+**Why this matters:**
+- Drafts runs all scripts with `Library/Scripts/` as the working directory
+- Using consistent paths prevents "module not found" errors
+- Makes refactoring easier since paths don't change when files move
+- All documentation and examples follow this convention
 
 ### Key Components
 

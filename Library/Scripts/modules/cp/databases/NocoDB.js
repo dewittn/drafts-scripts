@@ -15,7 +15,7 @@ class NocoController {
     this.#tableName = dependencyProvider.tableName;
     this.#settings = dependencyProvider.settings.nocodb;
     this.#defaultFields = this.#settings.defaultFields;
-    this.#text = dependencyProvider.textUltilities;
+    this.#text = dependencyProvider.textUtilities;
     this.#database = new NocoDB().base().table(this.#tableName);
   }
 

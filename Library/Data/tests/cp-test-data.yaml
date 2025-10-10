@@ -1,0 +1,157 @@
+# Content Pipeline Test Data
+# This file contains standardized test fixtures for CP tests
+# Build process converts this to JSON for runtime use
+
+# Settings configuration for tests
+settings:
+  defaultTag: "In Pipeline"
+
+  statuses:
+    selectStatus:
+      errorMessage: "Error: You must select a status!!"
+      menuSettings:
+        menuTitle: "Chose Status:"
+        menuMessage: "Please select a status for"
+
+    statusList:
+      - Developing
+      - Drafting
+      - Writing
+      - Editing
+      - Polishing
+      - On Deck
+
+  destinations:
+    destinationsFile: "destinations.json"
+    errorMessage: "Error: You must select a destination!!"
+    menuPicker:
+      name: "destination"
+      label: "Destination"
+    menuSettings:
+      menuTitle: "Chose destination:"
+      menuMessage: "Please select a destination for"
+      isCancellable: false
+      menuItems:
+        - type: "button"
+          data:
+            name: "Ok"
+            value: "ok"
+
+  documentFactory:
+    draftsDoc:
+      createNewDraft:
+        infoMessage: "Draft cannot be added without a destination!"
+        errorMessage: "Error: Draft could not be added to the Pipeline!"
+        successMessage: "Success! Draft added to the Pipeline"
+        menuSettings:
+          menuTitle: "Working title?"
+          menuMessage: "Please enter a working title for your draft (no markdown):"
+          menuItems:
+            - type: "button"
+              data:
+                name: "Developing"
+                value: "Developing"
+                isDefault: true
+            - type: "button"
+              data:
+                name: "Drafting"
+                value: "Drafting"
+            - type: "textField"
+              data:
+                name: "workingTitle"
+                label: ""
+                initialText: ""
+
+    ulyssesDoc:
+      excerptText: "This is a placeholder for the excerpt!!"
+      darftsCallbackData:
+        baseURL: "drafts://x-callback-url/"
+        runActionParams: "runAction?action="
+        uuidParams: "&text="
+      piplineLinks:
+        - linkText: "Content Pipeline: Update Status"
+          actionName: "updateStatusWithUlyssesID"
+        - linkText: "Content Pipeline: Sync Status"
+          actionName: "syncStatusWithUlyssesID"
+
+# Destinations data for testing
+destinations:
+  table1:
+    inbox:
+      groupID: "TEST-INBOX-ID-001"
+
+    "Test Newsletter":
+      groupID: "TEST-NEWSLETTER-ID-001"
+      draftAction: "Show Alert"
+      airtableName: "Newsletter"
+      template: "newsletter"
+
+    "Test Blog":
+      groupID: "TEST-BLOG-ID-001"
+      airtableName: "Blog.Posts"
+      template: "blogPost"
+      scrubText: "Blog: "
+
+    "Test Studio":
+      groupID: "TEST-STUDIO-ID-001"
+      airtableName: "Coto.Studio"
+
+  table2:
+    inbox:
+      groupID: "TEST-INBOX-ID-002"
+
+# Mock records for database tests
+mockRecords:
+  - id: "recTEST001"
+    docID: "TEST-DRAFT-UUID-001"
+    docIDType: "DraftsID"
+    Title: "Test Draft 1"
+    Status: "Writing"
+    Destination: "Test Blog"
+    Slug: "test-draft-1"
+
+  - id: "recTEST002"
+    docID: "TEST-ULYSSES-UUID-001"
+    docIDType: "UlyssesID"
+    Title: "Test Sheet 1"
+    Status: "Editing"
+    Destination: "Test Newsletter"
+    Slug: "test-sheet-1"
+
+  - id: "recTEST003"
+    docID: "TEST-DRAFT-UUID-002"
+    docIDType: "DraftsID"
+    Title: "Test Draft 2"
+    Status: "Developing"
+    Destination: "inbox"
+
+# Test scenarios
+scenarios:
+  simpleTextUtilities:
+    inputTags:
+      - "test1"
+      - "test2"
+      - "social media"
+    expectedTags:
+      - "Test1"
+      - "Test2"
+      - "Social Media"
+
+  documentConversion:
+    sourceDraft:
+      uuid: "TEST-CONVERT-UUID-001"
+      content: |
+        # Test Document for Conversion
+
+        This is a test draft created for conversion testing.
+
+        It includes [markdown links](https://example.com).
+      tags:
+        - "In Pipeline"
+        - "Writing"
+        - "Test Blog"
+
+    expectedSheet:
+      status: "Writing"
+      destination: "Test Blog"
+      contentLength: 100  # Approximate

@@ -3,7 +3,9 @@ require("modules/cp/core/Destinations.js");
 require("modules/cp/core/RecentRecords.js");
 require("modules/cp/utils/TextUtilities.js");
 require("shared/libraries/DraftsUI.js");
+require("shared/libraries/ulysses-v2.js");
 require("modules/cp/documents/DocumentFactory.js");
+require("modules/cp/templates/template_factory.js");
 
 require("modules/cp/databases/TestDB.js");
 require("modules/cp/filesystems/TestFS.js");
@@ -119,14 +121,17 @@ const settings = {
 
 const ui = new DraftsUI();
 const fileSystem = new TestFS(destinationsData);
-const textUltilities = new TextUltilities();
+const textUtilities = new TextUtilities();
+const ulysses = new Ulysses();
 
 const dependencies = {
   ui: ui,
   fileSystem: fileSystem,
   settings: settings,
   tableName: "table1",
-  textUltilities: textUltilities,
+  textUtilities: textUtilities,
+  ulysses: ulysses,
+  defaultTag: settings.defaultTag,
 };
 
 const statuses = new Statuses(dependencies);

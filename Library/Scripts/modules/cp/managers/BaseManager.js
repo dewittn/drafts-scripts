@@ -29,7 +29,7 @@ class BaseManager {
   }
 
   get text() {
-    return this.#dependencyProvider.textUltilities;
+    return this.#dependencyProvider.textUtilities;
   }
 
   get statuses() {
