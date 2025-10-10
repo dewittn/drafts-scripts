@@ -1,3 +1,5 @@
-require("modules/cp/core/ContentPipeline.js");
-const cp = ContentPipeline.getInstance();
+require("shared/core/ServiceInitializer.js");
+initializeServices();
+
+const cp = ServiceContainer.getInstance().get('cpDefault');
 cp.updateStatusOfRecord(draft.content, "UlyssesID");

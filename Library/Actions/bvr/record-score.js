@@ -1,4 +1,6 @@
-if (typeof Team == "undefined") require("modules/bvr/core/Team.js");
+require("shared/core/ServiceInitializer.js");
+initializeServices();
 
-const team = Team.getInstance();
+const container = ServiceContainer.getInstance();
+const team = container.get('teamFactory')();
 team.gameRecordResult();

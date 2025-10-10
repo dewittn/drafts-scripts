@@ -1,5 +1,6 @@
 // Content Pipeline Open
-require("modules/cp/core/ContentPipeline.js");
+require("shared/core/ServiceInitializer.js");
+initializeServices();
 
-const cp = ContentPipeline.getInstance();
+const cp = ServiceContainer.getInstance().get('cpDefault');
 cp.welcome();
