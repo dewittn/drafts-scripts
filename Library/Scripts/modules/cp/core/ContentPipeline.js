@@ -422,7 +422,7 @@ class ContentPipeline {
     const result = this.#status.updateStatus(docID, docIDType);
 
     // Handle cross-manager actions
-    if (typeof result === 'object' && result.action) {
+    if (result && typeof result === 'object' && result.action) {
       switch (result.action) {
         case "addToPipeline":
           if (this.addDocToPipeline() == false) return;
@@ -457,7 +457,7 @@ class ContentPipeline {
     const result = this.#navigation.getPublishedPostURL(year);
 
     // Handle year change request
-    if (typeof result === 'object' && result.action === 'changeYear') {
+    if (result && typeof result === 'object' && result.action === 'changeYear') {
       return this.getPublishedPostURL(result.year);
     }
 

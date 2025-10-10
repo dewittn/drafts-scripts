@@ -1,4 +1,4 @@
-class TextUltilities {
+class TextUtilities {
   constructor() {}
 
   // Converts string to Title Case

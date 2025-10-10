@@ -158,6 +158,23 @@ function setupContentPipelineServices() {
     const settings = c.get('cpSettings');
     return new Airtable(settings.airtableApiKey);
   }, true);
+
+  // Register ContentPipeline as a factory that returns singletons per table
+  container.register('contentPipeline', (c) => {
+    if (typeof ContentPipeline == "undefined") {
+      require("modules/cp/core/ContentPipeline.js");
+    }
+    // Return factory function that creates/returns singleton per table
+    return (table = "Content") => ContentPipeline.getInstance(table);
+  }, true);
+
+  // Register default ContentPipeline instance for convenience
+  container.register('cpDefault', (c) => {
+    if (typeof ContentPipeline == "undefined") {
+      require("modules/cp/core/ContentPipeline.js");
+    }
+    return ContentPipeline.getInstance("Content");
+  }, true);
 }
 
 /**

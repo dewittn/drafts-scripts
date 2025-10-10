@@ -22,10 +22,16 @@ if (typeof setupBVRServices == "undefined") {
 function initializeServices() {
   const container = ServiceContainer.getInstance();
 
-  // Check if already initialized
-  if (container.has('servicesInitialized')) {
+  // Check if already initialized AND has required services
+  if (container.has('servicesInitialized') && container.has('cpDefault')) {
     console.log('[ServiceInitializer] Services already initialized, skipping');
     return;
+  }
+
+  // If servicesInitialized but missing cpDefault, reset and re-initialize
+  if (container.has('servicesInitialized') && !container.has('cpDefault')) {
+    console.log('[ServiceInitializer] Services incomplete, resetting...');
+    container.reset();
   }
 
   console.log('[ServiceInitializer] Initializing all services...');
@@ -33,23 +39,6 @@ function initializeServices() {
   // Initialize BVR and CP services
   setupBVRServices();
   setupContentPipelineServices();
-
-  // Register ContentPipeline as a factory that returns singletons per table
-  container.register('contentPipeline', (c) => {
-    if (typeof ContentPipeline == "undefined") {
-      require("modules/cp/core/ContentPipeline.js");
-    }
-    // Return factory function that creates/returns singleton per table
-    return (table = "Content") => ContentPipeline.getInstance(table);
-  }, true);
-
-  // Register default ContentPipeline instance for convenience
-  container.register('cpDefault', (c) => {
-    if (typeof ContentPipeline == "undefined") {
-      require("modules/cp/core/ContentPipeline.js");
-    }
-    return ContentPipeline.getInstance("Content");
-  }, true);
 
   // Mark as initialized
   container.register('servicesInitialized', () => true, true);
