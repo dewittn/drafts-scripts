@@ -10,7 +10,15 @@
       "Bash(Library/Scripts/shared/core/ServiceFactories.js)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\n🔧 Remove ../Scripts/ prefix from all Actions and Tests files\n\nSince Library/Scripts/ is the base path for ALL require statements\n(regardless of file location), files in Actions/ and Tests/ should\nnot use ../Scripts/ prefix.\n\nChanges:\n- Library/Actions/: Remove ../Scripts/ from all require paths\n- Library/Tests/: Remove ../Scripts/ from all require paths\n- Fix module paths to use correct locations:\n  - ContentPipeline.js → modules/cp/core/ContentPipeline.js\n  - BVR.js → modules/bvr/core/BVR.js\n  - Statuses.js → modules/cp/core/Statuses.js\n  - Destinations.js → modules/cp/core/Destinations.js\n  - RecentRecords.js → modules/cp/core/RecentRecords.js\n  - TextUtilities.js → modules/cp/utils/TextUtilities.js\n  - document_factory.js → documents/DocumentFactory.js\n\nAll require paths now correctly use Library/Scripts/ as the base.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(tree:*)",
+      "Bash(awk:*)",
+      "Bash(mkdir:*)",
+      "Read(//Users/dewittn/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents/Library/Data/cp/**)",
+      "Read(//Users/dewittn/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents/**)",
+      "Bash(npm run sync:*)",
+      "Bash(gulp yaml2json:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []

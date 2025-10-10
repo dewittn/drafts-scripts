@@ -1,4 +1,6 @@
-if (typeof BaseManager == "undefined") require("modules/cp/managers/BaseManager.js");
+if (typeof BaseManager == "undefined") {
+  require("modules/cp/managers/BaseManager.js");
+}
 
 /**
  * MenuOrchestrator - Handles UI menu coordination
@@ -19,25 +21,24 @@ class MenuOrchestrator extends BaseManager {
    * @returns {string} Next action to perform
    */
   showWelcome() {
-    const { menuPicker, menuSettings, errorMessage } =
-      this.settings.welcome;
+    const { menuPicker, menuSettings, errorMessage } = this.settings.welcome;
 
     // Create menu picker from recent records
     this.ui.utilities.addRecordColomsToMenuPicker(
       menuPicker,
       menuSettings,
-      this.recent.records
+      this.recent.records,
     );
 
     // Build and display menu
     const welcomeScreen = this.ui.buildMenu(menuSettings);
-    if (welcomeScreen.show() == false) return context.cancel();
+    if (welcomeScreen.show() == false) return "canceled";
 
     // Record input from prompt
     const nextFunction = welcomeScreen.buttonPressed;
     const index = this.ui.utilities.getIndexFromPromptPicker(
       welcomeScreen,
-      menuPicker
+      menuPicker,
     );
     const record = this.recent.selectByIndex(index);
 
@@ -64,7 +65,7 @@ class MenuOrchestrator extends BaseManager {
 
     // Build and display menu
     const menu = this.ui.buildMenu(menuSettings);
-    if (menu.show() == false) return context.cancel();
+    if (menu.show() == false) return "canceled";
 
     return menu.buttonPressed;
   }
@@ -95,7 +96,7 @@ class MenuOrchestrator extends BaseManager {
 
     // Show menu
     const menu = this.ui.buildMenu(menuSettings);
-    if (menu.show() == false) return context.cancel();
+    if (menu.show() == false) return "canceled";
 
     // Load selected document
     const index = menu.fieldValues[menuPicker.name];
@@ -112,7 +113,7 @@ class MenuOrchestrator extends BaseManager {
     const { menuSettings } = this.settings.addContent;
 
     const menu = this.ui.buildMenu(menuSettings);
-    if (menu.show() == false) return context.cancel();
+    if (menu.show() == false) return "canceled";
 
     return menu.buttonPressed;
   }

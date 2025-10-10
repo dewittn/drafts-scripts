@@ -137,10 +137,10 @@ class ContentPipeline {
     // Text Utilities
     if (!this.#services.has("textUtilities")) {
       this.#services.register("textUtilities", () => {
-        if (typeof TextUltilities == "undefined") {
+        if (typeof TextUtilities == "undefined") {
           require("modules/cp/utils/TextUtilities.js");
         }
-        return new TextUltilities();
+        return new TextUtilities();
       }, true);
     }
   }
@@ -255,7 +255,9 @@ class ContentPipeline {
 
   get #navigation() {
     if (!this.#navigationManager) {
-      this.#navigationManager = new NavigationManager(this.#getManagerContext());
+      this.#navigationManager = new NavigationManager(
+        this.#getManagerContext(),
+      );
     }
     return this.#navigationManager;
   }
@@ -265,7 +267,9 @@ class ContentPipeline {
     return {
       dependencyProvider: this.#dependencyProvider,
       activeDoc: this.#activeDoc,
-      setActiveDoc: (doc) => { this.#activeDoc = doc; },
+      setActiveDoc: (doc) => {
+        this.#activeDoc = doc;
+      },
       services: this.#services,
       // Provide access to shared dependencies
       database: this.db,
@@ -422,7 +426,7 @@ class ContentPipeline {
     const result = this.#status.updateStatus(docID, docIDType);
 
     // Handle cross-manager actions
-    if (result && typeof result === 'object' && result.action) {
+    if (result && typeof result === "object" && result.action) {
       switch (result.action) {
         case "addToPipeline":
           if (this.addDocToPipeline() == false) return;
@@ -457,7 +461,9 @@ class ContentPipeline {
     const result = this.#navigation.getPublishedPostURL(year);
 
     // Handle year change request
-    if (result && typeof result === 'object' && result.action === 'changeYear') {
+    if (
+      result && typeof result === "object" && result.action === "changeYear"
+    ) {
       return this.getPublishedPostURL(result.year);
     }
 
@@ -468,6 +474,8 @@ class ContentPipeline {
   // * Private Functions
   // **************
   #functionToRunNext(name, args) {
+    if (name == "canceled" || name == undefined) return context.cancel();
+
     const route = this.#navigation.routeToFunction(name, args);
     if (route && route.action) {
       return this[route.action].apply(this, route.args || []);
