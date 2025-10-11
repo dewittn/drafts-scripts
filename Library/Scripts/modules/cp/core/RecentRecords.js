@@ -86,17 +86,27 @@ class RecentRecords {
 
   loadRecent() {
     const documents = this.#fs.read(this.#recentDocsFile);
-    return documents != undefined
-      ? documents
-      : this.retrieveRecentFromDatabase();
+    if (documents != undefined) {
+      return documents;
+    }
+
+    // If no file exists, initialize with empty structure for this table
+    const emptyStructure = {};
+    emptyStructure[this.#table] = [];
+    return emptyStructure;
   }
 
   retrieveRecentFromDatabase() {
-    return this.#db
+    const records = this.#db
       .fields(["Title", "Updated", "DraftsID", "UlyssesID"])
       .maxRecords("10")
       .sort("Updated", "desc")
       .select();
+
+    // Wrap in table structure
+    const result = {};
+    result[this.#table] = records;
+    return result;
   }
 
   selectByIndex(index) {

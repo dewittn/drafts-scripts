@@ -1,24 +1,22 @@
 // Content Pipeline Files
-require("modules/cp/core/DependencyProvider.js");
-require("modules/cp/core/Statuses.js");
-require("modules/cp/core/Destinations.js");
-require("modules/cp/core/RecentRecords.js");
-require("shared/libraries/DraftsUI.js");
-require("modules/cp/filesystems/CloudFS.js");
-require("modules/cp/databases/NocoDB.js");
-require("modules/cp/documents/DocumentFactory.js");
-require("modules/cp/templates/template_factory.js");
-if (typeof ServiceContainer == "undefined") {
-  require("shared/core/ServiceContainer.js");
-}
+if (typeof DependencyProvider == "undefined") require("modules/cp/core/DependencyProvider.js");
+if (typeof Statuses == "undefined") require("modules/cp/core/Statuses.js");
+if (typeof Destinations == "undefined") require("modules/cp/core/Destinations.js");
+if (typeof RecentRecords == "undefined") require("modules/cp/core/RecentRecords.js");
+if (typeof DraftsUI == "undefined") require("shared/libraries/DraftsUI.js");
+if (typeof CloudFS == "undefined") require("modules/cp/filesystems/CloudFS.js");
+if (typeof NocoController == "undefined") require("modules/cp/databases/NocoDB.js");
+if (typeof DocumentFactory == "undefined") require("modules/cp/documents/DocumentFactory.js");
+if (typeof TemplateFactory == "undefined") require("modules/cp/templates/template_factory.js");
+if (typeof ServiceContainer == "undefined") require("shared/core/ServiceContainer.js");
 
 // Manager classes
-require("modules/cp/managers/BaseManager.js");
-require("modules/cp/managers/DocumentManager.js");
-require("modules/cp/managers/PipelineManager.js");
-require("modules/cp/managers/StatusManager.js");
-require("modules/cp/managers/MenuOrchestrator.js");
-require("modules/cp/managers/NavigationManager.js");
+if (typeof BaseManager == "undefined") require("modules/cp/managers/BaseManager.js");
+if (typeof DocumentManager == "undefined") require("modules/cp/managers/DocumentManager.js");
+if (typeof PipelineManager == "undefined") require("modules/cp/managers/PipelineManager.js");
+if (typeof StatusManager == "undefined") require("modules/cp/managers/StatusManager.js");
+if (typeof MenuOrchestrator == "undefined") require("modules/cp/managers/MenuOrchestrator.js");
+if (typeof NavigationManager == "undefined") require("modules/cp/managers/NavigationManager.js");
 
 class ContentPipeline {
   static basePath = "/Library/Data/cp/";
@@ -92,11 +90,16 @@ class ContentPipeline {
     // Register services if not already registered
     this.#registerServices(table);
 
+    // Get defaultTag - handle both string (simple config) and object (multi-table config)
+    const defaultTag = typeof this.settings.defaultTag === 'string'
+      ? this.settings.defaultTag
+      : this.settings.defaultTag[this.#tableName];
+
     // Create dependency provider for lazy dependency injection
     this.#dependencyProvider = new DependencyProvider(
       this,
       this.#tableName,
-      this.settings.defaultTag[this.#tableName],
+      defaultTag,
     );
 
     this.#loadWorkspace();
@@ -206,10 +209,16 @@ class ContentPipeline {
 
   get db() {
     if (!this.#db) {
-      if (typeof NocoController == "undefined") {
-        require("modules/cp/databases/NocoDB.js");
+      // Check if a mock database is registered (for testing)
+      if (this.#services.has('cpDatabase')) {
+        this.#db = this.#services.get('cpDatabase');
+      } else {
+        // Use real database
+        if (typeof NocoController == "undefined") {
+          require("modules/cp/databases/NocoDB.js");
+        }
+        this.#db = new NocoController(this.#dependencyProvider);
       }
-      this.#db = new NocoController(this.#dependencyProvider);
     }
     return this.#db;
   }
@@ -222,6 +231,11 @@ class ContentPipeline {
       this.#document_factory = new DocumentFactory(this.#dependencyProvider);
     }
     return this.#document_factory;
+  }
+
+  // Alias for camelCase convention
+  get documentFactory() {
+    return this.document_factory;
   }
 
   // Manager getters - lazy initialization

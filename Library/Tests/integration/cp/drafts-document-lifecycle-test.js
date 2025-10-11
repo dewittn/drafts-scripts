@@ -54,9 +54,18 @@ test.assertNotNullish(documentFactory, 'DocumentFactory available');
 test.assertNotNullish(statuses, 'Statuses service available');
 test.assertNotNullish(destinations, 'Destinations service available');
 
-// Mock UI to auto-select destination
+// Mock UI to auto-select destination and title
 const mockUI = container.get('cpUI');
-mockUI.defaultMenuSelection = 'Test Blog';
+// Configure response for destination selection menu
+mockUI.setPromptResponse('Chose destination:', {
+  button: 'OK',
+  fieldValues: { destination: 'Test Blog' }
+});
+// Configure response for title/status menu
+mockUI.setPromptResponse('Working title?', {
+  button: 'Writing',
+  fieldValues: { title: 'Test Draft Document' }
+});
 
 // =============================================================================
 // Section 1: Create New Draft Document

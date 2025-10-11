@@ -163,7 +163,7 @@ class UlyssesDoc {
   set destination(newDest) {
     // Check if newDest exists in Destinations
     if (this.#destinations.isValidKey(newDest) == false) return;
-    if (this.#currentDest == undefined) this.#getDestinationOfSheet();
+    if (this.#currentDest == undefined) this.#currentDest = this.#getDestinationOfSheet();
     if (this.#currentDest == newDest) return;
 
     if (this.docID != undefined) {
@@ -173,7 +173,8 @@ class UlyssesDoc {
   }
 
   get destinationIsNotSet() {
-    return this.#currentDest == "";
+    // Use getter to ensure lazy initialization
+    return this.destination == "";
   }
 
   get airtableDestination() {

@@ -247,6 +247,12 @@ class DraftsDoc {
       uiSettings: this.#settings.createNewDraft,
     });
 
+    // Check if template creation was successful
+    if (templateDraft == undefined) {
+      console.log('[DraftsDoc] Template creation cancelled or failed');
+      return undefined;
+    }
+
     return templateDraft.draft;
   }
 

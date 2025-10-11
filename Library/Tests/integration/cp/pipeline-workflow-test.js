@@ -49,7 +49,7 @@ const contentPipeline = container.get('cpDefault');
 const documentFactory = contentPipeline.documentFactory;
 const statuses = contentPipeline.statuses;
 const destinations = contentPipeline.destinations;
-const recentRecords = contentPipeline.recentRecords;
+const recentRecords = contentPipeline.recent;
 const mockUI = container.get('cpUI');
 
 test.assertNotNullish(contentPipeline, 'ContentPipeline instance created');
@@ -65,7 +65,7 @@ test.assertNotNullish(recentRecords, 'RecentRecords available');
 test.section('Verify Pipeline Components Initialized');
 
 // Check Statuses
-const statusList = statuses.list;
+const statusList = statuses.statusList;
 test.assertNotNullish(statusList, 'Status list loaded');
 test.assert(statusList.length > 0, 'Has status options');
 test.assertContains(statusList, 'Writing', 'Contains "Writing" status');
@@ -74,7 +74,7 @@ test.assertContains(statusList, 'Editing', 'Contains "Editing" status');
 test.info(`Loaded ${statusList.length} statuses`);
 
 // Check Destinations
-const destinationKeys = destinations.destinationKeys;
+const destinationKeys = destinations.keys;
 test.assertNotNullish(destinationKeys, 'Destination keys loaded');
 test.assert(destinationKeys.length > 0, 'Has destination options');
 
@@ -86,8 +86,15 @@ test.info(`Loaded ${destinationKeys.length} destinations`);
 
 test.section('Workflow - Create New Draft Document');
 
-// Mock UI to select destination
-mockUI.defaultMenuSelection = 'Test Blog';
+// Configure MockUI responses for destination and title menus
+mockUI.setPromptResponse('Chose destination:', {
+  button: 'OK',
+  fieldValues: { destination: 'Test Blog' }
+});
+mockUI.setPromptResponse('Working title?', {
+  button: 'Writing',
+  fieldValues: { title: 'Workflow Test Draft' }
+});
 
 let newDraft;
 test.assertDoesNotThrow(() => {
@@ -114,7 +121,7 @@ if (newDraft && newDraft.workingDraft) {
   const selectedStatus = 'Writing';
 
   // Verify status is valid
-  test.assert(statuses.list.includes(selectedStatus), 'Selected status is valid');
+  test.assert(statuses.statusList.includes(selectedStatus), 'Selected status is valid');
 
   test.assertDoesNotThrow(() => {
     newDraft.status = selectedStatus;

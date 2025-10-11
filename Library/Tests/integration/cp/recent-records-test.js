@@ -23,7 +23,7 @@ require("shared/core/ServiceInitializer.js");
 
 // Load required modules
 require("modules/cp/core/ContentPipeline.js");
-require("modules/cp/core/RecentRecords.js");
+// RecentRecords is already loaded by ContentPipeline.js
 
 // Create test instance
 const test = new TestAssertions('RecentRecords Integration Test');
@@ -48,7 +48,7 @@ container.register('cpDatabase', () => createMockDatabase(getMockRecords()), tru
 
 // Get services under test
 const contentPipeline = container.get('cpDefault');
-const recentRecords = contentPipeline.recentRecords;
+const recentRecords = contentPipeline.recent;
 const mockFS = container.get('cpFileSystem');
 const mockDB = container.get('cpDatabase');
 
@@ -377,8 +377,8 @@ const allRecords = recentRecords.allRecords;
 test.assertNotNullish(allRecords, 'allRecords accessible');
 test.assertType(allRecords, 'Object', 'allRecords is an object');
 
-// Should contain the table key
-test.assertNotNullish(allRecords.table1, 'Contains table1 key');
+// Should contain the table key (ContentPipeline uses "Content" as default)
+test.assertNotNullish(allRecords.Content, 'Contains Content table key');
 
 test.info(`All records contains ${Object.keys(allRecords).length} tables`);
 
@@ -389,7 +389,7 @@ test.info(`All records contains ${Object.keys(allRecords).length} tables`);
 test.section('File System Write Verification');
 
 // MockFileSystem should have write operations
-const writeOps = mockFS.writes || [];
+const writeOps = mockFS.getOperationsByType('write');
 
 test.assert(writeOps.length > 0, 'File system writes occurred');
 test.info(`File system writes: ${writeOps.length}`);
@@ -407,7 +407,7 @@ container.register('cpFileSystem', () => emptyFS, true);
 // Reset and reinitialize to use new file system
 container.resetSingletons();
 const contentPipeline2 = container.get('cpDefault');
-const recentRecords2 = contentPipeline2.recentRecords;
+const recentRecords2 = contentPipeline2.recent;
 
 // Should fall back to database
 test.info('Testing database fallback when cache file missing');

@@ -17,6 +17,17 @@ class MockUI {
     this.debug = options.debug || false;
     this.interactions = [];
     this.promptResponses = options.promptResponses || {};
+
+    // Utilities object for menu/prompt helpers
+    this.utilities = {
+      getTextFieldValueFromMenu: (menu) => {
+        // Extract text field value from mock menu
+        const fieldValues = menu.fieldValues || {};
+        // Return the first field value if any exist
+        const values = Object.values(fieldValues);
+        return values.length > 0 ? values[0] : '';
+      }
+    };
   }
 
   /**
@@ -102,15 +113,67 @@ class MockUI {
       console.log('[MockUI] Build Menu:', menuSettings.menuTitle);
     }
 
+    // Check for configured response for this menu
+    const menuTitle = menuSettings.menuTitle || 'default';
+
+    // Try exact match first, then partial match, then default
+    let response = null;
+    let hasResponse = false;
+
+    // 1. Exact match
+    if (menuTitle in this.promptResponses) {
+      response = this.promptResponses[menuTitle];
+      hasResponse = true;
+    }
+    // 2. Partial match (check if any key is contained in menuTitle)
+    else {
+      for (const key in this.promptResponses) {
+        if (menuTitle.includes(key)) {
+          response = this.promptResponses[key];
+          hasResponse = true;
+          break;
+        }
+      }
+    }
+    // 3. Default fallback
+    if (!hasResponse && 'default' in this.promptResponses) {
+      response = this.promptResponses['default'];
+      hasResponse = true;
+    }
+
+    if (this.debug && hasResponse) {
+      console.log('[MockUI] Using response:', response);
+    }
+
+    // Create smart fieldValues object that returns destination for any picker key
+    const baseFieldValues = hasResponse ? (response?.fieldValues || {}) : {};
+    const smartFieldValues = new Proxy(baseFieldValues, {
+      get(target, prop) {
+        // If the property exists, return it
+        if (prop in target) {
+          return target[prop];
+        }
+        // For any unknown property, return the 'destination' value if it exists
+        if ('destination' in target) {
+          return target['destination'];
+        }
+        // Otherwise return the first value in the object
+        const values = Object.values(target);
+        return values.length > 0 ? values[0] : undefined;
+      }
+    });
+
     // Return a mock prompt object
     return {
       show: () => {
         if (this.debug) {
-          console.log('[MockUI] Show prompt');
+          console.log('[MockUI] Show prompt:', menuTitle, '(has response:', hasResponse, ')');
         }
-        return false; // Simulate cancelled prompt in tests
+        // Return true if we have a configured response, false otherwise
+        return hasResponse;
       },
-      fieldValues: {}
+      buttonPressed: hasResponse ? (response?.button || 'OK') : null,
+      fieldValues: smartFieldValues
     };
   }
 
@@ -147,6 +210,11 @@ class MockUI {
  * MockDatabase - Mock implementation of database for testing
  */
 class MockDatabase {
+  // Query builder state
+  #queryFields = [];
+  #querySort = null;
+  #queryMaxRecords = null;
+
   constructor(testRecords = [], options = {}) {
     this.records = new Map(testRecords.map(r => [r.docID, r]));
     this.queries = [];
@@ -292,6 +360,102 @@ class MockDatabase {
       this.databaseError = false;
     }
   }
+
+  /**
+   * Query builder methods (fluent API for chaining)
+   */
+
+  /**
+   * Set fields to retrieve (query builder)
+   * @param {Array} fieldList - Array of field names
+   * @returns {MockDatabase} Returns this for chaining
+   */
+  fields(fieldList) {
+    this.#queryFields = fieldList;
+    if (this.debug) {
+      console.log('[MockDatabase] Query fields:', fieldList);
+    }
+    return this;
+  }
+
+  /**
+   * Set sort order (query builder)
+   * @param {string} field - Field to sort by
+   * @param {string} direction - 'asc' or 'desc'
+   * @returns {MockDatabase} Returns this for chaining
+   */
+  sort(field, direction = 'asc') {
+    this.#querySort = { field, direction };
+    if (this.debug) {
+      console.log('[MockDatabase] Query sort:', field, direction);
+    }
+    return this;
+  }
+
+  /**
+   * Set max records to return (query builder)
+   * @param {string|number} max - Maximum number of records
+   * @returns {MockDatabase} Returns this for chaining
+   */
+  maxRecords(max) {
+    this.#queryMaxRecords = parseInt(max);
+    if (this.debug) {
+      console.log('[MockDatabase] Query maxRecords:', this.#queryMaxRecords);
+    }
+    return this;
+  }
+
+  /**
+   * Execute the query and return results
+   * @returns {Array} Array of records matching the query
+   */
+  select() {
+    this.queries.push({
+      type: 'select',
+      fields: this.#queryFields,
+      sort: this.#querySort,
+      maxRecords: this.#queryMaxRecords
+    });
+
+    if (this.debug) {
+      console.log('[MockDatabase] Executing select query');
+    }
+
+    if (this.shouldFail) {
+      this.databaseError = true;
+      return [];
+    }
+
+    // Convert records map to array
+    let results = Array.from(this.records.values());
+
+    // Apply sorting if specified
+    if (this.#querySort) {
+      const { field, direction } = this.#querySort;
+      results.sort((a, b) => {
+        const aVal = a.fields?.[field] || a[field];
+        const bVal = b.fields?.[field] || b[field];
+
+        if (aVal === bVal) return 0;
+        if (direction === 'desc') {
+          return aVal > bVal ? -1 : 1;
+        }
+        return aVal > bVal ? 1 : -1;
+      });
+    }
+
+    // Apply maxRecords limit if specified
+    if (this.#queryMaxRecords) {
+      results = results.slice(0, this.#queryMaxRecords);
+    }
+
+    // Reset query parameters for next query
+    this.#queryFields = [];
+    this.#querySort = null;
+    this.#queryMaxRecords = null;
+
+    return results;
+  }
 }
 
 /**
@@ -370,7 +534,19 @@ class MockFileSystem {
   }
 
   /**
-   * Write file
+   * Write file (CloudFS-compatible interface)
+   */
+  write(fileName, content) {
+    this.operations.push({ type: 'write', fileName, content });
+    if (this.debug) {
+      console.log('[MockFS] Write:', fileName);
+    }
+    this.data[fileName] = content;
+    return true; // Return success
+  }
+
+  /**
+   * Write file (legacy interface)
    */
   writeFile(path, content) {
     this.operations.push({ type: 'write', path, content });
@@ -503,6 +679,14 @@ class MockUlysses {
       console.log('[MockUlysses] attachKeywords:', sheetId, keywords);
     }
 
+    // Guard against undefined keywords
+    if (!keywords || typeof keywords !== 'string') {
+      if (this.debug) {
+        console.log('[MockUlysses] Invalid keywords:', keywords);
+      }
+      return;
+    }
+
     const sheet = this.sheets.get(sheetId);
     if (sheet) {
       const keywordArray = keywords.split(',').map(k => k.trim());
@@ -519,6 +703,14 @@ class MockUlysses {
     this.operations.push({ type: 'removeKeywords', sheetId, keywords });
     if (this.debug) {
       console.log('[MockUlysses] removeKeywords:', sheetId, keywords);
+    }
+
+    // Guard against undefined keywords
+    if (!keywords || typeof keywords !== 'string') {
+      if (this.debug) {
+        console.log('[MockUlysses] Invalid keywords:', keywords);
+      }
+      return;
     }
 
     const sheet = this.sheets.get(sheetId);
@@ -589,6 +781,10 @@ class MockUlysses {
    * Extract title from content (first line)
    */
   _extractTitle(content) {
+    // Handle undefined or null content
+    if (!content) {
+      return 'Untitled';
+    }
     const lines = content.split('\n');
     const firstLine = lines[0] || 'Untitled';
     // Remove markdown heading markers

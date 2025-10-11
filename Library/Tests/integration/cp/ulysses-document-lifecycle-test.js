@@ -45,6 +45,8 @@ const testData = getCPTestData();
 container.register('cpFileSystem', () => createMockFS(testData), true);
 container.register('cpUI', () => createMockUI({ debug: false }), true);
 container.register('ulysses', () => createMockUlysses({ debug: true }), true);
+// Register mock settings to use test data instead of real settings file
+container.register('cpSettings', () => testData.settings, true);
 
 // Get services under test
 const contentPipeline = container.get('cpDefault');

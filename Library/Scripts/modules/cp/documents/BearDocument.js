@@ -162,7 +162,7 @@ class BearDoc {
   set destination(newDest) {
     // Check if newDest exists in Destinations
     if (this.#destinations.isValidKey(newDest) == false) return;
-    if (this.#currentDest == undefined) this.#getDestinationOfNote();
+    if (this.#currentDest == undefined) this.#currentDest = this.#getDestinationOfNote();
     if (this.#currentDest == newDest) return;
 
     if (this.docID != undefined) {

@@ -164,9 +164,16 @@ test.info('Invalid docIDType triggers error message');
 
 test.section('Create Document - draft type');
 
-// Mock UI to auto-select destination
+// Configure mock UI to handle all prompts with default response
 const mockUI = container.get('cpUI');
-mockUI.defaultMenuSelection = 'Test Blog';
+// Set a default response for all menus (destination selection, draft creation, etc.)
+mockUI.setPromptResponse('default', {
+  button: 'Writing',
+  fieldValues: {
+    destination: 'Test Blog',
+    title: 'Test Draft Title'
+  }
+});
 
 test.assertDoesNotThrow(() => {
   const doc = documentFactory.create('draft');
