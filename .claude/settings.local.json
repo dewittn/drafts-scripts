@@ -18,7 +18,11 @@
       "Read(//Users/dewittn/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents/**)",
       "Bash(npm run sync:*)",
       "Bash(gulp yaml2json:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(cat:*)",
+      "Bash(osascript:*)",
+      "Bash(npm run yaml2json:*)",
+      "Bash(npx gulp:*)"
     ],
     "deny": [],
     "ask": []
