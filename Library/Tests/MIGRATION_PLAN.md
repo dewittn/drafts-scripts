@@ -168,3 +168,247 @@ These files map Drafts actions to test files and need to be updated when tests a
 - Always use MockUlysses, never real Ulysses
 - Always use `textUtilities`, not `textUltilities` (typo!)
 - Cache values before modifying shared objects in tests
+
+---
+
+# Phase 2: Expand Test Coverage (COMPLETED)
+
+## Overview
+Phase 2 focused on creating NEW comprehensive tests for areas not covered by existing tests. This phase goes beyond migrating old tests to create thorough test coverage for core components.
+
+## ✅ Completed Phase 2 Tests
+
+### Unit Tests
+
+#### 1. ServiceContainer Comprehensive Tests ✅
+**File**: `Library/Tests/unit/shared/servicecontainer-test.js`
+
+**Coverage**:
+- ✅ Singleton instance behavior
+- ✅ Service registration (singleton vs factory)
+- ✅ Lazy instantiation
+- ✅ Dependency resolution and injection
+- ✅ Complex dependency chains
+- ✅ Error handling for missing services
+- ✅ Error handling for invalid factories
+- ✅ Reset functionality (full reset and singletons only)
+- ✅ Re-registration behavior
+- ✅ Instance registration (registerInstance)
+- ✅ Service existence checks (has)
+- ✅ Unregister functionality
+- ✅ Getting all registered services
+- ✅ Mixed singleton and factory services
+- ✅ Edge cases (null/undefined returns, primitive returns, function returns)
+
+**Test Coverage**: 15 sections, 100+ assertions
+
+---
+
+#### 2. DocumentFactory Unit Tests ✅
+**File**: `Library/Tests/unit/cp/document-factory-test.js`
+
+**Coverage**:
+- ✅ Loading documents by docIDType (DraftsID, UlyssesID, BearID, TestID)
+- ✅ Creating documents by type (draft, sheet, note)
+- ✅ Case-insensitive type handling
+- ✅ Error handling for missing docIDType
+- ✅ Error handling for invalid docIDType
+- ✅ Error handling for invalid create types
+- ✅ Document properties after load
+- ✅ Multiple document instance creation
+- ✅ Document type mapping verification
+- ✅ Edge cases (extra fields, null docID)
+
+**Test Coverage**: 14 sections, 50+ assertions
+
+---
+
+#### 3. MockUI Comprehensive Tests ✅
+**File**: `Library/Tests/unit/shared/mockui-test.js`
+
+**Coverage**:
+- ✅ MockUI creation and initialization
+- ✅ Display prompt with default values
+- ✅ Display prompt without defaults
+- ✅ Display error messages
+- ✅ Display success messages
+- ✅ Display menu with default selection
+- ✅ Display menu without default (first option)
+- ✅ Interaction tracking by type
+- ✅ Clear interactions
+- ✅ Debug mode functionality
+- ✅ Multiple MockUI instances (independence)
+- ✅ Complex menu configurations
+- ✅ Edge cases (empty configs, empty options)
+- ✅ Interaction data integrity
+- ✅ No side effects on passed configurations
+- ✅ Interaction order preservation
+
+**Test Coverage**: 17 sections, 60+ assertions
+
+---
+
+### Integration Tests
+
+#### 4. DraftsDocument Lifecycle Tests ✅
+**File**: `Library/Tests/integration/cp/drafts-document-lifecycle-test.js`
+
+**Coverage**:
+- ✅ Create new draft document
+- ✅ Access draft properties (docID, docIDType, title, content)
+- ✅ Set draft status
+- ✅ Set draft destination
+- ✅ Pipeline integration (inPipeline flag)
+- ✅ Save draft
+- ✅ Load existing draft by docID
+- ✅ Draft title and slug generation
+- ✅ Scrubbed title generation
+- ✅ Record integration
+- ✅ Airtable destination mapping
+- ✅ Open draft method
+- ✅ Delete draft (trash)
+- ✅ Error handling for undefined working draft
+- ✅ Validation methods (statusIsNotSet, destinationIsNotSet)
+
+**Test Coverage**: 14 sections, 40+ assertions
+
+---
+
+#### 5. UlyssesDocument Lifecycle Tests ✅
+**File**: `Library/Tests/integration/cp/ulysses-document-lifecycle-test.js`
+
+**Coverage**:
+- ✅ Create new Ulysses document (sheet)
+- ✅ Set sheet properties before save
+- ✅ Save sheet to Ulysses (MockUlysses)
+- ✅ Verify keywords attached on save
+- ✅ Verify default notes attached (excerpt, callback links)
+- ✅ Load existing sheet by docID
+- ✅ Update sheet status (keyword management)
+- ✅ Update sheet destination (keyword management)
+- ✅ Sheet title and slug generation
+- ✅ Pipeline integration (inPipeline flag)
+- ✅ Record integration
+- ✅ Airtable destination mapping
+- ✅ Open sheet method
+- ✅ Delete sheet (trash)
+- ✅ Error handling for save without properties
+- ✅ Validation methods (statusIsNotSet, destinationIsNotSet)
+- ✅ UlyssesID accessor
+- ✅ Error handling for Ulysses errors
+- ✅ Multiple save calls behavior
+
+**Test Coverage**: 19 sections, 70+ assertions
+
+**Note**: ALWAYS uses MockUlysses, never real Ulysses (prevents x-callback-url issues)
+
+---
+
+#### 6. RecentRecords Caching Tests ✅
+**File**: `Library/Tests/integration/cp/recent-records-test.js`
+
+**Coverage**:
+- ✅ Initial load from file system
+- ✅ Save document to recent records
+- ✅ Save multiple documents (ordering verification)
+- ✅ Update existing document (no duplicates)
+- ✅ Cache size limit (15 records max)
+- ✅ Delete document from recent records
+- ✅ Error handling for save with missing title
+- ✅ Error handling for delete with undefined doc
+- ✅ Select record by index
+- ✅ Select invalid index (returns undefined)
+- ✅ RecentRecord wrapper class - DraftsID detection (old format)
+- ✅ RecentRecord wrapper class - UlyssesID detection (old format)
+- ✅ RecentRecord wrapper class - new format (docID/docIDType)
+- ✅ All records access (multi-table support)
+- ✅ File system write verification
+- ✅ Database fallback when cache file missing
+- ✅ Null record filtering
+
+**Test Coverage**: 17 sections, 60+ assertions
+
+---
+
+#### 7. ContentPipeline Workflow Tests ✅
+**File**: `Library/Tests/integration/cp/pipeline-workflow-test.js`
+
+**Coverage**:
+- ✅ Verify pipeline components initialized
+- ✅ Workflow: Create new draft document
+- ✅ Workflow: Set document status
+- ✅ Workflow: Add to pipeline (mark as in pipeline)
+- ✅ Workflow: Save to recent records
+- ✅ Workflow: Update document status
+- ✅ Workflow: Create Ulysses sheet
+- ✅ Workflow: Save sheet to Ulysses
+- ✅ Workflow: Add sheet to pipeline
+- ✅ Workflow: Save sheet to recent records
+- ✅ Workflow: Load document from recent records
+- ✅ Workflow: Change document destination
+- ✅ Workflow: Status progression (Developing → Drafting → Writing → Editing → Polishing)
+- ✅ Validation: Invalid status handling
+- ✅ Validation: Invalid destination handling
+- ✅ Workflow: Document conversion (reference to dedicated test)
+- ✅ Workflow: Delete from pipeline
+- ✅ Workflow: Multiple documents in pipeline
+- ✅ End-to-end workflow summary
+
+**Test Coverage**: 19 sections, 50+ assertions
+
+---
+
+## Phase 2 Test Statistics
+
+### Total Tests Created: 7 comprehensive test files
+
+**Unit Tests**: 3 files
+- ServiceContainer: 100+ assertions
+- DocumentFactory: 50+ assertions
+- MockUI: 60+ assertions
+
+**Integration Tests**: 4 files
+- DraftsDocument Lifecycle: 40+ assertions
+- UlyssesDocument Lifecycle: 70+ assertions
+- RecentRecords: 60+ assertions
+- ContentPipeline Workflows: 50+ assertions
+
+**Total Assertions**: 430+ assertions across all Phase 2 tests
+
+---
+
+## Phase 2 Benefits
+
+1. **Comprehensive Coverage**: Every major component now has thorough test coverage
+2. **Regression Prevention**: New tests catch issues early in development
+3. **Documentation**: Tests serve as living documentation of how components work
+4. **Refactoring Safety**: Comprehensive tests enable safe refactoring
+5. **Quality Assurance**: High confidence in core functionality
+
+---
+
+## Not Implemented (Lower Priority)
+
+- **BearDocument lifecycle tests** - Lower priority (less commonly used)
+- **Database connection tests** (AirTableDB, NocoDBDB) - Require real credentials or advanced mocking
+
+These can be added in future phases if needed.
+
+---
+
+## Next Steps (Future Phases)
+
+### Phase 3: Complete Phase 1 Migration (Optional)
+- Migrate remaining old tests from `Library/Tests/cp/` to new structure
+- Update test wrapper files
+- Archive obsolete tests
+
+### Phase 4: Performance and Edge Case Tests (Optional)
+- Load testing for large datasets
+- Stress testing for concurrent operations
+- More edge cases and error scenarios
+
+### Phase 5: Continuous Integration (Optional)
+- Set up automated test running
+- Test result reporting
+- Coverage metrics
