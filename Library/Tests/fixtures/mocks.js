@@ -74,6 +74,47 @@ class MockUI {
   }
 
   /**
+   * Display app message (used by CP components for error/info/success)
+   * @param {string} messageType - Type of message ('error', 'info', 'success')
+   * @param {string} message - Message to display
+   * @param {Object} debugData - Optional debug data
+   */
+  displayAppMessage(messageType, message, debugData = null) {
+    this.interactions.push({ type: 'appMessage', messageType, message, debugData });
+    if (this.debug) {
+      console.log(`[MockUI] App Message [${messageType}]:`, message);
+      if (debugData) {
+        console.log('[MockUI] Debug Data:', JSON.stringify(debugData, null, 2));
+      }
+    }
+    // Return undefined to simulate message display without halting execution
+    return undefined;
+  }
+
+  /**
+   * Build menu (used by select methods)
+   * @param {Object} menuSettings - Menu configuration
+   * @returns {Object} Mock prompt object
+   */
+  buildMenu(menuSettings) {
+    this.interactions.push({ type: 'buildMenu', menuSettings });
+    if (this.debug) {
+      console.log('[MockUI] Build Menu:', menuSettings.menuTitle);
+    }
+
+    // Return a mock prompt object
+    return {
+      show: () => {
+        if (this.debug) {
+          console.log('[MockUI] Show prompt');
+        }
+        return false; // Simulate cancelled prompt in tests
+      },
+      fieldValues: {}
+    };
+  }
+
+  /**
    * Get all interactions for assertions
    */
   getInteractions() {
@@ -264,7 +305,61 @@ class MockFileSystem {
   }
 
   /**
-   * Read file
+   * Read file (CloudFS-compatible interface)
+   * Returns JSON data for destinations, settings, etc.
+   */
+  read(fileName) {
+    this.operations.push({ type: 'read', fileName });
+    if (this.debug) {
+      console.log('[MockFS] Read:', fileName);
+    }
+
+    // Map file names to test data properties
+    if (fileName && fileName.includes('destinations')) {
+      const destinations = this.data.destinations || {};
+
+      // Normalize destination keys to lowercase for lookupAirTableDestinationName
+      // which uses .toLowerCase() internally
+      const normalizeDestinationKeys = (tableData) => {
+        const normalized = {};
+        for (const [key, value] of Object.entries(tableData)) {
+          // Keep both original case and lowercase keys
+          normalized[key] = value; // Original case for other methods
+          if (key !== key.toLowerCase()) {
+            normalized[key.toLowerCase()] = value; // Lowercase for lookupAirTableDestinationName
+          }
+        }
+        return normalized;
+      };
+
+      // Map "Content" table to "table1" for testing and normalize keys
+      // ContentPipeline defaults to "Content" but test data uses "table1"
+      if (destinations.table1 && !destinations.Content) {
+        return {
+          ...destinations,
+          Content: normalizeDestinationKeys(destinations.table1),
+          table1: normalizeDestinationKeys(destinations.table1)
+        };
+      }
+
+      // Normalize all table keys
+      const normalizedDestinations = {};
+      for (const [tableName, tableData] of Object.entries(destinations)) {
+        normalizedDestinations[tableName] = normalizeDestinationKeys(tableData);
+      }
+
+      return normalizedDestinations;
+    }
+    if (fileName && fileName.includes('settings')) {
+      return this.data.settings || {};
+    }
+
+    // Fallback to direct lookup
+    return this.data[fileName] || null;
+  }
+
+  /**
+   * Read file (legacy interface)
    */
   readFile(path) {
     this.operations.push({ type: 'read', path });
@@ -583,6 +678,16 @@ function createMockUlysses(options = {}) {
   return new MockUlysses(options);
 }
 
+/**
+ * Alias for createMockFileSystem (shorter name)
+ * @param {Object} testData - Test file data
+ * @param {Object} options - Configuration options
+ * @returns {MockFileSystem}
+ */
+function createMockFS(testData = {}, options = {}) {
+  return createMockFileSystem(testData, options);
+}
+
 // Export for use in test files
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -593,6 +698,7 @@ if (typeof module !== 'undefined' && module.exports) {
     createMockUI,
     createMockDatabase,
     createMockFileSystem,
+    createMockFS,
     createMockUlysses,
   };
 }

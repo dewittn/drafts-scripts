@@ -158,6 +158,31 @@ class TestAssertions {
   }
 
   /**
+   * Alias for assertIncludes - Assert that an array contains a value
+   * @param {Array} array - Array to test
+   * @param {*} value - Value to find
+   * @param {string} message - Test description
+   */
+  assertContains(array, value, message) {
+    this.assertIncludes(array, value, message);
+  }
+
+  /**
+   * Assert that an array has a specific length
+   * @param {Array} array - Array to test
+   * @param {number} expectedLength - Expected length
+   * @param {string} message - Test description
+   */
+  assertArrayLength(array, expectedLength, message) {
+    const condition = Array.isArray(array) && array.length === expectedLength;
+    if (!condition) {
+      const actualLength = Array.isArray(array) ? array.length : 'not an array';
+      message += ` (expected length: ${expectedLength}, got: ${actualLength})`;
+    }
+    this.assert(condition, message);
+  }
+
+  /**
    * Assert that an object has a property
    * @param {Object} obj - Object to test
    * @param {string} property - Property name

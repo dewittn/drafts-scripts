@@ -141,6 +141,14 @@ function createCPTestData() {
  */
 
 /**
+ * Get raw CP test data object
+ * @returns {Object} Raw test data object with settings, destinations, mockRecords, scenarios
+ */
+function getCPTestData() {
+  return loadCPTestData();
+}
+
+/**
  * Get CP settings for tests
  * @returns {Object} Settings configuration
  */
@@ -165,14 +173,24 @@ function getCPTestMockRecords() {
   return createCPTestData().getAllMockRecords();
 }
 
+/**
+ * Alias for getMockRecords - returns mock records array
+ * @returns {Array} Array of mock records
+ */
+function getMockRecords() {
+  return getCPTestMockRecords();
+}
+
 // Export for use in test files
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     loadCPTestData,
     TestDataHelper,
     createCPTestData,
+    getCPTestData,
     getCPTestSettings,
     getCPTestDestinations,
     getCPTestMockRecords,
+    getMockRecords,
   };
 }

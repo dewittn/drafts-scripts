@@ -127,7 +127,7 @@ test.section('Status Selection UI');
 // This would require the actual Drafts environment to work
 // We can verify the method exists and doesn't throw with our mock
 
-test.assertType(statuses.select, 'Function', 'select() method exists');
+test.assertType(statuses.select, 'function', 'select() method exists');
 test.info('Note: Full select() testing requires Drafts environment');
 
 // =============================================================================

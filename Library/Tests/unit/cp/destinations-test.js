@@ -327,7 +327,7 @@ test.section('Selection Method');
 
 // Note: The select() method uses buildMenu() which creates a Prompt object
 // This would require the actual Drafts environment to work
-test.assertType(destinations.select, 'Function', 'select() method exists');
+test.assertType(destinations.select, 'function', 'select() method exists');
 test.info('Note: Full select() testing requires Drafts environment');
 
 // =============================================================================
