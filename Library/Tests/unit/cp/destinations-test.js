@@ -1,18 +1,21 @@
 /**
- * Destinations Unit Test
+ * Destinations Comprehensive Unit Test
  *
  * Tests Destinations class in isolation with mock dependencies.
  * Verifies:
  * - Destinations list initialization from file system
  * - Destination selection UI
- * - Destination lookup by name
+ * - Destination lookup methods
+ * - Key validation
+ * - Airtable destination mapping
+ * - Template and action lookup
  * - Error handling
  */
 
 // Load test infrastructure
-require("../../fixtures/assertions.js");
-require("../../fixtures/testData.js");
-require("../../fixtures/mocks.js");
+require("../Tests/fixtures/assertions.js");
+require("../Tests/fixtures/testData.js");
+require("../Tests/fixtures/mocks.js");
 
 // Load ServiceContainer framework
 require("shared/core/ServiceInitializer.js");
@@ -21,180 +24,314 @@ require("shared/core/ServiceInitializer.js");
 require("modules/cp/core/Destinations.js");
 
 // Create test instance
-const test = new TestAssertions('Destinations Unit Tests');
+const test = new TestAssertions('Destinations Comprehensive Unit Tests');
 
+// =============================================================================
 // Setup with ServiceContainer
+// =============================================================================
+
+test.section('Setup and Configuration');
+
 resetServices();
 initializeServices();
 
 const container = ServiceContainer.getInstance();
 
 // Get test data
-const testDataHelper = createCPTestData();
-const testSettings = testDataHelper.getSettings();
-const testDestinations = testDataHelper.getDestinationsData('table1');
+const testData = getCPTestData();
+const testSettings = testData.settings;
+const destinationsData = testData.destinations;
 
 // Register test mocks
-const mockUI = createMockUI({ debug: true });
-const mockFS = createMockFileSystem({
-  '/Library/Data/cp/destinations.json': JSON.stringify({
-    table1: testDestinations
-  })
-}, { debug: true });
-
+const mockUI = createMockUI({ debug: false });
+const mockFS = createMockFS(testData);
 container.register('cpUI', () => mockUI, true);
 container.register('cpFileSystem', () => mockFS, true);
 
-// Create dependencies object
-const dependencies = {
-  ui: mockUI,
-  fileSystem: mockFS,
-  settings: testSettings,
-  tableName: 'table1',
-};
-
-// Create Destinations instance
-const destinations = new Destinations(dependencies);
-
-// Test Section: Initialization
-test.section('Initialization');
+// Get services
+const contentPipeline = container.get('cpDefault');
+const destinations = contentPipeline.destinations;
 
 test.assertNotNullish(destinations, 'Destinations instance created');
-test.assertNotNullish(destinations.destinationsList, 'Destinations list initialized');
-test.assertType(destinations.destinationsList, 'Array', 'Destinations list is an array');
 
-// Test Section: Destinations List Contents
-test.section('Destinations List Contents');
+// =============================================================================
+// Section 1: Initialization
+// =============================================================================
 
-test.assert(
-  destinations.destinationsList.length > 0,
-  'Destinations list is not empty'
-);
+test.section('Initialization');
 
-test.info(`Found ${destinations.destinationsList.length} destinations`);
-test.info(`Destinations: ${destinations.destinationsList.join(', ')}`);
+test.assertNotNullish(destinations.data, 'Destinations data initialized');
+test.assertType(destinations.data, 'Object', 'Destinations data is an object');
 
-// Verify specific test destinations exist
-const expectedDestinations = Object.keys(testDestinations).filter(key => key !== 'inbox');
+test.assertNotNullish(destinations.keys, 'Destinations keys initialized');
+test.assertType(destinations.keys, 'Array', 'Destinations keys is an array');
 
-expectedDestinations.forEach((destName) => {
-  test.assertIncludes(
-    destinations.destinationsList,
-    destName,
-    `Destinations list contains "${destName}"`
-  );
+// =============================================================================
+// Section 2: Destinations Keys Contents
+// =============================================================================
+
+test.section('Destinations Keys Contents');
+
+const keys = destinations.keys;
+
+test.assert(keys.length > 0, 'Has destination keys');
+test.info(`Found ${keys.length} destinations`);
+test.info(`Destinations: ${keys.join(', ')}`);
+
+// Verify specific test destinations exist (excluding 'inbox')
+const expectedDests = Object.keys(destinationsData.table1).filter(key => key !== 'inbox');
+
+test.assert(keys.length >= expectedDests.length, 'Has all expected destinations');
+
+expectedDests.forEach((destName) => {
+  test.assertContains(keys, destName, `Destinations contains "${destName}"`);
 });
 
-// Test Section: Destination Lookup
-test.section('Destination Lookup');
+// Verify specific destinations from test data
+test.assertContains(keys, 'Test Newsletter', 'Contains "Test Newsletter"');
+test.assertContains(keys, 'Test Blog', 'Contains "Test Blog"');
+test.assertContains(keys, 'Test Studio', 'Contains "Test Studio"');
 
-// Test getting destination by name
-const firstDest = destinations.destinationsList[0];
-const destData = destinations.getDestination(firstDest);
+// =============================================================================
+// Section 3: Key Validation
+// =============================================================================
 
-test.assertNotNullish(destData, `Can retrieve destination "${firstDest}"`);
-test.assertNotNullish(destData.groupID, 'Destination has groupID');
+test.section('Key Validation');
 
-test.info(`Destination "${firstDest}" groupID: ${destData.groupID}`);
+// Valid keys
+test.assert(destinations.isValidKey('Test Blog'), '"Test Blog" is valid');
+test.assert(destinations.isValidKey('Test Newsletter'), '"Test Newsletter" is valid');
+test.assert(destinations.isValidKey('Test Studio'), '"Test Studio" is valid');
 
-// Test getting inbox
-const inbox = destinations.getInbox();
-test.assertNotNullish(inbox, 'Can retrieve inbox');
-test.assertNotNullish(inbox.groupID, 'Inbox has groupID');
+// Invalid keys
+test.assert(!destinations.isValidKey('InvalidDestination'), 'Rejects invalid destination');
+test.assert(!destinations.isValidKey(''), 'Rejects empty string');
+test.assert(!destinations.isValidKey(null), 'Rejects null');
+test.assert(!destinations.isValidKey(undefined), 'Rejects undefined');
 
-test.info(`Inbox groupID: ${inbox.groupID}`);
+// =============================================================================
+// Section 4: Get Current Destination
+// =============================================================================
 
-// Test invalid destination
-const invalidDest = destinations.getDestination('NonexistentDestination');
-test.assertNullish(invalidDest, 'Returns null for invalid destination');
+test.section('Get Current Destination');
 
-// Test Section: Destination Selection UI
-test.section('Destination Selection UI');
+// Test with function that finds specific destination
+const findBlog = (dest) => dest === 'Test Blog';
+const currentDest = destinations.getCurrentDestination(findBlog);
 
-// Configure mock UI to return a specific destination
-const testDestName = destinations.destinationsList[0];
-mockUI.setPromptResponse('Chose destination:', testDestName);
+test.assertEqual(currentDest, 'Test Blog', 'getCurrentDestination finds "Test Blog"');
 
-const selectedDest = destinations.select();
+// Test with function that matches multiple
+const findTest = (dest) => dest.includes('Test');
+const multipleFirst = destinations.getCurrentDestination(findTest);
 
-test.assertEqual(
-  selectedDest,
-  testDestName,
-  'select() returns user-selected destination'
-);
+test.assertNotNullish(multipleFirst, 'getCurrentDestination returns result for multiple matches');
+test.info(`Destinations containing "Test": ${multipleFirst}`);
 
-// Verify UI interaction occurred
-const promptInteractions = mockUI.getInteractionsByType('prompt');
-test.assertEqual(
-  promptInteractions.length,
-  1,
-  'One prompt interaction occurred'
-);
+// Test with function that matches none
+const findNone = (dest) => dest === 'NonexistentDest';
+const noDest = destinations.getCurrentDestination(findNone);
 
-test.assertEqual(
-  promptInteractions[0].config.menuTitle,
-  'Chose destination:',
-  'Prompt has correct title'
-);
+test.assertEqual(noDest, '', 'getCurrentDestination returns empty string when no match');
 
-// Test Section: Error Handling
-test.section('Error Handling');
+// =============================================================================
+// Section 5: Lookup Group ID
+// =============================================================================
 
-// Test with no UI response (cancelled)
-mockUI.clearInteractions();
-mockUI.setPromptResponse('Chose destination:', null);
+test.section('Lookup Group ID');
 
-const cancelledDest = destinations.select();
+const blogGroupID = destinations.lookupGroupID('Test Blog');
+test.assertNotNullish(blogGroupID, '"Test Blog" has groupID');
+test.assertEqual(blogGroupID, 'TEST-BLOG-ID-001', 'Correct groupID returned');
 
-test.assertNullish(
-  cancelledDest,
-  'select() returns null when cancelled'
-);
+const newsletterGroupID = destinations.lookupGroupID('Test Newsletter');
+test.assertNotNullish(newsletterGroupID, '"Test Newsletter" has groupID');
+test.assertEqual(newsletterGroupID, 'TEST-NEWSLETTER-ID-001', 'Correct newsletter groupID');
 
-// Test Section: Properties
-test.section('Properties');
+// Invalid destination
+const invalidGroupID = destinations.lookupGroupID('InvalidDest');
+test.assertNullish(invalidGroupID, 'Invalid destination returns undefined for groupID');
 
-test.assertNotNullish(
-  destinations.errorMessage,
-  'Has error message defined'
-);
+// =============================================================================
+// Section 6: Lookup Template
+// =============================================================================
 
-test.assertType(
-  destinations.errorMessage,
-  'string',
-  'Error message is a string'
-);
+test.section('Lookup Template');
 
-test.info(`Error message: "${destinations.errorMessage}"`);
+const blogTemplate = destinations.lookupTemplate('Test Blog');
+test.assertNotNullish(blogTemplate, '"Test Blog" has template');
+test.assertEqual(blogTemplate, 'blogPost', 'Correct template returned');
 
-// Test Section: Dependency Injection
-test.section('Dependency Injection');
+const newsletterTemplate = destinations.lookupTemplate('Test Newsletter');
+test.assertNotNullish(newsletterTemplate, '"Test Newsletter" has template');
+test.assertEqual(newsletterTemplate, 'newsletter', 'Correct newsletter template');
 
-test.assertNotNullish(destinations.ui, 'Has UI dependency');
-test.assertNotNullish(destinations.fileSystem, 'Has fileSystem dependency');
-test.assertNotNullish(destinations.settings, 'Has settings dependency');
+// Destination without template
+const studioTemplate = destinations.lookupTemplate('Test Studio');
+test.assertNullish(studioTemplate, '"Test Studio" has no template (returns undefined)');
 
-test.assertEqual(
-  destinations.ui,
-  mockUI,
-  'UI dependency is the injected mock'
-);
+// Invalid destination
+const invalidTemplate = destinations.lookupTemplate('InvalidDest');
+test.assertNullish(invalidTemplate, 'Invalid destination returns undefined for template');
 
-test.assertEqual(
-  destinations.fileSystem,
-  mockFS,
-  'FileSystem dependency is the injected mock'
-);
+// =============================================================================
+// Section 7: Lookup Draft Action
+// =============================================================================
 
-// Test Section: File System Integration
-test.section('File System Integration');
+test.section('Lookup Draft Action');
 
-const fsOps = mockFS.getOperationsByType('read');
-test.assert(
-  fsOps.length > 0,
-  'FileSystem was queried during initialization'
-);
+const newsletterAction = destinations.lookupAction('Test Newsletter');
+test.assertNotNullish(newsletterAction, '"Test Newsletter" has action');
+test.assertEqual(newsletterAction, 'Show Alert', 'Correct action returned');
 
-test.info(`FileSystem read operations: ${fsOps.length}`);
+// Destination without action
+const blogAction = destinations.lookupAction('Test Blog');
+test.assertNullish(blogAction, '"Test Blog" has no action (returns undefined)');
+
+// Invalid destination
+const invalidAction = destinations.lookupAction('InvalidDest');
+test.assertNullish(invalidAction, 'Invalid destination returns undefined for action');
+
+// =============================================================================
+// Section 8: Lookup Airtable Destination Name
+// =============================================================================
+
+test.section('Lookup Airtable Destination Name');
+
+const blogAirtable = destinations.lookupAirTableDestinationName('Test Blog');
+test.assertNotNullish(blogAirtable, '"Test Blog" has Airtable name');
+test.assertEqual(blogAirtable, 'Blog.Posts', 'Correct Airtable name returned');
+
+const newsletterAirtable = destinations.lookupAirTableDestinationName('Test Newsletter');
+test.assertNotNullish(newsletterAirtable, '"Test Newsletter" has Airtable name');
+test.assertEqual(newsletterAirtable, 'Newsletter', 'Correct newsletter Airtable name');
+
+// Destination without airtableName - should return title-cased destination name
+const studioAirtable = destinations.lookupAirTableDestinationName('Test Studio');
+test.assertNotNullish(studioAirtable, '"Test Studio" returns title-cased name');
+test.assertEqual(studioAirtable, 'Coto.Studio', 'Uses airtableName from test data');
+
+// =============================================================================
+// Section 9: Get Scrub Text
+// =============================================================================
+
+test.section('Get Scrub Text');
+
+const blogScrubText = destinations.getScrubText('Test Blog');
+test.assertNotNullish(blogScrubText, '"Test Blog" has scrub text');
+test.assertEqual(blogScrubText, 'Blog: ', 'Correct scrub text returned');
+
+// Destination without scrubText
+const newsletterScrubText = destinations.getScrubText('Test Newsletter');
+test.assertNullish(newsletterScrubText, '"Test Newsletter" has no scrub text (returns undefined)');
+
+// Invalid destination
+const invalidScrubText = destinations.getScrubText('InvalidDest');
+test.assertNullish(invalidScrubText, 'Invalid destination returns undefined for scrub text');
+
+// =============================================================================
+// Section 10: Get Info From Key
+// =============================================================================
+
+test.section('Get Info From Key');
+
+const blogInfo = destinations.getInfoFromKey('Test Blog');
+test.assertNotNullish(blogInfo, '"Test Blog" returns info');
+test.assertType(blogInfo, 'Object', 'Info is an object');
+test.assertNotNullish(blogInfo.groupID, 'Info contains groupID');
+test.assertEqual(blogInfo.groupID, 'TEST-BLOG-ID-001', 'Correct groupID in info');
+
+// Invalid destination - should return default object
+const invalidInfo = destinations.getInfoFromKey('InvalidDest');
+test.assertNotNullish(invalidInfo, 'Invalid destination returns default info');
+test.assertNullish(invalidInfo.groupID, 'Invalid destination info has null groupID');
+
+// =============================================================================
+// Section 11: Lookup Document Conversion Data
+// =============================================================================
+
+test.section('Lookup Document Conversion Data');
+
+// Test with various destinations and statuses
+const conversionData = destinations.lookupDocConvertionData('Test Blog', 'Publishing');
+test.assertNotNullish(conversionData, 'Returns conversion data');
+test.assertType(conversionData, 'Object', 'Conversion data is an object');
+
+// Has expected properties
+test.assert('covertDoc' in conversionData, 'Has covertDoc property');
+test.assert('newDocType' in conversionData, 'Has newDocType property');
+
+test.info('Conversion data structure verified');
+
+// =============================================================================
+// Section 12: Data Access
+// =============================================================================
+
+test.section('Data Access');
+
+const data = destinations.data;
+test.assertNotNullish(data, 'Can access data');
+test.assertType(data, 'Object', 'Data is an object');
+
+// Verify specific destinations in data
+test.assertNotNullish(data['Test Blog'], 'Test Blog in data');
+test.assertNotNullish(data['Test Newsletter'], 'Test Newsletter in data');
+test.assertNotNullish(data['Test Studio'], 'Test Studio in data');
+
+// Verify inbox exists
+test.assertNotNullish(data['inbox'], 'Inbox exists in data');
+test.assertNotNullish(data['inbox'].groupID, 'Inbox has groupID');
+
+// =============================================================================
+// Section 13: Keys Array Verification
+// =============================================================================
+
+test.section('Keys Array Verification');
+
+const keysArray = destinations.keys;
+
+// Keys should not include 'inbox' typically (depends on implementation)
+test.assertType(keysArray, 'Array', 'Keys is an array');
+test.assert(keysArray.length > 0, 'Keys array not empty');
+
+// Each key should be valid
+keysArray.forEach((key) => {
+  test.assert(destinations.isValidKey(key), `Key "${key}" is valid`);
+});
+
+// =============================================================================
+// Section 14: Edge Cases
+// =============================================================================
+
+test.section('Edge Cases');
+
+// Test with case sensitivity
+const lowerCaseLookup = destinations.lookupAirTableDestinationName('test blog');
+test.info(`Lowercase "test blog" lookup: ${lowerCaseLookup || 'undefined'}`);
+// Note: The method uses .toLowerCase() internally
+
+// Test getCurrentDestination with edge cases
+const alwaysTrue = () => true;
+const allDests = destinations.getCurrentDestination(alwaysTrue);
+test.assert(allDests.includes('Test Blog'), 'Can match all destinations');
+
+const alwaysFalse = () => false;
+const noneDests = destinations.getCurrentDestination(alwaysFalse);
+test.assertEqual(noneDests, '', 'Returns empty string when no match');
+
+// =============================================================================
+// Section 15: Selection Method Exists
+// =============================================================================
+
+test.section('Selection Method');
+
+// Note: The select() method uses buildMenu() which creates a Prompt object
+// This would require the actual Drafts environment to work
+test.assertType(destinations.select, 'Function', 'select() method exists');
+test.info('Note: Full select() testing requires Drafts environment');
+
+// =============================================================================
+// Test Summary
+// =============================================================================
 
 test.summary();
