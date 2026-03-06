@@ -171,7 +171,7 @@ class Team {
   }
 
   get teamTemplateTags() {
-    const teamTags = this.#tmplSettings.teamTemplateTags;
+    const teamTags = this.tmplSettings.teamTemplateTags;
     return teamTags != undefined ? teamTags : {};
   }
 
@@ -204,7 +204,7 @@ class Team {
   }
 
   get welcomeLetterData() {
-    return this.#tmplSettings.welcomeLetter;
+    return this.tmplSettings.welcomeLetter;
   }
 
   get defaultDraftTags() {
