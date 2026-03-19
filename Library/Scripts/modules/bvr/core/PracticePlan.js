@@ -166,12 +166,20 @@ class PracticePlan {
   }
 
   #getCurrentWeek() {
-    const oneWeekInMilliseconds = 7 * 24 * 60 * 60 * 1000;
     const currentDate = new Date();
-    const targetDate = new Date(this.teamStartDate);
-    const timeDifference = currentDate.getTime() - targetDate.getTime();
-    const currentWeek = Math.floor(timeDifference / oneWeekInMilliseconds + 1);
-    return currentWeek;
+    const parts = this.teamStartDate.split("-");
+    const startDate = new Date(parts[0], parts[1] - 1, parts[2]);
+    const currentMonday = this.#getISOMonday(currentDate);
+    const startMonday = this.#getISOMonday(startDate);
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    return Math.floor((currentMonday - startMonday) / msPerWeek) + 1;
+  }
+
+  #getISOMonday(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const day = d.getUTCDay() || 7; // Convert Sunday (0) to 7
+    d.setUTCDate(d.getUTCDate() - day + 1); // Back to Monday
+    return d.getTime();
   }
 
   #getNextWeek() {
