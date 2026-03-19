@@ -91,9 +91,15 @@ class ContentPipeline {
     this.#registerServices(table);
 
     // Get defaultTag - handle both string (simple config) and object (multi-table config)
-    const defaultTag = typeof this.settings.defaultTag === 'string'
-      ? this.settings.defaultTag
-      : this.settings.defaultTag[this.#tableName];
+    const settingsDefaultTag = this.settings.defaultTag;
+    if (settingsDefaultTag == undefined) {
+      throw new Error(
+        `[ContentPipeline] defaultTag not found in settings. Run "bun run sync" to generate settings.json.`
+      );
+    }
+    const defaultTag = typeof settingsDefaultTag === 'string'
+      ? settingsDefaultTag
+      : settingsDefaultTag[this.#tableName];
 
     // Create dependency provider for lazy dependency injection
     this.#dependencyProvider = new DependencyProvider(
@@ -278,9 +284,10 @@ class ContentPipeline {
 
   // Create manager context object
   #getManagerContext() {
+    const pipeline = this;
     return {
       dependencyProvider: this.#dependencyProvider,
-      activeDoc: this.#activeDoc,
+      get activeDoc() { return pipeline.#activeDoc; },
       setActiveDoc: (doc) => {
         this.#activeDoc = doc;
       },

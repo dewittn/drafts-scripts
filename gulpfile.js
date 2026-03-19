@@ -150,7 +150,7 @@ const _default = series(copyJSONData, injectSecrets, convertYamlToJson, rsyncLib
 export { _default as default };
 const _watch = series(copyJSONData, injectSecrets, convertYamlToJson, rsyncLibrary, watchFiles);
 export { _watch as watch };
-export const sync = rsyncLibrary;
+export const sync = series(copyJSONData, injectSecrets, convertYamlToJson, rsyncLibrary);
 export const debug = logVaribles;
 export const inject = injectSecrets;
 export const data = copyJSONData;

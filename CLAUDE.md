@@ -8,11 +8,11 @@ This repository contains JavaScript scripts and templates for the [Drafts app](h
 
 ## Development Commands
 
-The project uses Gulp for build automation and file synchronization:
+The project uses Bun as the runtime and Gulp for build automation and file synchronization:
 
-- `npm run sync` - Synchronize Library folder to iCloud Drafts directory
-- `npm run watch` - Start file watcher that auto-syncs changes to iCloud
-- `npm run debug` - Display sync paths for debugging
+- `bun run sync` - Synchronize Library folder to iCloud Drafts directory
+- `bun run watch` - Start file watcher that auto-syncs changes to iCloud
+- `bun run debug` - Display sync paths for debugging
 - `gulp inject` - Process template files (.tpl) using 1Password CLI to inject secrets
 - `gulp data` - Copy JSON data files from iCloud to local Library
 - `gulp yaml2json` - Convert YAML config files to JSON (runs automatically during build)

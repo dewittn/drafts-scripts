@@ -106,7 +106,7 @@ function setupContentPipelineServices() {
       settings: () => c.get('cpSettings'),
       textUtilities: () => c.get('textUtilities'),
       tableName: "Content",
-      defaultTag: () => c.get('cpSettings').defaultTag["Content"],
+      defaultTag: () => c.get('cpSettings').defaultTag?.["Content"],
       statuses: () => c.get('cpStatuses'),
       destinations: () => c.get('cpDestinations'),
       recentRecords: () => c.get('cpRecentRecords'),
