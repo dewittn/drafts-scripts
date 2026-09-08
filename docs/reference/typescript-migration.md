@@ -2,6 +2,7 @@
 
 Status: Research / Pre-planning
 Date: 2026-03-06
+Last verified: 2026-09-08 against Bun 1.4.2
 
 ## Codebase Inventory
 
@@ -101,11 +102,60 @@ Key build tasks to replicate in Bun:
 
 #### Watch Mode Note
 
-`Bun.build()` does not have a built-in `watch: true` option (tracked in oven-sh/bun#5866).
-Options:
-- Run `bun --watch build.ts` to re-run the build script on file changes
-- Use `fs.watch()` or `chokidar` in a custom build script
-- Not a blocker — watch logic is manual in current Gulp setup too
+`Bun.build({ watch: true })` silently ignores the `watch` key (oven-sh/bun#5866, still open
+as of 1.4.2).
+
+The CLI flag behaves differently depending on mode, which matters here:
+
+| Invocation | Rebuilds on save? |
+|------------|-------------------|
+| `bun build --watch` (full bundle mode) | Yes |
+| `bun build --no-bundle --watch` (transpile only, what this project needs) | **No** |
+| `bun --watch run build.ts` (script-level watch) | Yes, restarts the script |
+
+The second row is the relevant one. Transpile-only mode keeps the process alive but never
+rebuilds, so `bun build --watch` cannot drive this project's dev loop.
+
+That leaves `bun --watch run build.ts`, which restarts the whole script on every save. Naive
+use re-runs `op inject` across all `.tpl` files, measured at 8 to 53 seconds in this project.
+A full restart per save is unusable at that cost.
+
+The watcher must be a long-running process that routes by file type, the same shape the
+Gulp watcher uses as of 2026-09-08:
+
+| Changed file | Action |
+|--------------|--------|
+| `.tpl` | inject secrets, convert YAML to JSON, push to iCloud |
+| `.yaml` | convert YAML to JSON, push to iCloud |
+| deletion | full rsync push (rsync `--delete` propagates the removal) |
+| anything else | copy that one file |
+
+Two supporting requirements, both learned from fixing the Gulp watcher:
+
+- Rebuilds must be serialized. A burst of saves must not interleave `op inject` with the
+  YAML to JSON conversion.
+- Generated files must be excluded from the watch globs, otherwise a rebuild's own writes
+  retrigger the watcher.
+
+Two designs satisfy this. Both are viable and the choice is open:
+
+**Design A: long-lived watcher.** One process watches the tree and routes by file type per
+the table above. This is what the Gulp watcher does today, so the logic ports directly.
+`fs.watch(dir, { recursive: true })` works under Bun on macOS (verified 2026-09-08).
+`chokidar` is already present in `node_modules` as a transitive Gulp dependency and would
+become a direct dependency if its glob-ignore and debounce handling are wanted.
+
+**Design B: `bun --watch run build.ts` with incremental skipping.** Each save restarts the
+script, so the script must skip expensive steps itself. Comparing the mtime of each `.tpl`
+against its generated `.yaml` skips `op inject` when no template changed. The remaining
+steps are cheap: the YAML to JSON conversion measured 6ms and the rsync push 40ms, so a
+typical save would cost roughly 100ms.
+
+Design B needs no watcher library and no rebuild queue, since each run is a fresh process.
+Design A gives finer control and avoids repeated process startup. Design B is only viable
+with the mtime skip. Without it, every save pays the full `op inject` cost.
+
+An mtime skip for `op inject` is worth adding regardless of which design wins.
 
 ### Bundling Strategy (Research Complete)
 
@@ -159,6 +209,23 @@ Transpile library/module files individually, bundle action scripts.
 - Mocks would become interfaces — ensuring they stay in sync with real implementations
 - The Drafts MCP server could enable integration tests that run in the actual Drafts runtime
 - Could keep `TestAssertions` for in-Drafts smoke tests while using Bun for full test suite
+
+### `bun test` capabilities as of 1.4 (checked 2026-09-08)
+
+Since 1.3, `bun test` has built-in `mock()` and `spyOn()`, Jest and Vitest compatible
+aliases, `test.concurrent()` and `test.serial()`, `--randomize` with `--seed`,
+`test.failing()`, and `expectTypeOf()`. Version 1.4.1 fixed `--isolate` memory leaks so that
+mocks, spies, and `process.env.TZ` no longer bleed between test files. That fix matters for
+a globals-heavy codebase like this one.
+
+This is mature enough to replace the hand-rolled `TestAssertions` class. Expect to write
+adapter code rather than relying on auto-mocking. This codebase attaches classes to globals
+via `require()` instead of exporting them, so `mock.module()` does not apply directly.
+Tests would reassign the global explicitly, most likely from a `--preload` setup file. There
+is no `__mocks__` directory support.
+
+One breaking change to note: `jest.resetAllMocks()` now actually clears `mockImplementation()`,
+matching real Jest. Only relevant if future tests depend on the older, weaker Bun behavior.
 
 ## Benefits Assessment
 
@@ -232,15 +299,54 @@ No source changes, no build changes. Adds type checking to existing JS immediate
 
 This is the riskiest phase. The build pipeline is what gets code to iCloud.
 
+Note that the build script becomes TypeScript, but the ~55 source files stay `.js`. Phase 2
+is separable from the source migration and can ship on its own.
+
 - [ ] Create Bun-based build script replicating all Gulp tasks
 - [ ] Replicate: iCloud sync, secret injection, YAML->JSON, file watch
 - [ ] **Run both Gulp and Bun in parallel** — diff their outputs
 - [ ] Validate output is byte-for-byte identical to Gulp output
 - [ ] Add TypeScript transpilation step (`bun build --no-bundle`)
+- [ ] Add a separate `tsc --noEmit` typecheck step, since Bun strips types without checking them
 - [ ] Only remove Gulp after the Bun pipeline has been validated for several days
 
 **Gate**: `diff -rq` between Gulp output and Bun output shows no differences.
 **Rollback**: Gulp remains on `main` until Bun pipeline is proven.
+
+#### Task mapping detail
+
+| Gulp task | Bun replacement | Dependencies dropped |
+|-----------|-----------------|----------------------|
+| `copyJSONData` | `Bun.spawn(["rsync", ...])` | none, already shells out |
+| `injectSecrets` | `Bun.Glob` over `**/*.tpl` plus `Bun.spawn(["op", "inject"])` | `gulp-exec`, `gulp-ext-replace` |
+| `convertYamlToJson` | Already plain `js-yaml` plus `fs`, copy across as is | none |
+| `rsyncLibrary` | `Bun.spawn(["rsync", ...])` | `gulp-rsync` |
+| `watchFiles` | Long-running watcher, see Watch Mode Note | `gulp` |
+
+Removing Gulp drops seven dev dependencies: `gulp`, `gulp-exec`, `gulp-ext-replace`,
+`gulp-rsync`, `gulp-util`, `fancy-log`, and the `gulp` tree itself. `js-yaml` stays.
+
+#### A class of bug that disappears
+
+Until 2026-09-08 the Gulp tasks called their completion callbacks synchronously while their
+real work ran in the background. `series()` therefore ran the pipeline concurrently instead
+of in order, and the synchronous YAML to JSON step read the previous run's `.yaml` files.
+Every JSON artifact was one build stale. Editing a `.tpl` updated the `.yaml` and never the
+`.json`.
+
+That bug is fixed in the Gulp pipeline, but it only existed because Gulp requires explicit
+completion signaling. In a Bun script the steps are plain `await` calls and the failure mode
+is not expressible. This is a real argument for the migration beyond speed.
+
+The one ordering constraint to preserve: `copyJSONData` pulls JSON from iCloud and must run
+before the YAML to JSON conversion, so that generated files win over the pulled copies.
+
+#### Constraint: `sync` runs the full pipeline
+
+`bun run sync` must run every step: data copy, secret injection, YAML to JSON, and rsync. A
+previous attempt reduced `sync` to rsync alone as an optimization, which produced missing
+JSON files and runtime errors in Drafts. All entry points (`default`, `sync`, `watch`) run
+the full pipeline. Reliability over speed.
 
 ### Phase 3: `src/` Restructure + Initial Rename (~1-2 sessions, low risk)
 
@@ -337,6 +443,81 @@ Skip:
 1. **Bun bundler output format**: YES — `bun build --no-bundle` transpiles individual `.ts` files to `.js` without bundling. Output preserves the existing global-scope pattern. No custom transform needed.
 2. **IIFE / globalNames**: NOT NEEDED for Strategy A. IIFE exists in Bun but `globalNames` is unimplemented. Only needed if we pursue per-action bundling (Strategy B) in the future.
 
+### Verification pass, Bun 1.4.2 (2026-09-08)
+
+The research above was done on Bun as of 2026-03. Re-verified against 1.4.2 by transpiling
+a sample file written in the project's actual idiom: a `require()` guard, an `interface`,
+a class with a private `#field`, and a `static` property.
+
+| Claim | Result |
+|-------|--------|
+| `--no-bundle` transpiles per file to an outdir | Confirmed |
+| `--root` preserves the source directory structure | Confirmed |
+| `require()` calls preserved verbatim | Confirmed |
+| `typeof X == "undefined"` guards untouched | Confirmed |
+| Private `#fields` and `static` pass through | Confirmed |
+| No module wrapper or export boilerplate added | Confirmed |
+| `.js` files pass through unchanged | Confirmed |
+| `js-yaml` works under Bun | Confirmed |
+| `Bun.Glob` available for entry point discovery | Confirmed |
+| `Bun.build()` still has no watch mode | Confirmed, see Watch Mode Note |
+
+One correction to the original research. Output is functionally identical but not
+byte-identical. Bun normalizes formatting, for example emitting `new Map` where the source
+has `new Map()`. See Validation Strategy for what this means for the Phase 3 gate.
+
+### Bun 1.4 items checked against this codebase (2026-09-08)
+
+Bun 1.4 shipped several changes that look relevant on paper. Each was checked against the
+actual repo rather than taken as a general warning.
+
+| 1.4 change | Applies here? |
+|------------|---------------|
+| Bun does not typecheck TypeScript, only strips types | **Yes.** Adds a required step, see below |
+| `--no-bundle` plus `--outdir` now errors on two inputs mapping to one output path | No. 99 non-vendor JS files, zero basename collisions, zero relative-path collisions |
+| YAML `yes`/`no`/`on`/`off` parse as strings, not booleans | No. See below |
+| `.xml` files now parsed by a default loader instead of returning a path | No. Zero `.xml` files in the repo |
+| `globalNames` for IIFE output | Still unimplemented, Strategy B stays parked. See below |
+
+#### Bun does not typecheck
+
+Bun strips type annotations without checking them. A file containing
+`const x: number = "not a number"` transpiles and runs with exit code 0. Whatever replaces
+Gulp needs an explicit `tsc --noEmit` step. This is not optional and is not covered by
+Phase 1's `tsconfig.json`, which only makes the editor and a manual `tsc` run useful.
+
+#### The YAML boolean change does not affect this project
+
+`Library/Data/bvr/ui.yaml` does use bare `yes` and `no` as values, so this looked like a
+live trap. It is not one. The project is on js-yaml 4.1.1, which already uses the YAML 1.2
+core schema where only `true` and `false` are booleans. Both parsers were run against the
+file and both produce the strings `"yes"` and `"no"`.
+
+Recorded here so a future session does not "fix" values that are already correct. The change
+would only matter to a project on js-yaml 3.x, which follows YAML 1.1.
+
+#### `globalNames` is still blocked
+
+The doc above cites oven-sh/bun#9685, which was closed as a duplicate of oven-sh/bun#2531.
+That issue is still open, unassigned, with no PR, filed April 2023. `bun build --help` on
+1.4.2 confirms `--format=iife` exists with no accompanying global-name flag. Strategy B
+stays parked.
+
+#### `Bun.$` handles the iCloud path
+
+`Bun.$` auto-quotes interpolated string and array values, so the destination path with
+spaces (`~/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`) needs no
+manual escaping. Build the path in JavaScript with `os.homedir()` plus literal segments and
+interpolate the result. Do not write the tilde into the template literal, since `~`
+expansion is a shell feature that `Bun.$` may not replicate.
+
+Bun 1.4 also made glob metacharacters inside interpolated values always literal, so paths
+containing `[` or `*` will not accidentally glob.
+
+`Bun.$` is the right tool for shelling out to `op inject` and `rsync`. It does not replace
+rsync itself. Keep using rsync for the tree mirroring rather than reimplementing its diffing
+in JavaScript.
+
 ## Open Questions
 
 1. **Drafts `require()` in TypeScript**: How to represent the `typeof X == "undefined"` guard pattern in TS source? Options:
@@ -347,6 +528,7 @@ Skip:
 3. **Airtable conflict resolution**: Which approach — rename, exclude from d.ts, or namespace?
 4. **iCloud sync timing**: Does adding a transpile step introduce noticeable latency in the watch/dev workflow? Bun is fast, but worth measuring.
 5. **Source directory layout**: Leaning toward Option B (separate `src/` tree). See "Source Directory Layout" section below.
+6. **`Library/Data` ownership**: Option B assumes `Library/` is disposable build output, but seven JSON files there are not. See "Blocker: not everything under `Library/Data` is a build artifact". Needs a decision before Phase 3.
 
 ## Source Directory Layout
 
@@ -403,6 +585,43 @@ Library/                              (build output, .gitignored)
 - Aligns with replacing Gulp — the Bun build script owns the entire `src/ -> Library/ -> iCloud` pipeline
 - Mirrors existing `Library/` structure so the mental model stays the same
 
+#### Blocker: not everything under `Library/Data` is a build artifact
+
+Option B assumes `Library/` can be gitignored because the build regenerates it. That holds
+for `Scripts/`, `Actions/`, and most of `Data/`, but not all of it. Seven JSON files under
+`Library/Data` have no `.yaml` source and are not build output (audited 2026-09-08).
+
+Hand maintained, git tracked, no YAML source:
+
+| File | Notes |
+|------|-------|
+| `Data/bases.json` | Airtable base IDs, read by `shared/libraries/airtable-v2.js` |
+| `Data/destinations.json` | Distinct from the generated `Data/cp/destinations.json` |
+| `Data/aubidle-testData-1.json` | Test fixture |
+| `Data/aubidle-testData-2.json` | Test fixture |
+
+Written by Drafts at runtime, untracked, pulled back from iCloud by the `copyJSONData` step:
+
+| File | Notes |
+|------|-------|
+| `Data/bvr/records.json` | Sports records |
+| `Data/bvr/practicePlans.json` | Practice plan state |
+| `Data/cp/recentRecords.json` | Content Pipeline record cache |
+
+Gitignoring `Library/` would lose the first group and break the round trip for the second.
+The build cannot simply own the whole directory.
+
+Options to resolve before committing to Option B:
+
+1. Move the four tracked files into `src/Data/` and have the build copy them, the same way
+   `Templates/`, `Themes/`, and `vendor/` are handled. Keep the three runtime files flowing
+   iCloud to local, and make sure the build never overwrites them.
+2. Gitignore selectively. Ignore `Library/Scripts/` and `Library/Actions/` only, and leave
+   `Library/Data/` tracked as it is today.
+
+Option 2 is the smaller change and preserves current behavior. Option 1 is cleaner but
+needs care so that a build does not clobber runtime state that only exists in iCloud.
+
 ### Validation Strategy
 
 Before trusting the new pipeline, **diff the transpiled output against the original**:
@@ -414,6 +633,11 @@ bun build src/**/*.ts --no-bundle --outdir Library/
 # Diff against the original JS (committed in git before migration)
 diff -rq Library/Scripts/ Library-original/Scripts/ --exclude='vendor'
 ```
+
+The diff will not be empty. Bun normalizes formatting, so expect cosmetic differences such
+as `new Map()` becoming `new Map`. The gate is functional equivalence, not byte equality.
+Review the diff for semantic changes and ignore formatting noise. Consider running both
+sides through Prettier first to reduce the noise to zero.
 
 If the transpiled `.js` output is functionally identical to the hand-written `.js` (ignoring whitespace/formatting), the migration is safe without needing to run every action in Drafts. Key things to verify in the diff:
 - `require()` paths are preserved (not transformed to `import`)
