@@ -5,6 +5,7 @@ absencesMsgConfig:
   recipients:
     - op://BVR/AG/cell
     - op://BVR/AN/cell
+    - op://BVR/HM/cell
     - op://BVR/WK/cell
   bodyText: "These students are absent from [[team_name]] today: "
 noAbsencesMsgConfig:
@@ -12,5 +13,6 @@ noAbsencesMsgConfig:
   recipients:
     - op://BVR/AG/cell
     - op://BVR/AN/cell
+    - op://BVR/HM/cell
     - op://BVR/WK/cell
   bodyText: "No one is absent from [[team_name]] today."
