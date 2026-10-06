@@ -15,3 +15,39 @@ meats:
     - "Friday"
     - "Saturday"
     - "Sunday"
+queryLetter:
+  sourceDraftUUID: "315D897D-FE86-465B-8DF0-BD624C21E9B3"
+  sourceTag: "authoring/wfid/query"
+  templateFile: "nr/query-letter.md"
+  draftTags:
+    - "authoring/wfid/query"
+  pickerData:
+    name: agent
+    label: Agent
+  menuSettings:
+    menuTitle: New Query Letter
+    menuMessage: Choose an agent who has not been queried yet. Any other field below fills the matching [[tag]] in the template.
+    isCancellable: true
+    # Extra fields are optional. Each textField name becomes a template tag,
+    # e.g. "represented" fills [[represented]] in nr/query-letter.md.
+    menuItems:
+      - type: select
+        data:
+          name: genre
+          label: Genre
+          values:
+            - upmarket literary fiction
+            - literary fiction
+          selectedValues:
+            - upmarket literary fiction
+      - type: textField
+        data:
+          name: represented
+          label: Represented (client/title)
+          options:
+            placeholder: Optional
+      - type: button
+        data:
+          name: Create Letter
+          value: create
+          isDefault: true
