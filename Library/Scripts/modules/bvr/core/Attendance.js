@@ -193,9 +193,15 @@ class Attendance {
 
   submitted() {
     this.#runAttendaceShortcut();
-    this.attendaceDraft.content = this.attendaceDraft.content
+    const content = this.attendaceDraft.content
       .replace(/- \[ \] Recorded/g, "- [x] Recorded")
       .replace(/- \[ \] Submitted/g, "- [x] Submitted");
+
+    // The attendance draft is loaded in the editor (see pinDraft in take()).
+    // Writing only to the Draft object lets the editor's stale text win when
+    // it is swapped out, so update the editor buffer as well.
+    editor.setText(content);
+    this.attendaceDraft.content = content;
     this.attendaceDraft.update();
     this.bvr.unpinDraft(this.attendaceDraft);
     this.bvr.ui.displayAppMessage("success", this.submitSuccess);
