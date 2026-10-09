@@ -13,22 +13,39 @@ const srcDir = "./Library";
 const destDir =
   `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`;
 
+// Build artifacts: .yaml generated from .tpl by injectSecrets, .json generated from
+// .yaml by convertYamlToJson. Excluded from the watcher so a rebuild's own writes
+// don't retrigger it.
+const generatedSettings = [
+  "gameReportSettings.yaml",
+  "settings.yaml",
+  "attendanceSettings.yaml",
+  "templateSettings.yaml",
+];
+const watchGlobs = [
+  `${srcDir}/**`,
+  `!${srcDir}/Data/**/*.json`,
+  ...generatedSettings.map((name) => `!${srcDir}/Data/**/${name}`),
+];
+
 function logVaribles(cb) {
   log(`${srcDir}/*`);
   log(`${destDir}/`);
   cb();
 }
 
-function copyJSONData(cb) {
-  exec(
-    `rsync -r --progress --include='*.json' --exclude-from='./exclude-file.txt' '${destDir}/Library/' '${srcDir}'`,
-  );
-  cb();
+function copyJSONData() {
+  return new Promise((resolve, reject) => {
+    exec(
+      `rsync -r --progress --include='*.json' --exclude-from='./exclude-file.txt' '${destDir}/Library/' '${srcDir}'`,
+      (err) => (err ? reject(err) : resolve()),
+    );
+  });
 }
 
-function rsyncLibrary(cb) {
+function rsyncLibrary() {
   log(destDir);
-  src([`${srcDir}/`]).pipe(
+  return src([`${srcDir}/`]).pipe(
     rsync({
       destination: `${destDir}/`,
       exclude: ["*.tpl", ".DS_Store"],
@@ -38,19 +55,55 @@ function rsyncLibrary(cb) {
       clean: true,
     }),
   );
-  cb();
 }
 
-function watchFiles(cb) {
-  watch(`${srcDir}/**`).on("change", function (file) {
-    log(`Dest: ${file}`);
-    log(`Dest: ${destDir}`);
-    src(file, { base: "./" }).pipe(dest(`${destDir}/`));
-  });
-  cb();
+function watchFiles() {
+  // series() wraps each task so its returned stream/promise resolves the callback.
+  // Calling rsyncLibrary bare would never signal completion and would stall the queue.
+  const rebuildFromTpl = series(injectSecrets, convertYamlToJson, rsyncLibrary);
+  const rebuildFromYaml = series(convertYamlToJson, rsyncLibrary);
+  const pushOnly = series(rsyncLibrary);
+
+  // Serialize rebuilds so a burst of saves can't interleave op inject with yaml2json.
+  let queue = Promise.resolve();
+  const enqueue = (label, task) => {
+    queue = queue.then(
+      () =>
+        new Promise((resolve) => {
+          log(`Rebuilding: ${label}`);
+          task((err) => {
+            err && log.error(`Rebuild failed for ${label}: ${err.message}`);
+            resolve();
+          });
+        }),
+    );
+    return queue;
+  };
+
+  const copyFile = (file) => (cb) => {
+    const stream = src(file, { base: "./" }).pipe(dest(`${destDir}/`));
+    stream.on("error", (err) => cb(err));
+    stream.on("end", () => cb());
+    stream.resume();
+  };
+
+  const onChange = (file) =>
+    file.endsWith(".tpl")
+      ? enqueue(file, rebuildFromTpl)
+      : file.endsWith(".yaml")
+        ? enqueue(file, rebuildFromYaml)
+        : enqueue(file, copyFile(file));
+
+  const watcher = watch(watchGlobs, { ignoreInitial: true });
+  watcher.on("change", onChange);
+  watcher.on("add", onChange);
+  // rsyncLibrary runs with --delete, so a full push is what propagates a removal.
+  watcher.on("unlink", (file) => enqueue(`${file} (removed)`, pushOnly));
+
+  return watcher;
 }
 
-function injectSecrets(cb) {
+function injectSecrets() {
   const options = {
     continueOnError: false, // default = false, true means don't emit error event
     pipeStdout: true, // default = false, true means stdout is written to file.contents
@@ -60,21 +113,15 @@ function injectSecrets(cb) {
     stderr: true, // default = true, false means don't write stderr
     stdout: false, // default = true, false means don't write stdout
   };
-  src(`${srcDir}/**/*.tpl`)
+  return src(`${srcDir}/**/*.tpl`)
     .pipe(gulpExec((file) => `op inject -i ${file.path}`, options))
     .pipe(reporter(reportOptions))
     .pipe(ext_replace(".yaml"))
     .pipe(dest(`${srcDir}`));
-  cb();
 }
 
 async function cleanSettings(cb) {
-  const filesToDelete = new Set([
-    "gameReportSettings.yaml",
-    "settings.yaml",
-    "attendanceSettings.yaml",
-    "templateSettings.yaml",
-  ]);
+  const filesToDelete = new Set(generatedSettings);
 
   const deleteFile = async (filePath) => {
     try {

@@ -4,7 +4,6 @@ messageSettings:
   - type: text
     recipients:
       - op://BVR/AG/cell
-      - op://BVR/AH/cell
       - op://BVR/WK/cell
     bodyText: "[[game_summary]]"
 googleFormSettings:
