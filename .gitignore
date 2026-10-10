@@ -9,3 +9,6 @@ templateSettings.yaml
 /Library/Data/bvr/records.json
 /gform.html
 /Library/Scripts/bvr/tests
+
+# Per-machine Claude Code settings
+.claude/settings.local.json
