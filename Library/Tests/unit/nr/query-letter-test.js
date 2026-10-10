@@ -180,5 +180,30 @@ Draft = { find: () => undefined, query: () => [] };
 missing.create();
 test.assertEqual(ui.messages[0]?.type, "error", "error when source draft missing");
 
+// --- sourceDraft lookup ---
+test.section("sourceDraft lookup");
+
+const storedCopy = { uuid: "LIST-1", ...makeSourceDraft([makeTask("Fay Find", false)]) };
+const taggedCopy = { uuid: "LIST-2", ...makeSourceDraft([makeTask("Gus Gone", false)]) };
+Draft = {
+  find: (uuid) => (uuid == "LIST-1" ? storedCopy : undefined),
+  query: () => [taggedCopy],
+};
+
+draft = undefined;
+let lookup = new QueryLetter({ ...settings, sourceDraftUUID: "LIST-1", sourceTag: "t" }, makeUI(0), null);
+test.assertEqual(lookup.sourceDraft, storedCopy, "finds source draft by UUID when nothing is open");
+
+lookup = new QueryLetter({ ...settings, sourceDraftUUID: "missing", sourceTag: "t" }, makeUI(0), null);
+test.assertEqual(lookup.sourceDraft, taggedCopy, "falls back to tag query when UUID is missing");
+
+draft = { uuid: "LIST-1", ...makeSourceDraft([makeTask("Fay Find", false)]) };
+lookup = new QueryLetter({ ...settings, sourceDraftUUID: "LIST-1", sourceTag: "t" }, makeUI(0), null);
+test.assertEqual(lookup.sourceDraft, draft, "uses the global draft when the agent list is the open draft");
+
+draft = { uuid: "OTHER", ...makeSourceDraft([]) };
+lookup = new QueryLetter({ ...settings, sourceDraftUUID: "LIST-1", sourceTag: "t" }, makeUI(0), null);
+test.assertEqual(lookup.sourceDraft, storedCopy, "ignores the global draft when a different draft is open");
+
 Template = originalTemplate;
 test.summary();

@@ -39,11 +39,14 @@ class QueryLetter {
   get sourceDraft() {
     if (this.#sourceDraft != undefined) return this.#sourceDraft;
 
-    this.#sourceDraft = Draft.find(this.settings.sourceDraftUUID);
-    if (this.#sourceDraft != undefined) return this.#sourceDraft;
+    const { sourceDraftUUID, sourceTag } = this.settings;
+    const found = Draft.find(sourceDraftUUID) ?? Draft.query("", "all", [sourceTag])[0];
 
-    const [tagged] = Draft.query("", "all", [this.settings.sourceTag]);
-    this.#sourceDraft = tagged;
+    // Drafts writes the global draft back to the editor when the script ends,
+    // so a change made through a separate copy is lost if the agent list is
+    // the open draft. Work on the global object in that case.
+    const openDraft = typeof draft == "undefined" ? undefined : draft;
+    this.#sourceDraft = openDraft?.uuid == found?.uuid ? openDraft : found;
     return this.#sourceDraft;
   }
 
