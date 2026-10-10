@@ -10,7 +10,7 @@ After traveling to Central America, his past and present blend, thunderstorms dr
 
 Since the 1950s, governments throughout Central and South America have abducted more than 100,000 people as a strategy of intimidation and control. Only a small handful, almost all children, reunite with their families. Of those, a tiny fraction get a second chance to grow up with the family they were taken from.
 
-As one of El Salvador's Disappeared Children, I am able to write about this phenomenon from personal experience: not only do I understand the ambiguous grief that comes from having someone taken, but I have also had to wrestle with the identity confusion, family separation, and cultural bifurcation that affect many Latinx, Central American, and other marginalized communities. While based on my life, this novel is cinematic and plot-driven, and it may be the first on the subject written by someone who lived through it.
+As one of El Salvador's Disappeared Children, I am able to write about this phenomenon from personal experience: not only do I understand the ambiguous grief that comes from having someone taken, but I have also had to wrestle with the identity confusion, family separation, and cultural bifurcation that affect many Latinx, Central American, and other marginalized communities. While based on my life, this novel is cinematic and plot-driven, and it may be the first book about the disappeared written by someone who lived through it.
 
 I am also completing a documentary film, IDENTIFYING NELSON/BUSCANDO A ROBERTO, which revolves around a historic 2011 commemoration of El Salvador's Day of the Disappeared and offers natural co-marketing opportunities for the book.
 
