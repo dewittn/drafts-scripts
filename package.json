@@ -34,6 +34,7 @@
     "claude": "gulp clean && claude",
     "gulp": "gulp",
     "sync": "gulp sync",
+    "test": "bun scripts/test-runner.js",
     "watch": "gulp watch",
     "debug": "gulp debug"
   }

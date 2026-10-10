@@ -6,9 +6,8 @@
  * so they can be tested directly without instantiating the full class.
  */
 
-// Load test infrastructure
-// Drafts path: ../Tests/fixtures/assertions.js (from Library/Scripts/)
-const TestAssertions = require("../../fixtures/assertions.js");
+// Load test infrastructure (path is relative to Library/Scripts/)
+require("../Tests/fixtures/assertions.js");
 
 // Extract the pure functions matching PracticePlan's private methods
 function getISOMonday(date) {

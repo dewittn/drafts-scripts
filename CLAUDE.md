@@ -13,6 +13,7 @@ The project uses Bun as the runtime and Gulp for build automation and file synch
 - `bun run sync` - Synchronize Library folder to iCloud Drafts directory
 - `bun run watch` - Start file watcher that auto-syncs changes to iCloud
 - `bun run debug` - Display sync paths for debugging
+- `bun run test [filter] [--all]` - Run unit tests locally under Bun with a Drafts-style `require()` shim. Covers loading and pure logic only; tests that touch Drafts objects (Draft, editor, Workspace, ...) are reported as "needs Drafts" and must run in the app
 - `gulp inject` - Process template files (.tpl) using 1Password CLI to inject secrets
 - `gulp data` - Copy JSON data files from iCloud to local Library
 - `gulp yaml2json` - Convert YAML config files to JSON (runs automatically during build)
