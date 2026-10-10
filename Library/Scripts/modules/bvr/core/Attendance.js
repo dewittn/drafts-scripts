@@ -127,6 +127,9 @@ class Attendance {
     return this.names.length == 0;
   }
 
+  // When the attendance draft is the one the action was run on, work on the
+  // global draft object. Drafts writes that object back to the editor when the
+  // script finishes, so a separate Draft.find() copy gets overwritten.
   loadDraft() {
     if (draft.uuid == this.attendanceDraftID) return draft;
     return Draft.find(this.attendanceDraftID);
@@ -165,12 +168,14 @@ class Attendance {
     return true;
   }
 
-  submit() {
+  // dryRun skips the attendance message and the completion shortcut so the
+  // draft update can be tested without side effects.
+  submit({ dryRun = false } = {}) {
     const msgConfig = this.noOneAbsent
       ? this.noAbsencesMsgConfig
       : this.absencesMsgConfig;
 
-    if (msgConfig != undefined) {
+    if (msgConfig != undefined && dryRun == false) {
       const message = meesageFactory(msgConfig);
       message.compose(this.names);
 
@@ -179,7 +184,7 @@ class Attendance {
       }
     }
 
-    this.submitted();
+    this.submitted({ dryRun });
   }
 
   #loadAttendaceDraft() {
@@ -188,14 +193,19 @@ class Attendance {
         "Error in #loadAttendaceDraft(): attendanceDraftID is undefined!",
       );
     }
-    this.attendaceDraft = Draft.find(this.attendanceDraftID);
+    this.attendaceDraft = this.loadDraft();
   }
 
-  submitted() {
-    this.#runAttendaceShortcut();
-    this.attendaceDraft.content = this.attendaceDraft.content
+  submitted({ dryRun = false } = {}) {
+    if (dryRun == false) this.#runAttendaceShortcut();
+    const content = this.attendaceDraft.content
       .replace(/- \[ \] Recorded/g, "- [x] Recorded")
       .replace(/- \[ \] Submitted/g, "- [x] Submitted");
+
+    // The attendance draft is loaded in the editor (see pinDraft in take()),
+    // so keep the editor buffer and the draft object in agreement.
+    editor.setText(content);
+    this.attendaceDraft.content = content;
     this.attendaceDraft.update();
     this.bvr.unpinDraft(this.attendaceDraft);
     this.bvr.ui.displayAppMessage("success", this.submitSuccess);
