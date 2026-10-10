@@ -127,6 +127,9 @@ class Attendance {
     return this.names.length == 0;
   }
 
+  // When the attendance draft is the one the action was run on, work on the
+  // global draft object. Drafts writes that object back to the editor when the
+  // script finishes, so a separate Draft.find() copy gets overwritten.
   loadDraft() {
     if (draft.uuid == this.attendanceDraftID) return draft;
     return Draft.find(this.attendanceDraftID);
@@ -190,7 +193,7 @@ class Attendance {
         "Error in #loadAttendaceDraft(): attendanceDraftID is undefined!",
       );
     }
-    this.attendaceDraft = Draft.find(this.attendanceDraftID);
+    this.attendaceDraft = this.loadDraft();
   }
 
   submitted({ dryRun = false } = {}) {
@@ -199,9 +202,8 @@ class Attendance {
       .replace(/- \[ \] Recorded/g, "- [x] Recorded")
       .replace(/- \[ \] Submitted/g, "- [x] Submitted");
 
-    // The attendance draft is loaded in the editor (see pinDraft in take()).
-    // Writing only to the Draft object lets the editor's stale text win when
-    // it is swapped out, so update the editor buffer as well.
+    // The attendance draft is loaded in the editor (see pinDraft in take()),
+    // so keep the editor buffer and the draft object in agreement.
     editor.setText(content);
     this.attendaceDraft.content = content;
     this.attendaceDraft.update();
