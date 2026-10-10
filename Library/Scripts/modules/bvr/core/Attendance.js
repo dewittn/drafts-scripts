@@ -165,12 +165,14 @@ class Attendance {
     return true;
   }
 
-  submit() {
+  // dryRun skips the attendance message and the completion shortcut so the
+  // draft update can be tested without side effects.
+  submit({ dryRun = false } = {}) {
     const msgConfig = this.noOneAbsent
       ? this.noAbsencesMsgConfig
       : this.absencesMsgConfig;
 
-    if (msgConfig != undefined) {
+    if (msgConfig != undefined && dryRun == false) {
       const message = meesageFactory(msgConfig);
       message.compose(this.names);
 
@@ -179,7 +181,7 @@ class Attendance {
       }
     }
 
-    this.submitted();
+    this.submitted({ dryRun });
   }
 
   #loadAttendaceDraft() {
@@ -191,8 +193,8 @@ class Attendance {
     this.attendaceDraft = Draft.find(this.attendanceDraftID);
   }
 
-  submitted() {
-    this.#runAttendaceShortcut();
+  submitted({ dryRun = false } = {}) {
+    if (dryRun == false) this.#runAttendaceShortcut();
     const content = this.attendaceDraft.content
       .replace(/- \[ \] Recorded/g, "- [x] Recorded")
       .replace(/- \[ \] Submitted/g, "- [x] Submitted");

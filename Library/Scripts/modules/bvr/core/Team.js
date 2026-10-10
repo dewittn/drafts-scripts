@@ -256,8 +256,8 @@ class Team {
     return this.attendace.take();
   }
 
-  submitAttendace() {
-    this.attendace.submit();
+  submitAttendace(options) {
+    this.attendace.submit(options);
   }
 
   gameRecordResult() {
