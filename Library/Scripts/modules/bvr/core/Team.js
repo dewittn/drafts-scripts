@@ -142,7 +142,7 @@ class Team {
     }
 
     const settingsFile = this.#teamData.gameReportSettingsFile == undefined
-      ? `${this.id}/gameReportSettings.yaml`
+      ? `${this.id}/gameReportSettings.json`
       : this.#teamData.gameReportSettings;
     if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
     return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
@@ -154,7 +154,7 @@ class Team {
     }
 
     const settingsFile = this.#teamData.attendanceSettingsFile == undefined
-      ? `${this.id}/attendanceSettings.yaml`
+      ? `${this.id}/attendanceSettings.json`
       : this.#teamData.attendanceSettingsFile;
     if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
     return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
@@ -420,7 +420,7 @@ class Team {
     }
 
     const settingsFile = this.#teamData.templateSettingsFile == undefined
-      ? `${this.id}/templateSettings.yaml`
+      ? `${this.id}/templateSettings.json`
       : this.#teamData.templateSettingsFile;
     if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
     return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);

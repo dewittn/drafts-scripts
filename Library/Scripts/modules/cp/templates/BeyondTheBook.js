@@ -3,7 +3,7 @@ if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js")
 if (typeof DraftsUI == "undefined") require("shared/libraries/DraftsUI.js");
 
 class BeyondTheBook {
-  static settingsFile = "cp/templates.yaml";
+  static settingsFile = "cp/templates.json";
   #settings;
   #ui;
 

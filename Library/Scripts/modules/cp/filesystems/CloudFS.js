@@ -29,6 +29,7 @@ class CloudFS {
     switch (extention) {
       case "yaml":
         // YAML files are converted to JSON at build time
+        this.#warnYaml(fileName);
         filePath = filePath.replace(/\.yaml$/, ".json");
         return this.#fmCloud.readJSON(filePath);
         break;
@@ -48,6 +49,7 @@ class CloudFS {
     switch (extention) {
       case "yaml":
         // YAML files are converted to JSON at build time
+        this.#warnYaml(fileName);
         filePath = filePath.replace(/\.yaml$/, ".json");
         const scrubbedYamlData = JSON.parse(JSON.stringify(data));
         return this.#fmCloud.writeJSON(filePath, scrubbedYamlData);
@@ -60,6 +62,14 @@ class CloudFS {
       default:
         return this.#fmCloud.writeString(filePath, data);
     }
+  }
+
+  // Deprecated: callers should name the .json file the build produces.
+  // The swap to .json keeps old references working while this flags them.
+  #warnYaml(fileName) {
+    const message = `Deprecated .yaml reference: ${fileName} (use .json)`;
+    console.log(`[CloudFS] ${message}`);
+    if (typeof app != "undefined") app.displayWarningMessage(message);
   }
 }
 

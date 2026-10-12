@@ -1,5 +1,5 @@
 class Sport {
-  static settingsFile = "bvr/sports.yaml";
+  static settingsFile = "bvr/sports.json";
   #settings;
 
   constructor(type) {

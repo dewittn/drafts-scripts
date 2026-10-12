@@ -15,7 +15,7 @@ if (typeof ServiceContainer == "undefined") require("shared/core/ServiceContaine
 require("modules/bvr/messages/message_factory.js");
 
 class BVR {
-  static settingsFile = "bvr/settings.yaml";
+  static settingsFile = "bvr/settings.json";
   #settings;
   #ui;
   #services;
