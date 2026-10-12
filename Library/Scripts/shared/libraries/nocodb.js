@@ -113,7 +113,7 @@ class NocoTable {
   constructor(nocodb, base, tableName) {
     this.#nocodb = nocodb;
     this.#base = base;
-    this.#tableData = new SettingsV2("cp/tables.yaml", base.baseID);
+    this.#tableData = new Settings("cp/tables.yaml", base.baseID);
     this.#tableID = this.#tableData.load(tableName);
   }
 
