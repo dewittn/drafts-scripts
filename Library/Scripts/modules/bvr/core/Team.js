@@ -143,7 +143,7 @@ class Team {
 
     const settingsFile = this.#teamData.gameReportSettingsFile == undefined
       ? `${this.id}/gameReportSettings.json`
-      : this.#teamData.gameReportSettings;
+      : this.#teamData.gameReportSettingsFile;
     if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
     return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }

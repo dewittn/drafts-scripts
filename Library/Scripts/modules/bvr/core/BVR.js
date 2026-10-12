@@ -100,7 +100,7 @@ class BVR {
   }
 
   get ppDataFile() {
-    const dataFile = this.settings.ppDataFile != undefined
+    const dataFile = this.settings.ppDataFile == undefined
       ? `practicePlans.json`
       : this.settings.ppDataFile;
 
