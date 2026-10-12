@@ -1,8 +1,8 @@
 ---
 dirPrefix: bvr/
-uiSettingsFile: ui.yaml
-teamSettingsFile: teams.yaml
-ppSettingsFile: practicePlans.yaml
+uiSettingsFile: ui.json
+teamSettingsFile: teams.json
+ppSettingsFile: practicePlans.json
 recordsFile: records.json
 ppDataFile: practicePlans.json
 defaultTemplateFile: practice-plan.md

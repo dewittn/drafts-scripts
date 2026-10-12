@@ -20,7 +20,7 @@ if (typeof NavigationManager == "undefined") require("modules/cp/managers/Naviga
 
 class ContentPipeline {
   static basePath = "/Library/Data/cp/";
-  static settingsFile = "cp/settings.yaml";
+  static settingsFile = "cp/settings.json";
   #fs;
   #ui;
   #db;

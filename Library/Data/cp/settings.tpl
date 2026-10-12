@@ -1,6 +1,6 @@
 ---
 dirPrefix: cp/
-uiSettingsFile: ui.yaml
+uiSettingsFile: ui.json
 draftLogUUID: F59242F5-8096-44A6-B8DC-529DA4082AAC
 defaultTable: Content
 defaultWorkspace: Content Pipeline
@@ -13,7 +13,7 @@ defualtTags:
 debug:
   errorMessage: "Error: debug can only be set to true or false."
 destinations:
-  destinationsFile: destinations.yaml
+  destinationsFile: destinations.json
   errorMessage: "Error: You must select a destination!!"
   errorMessage2: "Error: A destination was not selected."
   menuPicker:

@@ -29,6 +29,7 @@ class CloudFS {
     switch (extention) {
       case "yaml":
         // YAML files are converted to JSON at build time
+        this.#warnYaml(fileName);
         filePath = filePath.replace(/\.yaml$/, ".json");
         return this.#fmCloud.readJSON(filePath);
         break;
@@ -48,6 +49,7 @@ class CloudFS {
     switch (extention) {
       case "yaml":
         // YAML files are converted to JSON at build time
+        this.#warnYaml(fileName);
         filePath = filePath.replace(/\.yaml$/, ".json");
         const scrubbedYamlData = JSON.parse(JSON.stringify(data));
         return this.#fmCloud.writeJSON(filePath, scrubbedYamlData);
@@ -60,6 +62,14 @@ class CloudFS {
       default:
         return this.#fmCloud.writeString(filePath, data);
     }
+  }
+
+  // Deprecated: callers should name the .json file the build produces.
+  // The swap to .json keeps old references working while this flags them.
+  #warnYaml(fileName) {
+    const message = `Deprecated .yaml reference: ${fileName} (use .json)`;
+    console.log(`[CloudFS] ${message}`);
+    if (typeof app != "undefined") app.displayWarningMessage(message);
   }
 }
 
@@ -94,43 +104,23 @@ class DataFile {
 }
 
 class Settings {
+  #source;
+
   constructor(fileName, section) {
     const data = DataFile.load(fileName);
     const keys = section == undefined ? data : data[section];
+    this.#source = section == undefined ? fileName : `${fileName} [${section}]`;
 
     Object.assign(this, keys);
   }
 
-  get basePath() {
-    return this.constructor.basePath;
-  }
-
-  get ui() {
-    if (this.uiSettingsFile) {
-      return DataFile.load(`${this.dirPrefix}${this.uiSettingsFile}`);
-    }
-
-    return this.uiSettings;
-  }
-
-  static load(fileName) {
-    return DataFile.load(fileName);
-  }
-}
-
-class SettingsV2 {
-  #dataMap;
-
-  constructor(fileName, section) {
-    const data = DataFile.load(fileName);
-    const keys = section == undefined ? data : data[section];
-    // Convert object to Map
-    this.#dataMap = new Map(Object.entries(keys));
-  }
-
-  // Method to retrieve values from the Map
+  // Throws on a missing key so typos and gaps in the settings file surface
+  // with the key name, instead of as undefined further down the line.
   load(key) {
-    return this.#dataMap.get(key);
+    if (!Object.hasOwn(this, key)) {
+      throw new Error(`[Settings] "${key}" not found in ${this.#source}`);
+    }
+    return this[key];
   }
 
   get basePath() {

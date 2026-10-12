@@ -48,7 +48,7 @@ function rsyncLibrary() {
   return src([`${srcDir}/`]).pipe(
     rsync({
       destination: `${destDir}/`,
-      exclude: ["*.tpl", ".DS_Store"],
+      exclude: ["*.tpl", "*.yaml", ".DS_Store"],
       progress: true,
       recursive: true,
       incremental: true,

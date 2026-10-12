@@ -215,6 +215,12 @@ function getWorkingTitle() {
 
 function loadSettings(file) {
   const fmCloud = FileManager.createCloud(); // iCloud
+  if (file.endsWith(".yaml")) {
+    // Deprecated: name the .json file the build produces
+    const message = `Deprecated .yaml reference: ${file} (use .json)`;
+    console.log(`[loadSettings] ${message}`);
+    if (typeof app != "undefined") app.displayWarningMessage(message);
+  }
   const jsonFile = file.replace(/\.yaml$/, ".json");
   return fmCloud.readJSON(`/Library/Data/${jsonFile}`);
 }

@@ -5,7 +5,7 @@ require("modules/nr/EmailDraft.js");
 // Creates a Fastmail draft from the current draft. Fails the action on error
 // so later steps (like trashing the draft) do not run.
 function sendToFastmail() {
-  const settings = loadSettings("nr-settings.yaml");
+  const settings = loadSettings("nr-settings.json");
   const email = new EmailDraft(draft.content);
   email.addSignature(settings.fastmail?.signature);
 
