@@ -1,8 +1,10 @@
 /**
- * ServiceContainer - A singleton dependency injection container
+ * ServiceContainer - Per-run service registry
  *
- * Provides lazy instantiation and singleton pattern for services.
- * Manages the dependency graph and supports configuration injection.
+ * Drafts starts every action run in a fresh JavaScript context, so this
+ * container (and everything it caches) lives for exactly one run. It gives
+ * classes lazy, shared access to services within that run, and lets tests
+ * register mocks before the code under test asks for them.
  *
  * Usage:
  *   const services = ServiceContainer.getInstance();
@@ -11,7 +13,6 @@
  */
 class ServiceContainer {
   static #instance = null;
-  #services = new Map();
   #singletons = new Map();
   #factories = new Map();
 
@@ -110,7 +111,6 @@ class ServiceContainer {
    * Reset all services (useful for testing)
    */
   reset() {
-    this.#services.clear();
     this.#singletons.clear();
     this.#factories.clear();
   }

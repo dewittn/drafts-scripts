@@ -62,9 +62,6 @@ class DependencyProvider {
   }
 
   get ulysses() {
-    if (!this.#context.services) {
-      return ServiceContainer.getInstance().get('ulysses');
-    }
-    return this.#context.services.get('ulysses');
+    return ServiceContainer.getInstance().get('ulysses');
   }
 }

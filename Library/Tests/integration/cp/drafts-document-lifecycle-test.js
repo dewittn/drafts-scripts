@@ -19,7 +19,7 @@ require("../Tests/fixtures/testData.js");
 require("../Tests/fixtures/mocks.js");
 
 // Load ServiceContainer framework
-require("shared/core/ServiceInitializer.js");
+require("shared/core/ServiceContainer.js");
 
 // Load required modules
 require("modules/cp/core/ContentPipeline.js");
@@ -33,10 +33,8 @@ const test = new TestAssertions('DraftsDocument Lifecycle Integration Test');
 
 test.section('Setup and Configuration');
 
-resetServices();
-initializeServices();
-
 const container = ServiceContainer.getInstance();
+container.reset(); // Clean slate for this test
 
 // Register test services
 const testData = getCPTestData();
@@ -45,7 +43,7 @@ container.register('cpUI', () => createMockUI({ debug: false }), true);
 container.register('ulysses', () => createMockUlysses({ debug: false }), true);
 
 // Get services under test
-const contentPipeline = container.get('cpDefault');
+const contentPipeline = new ContentPipeline();
 const documentFactory = contentPipeline.documentFactory;
 const statuses = contentPipeline.statuses;
 const destinations = contentPipeline.destinations;
@@ -320,7 +318,7 @@ test.section('Open Draft Method');
 if (newDraft && newDraft.workingDraft) {
   // Note: We don't actually call open() as it would change the editor state
   // Just verify the method exists
-  test.assertType(newDraft.open, 'Function', 'open() method exists');
+  test.assertType(newDraft.open, 'function', 'open() method exists');
   test.info('open() method is available (not called in test)');
 } else {
   test.info('Skipping open tests - requires Drafts environment');

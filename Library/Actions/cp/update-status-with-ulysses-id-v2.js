@@ -1,6 +1,4 @@
-require("shared/core/ServiceInitializer.js");
-initializeServices();
-
+require("modules/cp/core/ContentPipeline.js");
 const uuid = draft.content;
-const cp = ServiceContainer.getInstance().get('cpDefault');
+const cp = new ContentPipeline();
 cp.updateStatusOfDoc(uuid, "UlyssesID");

@@ -18,7 +18,7 @@ require("../Tests/fixtures/testData.js");
 require("../Tests/fixtures/mocks.js");
 
 // Load ServiceContainer framework
-require("shared/core/ServiceInitializer.js");
+require("shared/core/ServiceContainer.js");
 
 // Load required modules
 require("modules/cp/core/ContentPipeline.js");
@@ -32,10 +32,8 @@ const test = new TestAssertions('ContentPipeline Workflow Integration Test');
 
 test.section('Setup and Configuration');
 
-resetServices();
-initializeServices();
-
 const container = ServiceContainer.getInstance();
+container.reset(); // Clean slate for this test
 
 // Register test services
 const testData = getCPTestData();
@@ -45,7 +43,7 @@ container.register('ulysses', () => createMockUlysses({ debug: false }), true);
 container.register('cpDatabase', () => createMockDatabase(getMockRecords()), true);
 
 // Get services under test
-const contentPipeline = container.get('cpDefault');
+const contentPipeline = new ContentPipeline();
 const documentFactory = contentPipeline.documentFactory;
 const statuses = contentPipeline.statuses;
 const destinations = contentPipeline.destinations;
