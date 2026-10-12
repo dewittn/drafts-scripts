@@ -480,6 +480,10 @@ class ContentPipeline {
 
   #loadWorkspace() {
     const { defaultWorkspace } = this.settings;
+    // Each applyWorkspace call leaks native memory in Drafts, so skip it when
+    // the workspace is already showing
+    if (app.currentWorkspace.name == defaultWorkspace) return;
+
     const workspace = Workspace.find(defaultWorkspace);
     app.currentWindow.applyWorkspace(workspace);
   }

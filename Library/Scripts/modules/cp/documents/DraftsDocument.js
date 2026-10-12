@@ -212,8 +212,12 @@ class DraftsDoc {
       console.log('[DraftsDoc] Cannot open: workingDraft is undefined');
       return;
     }
-    const workspace = Workspace.find("default");
-    app.currentWindow.applyWorkspace(workspace);
+    // No workspace is named "default", so find() returns undefined and
+    // applyWorkspace resets the window to Drafts' built-in "Default" workspace
+    if (app.currentWorkspace.name != "Default") {
+      const workspace = Workspace.find("default");
+      app.currentWindow.applyWorkspace(workspace);
+    }
     editor.load(this.workingDraft);
     editor.activate();
   }
