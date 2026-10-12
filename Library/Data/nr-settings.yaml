@@ -51,3 +51,11 @@ queryLetter:
           name: Create Letter
           value: create
           isDefault: true
+fastmail:
+  # Markdown, appended to every email body before the HTML conversion.
+  # Single line breaks are kept. Leave empty for no signature.
+  signature: |
+    \---
+    Nelson/Roberto
+    Author/Filmmaker/Developer
+    [nelsonroberto.com](https://nelsonroberto.com/)
