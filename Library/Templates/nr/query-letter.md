@@ -1,8 +1,14 @@
+# Query: [[agent]]
+
+To: [[agent]]
+Email:
+Subject: QUERY: Waking From Innocent Dreams
+
 Dear [[agent]],
 
-{==As the agent who represented [[represented]], I believe you would be an excellent fit for my novel.==}
+{==We met in... / I was referred to you by... ==}
 
-WAKING FROM INNOCENT DREAMS is [[genre]] with elements of magical realism. A cross between HADES, ARGENTINA, and THE VOLCANO DAUGHTERS, it will also appeal to readers who liked A BEAST SLINKS TOWARDS BEIJING. This coming-of-age story, complete at 110,000 words, spans twenty years and follows a boy who survived and a ghost who remembers.
+**WAKING FROM INNOCENT DREAMS** is [[genre]] with elements of magical realism. A cross between HADES, ARGENTINA, and THE VOLCANO DAUGHTERS, it will also appeal to readers who liked A BEAST SLINKS TOWARDS BEIJING. This coming-of-age story, complete at 110,000 words, spans twenty years and follows a boy who survived and a ghost who remembers.
 
 Growing up, Nelson’s family loved him but looked nothing like him. He longs to meet the one person he believes will make him whole, while trying to ignore the ghost that won't leave him alone. Then a positive DNA test reveals him to be Roberto, the son of Salvadoran revolutionaries who, as an infant, was *desaparecido* during a violent government raid. At a miraculous reunion, Nelson meets a family ready to welcome him home, except for the one person who was disappeared alongside him: his mother.
 
@@ -14,7 +20,7 @@ As one of El Salvador's Disappeared Children, I am able to write about this phen
 
 I am also completing a documentary film, IDENTIFYING NELSON/BUSCANDO A ROBERTO, which revolves around a historic 2011 commemoration of El Salvador's Day of the Disappeared and offers natural co-marketing opportunities for the book.
 
-{==Your list shows a deep commitment to (multicultural family sagas / literary fiction that crosses borders / stories of identity and belonging), from (CLIENT/TITLE) to (CLIENT/TITLE). WAKING FROM INNOCENT DREAMS would be a strong addition to that track: it shares their (quality), while its blend of true events and magical realism, and a story almost no one else alive could tell, brings a new facet to your program.==}
+{== As the agent representing... your list contains... I believe my novel would be a strong addition to your list, as... ==}
 
 If you are interested in reading WAKING FROM INNOCENT DREAMS, I would be happy to forward a sample of any length you suggest. Thank you for your consideration.
 
