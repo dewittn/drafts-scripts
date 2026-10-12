@@ -14,10 +14,11 @@ require("../Tests/fixtures/testData.js");
 require("../Tests/fixtures/mocks.js");
 
 // Load ServiceContainer framework
-require("shared/core/ServiceInitializer.js");
+require("shared/core/ServiceContainer.js");
+require("modules/cp/core/ContentPipeline.js");
 
 // Load DocumentFactory and document types
-require("modules/cp/documents/DocumentFactory.js");
+if (typeof DocumentFactory == "undefined") require("modules/cp/documents/DocumentFactory.js");
 
 // Create test instance
 const test = new TestAssertions('DocumentFactory Comprehensive Tests');
@@ -28,10 +29,8 @@ const test = new TestAssertions('DocumentFactory Comprehensive Tests');
 
 test.section('Setup and Configuration');
 
-resetServices();
-initializeServices();
-
 const container = ServiceContainer.getInstance();
+container.reset(); // Clean slate for this test
 
 // Register test mocks
 const testData = getCPTestData();
@@ -40,7 +39,7 @@ container.register('cpUI', () => createMockUI({ debug: false }), true);
 container.register('ulysses', () => createMockUlysses({ debug: false }), true);
 
 // Get services
-const contentPipeline = container.get('cpDefault');
+const contentPipeline = new ContentPipeline();
 const documentFactory = contentPipeline.documentFactory;
 
 test.assertNotNullish(documentFactory, 'DocumentFactory instance created');

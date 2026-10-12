@@ -21,8 +21,6 @@ if (typeof NavigationManager == "undefined") require("modules/cp/managers/Naviga
 class ContentPipeline {
   static basePath = "/Library/Data/cp/";
   static settingsFile = "cp/settings.yaml";
-  static #instances = new Map(); // One instance per table
-  static #constructorWarningShown = false;
   #fs;
   #ui;
   #db;
@@ -44,45 +42,7 @@ class ContentPipeline {
   #menuOrchestrator;
   #navigationManager;
 
-  /**
-   * Get singleton instance of ContentPipeline
-   * @param {string} table - Table name (default: "Content")
-   * @returns {ContentPipeline} Singleton instance for the table
-   */
-  static getInstance(table = "Content") {
-    if (!ContentPipeline.#instances.has(table)) {
-      console.log(
-        `[ContentPipeline] Creating singleton instance for table: ${table}`,
-      );
-      ContentPipeline.#instances.set(table, new ContentPipeline(table));
-    } else {
-      console.log(
-        `[ContentPipeline] Reusing singleton instance for table: ${table}`,
-      );
-    }
-    return ContentPipeline.#instances.get(table);
-  }
-
-  /**
-   * Reset singleton instances (for testing)
-   */
-  static resetInstance(table = null) {
-    if (table) {
-      ContentPipeline.#instances.delete(table);
-    } else {
-      ContentPipeline.#instances.clear();
-    }
-  }
-
   constructor(table = "Content") {
-    // Deprecation warning
-    if (!ContentPipeline.#constructorWarningShown) {
-      console.log(
-        "[DEPRECATION] Direct instantiation of ContentPipeline is deprecated. Use ContentPipeline.getInstance() instead.",
-      );
-      ContentPipeline.#constructorWarningShown = true;
-    }
-
     this.#tableName = table;
     this.#services = ServiceContainer.getInstance();
     this.#activeDoc = null;
@@ -152,6 +112,16 @@ class ContentPipeline {
         return new TextUtilities();
       }, true);
     }
+
+    // Ulysses
+    if (!this.#services.has("ulysses")) {
+      this.#services.register("ulysses", () => {
+        if (typeof Ulysses == "undefined") {
+          require("shared/libraries/ulysses-v2.js");
+        }
+        return new Ulysses();
+      }, true);
+    }
   }
 
   // Lazy getters for all dependencies
@@ -215,7 +185,7 @@ class ContentPipeline {
 
   get db() {
     if (!this.#db) {
-      // Check if a mock database is registered (for testing)
+      // Tests register a mock 'cpDatabase'; production never registers one
       if (this.#services.has('cpDatabase')) {
         this.#db = this.#services.get('cpDatabase');
       } else {
@@ -510,6 +480,10 @@ class ContentPipeline {
 
   #loadWorkspace() {
     const { defaultWorkspace } = this.settings;
+    // Each applyWorkspace call leaks native memory in Drafts, so skip it when
+    // the workspace is already showing
+    if (app.currentWorkspace.name == defaultWorkspace) return;
+
     const workspace = Workspace.find(defaultWorkspace);
     app.currentWindow.applyWorkspace(workspace);
   }

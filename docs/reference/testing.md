@@ -97,7 +97,7 @@ require("../../fixtures/testData.js");
 require("../../fixtures/mocks.js");
 
 // Load ServiceContainer
-require("shared/core/ServiceInitializer.js");
+require("shared/core/ServiceContainer.js");
 
 // Load component under test
 require("modules/cp/core/Statuses.js");
@@ -105,9 +105,8 @@ require("modules/cp/core/Statuses.js");
 const test = new TestAssertions('Statuses Unit Tests');
 
 // Setup
-resetServices();
-initializeServices();
 const container = ServiceContainer.getInstance();
+container.reset();
 
 // Register mocks
 const mockUI = createMockUI({ debug: true });
@@ -251,20 +250,18 @@ const reads = mockFS.getOperationsByType('read');
 All tests use the ServiceContainer dependency injection framework:
 
 ```javascript
-// Initialize services
-resetServices();  // Clean slate
-initializeServices();  // Register all services
-
-// Get container
+// Get the container and start from a clean slate
 const container = ServiceContainer.getInstance();
+container.reset();
 
 // Register test mocks (override real services)
 container.register('cpUI', () => createMockUI({ debug: true }), true);
 container.register('cpDatabase', () => createMockDatabase(records), true);
 container.register('ulysses', () => createMockUlysses({ debug: true }), true);
 
-// Get services
-const contentPipeline = container.get('cpDefault');
+// Construct the code under test. Its constructor only registers the
+// real services that haven't already been registered, so mocks win.
+const contentPipeline = new ContentPipeline();
 const statuses = contentPipeline.statuses;
 ```
 
@@ -272,7 +269,6 @@ const statuses = contentPipeline.statuses;
 - Consistent dependency injection
 - Easy to swap real services for mocks
 - Lazy initialization (services created on first use)
-- Singleton management
 - Testable architecture
 
 ## Test Data
@@ -320,15 +316,14 @@ mockRecords:
 require("../../fixtures/assertions.js");
 require("../../fixtures/testData.js");
 require("../../fixtures/mocks.js");
-require("shared/core/ServiceInitializer.js");
+require("shared/core/ServiceContainer.js");
 require("modules/path/to/Component.js");
 
 const test = new TestAssertions('[Component] Unit Tests');
 
 // Setup
-resetServices();
-initializeServices();
 const container = ServiceContainer.getInstance();
+container.reset();
 
 // Register mocks
 const mockUI = createMockUI({ debug: true });
@@ -357,7 +352,7 @@ test.summary();
 require("../../fixtures/assertions.js");
 require("../../fixtures/testData.js");
 require("../../fixtures/mocks.js");
-require("shared/core/ServiceInitializer.js");
+require("shared/core/ServiceContainer.js");
 
 // Load required modules
 require("modules/cp/core/ContentPipeline.js");
@@ -365,16 +360,16 @@ require("modules/cp/core/ContentPipeline.js");
 const test = new TestAssertions('[Workflow] Integration Test');
 
 // Setup
-resetServices();
-initializeServices();
 const container = ServiceContainer.getInstance();
+container.reset();
 
 // Register mocks
 container.register('cpDatabase', () => createMockDatabase(records), true);
 container.register('ulysses', () => createMockUlysses({ debug: true }), true);
 
-// Get services
-const contentPipeline = container.get('cpDefault');
+// Construct the code under test. Its constructor only registers the
+// real services that haven't already been registered, so mocks win.
+const contentPipeline = new ContentPipeline();
 
 // Test workflow
 test.section('Setup');
@@ -391,8 +386,8 @@ test.summary();
 // ❌ BAD - Manual instantiation
 const statuses = new Statuses(dependencies);
 
-// ✅ GOOD - ServiceContainer
-const contentPipeline = container.get('cpDefault');
+// ✅ GOOD - Mocks registered in the container, real wiring from ContentPipeline
+const contentPipeline = new ContentPipeline();
 const statuses = contentPipeline.statuses;
 ```
 

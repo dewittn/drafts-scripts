@@ -1,6 +1,4 @@
 // Content Pipeline Open
-require("shared/core/ServiceInitializer.js");
-initializeServices();
-
-const cp = ServiceContainer.getInstance().get('cpDefault');
+require("modules/cp/core/ContentPipeline.js");
+const cp = new ContentPipeline();
 cp.addDocToPipeline("DraftsID", draft.uuid);

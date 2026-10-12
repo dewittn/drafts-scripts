@@ -25,7 +25,7 @@ class Game {
   get bvr() {
     if (!this.#bvr && this.#dependencies == undefined) {
       if (typeof BVR == "undefined") require("modules/bvr/core/BVR.js");
-      this.#bvr = BVR.getInstance();
+      this.#bvr = new BVR();
     }
     return this.#bvr;
   }
@@ -33,7 +33,7 @@ class Game {
   get team() {
     if (!this.#team && this.#dependencies == undefined) {
       if (typeof Team == "undefined") require("modules/bvr/core/Team.js");
-      this.#team = Team.getInstance();
+      this.#team = new Team();
     }
     return this.#team;
   }

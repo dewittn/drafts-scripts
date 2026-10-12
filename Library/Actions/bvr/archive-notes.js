@@ -1,6 +1,4 @@
-require("shared/core/ServiceInitializer.js");
-initializeServices();
+require("modules/bvr/core/BVR.js");
 
-const container = ServiceContainer.getInstance();
-const team = container.get('teamFactory')();
+const team = new Team();
 team.archiveNotes();

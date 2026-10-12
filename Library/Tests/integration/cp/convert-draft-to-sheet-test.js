@@ -11,7 +11,7 @@ require("../Tests/fixtures/testData.js");
 require("../Tests/fixtures/mocks.js");
 
 // Load ServiceContainer framework
-require("shared/core/ServiceInitializer.js");
+require("shared/core/ServiceContainer.js");
 
 // Load required modules
 require("modules/cp/core/Statuses.js");

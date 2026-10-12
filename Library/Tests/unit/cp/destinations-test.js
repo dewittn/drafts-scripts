@@ -18,10 +18,11 @@ require("../Tests/fixtures/testData.js");
 require("../Tests/fixtures/mocks.js");
 
 // Load ServiceContainer framework
-require("shared/core/ServiceInitializer.js");
+require("shared/core/ServiceContainer.js");
+require("modules/cp/core/ContentPipeline.js");
 
 // Load component under test
-require("modules/cp/core/Destinations.js");
+if (typeof Destinations == "undefined") require("modules/cp/core/Destinations.js");
 
 // Create test instance
 const test = new TestAssertions('Destinations Comprehensive Unit Tests');
@@ -32,10 +33,8 @@ const test = new TestAssertions('Destinations Comprehensive Unit Tests');
 
 test.section('Setup and Configuration');
 
-resetServices();
-initializeServices();
-
 const container = ServiceContainer.getInstance();
+container.reset(); // Clean slate for this test
 
 // Get test data
 const testData = getCPTestData();
@@ -49,7 +48,7 @@ container.register('cpUI', () => mockUI, true);
 container.register('cpFileSystem', () => mockFS, true);
 
 // Get services
-const contentPipeline = container.get('cpDefault');
+const contentPipeline = new ContentPipeline();
 const destinations = contentPipeline.destinations;
 
 test.assertNotNullish(destinations, 'Destinations instance created');

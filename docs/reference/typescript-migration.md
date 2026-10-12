@@ -366,7 +366,7 @@ Can stop here and use scripts normally — they're still plain JS at runtime.
 
 Add types to the dependency backbone. Transpiled output shouldn't change.
 
-- [ ] Convert `shared/core/` (ServiceContainer, DependencyProvider, ServiceFactories)
+- [ ] Convert `shared/core/` (ServiceContainer, DependencyProvider)
 - [ ] Define interfaces for all injectable services (UI, DB, FS, Ulysses)
 - [ ] Convert `modules/cp/core/` (ContentPipeline, Statuses, Destinations, RecentRecords)
 - [ ] Convert `modules/cp/managers/` (BaseManager + 5 subclasses)
@@ -416,8 +416,6 @@ The key insight: **Phases 3-5 are mechanically safe because `--no-bundle` just s
 
 High (convert first — most dependency surface):
 - `shared/core/ServiceContainer.js`
-- `shared/core/ServiceInitializer.js`
-- `shared/core/ServiceFactories.js`
 - `modules/cp/core/DependencyProvider.js`
 - `modules/cp/core/ContentPipeline.js`
 - `modules/cp/managers/BaseManager.js`

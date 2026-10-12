@@ -17,7 +17,7 @@ require("../Tests/fixtures/testData.js");
 require("../Tests/fixtures/mocks.js");
 
 // Load ServiceContainer framework
-require("shared/core/ServiceInitializer.js");
+require("shared/core/ServiceContainer.js");
 
 // Load component under test
 require("modules/cp/core/Statuses.js");
@@ -31,10 +31,8 @@ const test = new TestAssertions('Statuses Comprehensive Unit Tests');
 
 test.section('Setup and Configuration');
 
-resetServices();
-initializeServices();
-
 const container = ServiceContainer.getInstance();
+container.reset(); // Clean slate for this test
 
 // Get test data
 const testData = getCPTestData();

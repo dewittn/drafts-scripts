@@ -19,7 +19,7 @@ require("../Tests/fixtures/testData.js");
 require("../Tests/fixtures/mocks.js");
 
 // Load ServiceContainer framework
-require("shared/core/ServiceInitializer.js");
+require("shared/core/ServiceContainer.js");
 
 // Load required modules
 require("modules/cp/core/ContentPipeline.js");
@@ -34,10 +34,8 @@ const test = new TestAssertions('RecentRecords Integration Test');
 
 test.section('Setup and Configuration');
 
-resetServices();
-initializeServices();
-
 const container = ServiceContainer.getInstance();
+container.reset(); // Clean slate for this test
 
 // Register test services
 const testData = getCPTestData();
@@ -47,7 +45,7 @@ container.register('ulysses', () => createMockUlysses({ debug: false }), true);
 container.register('cpDatabase', () => createMockDatabase(getMockRecords()), true);
 
 // Get services under test
-const contentPipeline = container.get('cpDefault');
+const contentPipeline = new ContentPipeline();
 const recentRecords = contentPipeline.recent;
 const mockFS = container.get('cpFileSystem');
 const mockDB = container.get('cpDatabase');
@@ -406,7 +404,7 @@ container.register('cpFileSystem', () => emptyFS, true);
 
 // Reset and reinitialize to use new file system
 container.resetSingletons();
-const contentPipeline2 = container.get('cpDefault');
+const contentPipeline2 = new ContentPipeline();
 const recentRecords2 = contentPipeline2.recent;
 
 // Should fall back to database

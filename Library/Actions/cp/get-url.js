@@ -1,7 +1,6 @@
-require("shared/core/ServiceInitializer.js");
-initializeServices();
+require("modules/cp/core/ContentPipeline.js");
 
-const cp = ServiceContainer.getInstance().get('cpDefault');
+const cp = new ContentPipeline();
 const link = cp.getPublishedPostURL();
 
 app.setClipboard(link);
