@@ -37,8 +37,8 @@ queryLetter:
           name: queryType
           label: Query Type
           values:
-            - email
-            - online
+            - Email
+            - Query Manager
           selectedValues:
             - email
       - type: select
@@ -53,7 +53,7 @@ queryLetter:
       - type: textField
         data:
           name: email
-          label: Email (leave blank for online queries)
+          label: Email Address
           options:
             keyboard: emailAddress
             autocapitalization: none
