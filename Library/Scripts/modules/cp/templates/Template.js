@@ -119,12 +119,13 @@ class Template {
       this.draft.content = this.draft.processTemplate(template);
     }
 
+    // draft.processMustacheTemplate() returns undefined in Drafts 54, so render
+    // with MustacheTemplate. It keeps the newline after a section tag that sits
+    // on its own line, so templates should put section tags inline.
     if (this.templateFile.endsWith(".mustache")) {
-      this.draft.content = this.draft.processMustacheTemplate(
-        "text",
-        template,
-        this.mustacheTags,
-      );
+      const mustache = MustacheTemplate.createWithTemplate(template);
+      mustache.contentType = "text";
+      this.draft.content = mustache.render(this.mustacheTags);
     }
   }
 }

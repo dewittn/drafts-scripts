@@ -102,10 +102,15 @@ class QueryLetter {
 
     // Every other prompt field becomes a template tag with the same name.
     // Select fields return arrays, so their choices are joined into one string.
+    // Each chosen value also sets a "<field>_<choice>" tag so Mustache sections
+    // like {{#queryType_email}} can switch on it.
     const templateTags = { agent: agent.name, agentNote: agent.note };
     for (const [key, value] of Object.entries(fieldValues)) {
       if (typeof value == "string") templateTags[key] = value;
-      if (Array.isArray(value)) templateTags[key] = value.join(", ");
+      if (Array.isArray(value)) {
+        templateTags[key] = value.join(", ");
+        value.forEach((choice) => (templateTags[`${key}_${choice}`] = choice));
+      }
     }
 
     return { agent, templateTags };

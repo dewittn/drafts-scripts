@@ -18,7 +18,7 @@ meats:
 queryLetter:
   sourceDraftUUID: "315D897D-FE86-465B-8DF0-BD624C21E9B3"
   sourceTag: "authoring/wfid/query"
-  templateFile: "nr/query-letter.md"
+  templateFile: "nr/query-letter.mustache"
   draftTags:
     - "authoring/wfid/query"
   pickerData:
@@ -26,11 +26,21 @@ queryLetter:
     label: Agent
   menuSettings:
     menuTitle: New Query Letter
-    menuMessage: Choose an agent who has not been queried yet. Any other field below fills the matching [[tag]] in the template.
+    menuMessage: Choose an agent who has not been queried yet. Any other field below fills the matching {{tag}} in the template.
     isCancellable: true
     # Extra fields are optional. Each field name becomes a template tag,
-    # e.g. a textField named "title" fills [[title]] in nr/query-letter.md.
+    # e.g. a textField named "title" fills {{{title}}} in nr/query-letter.mustache.
+    # Select choices also set "<name>_<choice>" for sections like {{#queryType_email}}.
     menuItems:
+      - type: select
+        data:
+          name: queryType
+          label: Query Type
+          values:
+            - email
+            - online
+          selectedValues:
+            - email
       - type: select
         data:
           name: genre
@@ -40,6 +50,14 @@ queryLetter:
             - literary fiction
           selectedValues:
             - upmarket literary fiction
+      - type: textField
+        data:
+          name: email
+          label: Email (leave blank for online queries)
+          options:
+            keyboard: emailAddress
+            autocapitalization: none
+            autocorrect: false
       - type: button
         data:
           name: Create Letter

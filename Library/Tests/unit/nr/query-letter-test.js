@@ -106,7 +106,7 @@ function makeUI(pickerIndex, extraFields = {}, shown = true) {
 }
 
 const settings = {
-  templateFile: "nr/query-letter.md",
+  templateFile: "nr/query-letter.mustache",
   draftTags: ["authoring/wfid/query"],
   pickerData: { name: "agent", label: "Agent" },
   menuSettings: {
@@ -122,7 +122,12 @@ let source = makeSourceDraft([
   makeTask("Bob Books (Bookish Lit)", false),
   makeTask("Carol Cover", false),
 ]);
-let ui = makeUI(1, { represented: "SOME TITLE", genre: ["upmarket literary fiction"] });
+let ui = makeUI(1, {
+  represented: "SOME TITLE",
+  queryType: ["email"],
+  genre: ["upmarket literary fiction"],
+  email: "carol@example.com",
+});
 let result = new QueryLetter(settings, ui, source).create();
 
 test.assertDeepEqual(
@@ -136,6 +141,9 @@ test.assertEqual(createdTemplates.length, 1, "one template draft created");
 test.assertEqual(createdTemplates[0].settings.templateTags.agent, "Carol Cover", "agent tag set from picker");
 test.assertEqual(createdTemplates[0].settings.templateTags.represented, "SOME TITLE", "extra field becomes template tag");
 test.assertEqual(createdTemplates[0].settings.templateTags.genre, "upmarket literary fiction", "select field becomes template tag");
+test.assertEqual(createdTemplates[0].settings.templateTags.email, "carol@example.com", "email field becomes template tag");
+test.assertEqual(createdTemplates[0].settings.templateTags.queryType_email, "email", "chosen select value sets a section tag");
+test.assertEqual(createdTemplates[0].settings.templateTags.queryType_online, undefined, "unchosen select value sets no section tag");
 test.assertDeepEqual(createdTemplates[0].settings.draftTags, ["authoring/wfid/query"], "draft tagged");
 test.assert(createdTemplates[0].archived, "new draft is archived");
 test.assert(createdTemplates[0].saved, "new draft is saved");
