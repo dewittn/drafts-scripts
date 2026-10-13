@@ -37,7 +37,9 @@ function logVaribles(cb) {
 function copyJSONData() {
   return new Promise((resolve, reject) => {
     exec(
-      `rsync -r --progress --include='*.json' --exclude-from='./exclude-file.txt' '${destDir}/Library/' '${srcDir}'`,
+      // Pull back only .json data. Without the final --exclude='*', every file type
+      // not in exclude-file.txt (e.g. .mustache) overwrote local edits.
+      `rsync -r --progress --include='*/' --include='*.json' --exclude-from='./exclude-file.txt' --exclude='*' '${destDir}/Library/' '${srcDir}'`,
       (err) => (err ? reject(err) : resolve()),
     );
   });
