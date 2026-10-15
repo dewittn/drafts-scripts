@@ -30,7 +30,9 @@ queryLetter:
     isCancellable: true
     # Extra fields are optional. Each field name becomes a template tag,
     # e.g. a textField named "title" fills {{{title}}} in nr/query-letter.mustache.
-    # Select choices also set "<name>_<choice>" for sections like {{#queryType_email}}.
+    # Select choices fill their tag lowercased ("Literary fiction" -> literary fiction)
+    # and also set "<name>_<choice>" for sections like {{#queryType_email}}
+    # (spaces as underscores: "Query Manager" -> queryType_query_manager).
     menuItems:
       - type: select
         data:
@@ -40,16 +42,16 @@ queryLetter:
             - Email
             - Query Manager
           selectedValues:
-            - email
+            - Email
       - type: select
         data:
           name: genre
           label: Genre
           values:
-            - upmarket literary fiction
-            - literary fiction
+            - Upmarket literary fiction
+            - Literary fiction
           selectedValues:
-            - upmarket literary fiction
+            - Upmarket literary fiction
       - type: textField
         data:
           name: email
