@@ -16,6 +16,7 @@ class EmailDraft {
   static addressPattern = /^\s*(?:"?([^"<]*?)"?\s*<\s*)?([^\s<>@,;]+@[^\s<>,;]+?)\s*>?\s*$/;
 
   #subject;
+  #to;
   #recipients;
   #body;
 
@@ -38,6 +39,7 @@ class EmailDraft {
     }
 
     this.#subject = fields.subject ?? "";
+    this.#to = fields.to ?? "";
     this.#recipients = this.constructor.parseRecipients(fields.to, fields.email);
     this.#body = lines.slice(index).join("\n").trim();
   }
@@ -75,8 +77,17 @@ class EmailDraft {
     this.#subject = subject;
   }
 
+  // Raw "To:" line, kept so a prompt can offer the name when no address parsed.
+  get to() {
+    return this.#to;
+  }
+
   get recipients() {
     return this.#recipients;
+  }
+
+  set recipients(recipients) {
+    this.#recipients = recipients;
   }
 
   // Appends a Markdown signature so it lands in both the text and HTML parts.

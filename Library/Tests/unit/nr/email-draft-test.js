@@ -22,11 +22,15 @@ test.assertEqual(email.body, "Hi Jane,\n\nAre you free?", "drops heading and fie
 email = new EmailDraft("Subject: Hello\nTo: Jane\n\nBody");
 test.assertEqual(email.subject, "Hello", "fields work without a heading");
 test.assertDeepEqual(email.recipients, [], "a To name without an address gives no recipient");
+test.assertEqual(email.to, "Jane", "keeps the raw To name for prompting");
+email.recipients = EmailDraft.parseRecipients(email.to, "jane@example.com");
+test.assertDeepEqual(email.recipients, [{ name: "Jane", email: "jane@example.com" }], "recipients can be set after parsing");
 test.assertEqual(email.body, "Body", "body without heading");
 
 email = new EmailDraft("Just a note\nTo: someone");
 test.assertEqual(email.body, "Just a note\nTo: someone", "keeps a first line that is not a heading");
 test.assertEqual(email.subject, "", "no subject when there is no Subject line");
+test.assertEqual(email.to, "", "no To name when there is no To line");
 
 email = new EmailDraft("# Email\nSubject: Hi\n\nThanks,\nNelson\nEmail: nr@example.com");
 test.assertEqual(email.body, "Thanks,\nNelson\nEmail: nr@example.com", "leaves field-like lines in the body alone");

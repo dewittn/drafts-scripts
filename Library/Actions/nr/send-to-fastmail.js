@@ -9,11 +9,7 @@ function sendToFastmail() {
   const email = new EmailDraft(draft.content);
   email.addSignature(settings.fastmail?.signature);
 
-  if (email.subject == "") {
-    const subject = promptForSubject();
-    if (subject == undefined) return context.cancel("No subject entered");
-    email.subject = subject;
-  }
+  if (!promptForMissingFields(email)) return context.cancel("Missing email fields");
 
   const result = new Fastmail().createDraft({
     to: email.recipients,
@@ -28,14 +24,38 @@ function sendToFastmail() {
   app.displaySuccessMessage(`Fastmail draft created${recipient ? ` for ${recipient}` : ""}`);
 }
 
-function promptForSubject() {
+// Asks for whichever of the subject and recipient the draft is missing.
+// Leaving a field blank creates the draft without it. Returns false on cancel.
+function promptForMissingFields(email, error = "") {
+  const needsSubject = email.subject == "";
+  const needsRecipient = email.recipients.length == 0;
+  if (!needsSubject && !needsRecipient) return true;
+
+  const missing = [needsSubject && "Subject:", needsRecipient && "Email:"].filter(Boolean).join(" or ");
   const prompt = Prompt.create();
   prompt.title = "Send to Fastmail";
-  prompt.message = "No Subject: line found.";
-  prompt.addTextField("subject", "Subject", "");
+  prompt.message = error || `No ${missing} line found.`;
+  if (needsSubject) prompt.addTextField("subject", "Subject", "");
+  if (needsRecipient) {
+    prompt.addTextField("to", "To", email.to);
+    prompt.addTextField("email", "Email Address", "", {
+      keyboard: "emailAddress",
+      autocapitalization: "none",
+      autocorrect: false,
+    });
+  }
   prompt.addButton("Create Draft");
-  if (!prompt.show()) return undefined;
-  return prompt.fieldValues.subject.trim();
+  if (!prompt.show()) return false;
+
+  const { subject = "", to = "", email: address = "" } = prompt.fieldValues;
+  if (needsSubject) email.subject = subject.trim();
+  if (needsRecipient) {
+    email.recipients = EmailDraft.parseRecipients(to.trim(), address.trim());
+    if (address.trim() != "" && email.recipients.length == 0) {
+      return promptForMissingFields(email, `"${address.trim()}" is not a valid email address.`);
+    }
+  }
+  return true;
 }
 
 sendToFastmail();
