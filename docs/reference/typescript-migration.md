@@ -1,6 +1,6 @@
 # TypeScript Migration Reference
 
-Status: Research / Pre-planning
+Status: Phases 1 and 2 implemented on `feature/bun-build` (2026-10-16), not yet merged
 Date: 2026-03-06
 Last verified: 2026-09-08 against Bun 1.4.2
 
@@ -35,10 +35,9 @@ Official Drafts type definitions exist:
 
 ### Conflict: Airtable class
 
-The official `drafts.d.ts` declares `class Airtable` which conflicts with the custom `airtable-v2.js` wrapper in this project. Options:
-1. Exclude the official `Airtable` declaration (patch or `/// <reference>` selective imports)
-2. Rename the project's class (e.g., `DraftsTable`)
-3. Use module namespacing once imports are proper
+The official `drafts.d.ts` declares `class Airtable` which conflicts with the custom
+`airtable-v2.js` wrapper in this project. Resolved by removing the official declaration
+with a scripted patch. See Resolved Questions.
 
 ## Module System
 
@@ -137,7 +136,8 @@ Two supporting requirements, both learned from fixing the Gulp watcher:
 - Generated files must be excluded from the watch globs, otherwise a rebuild's own writes
   retrigger the watcher.
 
-Two designs satisfy this. Both are viable and the choice is open:
+Two designs satisfy this. Design A was chosen on 2026-10-16 and is implemented in
+`scripts/build.ts`:
 
 **Design A: long-lived watcher.** One process watches the tree and routes by file type per
 the table above. This is what the Gulp watcher does today, so the logic ports directly.
@@ -275,8 +275,8 @@ Notes on estimate:
 
 | Phase | Estimated | Actual | Notes |
 |-------|-----------|--------|-------|
-| 1. Foundation | ~1 hr | | |
-| 2. Bun build | ~4-6 hrs | | |
+| 1. Foundation | ~1 hr | ~2 hrs | Agent session. Most of it went to discovering that plain `tsc` cannot model Drafts' `require()` |
+| 2. Bun build | ~4-6 hrs | ~1.5 hrs | Agent session, same day. Parity validated against Gulp in scratch folders |
 | 3. `src/` restructure | ~1.5-3 hrs | | |
 | 4. Core types | ~4-6 hrs | | |
 | 5. Remaining types | ~4-6 hrs | | |
@@ -287,13 +287,28 @@ Notes on estimate:
 
 No source changes, no build changes. Adds type checking to existing JS immediately.
 
-- [ ] Download `drafts.d.ts` into project
-- [ ] Create `tsconfig.json` with `allowJs: true`, `checkJs: true`
-- [ ] Get immediate type checking on existing `.js` files
-- [ ] Resolve `Airtable` class conflict (official d.ts declares `class Airtable`)
-- [ ] Create `drafts-extensions.d.ts` for project-specific globals
+- [x] Download `drafts.d.ts` into project
+- [x] Create `tsconfig.json` with `allowJs: true`, `checkJs: true`
+- [x] Get immediate type checking on existing `.js` files
+- [x] Resolve `Airtable` class conflict (official d.ts declares `class Airtable`)
+- [x] Create `drafts-extensions.d.ts` for project-specific globals
 
 **Gate**: Type checker runs without errors on existing JS. No runtime changes.
+
+**Result (2026-10-16)**: `bun run typecheck` exits 0 and no source file changed. Getting
+there took two findings that change the shape of this phase:
+
+- **Plain `tsc` cannot check these files.** TypeScript marks any `.js` file that calls
+  `require("x")` as a CommonJS module, so no class is visible to any other file. No
+  compiler option turns that off. `scripts/typecheck.ts` drives the compiler API and
+  rewrites `require(` to `Require(` in memory, same length, so positions still match.
+  It also checks each action and test with only the files it requires, because Drafts
+  gives every run a fresh scope. `.ts` files are not affected by this detection, so
+  from Phase 3 on, sources that are TypeScript check with plain `tsc`.
+- **The gate is met with a baseline, not with zero errors.** 348 errors predate checking.
+  They are recorded in `scripts/typecheck-baseline.json` and explained in
+  `typecheck-findings.md`, including 36 real-bug candidates. New errors fail the check.
+  No `@ts-ignore` comments were added.
 
 ### Phase 2: Bun Build Script (~2-3 sessions, medium risk)
 
@@ -302,16 +317,73 @@ This is the riskiest phase. The build pipeline is what gets code to iCloud.
 Note that the build script becomes TypeScript, but the ~55 source files stay `.js`. Phase 2
 is separable from the source migration and can ship on its own.
 
-- [ ] Create Bun-based build script replicating all Gulp tasks
-- [ ] Replicate: iCloud sync, secret injection, YAML->JSON, file watch
-- [ ] **Run both Gulp and Bun in parallel** — diff their outputs
-- [ ] Validate output is byte-for-byte identical to Gulp output
-- [ ] Add TypeScript transpilation step (`bun build --no-bundle`)
-- [ ] Add a separate `tsc --noEmit` typecheck step, since Bun strips types without checking them
-- [ ] Only remove Gulp after the Bun pipeline has been validated for several days
+- [x] Create Bun-based build script replicating all Gulp tasks
+- [x] Replicate: iCloud sync, secret injection, YAML->JSON, file watch
+- [x] **Run both Gulp and Bun in parallel** — diff their outputs
+- [x] Validate output is byte-for-byte identical to Gulp output
+- [ ] Add TypeScript transpilation step (`bun build --no-bundle`). Deferred to Phase 3, since
+  there is no TypeScript source to transpile until then
+- [x] Add a separate `tsc --noEmit` typecheck step, since Bun strips types without checking them.
+  Available as `bun run typecheck`. Not yet part of `sync`. Wire it in with the transpile step
+- [ ] Only remove Gulp after the Bun pipeline has been validated for several days. See
+  "Removing Gulp" below
 
 **Gate**: `diff -rq` between Gulp output and Bun output shows no differences.
 **Rollback**: Gulp remains on `main` until Bun pipeline is proven.
+
+#### Validation record (2026-10-16)
+
+`scripts/build.ts` is the replacement. Each pipeline ran against its own
+mtime-preserving copy of the repo and its own scratch destination, via `DRAFTS_DEST`.
+The real iCloud folder was never touched. Each destination was seeded first with:
+
+- a runtime `records.json`, to exercise the pull
+- a stale generated `cp/settings.json`, which the build must overwrite
+- a stale script, which `--delete` must remove
+- a remote-only `.md`, which the pull must ignore
+
+| Check | Result |
+|-------|--------|
+| `sync`: destinations, `diff -rq` | Identical, 203 files |
+| `sync`: local `Library/` after the run, `diff -rq` | Identical |
+| File permissions in both destinations | Identical |
+| rsync command | Gulp logged `rsync -crRv --exclude=*.tpl --exclude=*.yaml --exclude=.DS_Store --progress --delete Library <dest>`. Bun runs the same flags |
+| `sync --force` with every generated `.yaml` deleted first | Bun ran `op inject` for all 11 templates. Output identical to Gulp's |
+| `watch`, same 7-step edit sequence on both sides | Destinations and sources identical afterwards |
+| `clean` | Both deleted the same 11 files. Trees identical |
+| Missing `<dest>/Library` | Both exit 1 at the pull step |
+| `op` failing with a socket error, simulated | Bun exits 1 with the 1Password hint and leaves the `.yaml` untouched |
+
+The watch sequence was: edit a `.js`, add a `.md`, edit a source `.yaml`, edit a `.tpl`,
+delete the `.md`, do an atomic save (write to a temp file, then rename), and write a
+`Data/*.json` that must be ignored.
+
+Deliberate differences from Gulp:
+
+- **`inject` skips current templates.** It skips a `.tpl` whose `.yaml` mtime is equal or
+  newer. Gulp stamped each `.yaml` with its `.tpl`'s mtime, hence "equal". A secret
+  rotated in 1Password is not picked up until the `.tpl` changes. Run
+  `bun run inject --force` for that.
+- **`inject` fails loudly.** A failed `op` call stops the build and names the template,
+  with a hint about the desktop app. Gulp also stopped, but with a generic stream error.
+- **The watcher handles folders and temp files.** A folder added as a whole triggers a
+  full push. A path that disappears without ever having been seen, such as an editor's
+  temp file, is not treated as a deletion.
+- **Still the same: YAML errors.** A YAML file that fails to convert is logged and
+  skipped, and the push still runs. That matches Gulp exactly. Failing the build there
+  may be a safer default and is worth deciding before Gulp is removed.
+
+#### Removing Gulp
+
+After several days of daily use without falling back to `gulp:*`:
+
+- [ ] Delete `gulpfile.js`
+- [ ] Remove the `gulp`, `gulp:sync`, `gulp:watch`, and `gulp:debug` scripts from `package.json`
+- [ ] Remove dev dependencies `gulp`, `gulp-exec`, `gulp-ext-replace`, `gulp-rsync`,
+  `gulp-util`, and `fancy-log`. Keep `js-yaml`
+- [ ] Regenerate `package-lock.json` (`npm install --package-lock-only --ignore-scripts`)
+- [ ] Drop the Gulp mentions from `CLAUDE.md` and this document
+- [ ] Decide whether a YAML conversion error should fail the build (see above)
 
 #### Task mapping detail
 
@@ -440,6 +512,14 @@ Skip:
 
 1. **Bun bundler output format**: YES — `bun build --no-bundle` transpiles individual `.ts` files to `.js` without bundling. Output preserves the existing global-scope pattern. No custom transform needed.
 2. **IIFE / globalNames**: NOT NEEDED for Strategy A. IIFE exists in Bun but `globalNames` is unimplemented. Only needed if we pursue per-action bundling (Strategy B) in the future.
+3. **Airtable conflict**: Exclude the official declaration (2026-10-16).
+   `scripts/update-drafts-types.ts` downloads upstream `drafts.d.ts` and replaces its
+   `declare class Airtable` with a `PATCHED(drafts-scripts)` marker. The project class
+   keeps its name, which is what runs in Drafts, since it shadows the built-in.
+   Re-running the script after an upstream refresh re-applies the patch. It fails
+   loudly if the declaration has moved. See `types/README.md`.
+4. **Watch design**: Design A, the long-lived watcher, using `fs.watch` with a per-path
+   debounce and no new dependency (2026-10-16). See the Phase 2 validation record.
 
 ### Verification pass, Bun 1.4.2 (2026-09-08)
 
@@ -523,10 +603,9 @@ in JavaScript.
    - Keep `require()` in TS source with `declare function require()` from `drafts.d.ts` (simplest, no build transform needed)
    - The `--no-bundle` flag preserves `require()` calls as-is, so option 2 works today
 2. **Test runner dual-mode**: Can tests share code between Bun runner (CI/dev) and Drafts runner (integration)? The Drafts MCP server may bridge this.
-3. **Airtable conflict resolution**: Which approach — rename, exclude from d.ts, or namespace?
-4. **iCloud sync timing**: Does adding a transpile step introduce noticeable latency in the watch/dev workflow? Bun is fast, but worth measuring.
-5. **Source directory layout**: Leaning toward Option B (separate `src/` tree). See "Source Directory Layout" section below.
-6. **`Library/Data` ownership**: Option B assumes `Library/` is disposable build output, but seven JSON files there are not. See "Blocker: not everything under `Library/Data` is a build artifact". Needs a decision before Phase 3.
+3. **iCloud sync timing**: Does adding a transpile step introduce noticeable latency in the watch/dev workflow? Bun is fast, but worth measuring.
+4. **Source directory layout**: Leaning toward Option B (separate `src/` tree). See "Source Directory Layout" section below.
+5. **`Library/Data` ownership**: Option B assumes `Library/` is disposable build output, but seven JSON files there are not. See "Blocker: not everything under `Library/Data` is a build artifact". Needs a decision before Phase 3.
 
 ## Source Directory Layout
 
@@ -608,6 +687,12 @@ Written by Drafts at runtime, untracked, pulled back from iCloud by the `copyJSO
 
 Gitignoring `Library/` would lose the first group and break the round trip for the second.
 The build cannot simply own the whole directory.
+
+**Before Phase 3 (noted 2026-10-16):** the four tracked files above need a source
+location outside build output. Today they are force-added past the `**/Data/**/*.json`
+ignore rule. If `Library/` becomes build output, they must move somewhere the build
+copies from, or the selective-gitignore option below must be chosen. Phase 2 does not
+change this. The Bun pipeline pulls, generates, and pushes exactly the files Gulp did.
 
 Options to resolve before committing to Option B:
 

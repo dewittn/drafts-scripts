@@ -8,15 +8,20 @@ This repository contains JavaScript scripts and templates for the [Drafts app](h
 
 ## Development Commands
 
-The project uses Bun as the runtime and Gulp for build automation and file synchronization:
+The build runs on Bun (`scripts/build.ts`). Gulp is still installed as a fallback while the Bun pipeline proves itself.
 
-- `bun run sync` - Synchronize Library folder to iCloud Drafts directory
-- `bun run watch` - Start file watcher that auto-syncs changes to iCloud
+- `bun run sync` - Full pipeline: pull runtime JSON from iCloud, inject secrets, convert YAML to JSON, push `Library/` to iCloud. Always runs every step
+- `bun run watch` - Run `sync` once, then rebuild on every change under `Library/`
 - `bun run debug` - Display sync paths for debugging
 - `bun run test [filter] [--all]` - Run unit tests locally under Bun with a Drafts-style `require()` shim. Covers loading and pure logic only; tests that touch Drafts objects (Draft, editor, Workspace, ...) are reported as "needs Drafts" and must run in the app
-- `gulp inject` - Process template files (.tpl) using 1Password CLI to inject secrets
-- `gulp data` - Copy JSON data files from iCloud to local Library
-- `gulp yaml2json` - Convert YAML config files to JSON (runs automatically during build)
+- `bun run typecheck` - Type-check the scripts against `types/` (see `scripts/typecheck.ts`). Fails only on errors not in `scripts/typecheck-baseline.json`; `--all` shows every error, `--update-baseline` rewrites the baseline after fixing one (also update `docs/reference/typecheck-findings.md`)
+- `bun run inject [--force]` - Render `.tpl` files to `.yaml` with the 1Password CLI. Skips templates whose `.yaml` is current; `--force` renders all, e.g. after rotating a secret
+- `bun run data` - Copy JSON data files from iCloud to local Library
+- `bun run yaml2json` - Convert YAML config files to JSON (runs automatically during sync)
+- `bun run clean` - Delete the generated settings `.yaml` files
+- `bun run gulp:sync`, `gulp:watch`, `gulp:debug` - The old Gulp pipeline, same behavior
+
+`DRAFTS_DEST=/some/scratch/dir bun run sync` sends the pipeline to a scratch folder instead of iCloud. Use it to try build changes without touching the live Drafts library.
 
 ## Architecture
 
@@ -28,7 +33,8 @@ The project uses Bun as the runtime and Gulp for build automation and file synch
   - `Data/` - YAML/JSON configuration and data files
   - `Themes/` - Drafts theme files
   - `Tests/` - Test suite (unit and integration tests)
-- `gulpfile.js` - Build configuration that syncs files to iCloud Drafts directory
+- `scripts/build.ts` - Build pipeline that syncs files to iCloud Drafts directory (`gulpfile.js` is the legacy equivalent)
+- `types/` - Drafts type definitions for `bun run typecheck` (see `types/README.md`)
 
 ### Module Path Convention
 
