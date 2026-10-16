@@ -11,7 +11,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { readdirSync, statSync } from "fs";
 const srcDir = "./Library";
 const destDir =
-  `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`;
+  process.env.DRAFTS_DEST ?? `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`;
 
 // Build artifacts: .yaml generated from .tpl by injectSecrets, .json generated from
 // .yaml by convertYamlToJson. Excluded from the watcher so a rebuild's own writes

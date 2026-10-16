@@ -32,12 +32,19 @@
   ],
   "license": "ISC",
   "scripts": {
-    "claude": "gulp clean && claude",
-    "gulp": "gulp",
-    "sync": "gulp sync",
+    "claude": "bun scripts/build.ts clean && claude",
+    "sync": "bun scripts/build.ts sync",
+    "watch": "gulp watch",
+    "debug": "bun scripts/build.ts debug",
+    "data": "bun scripts/build.ts data",
+    "inject": "bun scripts/build.ts inject",
+    "yaml2json": "bun scripts/build.ts yaml2json",
+    "clean": "bun scripts/build.ts clean",
     "test": "bun scripts/test-runner.js",
     "typecheck": "bun scripts/typecheck.ts",
-    "watch": "gulp watch",
-    "debug": "gulp debug"
+    "gulp": "gulp",
+    "gulp:sync": "gulp sync",
+    "gulp:watch": "gulp watch",
+    "gulp:debug": "gulp debug"
   }
 }
