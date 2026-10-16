@@ -353,6 +353,7 @@ The real iCloud folder was never touched. Each destination was seeded first with
 | `clean` | Both deleted the same 11 files. Trees identical |
 | Missing `<dest>/Library` | Both exit 1 at the pull step |
 | `op` failing with a socket error, simulated | Bun exits 1 with the 1Password hint and leaves the `.yaml` untouched |
+| First real `bun run sync` to iCloud (2026-10-16) | 26 JSON files pulled, 20 YAML converted, one changed file pushed, 84 ms. In Drafts: all production modules load, data files present, Destinations and DocumentFactory unit tests pass (77/77, 61/61). User confirmed Add Draft to Pipeline (author update), Genreate Query Letter, and BVR attendance work as expected |
 
 The watch sequence was: edit a `.js`, add a `.md`, edit a source `.yaml`, edit a `.tpl`,
 delete the `.md`, do an atomic save (write to a temp file, then rename), and write a
