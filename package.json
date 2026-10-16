@@ -34,7 +34,7 @@
   "scripts": {
     "claude": "bun scripts/build.ts clean && claude",
     "sync": "bun scripts/build.ts sync",
-    "watch": "gulp watch",
+    "watch": "bun scripts/build.ts watch",
     "debug": "bun scripts/build.ts debug",
     "data": "bun scripts/build.ts data",
     "inject": "bun scripts/build.ts inject",
