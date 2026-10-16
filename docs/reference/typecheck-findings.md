@@ -21,7 +21,7 @@ added.
 
 | Group | Errors | Meaning |
 |-------|--------|---------|
-| Real-bug candidates | 36 | Likely wrong at runtime when the line runs |
+| Real-bug candidates | 36 | Likely wrong at runtime when the line runs. 8 entries are on production paths, 3 of them dead code. 4 errors are legacy/Airtable |
 | Ambiguous, verify in Drafts | 6 | Depends on runtime behavior the definitions do not capture |
 | Checker limitations in source | 77 | Valid JavaScript TypeScript cannot follow |
 | JSDoc does not match the code | 15 | Comments are wrong, runtime is fine |
@@ -42,30 +42,51 @@ To work through an item: fix the code, run `bun run typecheck`, then run
 
 ## Real-bug candidates
 
-These look wrong whatever the runtime does. None was verified in Drafts. Most sit on
-code paths that may be rare or dead.
+These look wrong whatever the runtime does. None was verified in Drafts. They are grouped
+by how much they matter.
+
+Production data runs through NocoDB (`shared/libraries/nocodb.js`, loaded by
+`ContentPipeline` through `modules/cp/databases/NocoDB.js`). The Content Pipeline and
+bvr modules must stay correct. Entries tagged **legacy/Airtable** sit on the Airtable
+path, which production no longer uses. They are recorded for completeness and need no
+action.
+
+### Production paths: Content Pipeline, bvr, NocoDB
 
 | Location | Error | Interpretation |
 |----------|-------|----------------|
-| `Library/Scripts/shared/libraries/airtable-v2.js:207` | Cannot find name `value` | `view(vaule)` misspells its parameter. Calling `.view()` throws a ReferenceError. |
-| `Library/Scripts/shared/libraries/airtable-v2.js:48` | `defaultBaseID` does not exist | Reads `this.defaultBaseID`, but the field is private `#defaultBaseID`. Looking up base `"default"` returns undefined. |
-| `Library/Scripts/shared/libraries/nocodb.js:138,142,201` | Duplicate identifier `offset` | `NocoTable` defines an `offset` getter and setter and an `offset(value)` method. The later method replaces the accessor, so `table.offset` returns a function. |
-| `Library/Scripts/modules/bvr/core/Game.js:367` | `descrition` does not exist | Both key and property are misspelled. The `descrition` field is always undefined. The getter is `description`. |
-| `Library/Scripts/modules/bvr/core/Game.js:412` | `seasonRecord` does not exist | No `seasonRecord` is defined anywhere. `#lookupDraftID()` throws a TypeError if reached. Probably meant `currentSeasonRecord`. |
-| `Library/Scripts/modules/bvr/core/Season.js:86` | Comparison with `"array"` has no overlap | `typeof` never returns `"array"`, so `migrateCurrentSeason()` never runs from here. `Array.isArray` was probably meant. |
-| `Library/Scripts/modules/bvr/messages/system_message.js:16` | `attendaceDraft` does not exist | `SystemMessage` never sets `attendaceDraft`. `subjectLine` throws unless a subclass sets it. |
-| `Library/Scripts/modules/cp/core/Destinations.js:26` | Getter must return a value | `get entries()` computes `Object.entries(...)` without `return`. Always undefined. |
-| `Library/Scripts/modules/cp/databases/AirTableDB.js:22` | Getter must return a value | `get debug()` has no `return`. Always undefined. |
-| `Library/Scripts/modules/cp/documents/UlyssesDocument.js:278` | `ui` does not exist | Uses `this.ui`, but the class stores `#ui`. The Ulysses error path throws a TypeError instead of showing the message. |
-| `Library/Scripts/shared/libraries/ulysses-v2.js:318` | Expected 0-2 arguments, got 3 | `open()` passes `false` as a third argument that `#openURL` ignores. Probably meant for `#openCallback`, which may wait for a callback. |
+| `Library/Scripts/modules/cp/documents/UlyssesDocument.js:278` | `ui` does not exist | Uses `this.ui`, but the class stores `#ui`. When Ulysses fails to load a sheet, this throws a TypeError instead of showing the error message. Reachable from `#loadSheet()`. |
+| `Library/Scripts/shared/libraries/ulysses-v2.js:318` | Expected 0-2 arguments, got 3 | `open()` passes `false` as a third argument that `#openURL` ignores. It may have been meant for `#openCallback`, which can wait for a callback. Behavior today is "open without waiting". Check that this is intended. |
+| `Library/Scripts/modules/bvr/core/Season.js:86` | Comparison with `"array"` has no overlap | `typeof` never returns `"array"`, so `currentSeasonData` never triggers `migrateCurrentSeason()`. This only matters if some team history is still in the old array format. `Array.isArray` was probably meant. |
+| `Library/Scripts/modules/bvr/core/Game.js:367` | `descrition` does not exist | **Data shape, do not "fix" as a typo.** `toJSON()` writes `descrition: this.descrition`, which is undefined and so dropped from new records. Existing `Data/bvr/records.json` entries do carry a `descrition` key with values. Decide which key records should use before changing it. |
+| `Library/Scripts/modules/bvr/messages/system_message.js:16` | `attendaceDraft` does not exist | Latent. `SystemMessage.subjectLine` would throw, but nothing reads it today. `compose()` and `send()` do not use it. |
+| `Library/Scripts/modules/bvr/core/Game.js:412` | `seasonRecord` does not exist | Dead code. `#lookupDraftID()` is never called. |
+| `Library/Scripts/modules/cp/core/Destinations.js:26` | Getter must return a value | Dead code. `get entries()` lacks `return`, but nothing reads `.entries`. |
+| `Library/Scripts/shared/libraries/nocodb.js:138,142,201` | Duplicate identifier `offset` | Harmless today. `NocoTable` declares an `offset` getter and setter, then an `offset(value)` query-builder method. The method replaces the accessor, which is the behavior callers want. Nothing reads `table.offset` as a property, and the private `#offset` is otherwise unused. The accessor is dead code. |
+
+### Actions
+
+| Location | Error | Interpretation |
+|----------|-------|----------------|
 | `Library/Actions/cp/update-status-with-ulysses-id-v3.js:3` | `updateStatusOfRecord` does not exist | `ContentPipeline` has `updateStatusOfDoc`. This action throws as written. |
 | `Library/Actions/nr/meat-inventory.js:6` | `active` does not exist on `Draft` | Should be `activate()`. This action throws as written. |
 | `Library/Actions/nr/kutt-test.js:4,17` | Cannot find `KuttItAPI`, `script` | The class and the global it uses are not defined. Looks like an abandoned test action. |
 | `Library/Actions/nr/morning-pages.js:35,41` | Cannot assign to `action` | Assigns to the Drafts global `action` without declaring a local. Works, but overwrites the current action object for the rest of the run. |
-| `Library/Scripts/shared/libraries/ulysses.js` (14 errors) | Undeclared names, `"cancel"` status | Implicit globals (`targetId`, `callbackAction`, `baseURL`), a status check against `"cancel"` where Drafts reports `"cancelled"`, and JSDoc typing `keywords` as a string. No file requires `ulysses.js`, so this is dead code next to `ulysses-v2.js`. |
+| `Library/Actions/cp/get-url.js:9,10` | Cannot find `nextAction` | Implicit global. Works in sloppy mode. Listed for completeness. |
 
-`Library/Actions/cp/get-url.js:9` assigns an undeclared `nextAction`, creating an
-implicit global. That works in sloppy mode and is listed only for completeness.
+### Legacy/Airtable
+
+| Location | Error | Interpretation |
+|----------|-------|----------------|
+| `Library/Scripts/shared/libraries/airtable-v2.js:207` | Cannot find name `value` | **legacy/Airtable.** `view(vaule)` misspells its parameter. Calling `.view()` throws a ReferenceError. |
+| `Library/Scripts/shared/libraries/airtable-v2.js:48` | `defaultBaseID` does not exist | **legacy/Airtable.** Reads `this.defaultBaseID`, but the field is private `#defaultBaseID`. Base `"default"` resolves to undefined. |
+| `Library/Scripts/modules/cp/databases/AirTableDB.js:22` | Getter must return a value | **legacy/Airtable.** `get debug()` has no `return`. `ContentPipeline` always uses `NocoController`, so this class is not loaded in production. |
+
+### Dead code
+
+| Location | Error | Interpretation |
+|----------|-------|----------------|
+| `Library/Scripts/shared/libraries/ulysses.js` (14 errors) | Undeclared names, `"cancel"` status | Implicit globals (`targetId`, `callbackAction`, `baseURL`), a status check against `"cancel"` where Drafts reports `"cancelled"`, and JSDoc typing `keywords` as a string. No file requires `ulysses.js`. `ulysses-v2.js` replaced it. |
 
 ## Ambiguous, verify in Drafts
 
@@ -86,9 +107,9 @@ JSDoc in Phases 4 and 5. Do not "fix" them now.
 
 | Pattern | Errors | Detail |
 |---------|--------|--------|
-| `this.constructor.X` | 31 | TypeScript types `this.constructor` as `Function`, so static fields read through it are unknown (TypeScript issue #3841). One instance hides a real gap. `Settings.basePath` at `Library/Scripts/modules/cp/filesystems/CloudFS.js:127` reads a static that `Settings` does not define, so it is always undefined. Nothing reads it today. |
+| `this.constructor.X` | 31 | Three are in `airtable-v2.js` (legacy/Airtable). TypeScript types `this.constructor` as `Function`, so static fields read through it are unknown (TypeScript issue #3841). One instance hides a real gap. `Settings.basePath` at `Library/Scripts/modules/cp/filesystems/CloudFS.js:127` reads a static that `Settings` does not define, so it is always undefined. Nothing reads it today. |
 | `Settings` fields | 11 | `Settings` copies keys from JSON with `Object.assign(this, ...)`. The fields exist only at runtime. A typed settings interface fixes this in Phase 4. |
-| `airtable-v2.js` responses | 16 | JSDoc types the response as `boolean \| {success, data}`, so `.success` is not provable. Ambiguous data shape. Settle it when typing airtable-v2. |
+| `airtable-v2.js` responses | 16 | **legacy/Airtable.** JSDoc types the response as `boolean \| {success, data}`, so `.success` is not provable. Ambiguous data shape. No action needed while Airtable is unused. |
 | Setters that return a value | 5 | `BearDocument.js:66`, `DraftsDocument.js:63`, `TestDocument.js:24,40`, `UlyssesDocument.js:67`. The return value is discarded. Harmless. |
 | Date arithmetic | 4 | `new Date() - draft.createdAt` in `record-attendance.js:2` and `record-attendance-dry-run.js:5`. Valid JavaScript that TypeScript rejects. Separately, `oneSecond = 10000` is ten seconds. |
 | `const draft` in actions | 4 | `beyond-the-book.js:4` and `author-update.js:3` declare their own `draft`, shadowing the Drafts global. That works at runtime. The checker then types it as the global `Draft`. |
@@ -105,7 +126,7 @@ code is the source of truth. The comments should be corrected in Phase 4.
   74, 79, 92, 100), `NavigationManager.js:43,50,51`, `MenuOrchestrator.js:90`,
   `DocumentManager.js:75`, and `PipelineManager.js:46,77` return `{ action: ... }`
   objects or `context.cancel()`. Their JSDoc says `boolean` or `string`.
-- **`AirTableDB.js:27`** assigns to a field whose JSDoc type does not match.
+- **`AirTableDB.js:27`** (legacy/Airtable) assigns to a field whose JSDoc type does not match.
 - **`PushoverAlert.js:39`** passes `{}` where JSDoc expects a string map.
 
 The two `keywords` errors in `ulysses.js` are the same kind of mismatch. They are counted

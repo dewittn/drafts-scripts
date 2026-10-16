@@ -518,6 +518,8 @@ Skip:
    keeps its name, which is what runs in Drafts, since it shadows the built-in.
    Re-running the script after an upstream refresh re-applies the patch. It fails
    loudly if the declaration has moved. See `types/README.md`.
+   Production has since moved to NocoDB, so `airtable-v2.js` is legacy. The patch is
+   still the simplest resolution. The class stays loadable, and no source changes.
 4. **Watch design**: Design A, the long-lived watcher, using `fs.watch` with a per-path
    debounce and no new dependency (2026-10-16). See the Phase 2 validation record.
 
