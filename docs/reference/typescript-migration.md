@@ -1,8 +1,41 @@
 # TypeScript Migration Reference
 
-Status: Phases 1 and 2 implemented on `feature/bun-build` (2026-10-16), not yet merged
+Status: Phases 1 and 2 complete and merged to `dev` (2026-10-16). Paused before Phase 3 by decision.
 Date: 2026-03-06
 Last verified: 2026-09-08 against Bun 1.4.2
+
+## Resuming This Work
+
+Read this section, then the phase you are picking up. Everything else in this document is
+background and research.
+
+**Where things stand (2026-10-16):**
+- The build runs on Bun (`scripts/build.ts`). Gulp is still installed as a fallback
+  (`bun run gulp:sync`). Source files are still plain `.js`. No type annotations exist.
+- `bun run typecheck` checks the existing JavaScript. 348 pre-existing errors are frozen
+  in `scripts/typecheck-baseline.json` and explained in `typecheck-findings.md`.
+- The user paused here on purpose, to see whether type checking earns its keep before
+  converting files to `.ts`. Do not start Phase 3 without that decision.
+
+**Next steps, in order:**
+1. After several days of daily Bun use, work the "Removing Gulp" checklist under Phase 2.
+2. Fix the live production bugs listed under "Production paths" in `typecheck-findings.md`
+   (small, independent fixes on `dev`). After each fix run `bun run typecheck --update-baseline`
+   and delete the row from the findings doc.
+3. Decide with the user whether to proceed to Phase 3. If yes, resolve the `Library/Data`
+   ownership question first (see "Blocker" under Source Directory Layout), then follow
+   Phases 3 to 5. Phases 4 and 5 need the user for allowed values, optional fields, and
+   external data shapes; infer everything else from the code.
+
+**Context that is easy to miss:**
+- NocoDB is the production data source. `airtable-v2.js` is legacy and never loaded by
+  `ContentPipeline`. Findings tagged legacy/Airtable need no action.
+- Plain `tsc` cannot check the `.js` files (it treats `require()` callers as modules);
+  `scripts/typecheck.ts` works around this. The workaround becomes unnecessary once files
+  are `.ts`.
+- `bun run sync` must always run the full pipeline. Never make it rsync-only.
+- To verify behavior inside Drafts without touching real drafts, see the Eval Draft probe
+  pattern in the project memory, or run the test actions in the Drafts "Tests" group.
 
 ## Codebase Inventory
 
