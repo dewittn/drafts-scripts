@@ -1,0 +1,15 @@
+{
+  // Build and tooling scripts run under Bun, so they get Bun's types and strict
+  // checking. The Drafts sources use ../tsconfig.json instead.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["bun"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["*.ts"]
+}

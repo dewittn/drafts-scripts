@@ -1,0 +1,2095 @@
+[
+  {
+    "file": "Library/Actions/bvr/record-attendance-dry-run.js",
+    "code": 2362,
+    "message": "The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.",
+    "line": "const recentlyCreated = new Date() - draft.createdAt < oneSecond;",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/bvr/record-attendance-dry-run.js",
+    "code": 2363,
+    "message": "The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.",
+    "line": "const recentlyCreated = new Date() - draft.createdAt < oneSecond;",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/bvr/record-attendance.js",
+    "code": 2362,
+    "message": "The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.",
+    "line": "const recentlyCreated = new Date() - draft.createdAt < oneSecond;",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/bvr/record-attendance.js",
+    "code": 2363,
+    "message": "The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.",
+    "line": "const recentlyCreated = new Date() - draft.createdAt < oneSecond;",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/cp/beyond-the-book.js",
+    "code": 2339,
+    "message": "Property 'save' does not exist on type 'Draft'.",
+    "line": "draft.save().activate().addToPipeline();",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/cp/beyond-the-book.js",
+    "code": 2451,
+    "message": "Cannot redeclare block-scoped variable 'draft'.",
+    "line": "const draft = new BeyondTheBook();",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/cp/get-url.js",
+    "code": 2304,
+    "message": "Cannot find name 'nextAction'.",
+    "line": "nextAction = Action.find(\"Markdown Link\");",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/cp/get-url.js",
+    "code": 2304,
+    "message": "Cannot find name 'nextAction'.",
+    "line": "app.queueAction(nextAction, draft);",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/cp/update-status-with-ulysses-id-v3.js",
+    "code": 2551,
+    "message": "Property 'updateStatusOfRecord' does not exist on type 'ContentPipeline'. Did you mean 'updateStatusOfDoc'?",
+    "line": "cp.updateStatusOfRecord(draft.content, \"UlyssesID\");",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/nr/author-update.js",
+    "code": 2339,
+    "message": "Property 'save' does not exist on type 'Draft'.",
+    "line": "draft.save().activate().addToPipeline();",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/nr/author-update.js",
+    "code": 2451,
+    "message": "Cannot redeclare block-scoped variable 'draft'.",
+    "line": "const draft = new AuthorUpdate();",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/nr/kutt-test.js",
+    "code": 2552,
+    "message": "Cannot find name 'KuttItAPI'. Did you mean 'kuttItApi'?",
+    "line": "const kuttItApi = new KuttItAPI();",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/nr/kutt-test.js",
+    "code": 2552,
+    "message": "Cannot find name 'script'. Did you mean 'Script'?",
+    "line": "script.complete();",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/nr/meat-inventory.js",
+    "code": 2551,
+    "message": "Property 'active' does not exist on type 'Draft'. Did you mean 'activate'?",
+    "line": "meatsDraft.active();",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/nr/morning-pages.js",
+    "code": 2339,
+    "message": "Property 'isMorningPage' does not exist on type 'Draft'.",
+    "line": "Draft.prototype.isMorningPage = (tagName = defaultTag) => draft.hasTag(tagName);",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/nr/morning-pages.js",
+    "code": 2339,
+    "message": "Property 'isMorningPage' does not exist on type 'Draft'.",
+    "line": "if (draft.isMorningPage()) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/nr/morning-pages.js",
+    "code": 2588,
+    "message": "Cannot assign to 'action' because it is a constant.",
+    "line": "action = Action.find(actions[i]);",
+    "count": 1
+  },
+  {
+    "file": "Library/Actions/nr/morning-pages.js",
+    "code": 2588,
+    "message": "Cannot assign to 'action' because it is a constant.",
+    "line": "action = Action.find(\"DayOne\");",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/core/Attendance.js",
+    "code": 2769,
+    "message": "No overload matches this call.   The last overload gave the following error.     Argument of type 'RegExpExecArray' is not assignable to parameter of type 'string | RegExp'.",
+    "line": "lastTaken,",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/core/BVR.js",
+    "code": 2339,
+    "message": "Property 'settingsFile' does not exist on type 'Function'.",
+    "line": "return this.constructor.settingsFile;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/core/Game.js",
+    "code": 2339,
+    "message": "Property 'seasonRecord' does not exist on type 'Game'.",
+    "line": "if (this.seasonRecord.find((game) => game.draftID == draft.uuid)) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/core/Game.js",
+    "code": 2339,
+    "message": "Property 'templateTags' does not exist on type 'TmplSettings'.",
+    "line": "msgConfig.templateTags = this.tmplSettingsMessage?.templateTags;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/core/Game.js",
+    "code": 2551,
+    "message": "Property 'descrition' does not exist on type 'Game'. Did you mean 'description'?",
+    "line": "descrition: this.descrition,",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/core/Game.js",
+    "code": 2554,
+    "message": "Expected 2 arguments, but got 1.",
+    "line": "const shortcut = Shortcut.create(\"Complete Game Day Tasks\");",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/core/Season.js",
+    "code": 2367,
+    "message": "This comparison appears to be unintentional because the types '\"string\" | \"number\" | \"bigint\" | \"boolean\" | \"symbol\" | \"undefined\" | \"object\" | \"function\"' and '\"array\"' have no overlap.",
+    "line": "if (typeof this.teamHistory[this.currentSeasonID] == \"array\") {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/core/Sport.js",
+    "code": 2339,
+    "message": "Property 'settingsFile' does not exist on type 'Function'.",
+    "line": "return this.constructor.settingsFile;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/core/Team.js",
+    "code": 2554,
+    "message": "Expected 5-7 arguments, but got 3.",
+    "line": "const teamNotes = Draft.query(\"\", \"archive\", this.defaultDraftTags);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/core/Team.js",
+    "code": 2769,
+    "message": "No overload matches this call.   The last overload gave the following error.     Argument of type 'number' is not assignable to parameter of type '(substring: string, ...args: any[]) => string'.",
+    "line": "return line.replace(yearPattern, newYear) + \" (Potential)\";",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/messages/system_message.js",
+    "code": 2339,
+    "message": "Property 'attendaceDraft' does not exist on type 'SystemMessage'.",
+    "line": "return this.attendaceDraft.processTemplate(this.messageDetails.subjectLine);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/services/GoogleForm.js",
+    "code": 2339,
+    "message": "Property 'viewPath' does not exist on type 'Function'.",
+    "line": "return this.constructor.viewPath;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/bvr/services/GoogleForm.js",
+    "code": 2339,
+    "message": "Property 'submitPath' does not exist on type 'Function'.",
+    "line": "return this.constructor.submitPath;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/core/ContentPipeline.js",
+    "code": 2339,
+    "message": "Property 'settingsFile' does not exist on type 'Function'.",
+    "line": "return this.constructor.settingsFile;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/core/ContentPipeline.js",
+    "code": 2339,
+    "message": "Property 'basePath' does not exist on type 'Function'.",
+    "line": "return this.constructor.basePath;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/core/Destinations.js",
+    "code": 2378,
+    "message": "A 'get' accessor must return a value.",
+    "line": "get entries() {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/databases/AirTableDB.js",
+    "code": 2322,
+    "message": "Type 'void' is not assignable to type 'boolean'.",
+    "line": "this.#database.debug = value;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/databases/AirTableDB.js",
+    "code": 2378,
+    "message": "A 'get' accessor must return a value.",
+    "line": "get debug() {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/BearDocument.js",
+    "code": 2339,
+    "message": "Property 'docIDType' does not exist on type 'Function'.",
+    "line": "return this.constructor.docIDType;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/BearDocument.js",
+    "code": 2408,
+    "message": "Setters cannot return a value.",
+    "line": "return this.#ui.displayAppMessage(\"error\", errorMessage, {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/DocumentFactory.js",
+    "code": 2367,
+    "message": "This comparison appears to be unintentional because the types 'BearDoc | DraftsDoc | UlyssesDoc | TestDoc' and 'boolean' have no overlap.",
+    "line": "if (doc == undefined || doc == false) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/DraftsDocument.js",
+    "code": 2339,
+    "message": "Property 'docIDType' does not exist on type 'Function'.",
+    "line": "return this.constructor.docIDType;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/DraftsDocument.js",
+    "code": 2339,
+    "message": "Property 'draft' does not exist on type 'void | Template | AuthorUpdate | BeyondTheBook'.   Property 'draft' does not exist on type 'void'.",
+    "line": "return templateDraft.draft;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/DraftsDocument.js",
+    "code": 2408,
+    "message": "Setters cannot return a value.",
+    "line": "return this.#ui.displayAppMessage(",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/TestDocument.js",
+    "code": 2339,
+    "message": "Property 'docIDType' does not exist on type 'Function'.",
+    "line": "return this.constructor.docIDType;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/TestDocument.js",
+    "code": 2408,
+    "message": "Setters cannot return a value.",
+    "line": "return newStatus;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/TestDocument.js",
+    "code": 2408,
+    "message": "Setters cannot return a value.",
+    "line": "return newDest;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/UlyssesDocument.js",
+    "code": 2339,
+    "message": "Property 'docIDType' does not exist on type 'Function'.",
+    "line": "return this.constructor.docIDType;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/UlyssesDocument.js",
+    "code": 2339,
+    "message": "Property 'ui' does not exist on type 'UlyssesDoc'.",
+    "line": "this.ui.displayAppMessage(",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/documents/UlyssesDocument.js",
+    "code": 2408,
+    "message": "Setters cannot return a value.",
+    "line": "return this.#ui.displayAppMessage(\"error\", errorMessage, {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/filesystems/CloudFS.js",
+    "code": 2339,
+    "message": "Property 'regEx' does not exist on type 'Function'.",
+    "line": "return this.constructor.regEx;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/filesystems/CloudFS.js",
+    "code": 2339,
+    "message": "Property 'basePath' does not exist on type 'Function'.",
+    "line": "return this.constructor.basePath;",
+    "count": 2
+  },
+  {
+    "file": "Library/Scripts/modules/cp/filesystems/CloudFS.js",
+    "code": 2339,
+    "message": "Property 'uiSettingsFile' does not exist on type 'Settings'.",
+    "line": "if (this.uiSettingsFile) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/filesystems/CloudFS.js",
+    "code": 2339,
+    "message": "Property 'dirPrefix' does not exist on type 'Settings'.",
+    "line": "return DataFile.load(`${this.dirPrefix}${this.uiSettingsFile}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/filesystems/CloudFS.js",
+    "code": 2339,
+    "message": "Property 'uiSettingsFile' does not exist on type 'Settings'.",
+    "line": "return DataFile.load(`${this.dirPrefix}${this.uiSettingsFile}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/filesystems/CloudFS.js",
+    "code": 2339,
+    "message": "Property 'uiSettings' does not exist on type 'Settings'.",
+    "line": "return this.uiSettings;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/DocumentManager.js",
+    "code": 2322,
+    "message": "Type 'void' is not assignable to type 'boolean'.",
+    "line": "if (menu.show() == false) return context.cancel();",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/MenuOrchestrator.js",
+    "code": 2322,
+    "message": "Type 'void' is not assignable to type 'string'.",
+    "line": "return this.throwDBError(\"MenuOrchestrator.showDocumentsByStatus()\");",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/NavigationManager.js",
+    "code": 2322,
+    "message": "Type 'void' is not assignable to type 'string'.",
+    "line": "if (menu.show() == false) return context.cancel();",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/NavigationManager.js",
+    "code": 2322,
+    "message": "Type 'void' is not assignable to type 'string'.",
+    "line": "if (newYear == undefined) return context.cancel();",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/NavigationManager.js",
+    "code": 2322,
+    "message": "Type '{ action: string; year: any; }' is not assignable to type 'string'.",
+    "line": "return { action: \"changeYear\", year: newYear };",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/PipelineManager.js",
+    "code": 2322,
+    "message": "Type 'void' is not assignable to type 'boolean'.",
+    "line": "return this.throwDBError(\"PipelineManager.addDocument()\");",
+    "count": 2
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/StatusManager.js",
+    "code": 2322,
+    "message": "Type '{ action: string; docID: string; docIDType: string; }' is not assignable to type 'boolean'.",
+    "line": "return { action: \"addToPipeline\", docID, docIDType };",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/StatusManager.js",
+    "code": 2322,
+    "message": "Type 'void' is not assignable to type 'boolean'.",
+    "line": "return this.throwDBError(\"StatusManager.updateStatus()\");",
+    "count": 2
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/StatusManager.js",
+    "code": 2322,
+    "message": "Type 'void' is not assignable to type 'boolean'.",
+    "line": "if (menu.show() == false) return context.cancel();",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/StatusManager.js",
+    "code": 2322,
+    "message": "Type '{ action: string; }' is not assignable to type 'boolean'.",
+    "line": "return { action: \"back\" };",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/managers/StatusManager.js",
+    "code": 2322,
+    "message": "Type '{ action: string; newDocType: any; }' is not assignable to type 'boolean'.",
+    "line": "return { action: \"convertDoc\", newDocType };",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/AuthorUpdate.js",
+    "code": 2339,
+    "message": "Property 'uiSettings' does not exist on type 'Settings'.",
+    "line": "this.#ui = new DraftsUI(this.#settings.uiSettings);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/AuthorUpdate.js",
+    "code": 2339,
+    "message": "Property 'settingsFile' does not exist on type 'Function'.",
+    "line": "return this.constructor.settingsFile;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/AuthorUpdate.js",
+    "code": 2339,
+    "message": "Property 'templateSettings' does not exist on type 'Settings'.",
+    "line": "return this.#settings.templateSettings;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/AuthorUpdate.js",
+    "code": 2339,
+    "message": "Property 'dateFormat' does not exist on type 'Settings'.",
+    "line": "return this.#settings.dateFormat;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/AuthorUpdate.js",
+    "code": 2339,
+    "message": "Property 'templateSettings' does not exist on type 'Settings'.",
+    "line": "return this.#settings?.templateSettings?.templateTag;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/AuthorUpdate.js",
+    "code": 2339,
+    "message": "Property 'format' does not exist on type 'Date'.",
+    "line": "const currentMonth = date.format(this.dateFormat);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/AuthorUpdate.js",
+    "code": 2339,
+    "message": "Property 'format' does not exist on type 'Date'.",
+    "line": "const nextMonth = date.format(this.dateFormat);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/BeyondTheBook.js",
+    "code": 2339,
+    "message": "Property 'uiSettings' does not exist on type 'Settings'.",
+    "line": "this.#ui = new DraftsUI(this.#settings.uiSettings);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/BeyondTheBook.js",
+    "code": 2339,
+    "message": "Property 'settingsFile' does not exist on type 'Function'.",
+    "line": "return this.constructor.settingsFile;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/BeyondTheBook.js",
+    "code": 2339,
+    "message": "Property 'templateSettings' does not exist on type 'Settings'.",
+    "line": "return this.#settings.templateSettings;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/BeyondTheBook.js",
+    "code": 2339,
+    "message": "Property 'templateSettings' does not exist on type 'Settings'.",
+    "line": "return this.#settings?.templateSettings?.templateTag;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/cp/templates/Template.js",
+    "code": 2339,
+    "message": "Property 'basePath' does not exist on type 'Function'.",
+    "line": "return this.constructor.basePath;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/nr/EmailDraft.js",
+    "code": 2339,
+    "message": "Property 'fieldPattern' does not exist on type 'Function'.",
+    "line": "const match = this.constructor.fieldPattern.exec(lines[index]);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/nr/EmailDraft.js",
+    "code": 2339,
+    "message": "Property 'parseRecipients' does not exist on type 'Function'.",
+    "line": "this.#recipients = this.constructor.parseRecipients(fields.to, fields.email);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/modules/nr/QueryLetter.js",
+    "code": 2554,
+    "message": "Expected 5-7 arguments, but got 3.",
+    "line": "const found = Draft.find(sourceDraftUUID) ?? Draft.query(\"\", \"all\", [sourceTag])[0];",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2339,
+    "message": "Property 'endPointURL' does not exist on type 'Function'.",
+    "line": "return this.constructor.endPointURL;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2339,
+    "message": "Property 'filesPath' does not exist on type 'Function'.",
+    "line": "return this.constructor.filesPath;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2339,
+    "message": "Property 'errorCodes' does not exist on type 'Function'.",
+    "line": "return this.constructor.errorCodes;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2339,
+    "message": "Property 'success' does not exist on type 'boolean | { success: true; data: any; }'.   Property 'success' does not exist on type 'false'.",
+    "line": "if (response.success) response.data.forEach((record) => this.#addRecord(record));",
+    "count": 4
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2339,
+    "message": "Property 'data' does not exist on type 'boolean | { success: true; data: any; }'.   Property 'data' does not exist on type 'false'.",
+    "line": "if (response.success) response.data.forEach((record) => this.#addRecord(record));",
+    "count": 4
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2339,
+    "message": "Property 'success' does not exist on type 'boolean | { success: true; data: any; }'.   Property 'success' does not exist on type 'false'.",
+    "line": "if (response.success) this.#addRecord(response.data);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2339,
+    "message": "Property 'data' does not exist on type 'boolean | { success: true; data: any; }'.   Property 'data' does not exist on type 'false'.",
+    "line": "if (response.success) this.#addRecord(response.data);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2339,
+    "message": "Property 'success' does not exist on type 'boolean | { success: true; data: any; }'.   Property 'success' does not exist on type 'false'.",
+    "line": "if (response.success && response.data[0] != undefined) this.#addRecord(response.data[0]);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2339,
+    "message": "Property 'data' does not exist on type 'boolean | { success: true; data: any; }'.   Property 'data' does not exist on type 'false'.",
+    "line": "if (response.success && response.data[0] != undefined) this.#addRecord(response.data[0]);",
+    "count": 2
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2339,
+    "message": "Property 'success' does not exist on type 'boolean | { success: true; data: any; }'.   Property 'success' does not exist on type 'false'.",
+    "line": "return response.success;",
+    "count": 3
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2551,
+    "message": "Property 'defaultBaseID' does not exist on type 'Airtable'. Did you mean '#defaultBaseID'?",
+    "line": "if (baseName == \"default\") return this.defaultBaseID;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/airtable-v2.js",
+    "code": 2552,
+    "message": "Cannot find name 'value'. Did you mean 'vaule'?",
+    "line": "if (typeof value === \"string\") this.#params[\"view\"] = value;",
+    "count": 2
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/bear.js",
+    "code": 2339,
+    "message": "Property 'callbackURL' does not exist on type 'Function'.",
+    "line": "return this.constructor.callbackURL;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/fastmail.js",
+    "code": 2339,
+    "message": "Property 'hostname' does not exist on type 'Function'.",
+    "line": "url: `https://${this.constructor.hostname}/jmap/session`,",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/fastmail.js",
+    "code": 2339,
+    "message": "Property 'capabilities' does not exist on type 'Function'.",
+    "line": "data: { using: this.constructor.capabilities, methodCalls },",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/kutt.js",
+    "code": 2339,
+    "message": "Property 'filesPath' does not exist on type 'Function'.",
+    "line": "return this.constructor.filesPath;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/nocodb.js",
+    "code": 2300,
+    "message": "Duplicate identifier 'offset'.",
+    "line": "get offset() {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/nocodb.js",
+    "code": 2300,
+    "message": "Duplicate identifier 'offset'.",
+    "line": "set offset(value) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/nocodb.js",
+    "code": 2300,
+    "message": "Duplicate identifier 'offset'.",
+    "line": "offset(value) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/nocodb.js",
+    "code": 2339,
+    "message": "Property 'endPointDomain' does not exist on type 'Function'.",
+    "line": "return this.constructor.endPointDomain;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/nocodb.js",
+    "code": 2339,
+    "message": "Property 'filesPath' does not exist on type 'Function'.",
+    "line": "return this.constructor.filesPath;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/nocodb.js",
+    "code": 2339,
+    "message": "Property 'endPointDomain' does not exist on type 'Function'.",
+    "line": "this.constructor.endPointDomain = customEndpoint.trim();",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/nocodb.js",
+    "code": 2339,
+    "message": "Property 'errorCodes' does not exist on type 'Function'.",
+    "line": "return this.constructor.errorCodes;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/PushoverAlert.js",
+    "code": 2322,
+    "message": "Type '{}' is not assignable to type '{ [x: string]: string; }'.   Index signature for type 'string' is missing in type '{}'.",
+    "line": "parameters: this.#params,",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/PushoverAlert.js",
+    "code": 2339,
+    "message": "Property 'apiURL' does not exist on type 'Function'.",
+    "line": "return this.constructor.apiURL;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses-v2.js",
+    "code": 2339,
+    "message": "Property 'callbackURL' does not exist on type 'Function'.",
+    "line": "return this.constructor.callbackURL;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses-v2.js",
+    "code": 2554,
+    "message": "Expected 0-2 arguments, but got 3.",
+    "line": "return this.#openURL(\"open\", { id: id }, false);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2304,
+    "message": "Cannot find name 'callbackAction'.",
+    "line": "callbackAction = \"attach-keywords\";",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2304,
+    "message": "Cannot find name 'baseURL'.",
+    "line": "baseURL = callbackURL + callbackAction;",
+    "count": 2
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2304,
+    "message": "Cannot find name 'callbackAction'.",
+    "line": "baseURL = callbackURL + callbackAction;",
+    "count": 2
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2304,
+    "message": "Cannot find name 'baseURL'.",
+    "line": "openCallback(baseURL, params);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2304,
+    "message": "Cannot find name 'callbackAction'.",
+    "line": "callbackAction = \"attach-note\";",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2304,
+    "message": "Cannot find name 'baseURL'.",
+    "line": "openCallback(baseURL, params, false);",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2322,
+    "message": "Type 'string[]' is not assignable to type 'string'.",
+    "line": "keywords = [\"Newsletter\", \"Writing\"];",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2322,
+    "message": "Type 'string[]' is not assignable to type 'string'.",
+    "line": "keywords = [\"Beyond The Book\", \"Writing\"];",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2367,
+    "message": "This comparison appears to be unintentional because the types '\"cancelled\" | \"created\" | \"success\" | \"error\" | \"timeout\" | \"invalid\"' and '\"cancel\"' have no overlap.",
+    "line": "if (cb.status == \"cancel\") {",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2552,
+    "message": "Cannot find name 'targetId'. Did you mean 'targetID'?",
+    "line": "targetId = openCallback(baseURL, params).targetId;",
+    "count": 1
+  },
+  {
+    "file": "Library/Scripts/shared/libraries/ulysses.js",
+    "code": 2552,
+    "message": "Cannot find name 'targetId'. Did you mean 'targetID'?",
+    "line": "[\"id\", targetId],",
+    "count": 2
+  },
+  {
+    "file": "Library/Tests/fixtures/mocks.js",
+    "code": 2345,
+    "message": "Argument of type 'string | number' is not assignable to parameter of type 'string'.   Type 'number' is not assignable to type 'string'.",
+    "line": "this.#queryMaxRecords = parseInt(max);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'activeDoc' is possibly 'undefined'.",
+    "line": "activeDoc.inPipeline = true;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'activeDoc' is possibly 'undefined'.",
+    "line": "test.assert(activeDoc.inPipeline, 'Document marked as in pipeline');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'activeDoc' is possibly 'undefined'.",
+    "line": "const sourceStatus = activeDoc.status;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'activeDoc' is possibly 'undefined'.",
+    "line": "const sourceDestination = activeDoc.destination;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'activeDoc' is possibly 'undefined'.",
+    "line": "const sourceContent = activeDoc.content;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "newDoc.status = sourceStatus;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "newDoc.destination = sourceDestination;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "newDoc.content = sourceContent;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.status, sourceStatus, 'Status transferred correctly');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.destination, sourceDestination, 'Destination transferred correctly');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.content, sourceContent, 'Content transferred correctly');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.assertNotNullish(newDoc.docID, 'Sheet has docID after save');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.info(`New sheet docID: ${newDoc.docID}`);",
+    "count": 2
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'activeDoc' is possibly 'undefined'.",
+    "line": "const originalDraftDocID = activeDoc.docID;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "const newSheetDocID = newDoc.docID;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "newDoc.record = record;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.assertNotNullish(newDoc.record, 'Sheet linked to record');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.record.docID, newDoc.docID, 'Record docID updated to new sheet ID');",
+    "count": 2
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.record.docIDType, 'UlyssesID', 'Record docIDType updated to UlyssesID');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.status, activeDoc.status, 'Status preserved in conversion');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'activeDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.status, activeDoc.status, 'Status preserved in conversion');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.destination, activeDoc.destination, 'Destination preserved in conversion');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'activeDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.destination, activeDoc.destination, 'Destination preserved in conversion');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'newDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.content, activeDoc.content, 'Content preserved in conversion');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/convert-draft-to-sheet-test.js",
+    "code": 18048,
+    "message": "'activeDoc' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDoc.content, activeDoc.content, 'Content preserved in conversion');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'workingDraft' does not exist on type 'never'.",
+    "line": "if (newDraft && newDraft.workingDraft) {",
+    "count": 10
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'docID' does not exist on type 'never'.",
+    "line": "test.assertNotNullish(newDraft.docID, 'Draft has docID');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'docID' does not exist on type 'never'.",
+    "line": "test.info(`Draft ID: ${newDraft.docID}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'docIDType' does not exist on type 'never'.",
+    "line": "test.assertNotNullish(newDraft.docIDType, 'Draft has docIDType');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'docIDType' does not exist on type 'never'.",
+    "line": "test.assertEqual(newDraft.docIDType, 'DraftsID', 'docIDType is DraftsID');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'destination' does not exist on type 'never'.",
+    "line": "if (newDraft.destination) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'destination' does not exist on type 'never'.",
+    "line": "test.info(`Destination: ${newDraft.destination}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'content' does not exist on type 'never'.",
+    "line": "test.info(`Content length: ${newDraft.content?.length || 0}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'workingDraft' does not exist on type 'never'.",
+    "line": "if (newDraft.workingDraft.hasTag(testStatus) ||",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'workingDraft' does not exist on type 'never'.",
+    "line": "newDraft.workingDraft.hasTag(`In Pipeline::${testStatus}`)) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'workingDraft' does not exist on type 'never'.",
+    "line": "if (newDraft.workingDraft.hasTag(testDestination)) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'inPipeline' does not exist on type 'never'.",
+    "line": "const initialPipelineStatus = newDraft.inPipeline;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'workingDraft' does not exist on type 'never'.",
+    "line": "if (newDraft.workingDraft.isArchived) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'docID' does not exist on type 'never'.",
+    "line": "const draftIDAfterSave = newDraft.docID;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'docID' does not exist on type 'never'.",
+    "line": "if (newDraft && newDraft.docID) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'docID' does not exist on type 'never'.",
+    "line": "docID: newDraft.docID,",
+    "count": 2
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'docID' does not exist on type 'never'.",
+    "line": "test.assertEqual(loadedDraft.docID, newDraft.docID, 'Loaded draft has same ID');",
+    "count": 2
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'title' does not exist on type 'never'.",
+    "line": "const title = newDraft.title;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'slug' does not exist on type 'never'.",
+    "line": "const slug = newDraft.slug;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'scrubedTitle' does not exist on type 'never'.",
+    "line": "const scrubedTitle = newDraft.scrubedTitle;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'record' does not exist on type 'never'.",
+    "line": "test.assertNotNullish(newDraft.record, 'Record is set');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'record' does not exist on type 'never'.",
+    "line": "test.assertEqual(newDraft.record.id, 'recTEST123', 'Record ID matches');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'record' does not exist on type 'never'.",
+    "line": "if (newDraft.record.Title) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'record' does not exist on type 'never'.",
+    "line": "test.assertEqual(newDraft.record.Title, 'Test Record Title', 'Record title accessible');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'destination' does not exist on type 'never'.",
+    "line": "if (newDraft && newDraft.destination) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'airtableDestination' does not exist on type 'never'.",
+    "line": "const airtableDest = newDraft.airtableDestination;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'open' does not exist on type 'never'.",
+    "line": "test.assertType(newDraft.open, 'function', 'open() method exists');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'docID' does not exist on type 'never'.",
+    "line": "const draftIDBeforeDelete = newDraft.docID;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'workingDraft' does not exist on type 'never'.",
+    "line": "if (newDraft.workingDraft.isTrashed) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'workingDraft' does not exist on type 'never'.",
+    "line": "if (!invalidDoc.workingDraft) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'workingDraft' does not exist on type 'never'.",
+    "line": "test.assertNullish(invalidDoc.workingDraft, 'workingDraft is undefined for invalid UUID');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'status' does not exist on type 'never'.",
+    "line": "if (newDraft.status === '') {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'statusIsNotSet' does not exist on type 'never'.",
+    "line": "test.assert(newDraft.statusIsNotSet, 'statusIsNotSet true when status empty');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'statusIsNotSet' does not exist on type 'never'.",
+    "line": "test.assert(!newDraft.statusIsNotSet, 'statusIsNotSet false when status set');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'destination' does not exist on type 'never'.",
+    "line": "if (newDraft.destination === '' || newDraft.destination === undefined) {",
+    "count": 2
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'destinationIsNotSet' does not exist on type 'never'.",
+    "line": "test.assert(newDraft.destinationIsNotSet, 'destinationIsNotSet true when destination empty');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 2339,
+    "message": "Property 'destinationIsNotSet' does not exist on type 'never'.",
+    "line": "test.assert(!newDraft.destinationIsNotSet, 'destinationIsNotSet false when destination set');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newDraft' is possibly 'undefined'.",
+    "line": "test.assertEqual(newDraft.docIDType, 'DraftsID', 'Has DraftsID type');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/drafts-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newDraft' is possibly 'undefined'.",
+    "line": "test.info(`Draft created with docIDType: ${newDraft.docIDType}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'workingDraft' does not exist on type 'never'.",
+    "line": "if (newDraft && newDraft.workingDraft) {",
+    "count": 5
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'docID' does not exist on type 'never'.",
+    "line": "test.info(`Created draft with ID: ${newDraft.docID}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'destination' does not exist on type 'never'.",
+    "line": "test.info(`Draft destination: ${newDraft.destination || 'none'}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'status' does not exist on type 'never'.",
+    "line": "test.assertEqual(newDraft.status, selectedStatus, 'Status set correctly');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'inPipeline' does not exist on type 'never'.",
+    "line": "test.assert(newDraft.inPipeline === true, 'Document marked as in pipeline');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'workingDraft' does not exist on type 'never'.",
+    "line": "if (newDraft.workingDraft.isArchived) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'docID' does not exist on type 'never'.",
+    "line": "docID: newDraft.docID,",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'record' does not exist on type 'never'.",
+    "line": "newDraft.record = draftRecord;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'status' does not exist on type 'never'.",
+    "line": "test.assertEqual(newDraft.status, newStatus, 'Status updated');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'record' does not exist on type 'never'.",
+    "line": "if (newDraft.record) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2339,
+    "message": "Property 'status' does not exist on type 'never'.",
+    "line": "test.assertEqual(progressDoc.status, status, `Status is ${status}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 2367,
+    "message": "This comparison appears to be unintentional because the types 'false' and 'true' have no overlap.",
+    "line": "test.assert(sheetSaved === true, 'Sheet saved successfully');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assertNotNullish(newSheet.docID, 'Sheet has ID after save');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.info(`Sheet saved with ID: ${newSheet.docID}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assert(newSheet.inPipeline === true, 'Sheet in pipeline');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "docID: newSheet.docID,",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "newSheet.record = sheetRecord;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/pipeline-workflow-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(loadedDoc.docID, newSheet.docID, 'Loaded correct document');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(newSheet.docIDType, 'UlyssesID', 'Has UlyssesID type');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.info(`Sheet created with docIDType: ${newSheet.docIDType}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(newSheet.status, testStatus, 'Status set correctly');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(newSheet.destination, testDestination, 'Destination set correctly');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assertNotNullish(newSheet.content, 'Content set');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.info(`Content length: ${newSheet.content.length} characters`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assertNullish(newSheet.docID, 'docID is undefined before save');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assertNotNullish(newSheet.docID, 'docID exists after save');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.info(`Sheet ID after save: ${newSheet.docID}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(newSheetOps[0].content, newSheet.content, 'Content passed to newSheet');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "const sheetIDToLoad = newSheet.docID;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(loadedSheet.docID, sheetIDToLoad, 'Loaded sheet has same ID');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(loadedSheet.record.Title, 'Loaded Test Sheet', 'Title from record');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(loadedSheet.record.Status, 'Editing', 'Status from record');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(loadedSheet.record.Destination, 'Test Newsletter', 'Destination from record');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "const oldStatus = loadedSheet.status;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(loadedSheet.status, newStatus, 'Status updated');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "const oldDestination = loadedSheet.destination;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(loadedSheet.destination, newDestination, 'Destination updated');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "const sheetTitle = loadedSheet.title;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "const slug = loadedSheet.slug;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "const scrubedTitle = loadedSheet.scrubedTitle;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "docID: loadedSheet.docID,",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "test.assertNotNullish(loadedSheet.record, 'Record is set');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(loadedSheet.record.id, 'recULYSSES123', 'Record ID matches');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(loadedSheet.recordID, 'recULYSSES123', 'recordID getter works');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "const airtableDest = loadedSheet.airtableDestination;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "if (loadedSheet.destination === 'Test Blog') {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'loadedSheet' is possibly 'undefined'.",
+    "line": "const sheetIDBeforeDelete = loadedSheet.docID;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "if (newSheet.docID) {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.assertEqual(newSheet.UlyssesID, newSheet.docID, 'UlyssesID equals docID');",
+    "count": 2
+  },
+  {
+    "file": "Library/Tests/integration/cp/ulysses-document-lifecycle-test.js",
+    "code": 18048,
+    "message": "'newSheet' is possibly 'undefined'.",
+    "line": "test.info(`UlyssesID: ${newSheet.UlyssesID}`);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/cp/settings-test.js",
+    "code": 2339,
+    "message": "Property 'defaultTag' does not exist on type 'Settings'.",
+    "line": "test.assertNotNullish(settings.defaultTag, \"keys are readable as properties\");",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/cp/settings-test.js",
+    "code": 2339,
+    "message": "Property 'defaultTag' does not exist on type 'Settings'.",
+    "line": "test.assertEqual(settings.load(\"defaultTag\"), settings.defaultTag, \"load(key) returns the same value as the property\");",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/cp/settings-test.js",
+    "code": 2339,
+    "message": "Property 'statuses' does not exist on type 'Settings'.",
+    "line": "test.assertEqual(settings.load(\"statuses\"), settings.statuses, \"load(key) returns nested sections by reference\");",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/cp/text-utilities-test.js",
+    "code": 2454,
+    "message": "Variable 'capitalizedTags' is used before being assigned.",
+    "line": "test.assertEqual(capitalizedTags.length, expectedTags.length, 'Output array has correct length');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/cp/text-utilities-test.js",
+    "code": 18048,
+    "message": "'textUtils' is possibly 'undefined'.",
+    "line": "const emptyResult = textUtils.capitalizeTags([]);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/nr/query-letter-test.js",
+    "code": 2588,
+    "message": "Cannot assign to 'draft' because it is a constant.",
+    "line": "draft = undefined;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/nr/query-letter-test.js",
+    "code": 2588,
+    "message": "Cannot assign to 'draft' because it is a constant.",
+    "line": "draft = { uuid: \"LIST-1\", ...makeSourceDraft([makeTask(\"Fay Find\", false)]) };",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/nr/query-letter-test.js",
+    "code": 2588,
+    "message": "Cannot assign to 'draft' because it is a constant.",
+    "line": "draft = { uuid: \"OTHER\", ...makeSourceDraft([]) };",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/nr/query-letter-test.js",
+    "code": 2629,
+    "message": "Cannot assign to 'Template' because it is a class.",
+    "line": "Template = class {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/nr/query-letter-test.js",
+    "code": 2629,
+    "message": "Cannot assign to 'Draft' because it is a class.",
+    "line": "Draft = { find: () => undefined, query: () => [] };",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/nr/query-letter-test.js",
+    "code": 2629,
+    "message": "Cannot assign to 'Draft' because it is a class.",
+    "line": "Draft = {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/nr/query-letter-test.js",
+    "code": 2629,
+    "message": "Cannot assign to 'Template' because it is a class.",
+    "line": "Template = originalTemplate;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/fastmail-test.js",
+    "code": 2345,
+    "message": "Argument of type '{ subject: string; text: string; }' is not assignable to parameter of type '{ to?: any[]; subject?: string; text?: string; html: any; }'.   Property 'html' is missing in type '{ subject: string; text: string; }' but required in type '{ to?: any[]; subject?: string; text?: string; html: any; }'.",
+    "line": "new Fastmail().createDraft({ subject: \"Plain\", text: \"Body\" });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/fastmail-test.js",
+    "code": 2345,
+    "message": "Argument of type '{ subject: string; text: string; }' is not assignable to parameter of type '{ to?: any[]; subject?: string; text?: string; html: any; }'.   Property 'html' is missing in type '{ subject: string; text: string; }' but required in type '{ to?: any[]; subject?: string; text?: string; html: any; }'.",
+    "line": "result = new Fastmail().createDraft({ subject: \"Hi\", text: \"\" });",
+    "count": 4
+  },
+  {
+    "file": "Library/Tests/unit/shared/fastmail-test.js",
+    "code": 2629,
+    "message": "Cannot assign to 'Credential' because it is a class.",
+    "line": "Credential = {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/fastmail-test.js",
+    "code": 2629,
+    "message": "Cannot assign to 'HTTP' because it is a class.",
+    "line": "HTTP = {",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 2339,
+    "message": "Property 'displayMenu' does not exist on type 'MockUI'.",
+    "line": "debugUI.displayMenu({ title: 'Debug Menu', options: ['A', 'B'] });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 2339,
+    "message": "Property 'defaultMenuSelection' does not exist on type 'MockUI'.",
+    "line": "uiWithDefault.defaultMenuSelection = 'Custom Default';",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assert(mockUI.debug === false, 'Debug mode set correctly');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertArrayLength(mockUI.interactions, 0, 'No interactions initially');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertArrayLength(mockUI.interactions, 1, 'Interaction tracked');",
+    "count": 2
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[0].type, 'prompt', 'Interaction type is prompt');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[0].config.title, 'Test Prompt', 'Config captured');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.clearInteractions();",
+    "count": 11
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "const noDefaultResult = mockUI.displayPrompt(promptNoDefault);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertArrayLength(mockUI.interactions, 1, 'Error interaction tracked');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[0].type, 'error', 'Interaction type is error');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[0].config.errorMessage, 'This is an error!', 'Error message captured');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertArrayLength(mockUI.interactions, 1, 'Success interaction tracked');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[0].type, 'success', 'Interaction type is success');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[0].config.successMessage, 'Operation successful!', 'Success message captured');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertArrayLength(mockUI.interactions, 1, 'Menu interaction tracked');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[0].type, 'menu', 'Interaction type is menu');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[0].config.title, 'Select Option', 'Menu title captured');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "const menuNoDefaultResult = mockUI.displayMenu(menuNoDefault);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displayPrompt({ title: 'Prompt 1' });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displayErrorMessage({ errorMessage: 'Error 1' });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displayPrompt({ title: 'Prompt 2' });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displaySuccessMessage({ successMessage: 'Success 1' });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displayMenu({ title: 'Menu 1', options: ['A', 'B'] });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displayErrorMessage({ errorMessage: 'Error 2' });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertArrayLength(mockUI.interactions, 6, 'All interactions tracked');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "const promptInteractions = mockUI.getInteractionsByType('prompt');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "const errorInteractions = mockUI.getInteractionsByType('error');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "const successInteractions = mockUI.getInteractionsByType('success');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "const menuInteractions = mockUI.getInteractionsByType('menu');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assert(mockUI.interactions.length > 0, 'Has interactions before clear');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertArrayLength(mockUI.interactions, 0, 'Interactions cleared');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displayPrompt({ title: 'After Clear' });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertArrayLength(mockUI.interactions, 1, 'New interactions tracked after clear');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "const complexResult = mockUI.displayMenu(complexMenu);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "const menuInteraction = mockUI.interactions[0];",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displayPrompt(testConfig);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "const capturedConfig = mockUI.interactions[0].config;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displayMenu(originalConfig);",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displayPrompt({ title: 'First' });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displayErrorMessage({ errorMessage: 'Second' });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "mockUI.displaySuccessMessage({ successMessage: 'Third' });",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[0].type, 'prompt', 'First interaction is prompt');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[1].type, 'error', 'Second interaction is error');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[2].type, 'success', 'Third interaction is success');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[0].config.title, 'First', 'Order preserved');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[1].config.errorMessage, 'Second', 'Order preserved');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/mockui-test.js",
+    "code": 18048,
+    "message": "'mockUI' is possibly 'undefined'.",
+    "line": "test.assertEqual(mockUI.interactions[2].config.successMessage, 'Third', 'Order preserved');",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/servicecontainer-test.js",
+    "code": 2339,
+    "message": "Property 'dependency' does not exist on type 'TestService'.",
+    "line": "service.dependency = a;",
+    "count": 1
+  },
+  {
+    "file": "Library/Tests/unit/shared/servicecontainer-test.js",
+    "code": 2339,
+    "message": "Property 'dependency' does not exist on type 'TestService'.",
+    "line": "service.dependency = b;",
+    "count": 1
+  }
+]

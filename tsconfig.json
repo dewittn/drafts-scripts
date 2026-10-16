@@ -1,0 +1,18 @@
+{
+  // Type checking only. Drafts runs these files as classic scripts that share
+  // one global scope, so no module or isolatedModules settings: a class declared
+  // in one file must be visible to every other file, as it is at runtime.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": [],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "skipLibCheck": false
+  },
+  "include": ["Library/Scripts", "Library/Actions", "Library/Tests", "types"],
+  // Library/Scripts/bvr/tests is gitignored local scratch, not part of the repo.
+  "exclude": ["Library/Scripts/vendor", "Library/Scripts/bvr/tests", "node_modules"]
+}

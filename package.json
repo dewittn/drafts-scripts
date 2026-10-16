@@ -15,7 +15,8 @@
     "gulp-ext-replace": "^0.3.0",
     "gulp-rsync": "^0.1.0",
     "gulp-util": "^3.0.8",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "typescript": "5.9.3"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -35,6 +36,7 @@
     "gulp": "gulp",
     "sync": "gulp sync",
     "test": "bun scripts/test-runner.js",
+    "typecheck": "bun scripts/typecheck.ts",
     "watch": "gulp watch",
     "debug": "gulp debug"
   }
