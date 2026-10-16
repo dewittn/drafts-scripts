@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repository contains JavaScript scripts and templates for the [Drafts app](https://getdrafts.com) on iOS and macOS. The scripts extend Drafts functionality with integrations to Airtable, Ulysses, Bear, and other apps.
+This repository contains JavaScript scripts and templates for the [Drafts app](https://getdrafts.com) on iOS and macOS. The scripts extend Drafts functionality with integrations to NocoDB, Ulysses, Bear, and other apps. NocoDB is the production data source as of October 2026; the Airtable code remains but is legacy.
 
 ## Development Commands
 
@@ -73,7 +73,8 @@ require("shared/core/ServiceInitializer.js");           // ✅ Correct
 ### Key Components
 
 **Core Libraries (`Library/Scripts/libraries/`)**:
-- `airtable-v2.js` - Main Airtable API wrapper (primary framework)
+- `nocodb.js` - NocoDB API wrapper (primary data source)
+- `airtable-v2.js` - Airtable API wrapper (legacy, no longer production)
 - `ulysses.js` - Ulysses app integration
 - `bear.js` - Bear notes app integration
 

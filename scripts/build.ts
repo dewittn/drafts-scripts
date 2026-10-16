@@ -273,7 +273,11 @@ async function watchFiles() {
       file,
       setTimeout(() => {
         pending.delete(file);
-        handle(file);
+        try {
+          handle(file);
+        } catch (error) {
+          logError(`Watcher could not handle ${relative(root, file)}: ${(error as Error).message}`);
+        }
       }, 100),
     );
   });
