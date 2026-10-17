@@ -28,7 +28,7 @@ This repo has its own helpers for prompts, menus, settings, and messages, and th
 
 For anything beyond editing a few lines you have already read, spawn an Explore agent first:
 
-> Task: <what the change needs to do>. In /Users/dewittn/Programing/dewittn/Other/drafts-scripts, find existing code that already does any part of this. Check `Library/Scripts/shared/libraries/`, `Library/Scripts/vendor/nr.js`, `Library/Scripts/modules/*/utils/`, the module being changed, and sibling actions in `Library/Actions/<area>/`. For each match, return the function or class, its file:line, and one real call site showing how it is used. Say plainly if nothing fits.
+> Task: <what the change needs to do>. In /Users/dewittn/Programing/dewittn/Other/drafts-scripts, find existing code that already does any part of this. Search by each step the change performs (for example: building a slug, adding draft tags, prompting for a choice), not only by the feature's name. Check `Library/Scripts/shared/libraries/`, `Library/Scripts/vendor/nr.js`, `Library/Scripts/modules/*/utils/`, the module being changed, and sibling actions in `Library/Actions/<area>/`. For each match, return the function or class, its file:line, and one real call site showing how it is used. Say plainly if nothing fits.
 
 Where things usually live:
 
@@ -41,6 +41,8 @@ Where things usually live:
 | Text helpers | `modules/cp/utils/TextUtilities.js`, `modules/bvr/utils/BVRUtilities.js` |
 | How a similar action is put together | Sibling files in `Library/Actions/<area>/` |
 | Test mocks | `Library/Tests/fixtures/mocks.js` |
+
+Whether you use the agent or search yourself, search by what the new code does. Reading the module you're changing shows its own patterns but misses helpers that live elsewhere. For example, a tag change should look for existing tag and slug code (`TextUtilities.convertTitleToSlug()`), not just grep for "query".
 
 If a helper almost fits, extend it and say so, rather than working around it. If you write something new that other scripts could use, put it where the next search would find it (`shared/libraries/` or the module's `utils/`).
 
@@ -76,7 +78,9 @@ When the user says a round works in Drafts, commit right away without asking, fo
 - **On dev:** commit and push, with no PR. The global commit skill opens a PR for any branch other than main. Skip that here, because main only moves through checkpoints.
 - **On a feature branch:** commit and push each working round. When the feature is done, open a PR into `dev`, merge it with a merge commit, and delete the branch (as with PRs #4 to #8).
 
-Then run `bun run checkpoint` and offer a checkpoint if commits have settled that you haven't offered yet this session.
+Then run `bun run checkpoint` and offer a checkpoint if commits have settled that you haven't offered yet this session. If nothing has settled, give the date the script reports ("these settle on Oct 20"), but don't promise to follow up. A later session won't remember the promise. The start-of-work check in whichever session runs next makes the offer.
+
+Keep the report short: what was committed, and the checkpoint status. Don't explain the workflow back to the user (why there's no PR, why main didn't move). They wrote these rules.
 
 ## Working on main
 
