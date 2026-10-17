@@ -1,5 +1,6 @@
 require("vendor/nr.js");
 require("shared/libraries/fastmail.js");
+require("shared/libraries/DraftsUI.js");
 require("modules/nr/EmailDraft.js");
 
 // Creates a Fastmail draft from the current draft. Fails the action on error
@@ -7,7 +8,8 @@ require("modules/nr/EmailDraft.js");
 function sendToFastmail() {
   const settings = loadSettings("nr-settings.json");
   const email = new EmailDraft(draft.content);
-  email.addSignature(settings.fastmail?.signature);
+  const signature = settings.fastmail?.signature;
+  if (signature && askToAttachSignature()) email.addSignature(signature);
 
   if (!promptForMissingFields(email)) return context.cancel("Missing email fields");
 
@@ -22,6 +24,14 @@ function sendToFastmail() {
 
   const recipient = email.recipients.map((item) => item.name ?? item.email).join(", ");
   app.displaySuccessMessage(`Fastmail draft created${recipient ? ` for ${recipient}` : ""}`);
+}
+
+function askToAttachSignature() {
+  const answer = new DraftsUI().yesNoPrompt({
+    menuTitle: "Send to Fastmail",
+    menuMessage: "Attach your signature?",
+  });
+  return answer == "yes";
 }
 
 // Asks for whichever of the subject and recipient the draft is missing.
