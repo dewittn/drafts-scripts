@@ -24,6 +24,8 @@ const test = new TestAssertions('MockUI Comprehensive Tests');
 
 test.section('MockUI Creation and Initialization');
 
+// The JSDoc type tells the type checker what the callback assigns.
+/** @type {MockUI} */
 let mockUI;
 test.assertDoesNotThrow(() => {
   mockUI = createMockUI({ debug: false });
@@ -138,6 +140,7 @@ const menuSettings = {
   ]
 };
 
+/** @type {Object} */
 let menu;
 test.assertDoesNotThrow(() => {
   menu = mockUI.buildMenu(menuSettings);

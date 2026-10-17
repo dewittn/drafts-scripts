@@ -19,13 +19,17 @@ means. The check fails only on errors that are not in the baseline.
 The 348 remaining errors are 299 baseline entries. Zero `// @ts-ignore` comments were
 added.
 
+Updated 2026-10-17: 289 errors in 251 entries. All 59 removed errors were test-only and
+came from `mockui-test.js`. `2aa9e16` dropped the `displayMenu` calls, and a JSDoc
+`@type` on its `let` variables cleared the callback-assignment errors.
+
 | Group | Errors | Meaning |
 |-------|--------|---------|
 | Real-bug candidates | 36 | Likely wrong at runtime when the line runs. 8 entries are on production paths, 3 of them dead code. 4 errors are legacy/Airtable |
 | Ambiguous, verify in Drafts | 6 | Depends on runtime behavior the definitions do not capture |
 | Checker limitations in source | 77 | Valid JavaScript TypeScript cannot follow |
 | JSDoc does not match the code | 15 | Comments are wrong, runtime is fine |
-| Test-only | 214 | Test patterns TypeScript cannot follow, plus one real test gap |
+| Test-only | 155 | Test patterns TypeScript cannot follow (214 at baseline) |
 
 Line numbers below are as of commit `94e0a92` plus this branch.
 
@@ -136,9 +140,8 @@ with that file's row under real-bug candidates.
 
 | Pattern | Errors | Detail |
 |---------|--------|--------|
-| Assigned inside a callback | 190 | `let x; test.assertDoesNotThrow(() => { x = ... })`. TypeScript does not see assignments inside callbacks, so `x` stays `undefined` or `never`. This happens even with `strictNullChecks` off. |
+| Assigned inside a callback | 133 | `let x; test.assertDoesNotThrow(() => { x = ... })`. TypeScript does not see assignments inside callbacks, so `x` stays `undefined` or `never`. This happens even with `strictNullChecks` off. A JSDoc `/** @type {MockUI} */` on the `let` fixes it, as in `mockui-test.js` (was 190). |
 | Stubbing Drafts globals | 9 | Tests reassign `Draft`, `HTTP`, `Credential`, `Template`, and `draft` to install stubs. That is valid at runtime but not for declared classes and constants. |
-| **`MockUI` lacks `displayMenu`** | 2 | `Library/Tests/unit/shared/mockui-test.js:234` and the `defaultMenuSelection` setter. **This is a real gap.** It is why `mockui-test.js` fails under `bun run test` on `dev` today. |
 | Other | 13 | `fastmail-test.js` omits fields the `createDraft` JSDoc marks as required (5). `settings-test.js` reads dynamic `Settings` fields (3). `servicecontainer-test.js` adds an undeclared `dependency` field (2). `mocks.js:401` passes a number to `parseInt`. `pipeline-workflow-test.js:260` compares `false === true`. `text-utilities-test.js` reads a variable before assignment. |
 
 ## Fixed in the definitions
