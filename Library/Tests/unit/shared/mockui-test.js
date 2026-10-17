@@ -3,7 +3,7 @@
  *
  * Tests MockUI functionality in isolation covering:
  * - Prompt display and interaction tracking
- * - Menu display and selection
+ * - Menu building and configured responses
  * - Error message handling
  * - Success message handling
  * - Interaction history
@@ -122,48 +122,49 @@ test.assertEqual(mockUI.interactions[0].type, 'success', 'Interaction type is su
 test.assertEqual(mockUI.interactions[0].config.successMessage, 'Operation successful!', 'Success message captured');
 
 // =============================================================================
-// Section 6: Display Menu with Default Selection
+// Section 6: Build Menu with Configured Response
 // =============================================================================
 
-test.section('Display Menu - Default Selection');
+test.section('Build Menu - Configured Response');
 
 mockUI.clearInteractions();
+mockUI.setPromptResponse('Select Option', { button: 'Option 2', fieldValues: { size: 'Medium' } });
 
-const menuConfig = {
-  title: 'Select Option',
-  defaultSelection: 'Option 2',
-  options: ['Option 1', 'Option 2', 'Option 3']
+const menuSettings = {
+  menuTitle: 'Select Option',
+  menuItems: [
+    { type: 'button', data: { name: 'Option 1', value: 'Option 1' } },
+    { type: 'button', data: { name: 'Option 2', value: 'Option 2' } },
+  ]
 };
 
-let menuResult;
+let menu;
 test.assertDoesNotThrow(() => {
-  menuResult = mockUI.displayMenu(menuConfig);
-}, 'displayMenu does not throw');
+  menu = mockUI.buildMenu(menuSettings);
+}, 'buildMenu does not throw');
 
-// Should return default selection
-test.assertEqual(menuResult, 'Option 2', 'Returns default selection');
+// Should behave like a shown prompt with the configured response
+test.assert(menu.show() === true, 'show() returns true when a response is configured');
+test.assertEqual(menu.buttonPressed, 'Option 2', 'Returns configured button');
+test.assertEqual(menu.fieldValues.size, 'Medium', 'Returns configured field value');
 
 // Should track interaction
 test.assertArrayLength(mockUI.interactions, 1, 'Menu interaction tracked');
-test.assertEqual(mockUI.interactions[0].type, 'menu', 'Interaction type is menu');
-test.assertEqual(mockUI.interactions[0].config.title, 'Select Option', 'Menu title captured');
+test.assertEqual(mockUI.interactions[0].type, 'buildMenu', 'Interaction type is buildMenu');
+test.assertEqual(mockUI.interactions[0].menuSettings.menuTitle, 'Select Option', 'Menu title captured');
 
 // =============================================================================
-// Section 7: Display Menu Without Default (First Option)
+// Section 7: Build Menu Without Response (Cancelled)
 // =============================================================================
 
-test.section('Display Menu - No Default (First Option)');
+test.section('Build Menu - No Response (Cancelled)');
 
 mockUI.clearInteractions();
 
-const menuNoDefault = {
-  title: 'Choose One',
-  options: ['First', 'Second', 'Third']
-};
+const unansweredMenu = mockUI.buildMenu({ menuTitle: 'Choose One', menuItems: [] });
 
-const menuNoDefaultResult = mockUI.displayMenu(menuNoDefault);
-
-test.assertEqual(menuNoDefaultResult, 'First', 'Returns first option when no default');
+test.assert(unansweredMenu.show() === false, 'show() returns false when no response is configured');
+test.assertNullish(unansweredMenu.buttonPressed, 'No button pressed when cancelled');
 
 // =============================================================================
 // Section 8: Get Interactions by Type
@@ -178,7 +179,7 @@ mockUI.displayPrompt({ title: 'Prompt 1' });
 mockUI.displayErrorMessage({ errorMessage: 'Error 1' });
 mockUI.displayPrompt({ title: 'Prompt 2' });
 mockUI.displaySuccessMessage({ successMessage: 'Success 1' });
-mockUI.displayMenu({ title: 'Menu 1', options: ['A', 'B'] });
+mockUI.buildMenu({ menuTitle: 'Menu 1', menuItems: [] });
 mockUI.displayErrorMessage({ errorMessage: 'Error 2' });
 
 // Total should be 6
@@ -194,7 +195,7 @@ test.assertArrayLength(errorInteractions, 2, 'Two error interactions');
 const successInteractions = mockUI.getInteractionsByType('success');
 test.assertArrayLength(successInteractions, 1, 'One success interaction');
 
-const menuInteractions = mockUI.getInteractionsByType('menu');
+const menuInteractions = mockUI.getInteractionsByType('buildMenu');
 test.assertArrayLength(menuInteractions, 1, 'One menu interaction');
 
 // =============================================================================
@@ -231,7 +232,7 @@ test.assertDoesNotThrow(() => {
   debugUI.displayPrompt({ title: 'Debug Prompt' });
   debugUI.displayErrorMessage({ errorMessage: 'Debug Error' });
   debugUI.displaySuccessMessage({ successMessage: 'Debug Success' });
-  debugUI.displayMenu({ title: 'Debug Menu', options: ['A', 'B'] });
+  debugUI.buildMenu({ menuTitle: 'Debug Menu', menuItems: [] });
 }, 'Debug mode does not break functionality');
 
 test.assertArrayLength(debugUI.interactions, 4, 'Debug mode tracks interactions');
@@ -262,24 +263,28 @@ test.assertEqual(ui2.interactions[0].config.title, 'UI2 Prompt', 'UI2 interactio
 test.section('Complex Menu Configuration');
 
 mockUI.clearInteractions();
+mockUI.setPromptResponse('Complex', { button: 'Save', fieldValues: { destination: 'Drafts' } });
 
 const complexMenu = {
-  title: 'Complex Menu',
-  message: 'Choose wisely',
-  defaultSelection: 'Medium',
-  options: ['Small', 'Medium', 'Large', 'Extra Large'],
-  isCancellable: true
+  menuTitle: 'Complex Menu',
+  menuMessage: 'Choose wisely',
+  isCancellable: true,
+  menuItems: [
+    { type: 'picker', data: { name: 'destination', label: 'Destination', columns: [['Drafts', 'Ulysses']] } },
+    { type: 'button', data: { name: 'Save', value: 'Save' } },
+  ]
 };
 
-const complexResult = mockUI.displayMenu(complexMenu);
+const complexResult = mockUI.buildMenu(complexMenu);
 
-test.assertEqual(complexResult, 'Medium', 'Complex menu returns default selection');
+test.assertEqual(complexResult.buttonPressed, 'Save', 'Partial title match finds configured response');
+test.assertEqual(complexResult.fieldValues.anyPickerKey, 'Drafts', 'Unknown field keys fall back to destination');
 
 const menuInteraction = mockUI.interactions[0];
-test.assertEqual(menuInteraction.config.title, 'Complex Menu', 'Title preserved');
-test.assertEqual(menuInteraction.config.message, 'Choose wisely', 'Message preserved');
-test.assert(menuInteraction.config.isCancellable === true, 'isCancellable preserved');
-test.assertArrayLength(menuInteraction.config.options, 4, 'All options preserved');
+test.assertEqual(menuInteraction.menuSettings.menuTitle, 'Complex Menu', 'Title preserved');
+test.assertEqual(menuInteraction.menuSettings.menuMessage, 'Choose wisely', 'Message preserved');
+test.assert(menuInteraction.menuSettings.isCancellable === true, 'isCancellable preserved');
+test.assertArrayLength(menuInteraction.menuSettings.menuItems, 2, 'All menu items preserved');
 
 // =============================================================================
 // Section 13: Edge Cases - Empty Configurations
@@ -305,11 +310,11 @@ test.assertDoesNotThrow(() => {
   mockUI.displaySuccessMessage({});
 }, 'Empty success config handled');
 
-// Menu with empty options array
+// Menu with no settings beyond empty items
 test.assertDoesNotThrow(() => {
-  const emptyMenu = mockUI.displayMenu({ options: [] });
-  test.assertNullish(emptyMenu, 'Menu with empty options returns undefined');
-}, 'Empty menu options handled');
+  const emptyMenu = mockUI.buildMenu({ menuItems: [] });
+  test.assert(emptyMenu.show() === false, 'Empty menu shows as cancelled');
+}, 'Empty menu settings handled');
 
 // =============================================================================
 // Section 14: Interaction Data Integrity
@@ -333,39 +338,26 @@ test.assertNotNullish(capturedConfig.extra, 'Extra data captured');
 test.assertEqual(capturedConfig.extra.key, 'value', 'Nested data captured');
 
 // =============================================================================
-// Section 15: MockUI with defaultMenuSelection
-// =============================================================================
-
-test.section('MockUI with defaultMenuSelection Property');
-
-const uiWithDefault = createMockUI({ debug: false });
-uiWithDefault.defaultMenuSelection = 'Custom Default';
-
-// When displayMenu is called, it uses config.defaultSelection
-// But we can set a property on mockUI for testing purposes
-test.info('Custom default selection property can be set');
-
-// =============================================================================
-// Section 16: Verify No Side Effects
+// Section 15: Verify No Side Effects
 // =============================================================================
 
 test.section('Verify No Side Effects');
 
 // MockUI should not modify passed configurations
 const originalConfig = {
-  title: 'Original',
-  options: ['A', 'B', 'C']
+  menuTitle: 'Original',
+  menuItems: [{ type: 'button', data: { name: 'A', value: 'A' } }]
 };
 
 const configCopy = JSON.parse(JSON.stringify(originalConfig));
 
-mockUI.displayMenu(originalConfig);
+mockUI.buildMenu(originalConfig);
 
 // Original should be unchanged
 test.assertEqual(JSON.stringify(originalConfig), JSON.stringify(configCopy), 'Config not modified');
 
 // =============================================================================
-// Section 17: Interaction Order
+// Section 16: Interaction Order
 // =============================================================================
 
 test.section('Interaction Order');
