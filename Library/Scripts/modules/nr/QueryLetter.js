@@ -76,8 +76,8 @@ class QueryLetter {
     const selection = this.#promptForAgent(agents);
     if (selection == undefined) return false;
 
-    const { agent, templateTags } = selection;
-    const letter = this.#createLetter(agent, templateTags);
+    const { agent, templateTags, choiceTags } = selection;
+    const letter = this.#createLetter(agent, templateTags, choiceTags);
     if (letter == undefined) return false;
 
     this.#markQueried(agent);
@@ -116,11 +116,22 @@ class QueryLetter {
       }
     }
 
-    return { agent, templateTags };
+    return { agent, templateTags, choiceTags: this.#choiceTags(fieldValues) };
   }
 
-  #createLetter(agent, templateTags) {
-    const { templateFile, draftTags = [], workspaceName } = this.settings;
+  // Draft tags from the select fields listed in tagFields. Each chosen value
+  // becomes a tag, lowercased with spaces as hyphens ("Query Manager" ->
+  // query-manager), so a new choice added in settings tags itself.
+  #choiceTags(fieldValues) {
+    const { tagFields = [] } = this.settings;
+    return tagFields
+      .flatMap((field) => fieldValues[field] ?? [])
+      .map((choice) => choice.toLowerCase().replace(/\s+/g, "-"));
+  }
+
+  #createLetter(agent, templateTags, choiceTags = []) {
+    const { templateFile, workspaceName } = this.settings;
+    const draftTags = [...(this.settings.draftTags ?? []), ...choiceTags];
 
     if (Template.load(templateFile) == undefined) {
       return this.#ui.displayErrorMessage(`Query letter template "${templateFile}" could not be read!`, {

@@ -21,6 +21,10 @@ queryLetter:
   templateFile: "nr/query-letter.mustache"
   draftTags:
     - "authoring/wfid/query"
+  # Select fields whose chosen value also tags the new draft, lowercased with
+  # spaces as hyphens ("Query Manager" -> query-manager).
+  tagFields:
+    - queryType
   pickerData:
     name: agent
     label: Agent

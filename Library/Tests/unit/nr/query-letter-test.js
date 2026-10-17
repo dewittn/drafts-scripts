@@ -108,6 +108,7 @@ function makeUI(pickerIndex, extraFields = {}, shown = true) {
 const settings = {
   templateFile: "nr/query-letter.mustache",
   draftTags: ["authoring/wfid/query"],
+  tagFields: ["queryType"],
   pickerData: { name: "agent", label: "Agent" },
   menuSettings: {
     menuTitle: "New Query Letter",
@@ -144,7 +145,7 @@ test.assertEqual(createdTemplates[0].settings.templateTags.genre, "upmarket lite
 test.assertEqual(createdTemplates[0].settings.templateTags.email, "carol@example.com", "email field becomes template tag");
 test.assertEqual(createdTemplates[0].settings.templateTags.queryType_email, "email", "chosen select value sets a lowercase section tag");
 test.assertEqual(createdTemplates[0].settings.templateTags.queryType_query_manager, undefined, "unchosen select value sets no section tag");
-test.assertDeepEqual(createdTemplates[0].settings.draftTags, ["authoring/wfid/query"], "draft tagged");
+test.assertDeepEqual(createdTemplates[0].settings.draftTags, ["authoring/wfid/query", "email"], "draft tagged with query type");
 test.assert(createdTemplates[0].archived, "new draft is archived");
 test.assert(createdTemplates[0].saved, "new draft is saved");
 test.assert(createdTemplates[0].activated, "new draft is loaded in editor");
@@ -164,6 +165,15 @@ test.assertDeepEqual(
   "completed agent excluded on next run",
 );
 test.assertEqual(createdTemplates[0].settings.templateTags.agentNote, "Bookish Lit", "agentNote tag carries parenthetical");
+test.assertDeepEqual(createdTemplates[0].settings.draftTags, ["authoring/wfid/query"], "no query type chosen adds no extra tag");
+
+// Multi-word query type becomes a hyphenated tag
+createdTemplates = [];
+source = makeSourceDraft([makeTask("Hal Hyphen", false)]);
+ui = makeUI(0, { queryType: ["Query Manager"] });
+new QueryLetter(settings, ui, source).create();
+test.assertDeepEqual(createdTemplates[0].settings.draftTags, ["authoring/wfid/query", "query-manager"], "multi-word choice tags with hyphens");
+test.assertDeepEqual(settings.draftTags, ["authoring/wfid/query"], "shared draftTags setting is not mutated");
 
 // Cancelled prompt
 createdTemplates = [];
