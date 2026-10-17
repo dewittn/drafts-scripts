@@ -29,16 +29,13 @@ Library/Tests/
 
 ## Quick Start
 
+### Running Tests Locally
+
+`bun run test` runs the unit tests under Bun with a Drafts-style `require()` shim (`scripts/test-runner.js`). `bun run test <filter>` runs only matching files, and `--all` adds the integration tests. Tests that touch Drafts objects (Draft, editor, app, Prompt, ...) are reported as "needs Drafts" rather than failing.
+
 ### Running Tests in Drafts
 
-All tests are designed to run as Drafts actions:
-
-1. Open Drafts app
-2. Navigate to the action you want to run (e.g., "Test: Statuses")
-3. Run the action
-4. View results in the Drafts log
-
-Test actions are located in the `Library/Scripts/cp/tests/` directory as wrapper files that require the actual test files.
+Run "needs Drafts" tests inside the app with the Eval Draft probe described in [Drafts Runtime Behavior](drafts-runtime.md#testing-inside-drafts-with-the-eval-draft-action). It works through the Drafts MCP server and reads the output back, one test file per run.
 
 ### Test Output
 
@@ -519,13 +516,7 @@ See [MIGRATION_PLAN.md](./MIGRATION_PLAN.md) for detailed migration status and p
 
 ## Running the Full Test Suite
 
-Currently, tests are run individually as Drafts actions. A future enhancement may add a test runner for batch execution.
-
-**Available Test Actions:**
-- Test: TextUtilities
-- Test: Statuses
-- Test: Destinations
-- Test: Convert Draft to Sheet
+`bun run test --all` runs every unit and integration test locally and prints a pass, fail, and "needs Drafts" summary. See [Running Tests Locally](#running-tests-locally).
 
 ## Contributing
 

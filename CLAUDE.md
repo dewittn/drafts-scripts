@@ -19,6 +19,7 @@ The build runs on Bun (`scripts/build.ts`). Gulp is still installed as a fallbac
 - `bun run data` - Copy JSON data files from iCloud to local Library
 - `bun run yaml2json` - Convert YAML config files to JSON (runs automatically during sync)
 - `bun run clean` - Delete the generated settings `.yaml` files
+- `bun run checkpoint [promote]` - Report which dev commits have settled enough to move to main; `promote` fast-forwards main and tags it (see the `drafts-change-workflow` skill)
 - `bun run gulp:sync`, `gulp:watch`, `gulp:debug` - The old Gulp pipeline, same behavior
 
 `DRAFTS_DEST=/some/scratch/dir bun run sync` sends the pipeline to a scratch folder instead of iCloud. Use it to try build changes without touching the live Drafts library.
@@ -72,7 +73,7 @@ require("shared/core/ServiceInitializer.js");           // ✅ Correct
 
 ### Key Components
 
-**Core Libraries (`Library/Scripts/libraries/`)**:
+**Core Libraries (`Library/Scripts/shared/libraries/`)**:
 - `nocodb.js` - NocoDB API wrapper (primary data source)
 - `airtable-v2.js` - Airtable API wrapper (legacy, no longer production)
 - `ulysses.js` - Ulysses app integration
@@ -84,9 +85,7 @@ require("shared/core/ServiceInitializer.js");           // ✅ Correct
 - `nr/` - Personal productivity and note-taking utilities
 
 **Framework Classes**:
-- `Airtable` - API wrapper with credential management
-- `ATBase` - Represents an Airtable base
-- `ATTable` - Table operations with query building
+- `Airtable`, `ATBase`, `ATTable` - Airtable wrapper, base, and table query classes (legacy)
 - `RecentRecords` - Caches frequently accessed records
 - `Sport` - Sports-specific configuration management
 

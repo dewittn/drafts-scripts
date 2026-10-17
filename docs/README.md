@@ -6,20 +6,15 @@ This directory contains comprehensive documentation for the Drafts Scripts proje
 
 The Diátaxis framework organizes documentation into four categories based on their purpose and the user's needs:
 
-### 📚 [Tutorials](tutorials/)
-**Learning-oriented** - Hands-on lessons that help you get started
-
-*Coming soon*
-
-### 📖 [How-to Guides](how-to-guides/)
-**Task-oriented** - Practical step-by-step instructions for specific tasks
-
-*Coming soon*
+There are no tutorials or how-to guides yet. The change workflow (sizing, testing in Drafts, commits, checkpoints) lives in the `drafts-change-workflow` skill under `.claude/skills/`.
 
 ### 📋 [Reference](reference/)
 **Information-oriented** - Technical descriptions and API documentation
 
+- [Drafts Runtime Behavior](reference/drafts-runtime.md) - Non-obvious runtime facts (fresh context per run, global draft write-back, Eval Draft testing, 1Password)
 - [Testing Guide](reference/testing.md) - Comprehensive test suite documentation, infrastructure, and best practices
+- [TypeScript Migration](reference/typescript-migration.md) - Migration plan, with a resume guide at the top
+- [Type Check Findings](reference/typecheck-findings.md) - Baseline type check errors ranked by production impact
 
 ### 💡 [Explanation](explanation/)
 **Understanding-oriented** - Clarification, discussion, and context
