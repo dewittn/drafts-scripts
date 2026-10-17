@@ -90,4 +90,32 @@ test.assertDeepEqual(
 );
 test.assertEqual(EmailDraft.parseAddress("not an address"), undefined, "rejects text without @");
 
+test.assertDeepEqual(
+  EmailDraft.parseAddress("[mail@dclagency.com](mailto:mail@dclagency.com)"),
+  { name: null, email: "mail@dclagency.com" },
+  "unwraps Markdown mailto links",
+);
+test.assertDeepEqual(
+  EmailDraft.parseAddress("mailto:jane@example.com"),
+  { name: null, email: "jane@example.com" },
+  "strips mailto: prefix",
+);
+test.assertEqual(EmailDraft.parseAddress("jane@writershouse."), undefined, "rejects address with no TLD");
+test.assertEqual(EmailDraft.parseAddress("jane@example"), undefined, "rejects address with no dot in domain");
+test.assertDeepEqual(
+  EmailDraft.findInvalidAddresses("Jane", "ok@example.com, jcastillosubmissions@writershouse."),
+  ["jcastillosubmissions@writershouse."],
+  "reports invalid addresses as written",
+);
+test.assertDeepEqual(
+  new EmailDraft("Email: [mail@dclagency.com](mailto:mail@dclagency.com)\n\nBody").invalidAddresses,
+  [],
+  "Markdown mailto link is valid",
+);
+test.assertDeepEqual(
+  new EmailDraft("Email: bad@host.\n\nBody").invalidAddresses,
+  ["bad@host."],
+  "draft exposes invalid addresses",
+);
+
 test.summary();

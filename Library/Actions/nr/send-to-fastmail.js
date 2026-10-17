@@ -8,6 +8,12 @@ require("modules/nr/EmailDraft.js");
 function sendToFastmail() {
   const settings = loadSettings("nr-settings.json");
   const email = new EmailDraft(draft.content);
+  if (email.invalidAddresses.length > 0) {
+    const message = `Invalid email address: ${email.invalidAddresses.join(", ")}`;
+    app.displayErrorMessage(message);
+    return context.fail(message);
+  }
+
   const signature = settings.fastmail?.signature;
   if (signature && askToAttachSignature()) email.addSignature(signature);
 

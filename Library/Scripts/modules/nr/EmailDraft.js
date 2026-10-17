@@ -14,11 +14,14 @@
 class EmailDraft {
   static fieldPattern = /^\s*(subject|email|to)\s*:\s*(.*?)\s*$/i;
   static addressPattern = /^\s*(?:"?([^"<]*?)"?\s*<\s*)?([^\s<>@,;]+@[^\s<>,;]+?)\s*>?\s*$/;
+  static validEmailPattern = /^[^\s@<>()\[\],;:"]+@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i;
+  static markdownLinkPattern = /\[[^\]]*\]\(\s*(?:mailto:)?([^)\s]*)\s*\)/gi;
 
   #subject;
   #to;
   #recipients;
   #body;
+  #invalidAddresses;
 
   constructor(content = "") {
     const lines = content.split("\n");
@@ -41,14 +44,27 @@ class EmailDraft {
     this.#subject = fields.subject ?? "";
     this.#to = fields.to ?? "";
     this.#recipients = this.constructor.parseRecipients(fields.to, fields.email);
+    this.#invalidAddresses = EmailDraft.findInvalidAddresses(fields.to, fields.email);
     this.#body = lines.slice(index).join("\n").trim();
   }
 
   // Turns "Jane Smith <jane@x.com>" or "jane@x.com" into { name, email }.
+  // Markdown links and mailto: prefixes are unwrapped first. Returns undefined
+  // when the text holds no valid address.
   static parseAddress(text = "") {
-    const match = this.addressPattern.exec(text);
-    if (match == null) return undefined;
+    const cleaned = text.replace(this.markdownLinkPattern, "$1").replace(/mailto:/gi, "");
+    const match = this.addressPattern.exec(cleaned);
+    if (match == null || !this.validEmailPattern.test(match[2])) return undefined;
     return { name: match[1]?.trim() || null, email: match[2] };
+  }
+
+  // Parts of the To and Email lines that look like addresses (contain "@")
+  // but fail validation, such as "jane@example." Returned as written.
+  static findInvalidAddresses(to = "", email = "") {
+    return [to, email]
+      .flatMap((text) => text.split(/[,;]/))
+      .map((part) => part.trim())
+      .filter((part) => part.includes("@") && this.parseAddress(part) == undefined);
   }
 
   // "Email:" holds the address(es) and "To:" the name. A lone address takes the
@@ -80,6 +96,10 @@ class EmailDraft {
   // Raw "To:" line, kept so a prompt can offer the name when no address parsed.
   get to() {
     return this.#to;
+  }
+
+  get invalidAddresses() {
+    return this.#invalidAddresses;
   }
 
   get recipients() {
