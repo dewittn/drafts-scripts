@@ -7,6 +7,8 @@ if (typeof GoogleForm == "undefined") require("modules/bvr/services/GoogleForm.j
 if (typeof Attendance == "undefined") require("modules/bvr/core/Attendance.js");
 if (typeof PracticePlan == "undefined") require("modules/bvr/core/PracticePlan.js");
 if (typeof TmplSettings == "undefined") require("modules/bvr/utils/TmplSettings.js");
+if (typeof Staff == "undefined") require("modules/bvr/utils/Staff.js");
+if (typeof TeamConfig == "undefined") require("modules/bvr/utils/TeamConfig.js");
 if (typeof Bear == "undefined") require("shared/libraries/bear.js");
 if (typeof DraftsUI == "undefined") require("shared/libraries/DraftsUI.js");
 if (typeof CloudFS == "undefined") require("modules/cp/filesystems/CloudFS.js");
@@ -19,6 +21,9 @@ class BVR {
   #settings;
   #ui;
   #services;
+  #staff;
+  #forms;
+  #globalTags;
 
   constructor() {
     this.#services = ServiceContainer.getInstance();
@@ -133,8 +138,43 @@ class BVR {
     return `${this.teamFilesDir}${teamID}.json`;
   }
 
+  // The staff directory (bvr/staff.json), loaded once per run.
+  get staff() {
+    if (!this.#staff) this.#staff = Staff.load(`${this.dirPrefix}${this.settings.staffFile}`);
+    return this.#staff;
+  }
+
+  // School-wide score forms by name (bvr/forms.json).
+  get forms() {
+    if (!this.#forms) this.#forms = DataFile.load(`${this.dirPrefix}${this.settings.formsFile}`);
+    return this.#forms;
+  }
+
+  get attendanceOffice() {
+    return this.settings.attendanceOffice;
+  }
+
+  // A level's defaults (bvr/levels/<level>.json). Throws for an unknown
+  // level so a typo in teams.yaml names itself.
+  levelSettings(level) {
+    const data = DataFile.load(`${this.dirPrefix}${this.settings.levelsDir}${level}.json`);
+    if (data == undefined) throw new Error(`No settings for level "${level}" (levels/${level}.yaml)`);
+    return data;
+  }
+
+  // Template tags every BVR template gets. hc_name and hc_email come from
+  // the head coach's staff entry, so the staff file is the only one with
+  // contact details.
   get globalTags() {
-    return this.settings.globalTemplateTags;
+    if (!this.#globalTags) {
+      const headCoach = this.settings.headCoach;
+      this.#globalTags = { ...this.settings.globalTemplateTags };
+      if (headCoach != undefined) {
+        this.#globalTags.hc_name = this.staff.contact(headCoach, "name");
+        this.#globalTags.hc_email = this.staff.contact(headCoach, "email");
+      }
+    }
+    return this.#globalTags;
   }
 
   createDraftFromTemplate(settings) {

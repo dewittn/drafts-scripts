@@ -10,6 +10,7 @@ class Team {
   #services;
   #attendance;
   #season;
+  #config;
 
   constructor(teamID = "") {
     this.#services = ServiceContainer.getInstance();
@@ -43,9 +44,28 @@ class Team {
 
   get tmplSettings() {
     if (!this.#tmplSettings) {
-      this.#tmplSettings = this.#loadTemplateSettings();
+      this.#tmplSettings = this.config.templateSettings;
     }
     return this.#tmplSettings;
+  }
+
+  // This team's settings, merged from its level, its teams.yaml entry, the
+  // school-wide forms, and the staff directory.
+  get config() {
+    if (!this.#config) {
+      if (this.#teamData.level == undefined) {
+        throw new Error(`teams.yaml: ${this.id} has no level (ms or us)`);
+      }
+      this.#config = new TeamConfig({
+        team: this.#teamData,
+        level: this.bvr.levelSettings(this.#teamData.level),
+        forms: this.bvr.forms,
+        staff: this.bvr.staff,
+        attendanceOffice: this.bvr.attendanceOffice,
+        templateExists: (file) => new CloudFS(Template.basePath).exists(file),
+      });
+    }
+    return this.#config;
   }
 
   get attendace() {
@@ -110,9 +130,7 @@ class Team {
   }
 
   get attendanceDraftID() {
-    return this.#teamData.attendanceDraftID != undefined
-      ? this.#teamData.attendanceDraftID
-      : this.attendanceSettings.attendanceDraftID;
+    return this.#teamData.attendanceDraftID;
   }
 
   get tags() {
@@ -142,27 +160,21 @@ class Team {
   }
 
   get gameReportSettings() {
-    if (this.#teamData.gameReportSettings != undefined) {
-      return this.#teamData.gameReportSettings;
-    }
-
-    const settingsFile = this.#teamData.gameReportSettingsFile == undefined
-      ? `${this.id}/gameReportSettings.json`
-      : this.#teamData.gameReportSettingsFile;
-    if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
-    return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
+    return this.config.gameReportSettings;
   }
 
   get attendanceSettings() {
-    if (this.#teamData.attendanceSettings != undefined) {
-      return this.#teamData.attendanceSettings;
-    }
+    return this.config.attendanceSettings;
+  }
 
-    const settingsFile = this.#teamData.attendanceSettingsFile == undefined
-      ? `${this.id}/attendanceSettings.json`
-      : this.#teamData.attendanceSettingsFile;
-    if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
-    return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
+  // The score forms this team submits, by name (see forms.yaml).
+  get formNames() {
+    return this.config.formNames;
+  }
+
+  // A form's title and fields, for prompts.
+  form(name) {
+    return this.config.form(name);
   }
 
   get defaultTag() {
@@ -421,18 +433,6 @@ class Team {
 
     selectMenu.show();
     return selectMenu.buttonPressed;
-  }
-
-  #loadTemplateSettings() {
-    if (this.#teamData.templateSettings != undefined) {
-      return this.#teamData.templateSettings;
-    }
-
-    const settingsFile = this.#teamData.templateSettingsFile == undefined
-      ? `${this.id}/templateSettings.json`
-      : this.#teamData.templateSettingsFile;
-    if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
-    return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 
   #insertTextPosAtEnd(text) {

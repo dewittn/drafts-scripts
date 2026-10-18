@@ -139,6 +139,17 @@ class Season {
     return false;
   }
 
+  // The current season's link for a form, asking for it (and saving it)
+  // when the season has none yet. Returns undefined if none is given.
+  ensureFormURL(formName) {
+    const saved = this.store.formURLs[formName];
+    if (saved) return saved;
+
+    const url = this.#promptForFormURL(formName);
+    if (url != undefined) this.store.saveFormURL(formName, url);
+    return url;
+  }
+
   updateWith(game) {
     if (game == undefined) {
       return this.ui.displayAppMessage("error", "Game data missing!");
@@ -265,6 +276,29 @@ class Season {
       ? `${this.teamName} already has a ${seasonID} season.`
       : `${seasonID} is now the current season. It already had a season record draft.`;
     return this.ui.displayAppMessage("info", message);
+  }
+
+  // Ask for the link to one score form, for this season. Blank skips it;
+  // something that is not a link is reported and skipped.
+  #promptForFormURL(formName) {
+    if (typeof GoogleForm == "undefined") require("modules/bvr/services/GoogleForm.js");
+    const section = JSON.parse(JSON.stringify(this.ui.settings("formURLPrompt")));
+    const { menuSettings, urlField } = section;
+    const title = this.team.form(formName).title || formName;
+    menuSettings.menuMessage = `${menuSettings.menuMessage}\n\n${title}, ${this.currentSeasonLabel}`;
+    menuSettings.menuItems.push(urlField);
+
+    const urlPrompt = this.ui.buildMenu(menuSettings);
+    if (urlPrompt.show() == false) return undefined;
+
+    const pasted = `${urlPrompt.fieldValues[urlField.data.name] || ""}`.trim();
+    if (pasted == "") return undefined;
+
+    const url = GoogleForm.baseURL(pasted);
+    if (url == undefined) {
+      this.ui.displayAppMessage("info", `That is not a link, so the ${title} link was not saved.`);
+    }
+    return url;
   }
 
   // Ask for the new season's ID and start date, asking again (up to three

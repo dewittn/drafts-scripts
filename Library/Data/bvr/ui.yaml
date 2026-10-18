@@ -85,6 +85,25 @@ startNewSeason:
         data:
           name: Start Season
           value: start
+formURLPrompt:
+  urlField:
+    type: textField
+    data:
+      name: url
+      label: Form link
+      options:
+        placeholder: https://docs.google.com/forms/...
+        keyboard: url
+        autocorrect: false
+        autocapitalization: none
+  menuSettings:
+    menuTitle: Score Report Form
+    menuMessage: "Paste this season's link to the form, from the athletic department's email. Leave it blank to skip."
+    menuItems:
+      - type: button
+        data:
+          name: Save
+          value: save
 recordOpponent:
   textField:
     type: textField

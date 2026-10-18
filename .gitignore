@@ -4,6 +4,7 @@ gameReportSettings.yaml
 settings.yaml
 attendanceSettings.yaml
 templateSettings.yaml
+staff.yaml
 *.lockb
 **/Data/**/*.json
 /Library/Data/bvr/records.json

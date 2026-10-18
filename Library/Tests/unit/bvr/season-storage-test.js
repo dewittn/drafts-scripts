@@ -17,6 +17,7 @@ require("modules/bvr/core/Season.js");
 require("modules/bvr/core/PracticePlan.js");
 require("modules/bvr/core/Game.js");
 require("modules/bvr/utils/TmplSettings.js");
+require("modules/bvr/services/GoogleForm.js");
 require("modules/bvr/storage/TeamFileStore.js");
 require("modules/bvr/storage/LegacySeasonStore.js");
 
@@ -64,8 +65,16 @@ function teamFixture() {
   return savable(DataFile.load(teamFixturePath));
 }
 
-// The startNewSeason entry from Library/Data/bvr/ui.yaml.
+// The startNewSeason and formURLPrompt entries from Library/Data/bvr/ui.yaml.
 const uiSettings = {
+  formURLPrompt: {
+    urlField: { type: "textField", data: { name: "url", label: "Form link" } },
+    menuSettings: {
+      menuTitle: "Score Report Form",
+      menuMessage: "Paste this season's link to the form.",
+      menuItems: [{ type: "button", data: { name: "Save", value: "save" } }],
+    },
+  },
   startNewSeason: {
     seasonIDField: { type: "textField", data: { name: "seasonID", label: "Season" } },
     startDateField: { type: "datePicker", data: { name: "startDate", label: "First Day", options: { mode: "date" } } },
@@ -110,6 +119,14 @@ function mockTeam(bvr, overrides = {}) {
     startDate: "2026-08-31",
     seasonName: "fall",
     defaultTag: "bvr/test",
+    formNames: ["varsity-score-report"],
+    form: (name) => ({ name, title: name == "varsity-score-report" ? "Varsity score report" : "MS score report" }),
+    gameReportSettings: {
+      googleFormSettings: [
+        { name: "ms-score-report", title: "MS score report", postData: true, fields: [] },
+        { name: "varsity-score-report", title: "Varsity score report", postData: false, fields: [] },
+      ],
+    },
     dependencies: null,
     season: null,
     ...overrides,
@@ -510,6 +527,77 @@ test.assertDeepEqual(bareRecords["test-team"][2024], { seasonRecordDraftID: "", 
 test.assertEqual(bareRecords.saves, 1, "and saves records.json");
 test.assertEqual(legacy(2026, bareRecords).migrateBareSeason(), "already", "leaves an object season alone");
 test.assertEqual(legacy(2025, bareRecords).migrateBareSeason(), "wrong-type", "reports a missing season");
+
+// --- form links ---
+test.section("form links");
+
+test.assertEqual(
+  GoogleForm.baseURL("https://docs.google.com/forms/d/e/ABC/viewform?usp=sf_link"),
+  "https://docs.google.com/forms/d/e/ABC",
+  "a pasted viewform link is cut to the base link",
+);
+test.assertEqual(GoogleForm.baseURL(" https://docs.google.com/forms/d/e/ABC/ "), "https://docs.google.com/forms/d/e/ABC", "spaces and a trailing slash go");
+test.assertEqual(GoogleForm.baseURL("https://docs.google.com/forms/d/ABC/edit#responses"), "https://docs.google.com/forms/d/ABC", "an edit link is cut too");
+test.assertEqual(GoogleForm.baseURL("not a link"), undefined, "text that is not a link gives nothing");
+
+const urlResponse = (url) => ({ "Score Report Form": { button: "save", fieldValues: { url } } });
+
+bvr = mockBVR(teamFixturePath, mockUI(urlResponse("https://docs.google.com/forms/d/e/NEW/viewform?usp=sf_link")));
+team = mockTeam(bvr);
+file = teamFixture();
+team.season.store = new TeamFileStore(file);
+test.assertEqual(team.season.ensureFormURL("varsity-score-report"), "https://docs.google.com/forms/d/e/NEW", "a missing link is asked for and cleaned");
+test.assertDeepEqual(file.seasons["2026-fall"].formURLs, { "varsity-score-report": "https://docs.google.com/forms/d/e/NEW" }, "and saved to the season");
+test.assertEqual(file.saves, 1, "with one save");
+const urlPrompt = bvr.ui.getInteractionsByType("buildMenu")[0]?.menuSettings;
+test.assert(urlPrompt?.menuMessage.endsWith("Varsity score report, 2026 Fall"), "the prompt names the form and season");
+test.assertDeepEqual(urlPrompt?.menuItems.map((item) => item.type), ["button", "textField"], "with one text field");
+test.assertEqual(team.season.ensureFormURL("varsity-score-report"), "https://docs.google.com/forms/d/e/NEW", "a saved link is used without asking");
+test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 1, "so the prompt appears once");
+
+bvr = mockBVR(teamFixturePath, mockUI(urlResponse("  ")));
+team = mockTeam(bvr);
+file = teamFixture();
+team.season.store = new TeamFileStore(file);
+test.assertEqual(team.season.ensureFormURL("varsity-score-report"), undefined, "a blank answer gives no link");
+test.assertEqual(file.saves, 0, "and saves nothing");
+
+bvr = mockBVR(teamFixturePath, mockUI(urlResponse("docs dot google")));
+team = mockTeam(bvr);
+file = teamFixture();
+team.season.store = new TeamFileStore(file);
+test.assertEqual(team.season.ensureFormURL("varsity-score-report"), undefined, "a non-link answer gives no link");
+test.assertEqual(file.saves, 0, "and saves nothing");
+test.assert(infoMessages(bvr.ui).some((m) => m.includes("not a link")), "and says so");
+
+// Submit Game Report: one form has a link, the other is asked for.
+bvr = mockBVR(teamFixturePath, mockUI(urlResponse("https://docs.google.com/forms/d/e/MS")));
+team = mockTeam(bvr);
+file = teamFixture();
+file.seasons["2026-fall"].formURLs = { "varsity-score-report": "https://docs.google.com/forms/d/e/VARSITY" };
+team.season.store = new TeamFileStore(file);
+let submitted = new Game(team.dependencies, "ANY-DRAFT").resolveGoogleForms();
+test.assertDeepEqual(
+  submitted.map((form) => [form.name, form.url, form.postData]),
+  [
+    ["ms-score-report", "https://docs.google.com/forms/d/e/MS", true],
+    ["varsity-score-report", "https://docs.google.com/forms/d/e/VARSITY", false],
+  ],
+  "Submit Game Report gets every form with this season's link",
+);
+test.assertEqual(file.seasons["2026-fall"].formURLs["ms-score-report"], "https://docs.google.com/forms/d/e/MS", "the asked-for link is saved");
+
+bvr = mockBVR(teamFixturePath, mockUI());
+team = mockTeam(bvr);
+file = teamFixture();
+team.season.store = new TeamFileStore(file);
+submitted = new Game(team.dependencies, "ANY-DRAFT").resolveGoogleForms();
+test.assertDeepEqual(submitted, [], "cancelled prompts skip the forms");
+test.assertEqual(
+  infoMessages(bvr.ui).filter((m) => m.includes("link for this season, so it was not submitted")).length,
+  2,
+  "each skipped form is reported",
+);
 
 // --- shared schema fixture ---
 test.section("shared schema fixture");

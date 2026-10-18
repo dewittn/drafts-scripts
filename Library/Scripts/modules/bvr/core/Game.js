@@ -534,10 +534,9 @@ class Game {
     this.comments = comments;
     this.highlights = highlights;
 
+    const googleForms = this.resolveGoogleForms();
     if (this.msgSettings != undefined) this.#sendMessages();
-    if (this.googleFormSettings != undefined) {
-      this.googleFormSettings.forEach((gform) => this.#submitGoogleForm(gform));
-    }
+    googleForms.forEach((gform) => this.#submitGoogleForm(gform));
     // Run Shortcut to mark tasks as complete in things.
     if (!this.submitted) {
       const shortcut = Shortcut.create("Complete Game Day Tasks");
@@ -546,6 +545,24 @@ class Game {
 
     this.submitted = true;
     this.#updateSeasonRecord();
+  }
+
+  // The team's score forms with this season's links, asking for any link the
+  // season does not have yet. A form left without one is skipped, with a
+  // message, so the rest of the report still goes out.
+  resolveGoogleForms() {
+    const forms = this.googleFormSettings == undefined ? [] : this.googleFormSettings;
+    return forms.flatMap((gform) => {
+      const url = this.team.season.ensureFormURL(gform.name);
+      if (url == undefined) {
+        this.ui.displayAppMessage(
+          "info",
+          `No ${gform.title || gform.name} link for this season, so it was not submitted.`,
+        );
+        return [];
+      }
+      return [{ ...gform, url }];
+    });
   }
 
   generateTmplSettings(key) {
