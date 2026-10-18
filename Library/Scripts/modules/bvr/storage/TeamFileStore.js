@@ -140,6 +140,11 @@ class TeamFileStore {
     return this.#file.seasons?.[seasonID] != undefined;
   }
 
+  // Any season's entry, not just the current one.
+  seasonFor(seasonID) {
+    return this.#file.seasons?.[seasonID];
+  }
+
   // Add a season entry. details holds whatever the caller collected
   // (startDate today; formURL, recipients and more in later phases).
   addSeason(seasonID, details = {}) {

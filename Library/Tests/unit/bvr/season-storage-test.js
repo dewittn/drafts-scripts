@@ -346,6 +346,64 @@ team.season.store = legacy(2026);
 team.season.startNewSeason();
 test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 0, "an unmigrated team with history keeps the old flow");
 
+// A season bvr:migrate created from teams.yaml: no record draft yet.
+function teamFixtureWithWinter(startDate = null) {
+  const winterFile = teamFixture();
+  winterFile.seasons["2026-winter"] = TeamFileStore.emptySeason("2026-winter");
+  winterFile.seasons["2026-winter"].startDate = startDate;
+  return winterFile;
+}
+
+bvr = mockBVR(teamFixturePath, mockUI(startResponse("2026-winter")));
+team = mockTeam(bvr);
+file = teamFixtureWithWinter();
+team.season.store = new TeamFileStore(file);
+StubTemplate.rendered = [];
+team.season.startNewSeason();
+test.assertEqual(file.currentSeason, "2026-winter", "an existing season without a draft becomes current");
+test.assertEqual(file.seasons["2026-winter"].seasonRecordDraftID, "NEW-RECORD-DRAFT", "and gets its record draft");
+test.assertEqual(file.seasons["2026-winter"].startDate, "2026-11-16", "and takes the prompted start date when it has none");
+test.assert(file.saves >= 1, "and is saved");
+test.assertEqual(StubTemplate.rendered[0]?.templateTags?.current_season, "2026-winter", "the draft is for that season");
+test.assert(!infoMessages(bvr.ui).some((m) => m.includes("already has")), "is not reported as already existing");
+
+bvr = mockBVR(teamFixturePath, mockUI(startResponse("2026-winter")));
+team = mockTeam(bvr);
+file = teamFixtureWithWinter("2026-11-23");
+team.season.store = new TeamFileStore(file);
+team.season.startNewSeason();
+test.assertEqual(file.seasons["2026-winter"].startDate, "2026-11-23", "an existing start date is kept");
+
+bvr = mockBVR(teamFixturePath, mockUI(startResponse("2025-fall")));
+team = mockTeam(bvr);
+file = teamFixture();
+file.seasons["2025-fall"].seasonRecordDraftID = "REC-2025-FALL";
+file.seasons["2025-fall"].startDate = "2025-09-01";
+team.season.store = new TeamFileStore(file);
+StubTemplate.rendered = [];
+team.season.startNewSeason();
+test.assertEqual(file.currentSeason, "2025-fall", "an existing season with a draft is made current");
+test.assertEqual(StubTemplate.rendered.length, 0, "without a second record draft");
+test.assertEqual(file.saves, 1, "and the switch is saved");
+test.assert(infoMessages(bvr.ui).some((m) => m.includes("now the current season")), "says it is now current");
+
+// --- season without a start date ---
+test.section("season without a start date");
+
+bvr = mockBVR(teamFixturePath);
+team = mockTeam(bvr, { startDate: undefined });
+file = teamFixture();
+file.seasons["2026-fall"].startDate = null;
+team.season.store = new TeamFileStore(file);
+test.assertDoesNotThrow(() => new PracticePlan(team.dependencies).create(), "Create Practice Plan does not throw");
+test.assertDoesNotThrow(() => new PracticePlan(team.dependencies).load(), "Load Practice Plan does not throw");
+test.assertEqual(bvr.draftsCreated, 0, "no plan draft is created");
+test.assertEqual(
+  infoMessages(bvr.ui).filter((m) => m.includes("has no start date")).length,
+  2,
+  "each says the season has no start date",
+);
+
 // --- unusable team file ---
 test.section("unusable team file");
 

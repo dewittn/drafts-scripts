@@ -102,6 +102,14 @@ A team file with no current season (`currentSeason: null`) stops Record Game
 Score, Submit Game Report, and both practice plan actions before any prompt,
 with a message to run Start New Season. The season template tags render empty.
 
+Start New Season with the name of a season that already exists completes it
+instead of refusing: it becomes current, keeps its own start date (or takes
+the prompted one), and gets a season record draft if it has none. This covers
+a season `bvr:migrate` created from `teams.yaml` before its first game. Only a
+season that is current and already has a draft is reported as existing.
+Practice plan actions on a season with no start date, on a team with none in
+`teams.yaml` either, stop with a message instead of counting weeks.
+
 Start New Season on a team with no team file and no data in the old files
 creates the team file. A team that has old data but no team file keeps the old
 behavior until `bvr:migrate` runs, so its history is not hidden.
@@ -151,7 +159,8 @@ team file already has (marking it submitted, say) is not carried forward.
 
 Rebuilds the old files from the team files alone and compares them with the
 real ones, per team and year, pairing games key by key so a duplicate that
-went missing is caught. It lists draft IDs missing from or different in
+went missing is caught. A game counts as different only if its content
+differs; key order is ignored. It lists draft IDs missing from or different in
 the team files, practice-plan keys likewise, and counts games that exist only
 in the team file. Exits 1 when anything differs.
 

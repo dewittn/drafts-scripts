@@ -226,17 +226,14 @@ class Season {
   }
 
   // Team file: prompt for the season, add it, make it current, and give it a
-  // season record draft.
+  // season record draft. A season that already exists is completed instead.
   #startTeamFileSeason() {
     if (typeof TeamFileStore == "undefined") require("modules/bvr/storage/TeamFileStore.js");
     const details = this.#promptForNewSeason();
     if (details == undefined) return;
 
     if (this.usesTeamFile && this.store.hasSeason(details.seasonID)) {
-      return this.ui.displayAppMessage(
-        "info",
-        `${this.teamName} already has a ${details.seasonID} season.`,
-      );
+      return this.#completeExistingSeason(details);
     }
     if (!this.usesTeamFile) {
       this.store = TeamFileStore.create(this.teamFilePath, this.teamID);
@@ -247,6 +244,27 @@ class Season {
     this.store.addSeason(details.seasonID, { startDate: details.startDate });
     this.store.setCurrentSeason(details.seasonID);
     this.#createSeasonRecordDraft();
+  }
+
+  // A season can exist without a record draft: bvr:migrate creates the
+  // teams.yaml season before its first game. Make it current, keep its own
+  // start date (or take the prompted one), and create the draft it lacks.
+  // Only a season that already has a draft is reported as existing.
+  #completeExistingSeason({ seasonID, startDate }) {
+    const entry = this.store.seasonFor(seasonID);
+    const wasCurrent = this.currentSeasonID == seasonID;
+    const hadDraft = Boolean(entry.seasonRecordDraftID);
+    const filledStartDate = !entry.startDate;
+
+    if (filledStartDate) entry.startDate = startDate;
+    this.store.setCurrentSeason(seasonID);
+    if (!hadDraft) return this.#createSeasonRecordDraft();
+
+    if (!wasCurrent || filledStartDate) this.store.saveGames();
+    const message = wasCurrent
+      ? `${this.teamName} already has a ${seasonID} season.`
+      : `${seasonID} is now the current season. It already had a season record draft.`;
+    return this.ui.displayAppMessage("info", message);
   }
 
   // Ask for the new season's ID and start date, asking again (up to three

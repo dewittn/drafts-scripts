@@ -113,7 +113,7 @@ class PracticePlan {
   }
 
   create() {
-    if (!this.team.season.ensureCurrentSeason()) return;
+    if (!this.team.season.ensureCurrentSeason() || !this.#hasStartDate()) return;
     if (this.ppTmplSettings == undefined) {
       return alert("ppTmplSettings is undefined!");
     }
@@ -141,7 +141,7 @@ class PracticePlan {
   }
 
   load() {
-    if (!this.team.season.ensureCurrentSeason()) return;
+    if (!this.team.season.ensureCurrentSeason() || !this.#hasStartDate()) return;
     const draftID = this.practicePlans?.[this.planID];
     if (draftID == undefined) {
       return this.bvr.ui.displayAppMessage("info", "No practice plan found.");
@@ -167,6 +167,17 @@ class PracticePlan {
 
     coachingDraft.insert(`[[${linkTxt}]]`, insertPosision);
     coachingDraft.update();
+  }
+
+  // The week number needs a start date, from the season or teams.yaml.
+  #hasStartDate() {
+    if (this.teamStartDate != undefined) return true;
+
+    this.bvr.ui.displayAppMessage(
+      "info",
+      `${this.teamName}'s current season has no start date. Run Start New Season, or set startDate in its team file.`,
+    );
+    return false;
   }
 
   #getCurrentWeek() {
