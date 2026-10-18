@@ -20,15 +20,17 @@
  * points every direction at a scratch Drafts folder instead of iCloud.
  */
 import yaml from "js-yaml";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { backupBvrData } from "./lib/bvr-backup";
-import { bvrDataDir, repoRoot, repoTeamsYaml } from "./lib/drafts-paths";
+import { bvrDataDir, defaultDraftsDest, repoRoot, repoTeamsYaml } from "./lib/drafts-paths";
 import {
   forwardMigrate,
   isClean,
+  isSafeTeamID,
   reverseMigrate,
+  teamFileProblem,
   verifyMigration,
   type LegacyPracticePlans,
   type LegacyRecords,
@@ -40,9 +42,14 @@ import {
 
 const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(name);
+// The value after an option. A missing value, or another option in its
+// place (`--out --dry-run`), is an error rather than a folder name.
 const option = (name: string) => {
   const at = args.indexOf(name);
-  return at == -1 ? undefined : args[at + 1];
+  if (at == -1) return undefined;
+  const value = args[at + 1];
+  if (value == undefined || value.startsWith("--")) throw new Error(`${name} needs a value`);
+  return value;
 };
 
 const dryRun = flag("--dry-run");
@@ -70,6 +77,8 @@ async function teamsDir(): Promise<string> {
 
 async function readTeams(): Promise<TeamConfig[]> {
   const { teamsData } = await readYaml<{ teamsData: TeamConfig[] }>(repoTeamsYaml);
+  const unsafe = teamsData.filter((team) => !isSafeTeamID(`${team.id}`));
+  if (unsafe.length > 0) throw new Error(`teams.yaml has team IDs that are not safe file names: ${unsafe.map((t) => t.id).join(", ")}`);
   return teamsData;
 }
 
@@ -81,12 +90,25 @@ async function readLegacy(): Promise<{ records: LegacyRecords; practicePlans: Le
   };
 }
 
+// Every team file in dir. Any file that is not a usable team file (half
+// synced, hand edited, unknown schema) stops the run, so it is never merged
+// into or overwritten.
 async function readTeamFiles(dir: string): Promise<TeamFiles> {
   const teamFiles: TeamFiles = {};
   if (!existsSync(dir)) return teamFiles;
   for (const file of new Bun.Glob("*.json").scanSync({ cwd: dir })) {
-    const teamFile = await readJSON<TeamFile | undefined>(join(dir, file), undefined);
-    if (teamFile?.teamID) teamFiles[teamFile.teamID] = teamFile;
+    const path = join(dir, file);
+    let data: unknown;
+    try {
+      data = await Bun.file(path).json();
+    } catch {
+      data = undefined;
+    }
+    const problem = teamFileProblem(data);
+    if (problem) throw new Error(`${path} cannot be used: ${problem}. Wait for iCloud or restore it from a backup.`);
+    const teamFile = data as TeamFile;
+    if (!isSafeTeamID(teamFile.teamID)) throw new Error(`${path} has an unsafe teamID`);
+    teamFiles[teamFile.teamID] = teamFile;
   }
   return teamFiles;
 }
@@ -124,6 +146,8 @@ function printSummary(summary: SeasonSummary[]) {
 }
 
 function printWarnings(warnings: string[]) {
+  if (warnings.length == 0) return;
+  console.warn(`WARNINGS (${warnings.length}):`);
   warnings.forEach((warning) => console.warn(`  ! ${warning}`));
 }
 
@@ -156,8 +180,24 @@ function reverseTarget(): string | undefined {
   const out = option("--out");
   if (out == undefined) return undefined;
   const target = resolve(out);
-  if (target == resolve(dataDir)) throw new Error("--out is the live data folder; write elsewhere and copy the files over");
+  const liveFolders = [dataDir, bvrDataDir(defaultDraftsDest)].map(comparablePath);
+  if (liveFolders.includes(comparablePath(target))) {
+    throw new Error("--out is a live data folder; write elsewhere and copy the files over");
+  }
   return target;
+}
+
+// A path with symlinks resolved and case folded, for comparing folders on a
+// case-insensitive disk. The folder need not exist: the deepest existing
+// parent is resolved and the rest appended.
+function comparablePath(path: string): string {
+  let existing = resolve(path);
+  const rest: string[] = [];
+  while (!existsSync(existing) && dirname(existing) != existing) {
+    rest.unshift(basename(existing));
+    existing = dirname(existing);
+  }
+  return join(realpathSync(existing), ...rest).toLowerCase();
 }
 
 async function reverse() {
