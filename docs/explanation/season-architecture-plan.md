@@ -121,6 +121,13 @@ basketball team starts on 2026-10-30):
   each link (blank skips); Submit Game Report asks for any still missing,
   saves it, and skips a form left blank with a message. A pasted
   `.../viewform?usp=...` link is cut back to the base link.
+- Form links turned out to be per term, not per team: the athletic
+  department issues one link per form for fall, winter, and spring each
+  year, shared by every team in that term. They live in a runtime
+  `bvr/formLinks.json` keyed by `<year>-<term>`; a season's own `formURLs`
+  stays as an override and as the home for seasons with no term (`2026-27`).
+  Links already saved on a season move up to the term the first time they
+  are used in Drafts.
 - `levels/ms.yaml` and `levels/us.yaml` take today's MS Girls Soccer and
   Varsity Ultimate values. In teams.yaml a team overrides any part: objects
   merge, lists replace. MS Ultimate overrides attendance recipients, its

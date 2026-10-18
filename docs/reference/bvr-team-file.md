@@ -27,7 +27,7 @@ reads the same key from the template.
       "label": "2026 Fall",
       "startDate": "2026-08-31",
       "endDate": null,
-      "formURLs": { "varsity-score-report": "https://docs.google.com/forms/d/e/..." },
+      "formURLs": {},
       "recipients": null,
       "attendanceDraftID": null,
       "seasonRecordDraftID": "0A1B2C3D-...",
@@ -52,7 +52,7 @@ Each season entry:
 | `label` | string | Display name, used by the `current_season_label` template tag |
 | `startDate` | `YYYY-MM-DD` or null | Week 1 of the practice-plan counter. Null falls back to `startDate` in `teams.yaml` |
 | `endDate` | `YYYY-MM-DD` or null | Not read yet. Reserved for the guided Start New Season flow |
-| `formURLs` | object | Form name (from `forms.yaml`) to this season's form URL. Submit Game Report asks for a missing one and saves it. Files written before this key carry `formURL: null`, which reads as `{}` and is dropped on the first save |
+| `formURLs` | object | Form name (from `forms.yaml`) to a link for this team's season only, overriding the term's shared link (see "Form links"). Usually empty. Files written before this key carry `formURL: null`, which reads as `{}` and is dropped on the first save |
 | `recipients` | string[] or null | Not read yet. Initials of who gets notified, a later phase |
 | `attendanceDraftID` | string or null | Not read yet. `teams.yaml` still supplies it |
 | `seasonRecordDraftID` | string or null | The season record draft. Copied verbatim from `records.json`, so an old `""` stays `""` |
@@ -110,10 +110,51 @@ season that is current and already has a draft is reported as existing.
 Practice plan actions on a season with no start date, on a team with none in
 `teams.yaml` either, stop with a message instead of counting weeks.
 
-Start New Season also asks for this season's link to each score form the
-team submits (from its level or `forms` in `teams.yaml`) and stores the ones
-given in `formURLs`. Completing an existing season asks only for missing
-links. A link still missing at Submit Game Report is asked for there.
+Start New Season also asks for each score-form link the team submits (from
+its level or `forms` in `teams.yaml`) that the season's term does not share
+yet, and saves the ones given for the term. Completing an existing season
+works the same way. A link still missing at Submit Game Report is asked for
+there.
+
+## Form links
+
+The athletic department issues one link per score form per term each year,
+and every team playing that term uses it. So links are shared per term, in
+one runtime file beside the team files:
+
+```
+<Drafts>/Library/Data/bvr/formLinks.json     (name from formLinksFile in settings.yaml.tpl)
+
+{
+  "schemaVersion": 1,
+  "terms": {
+    "2026-fall":   { "varsity-score-report": "https://docs.google.com/forms/d/e/..." },
+    "2026-winter": { "varsity-score-report": "https://docs.google.com/forms/d/e/..." }
+  }
+}
+```
+
+- **Term.** A season's term is its ID when the ID is `<year>-fall`,
+  `<year>-winter`, or `<year>-spring` (any case, stored lowercase). Any other
+  ID (`2026-27`) has no term, and its links live on the season, in
+  `formURLs`. Teams on the old files also keep links on their
+  `records.json` season.
+- **Lookup order** when a form is submitted: the season's own `formURLs`
+  entry (an override), then the term's shared link, then a prompt. A link
+  given at the prompt is saved for the term when the season has one, else on
+  the season.
+- **Overrides** exist only if one is already in a team file; nothing in
+  Drafts creates one. Edit Season changes an override in place.
+- **Moving older links up.** A link saved on a season before sharing existed
+  moves to the term the first time the season's links are used (Submit Game
+  Report, Start New Season, Edit Season) if the term has none for that form.
+  It is then removed from the season, with one save of each file. A season
+  link that differs from the term's stays, as an override. The migrate
+  scripts never read or write `formLinks.json`; this happens only in Drafts.
+- **Validity and the build.** The same rules as team files: a missing file
+  starts empty and is written on first save, an unusable one stops the
+  action, and `bun run sync` pulls it but never pushes it.
+  `bun run bvr:backup` copies it with the other JSON.
 
 Start New Season on a team with no team file and no data in the old files
 creates the team file. A team that has old data but no team file keeps the old
@@ -202,10 +243,13 @@ current season of a team-file team in one prompt, prefilled from the file:
 - **Last Day** (`endDate`). A Drafts date picker cannot be left empty, so a
   "Has a last day" switch decides: off saves `null`, on saves the picked
   date.
-- **One link per form** the team submits (`formURLs`). A new link is cleaned
-  the same way as at Submit Game Report. A field left blank clears its saved
-  link only after a yes/no prompt; on no, blanks are ignored. Text that is
-  not a link leaves the saved link and says so.
+- **One link per form** the team submits, showing the link in effect. A link
+  that comes from the term is labeled "(shared for 2026 Fall)". A change is
+  saved where the link came from: the season's override if it has one, else
+  the term's shared entry (so every team in the term gets it), else the
+  season. A field left blank clears the link from both places, only after a
+  yes/no prompt; on no, blanks are ignored. Text that is not a link leaves
+  the saved link and says so.
 
 It saves once, through the store's validation, and the success message lists
 what changed. A team still on `records.json` is told to run `bvr:migrate`
