@@ -6,10 +6,11 @@
  *
  *   sync       data, inject, yaml2json, push, clean, in that order (also the default)
  *   watch      sync once, then rebuild on every change under Library/
- *   data       pull runtime .json files from iCloud into Library/
+ *   data       pull runtime .json files from iCloud into Library/ (never
+ *              .json built from a source or committed to the repo)
  *   inject     render each <name>.yaml.tpl into <name>.yaml with `op inject`
- *              (skips a template whose content has not changed since its last
- *              render; --force renders all)
+ *              (skips a template whose content and .json output are unchanged
+ *              since its last render; --force renders all)
  *   yaml2json  convert every Library/Data/**\/*.yaml to .json
  *   push       mirror Library/ to iCloud with rsync --delete (never the
  *              BVR team files, which are written in iCloud)
@@ -37,12 +38,19 @@ const force = process.argv.includes("--force");
 // --- rendered templates ------------------------------------------------------
 
 // A <name>.yaml.tpl renders to a sibling <name>.yaml, which yaml2json turns
-// into <name>.json. The
-// rendered .yaml holds secrets and contact details, so it exists only between
-// inject and clean. Because it is gone by the next run, inject cannot compare
-// file times to decide what is current. Instead it remembers a hash of each
-// template's content here and re-renders only when the content changes.
+// into <name>.json. The rendered .yaml holds secrets and contact details, so
+// it exists only between inject and clean. Because it is gone by the next
+// run, inject cannot compare file times to decide what is current. Instead
+// the manifest remembers, per template, a hash of the template and a hash of
+// the .json it produced. A template is re-rendered when either differs, so a
+// .json pulled from iCloud or replaced by hand can never stand in for it.
 const manifestFile = join(root, ".build", "inject-manifest.json");
+
+interface ManifestEntry {
+  template: string;
+  output?: string;
+}
+type Manifest = Record<string, ManifestEntry>;
 
 function templates(): string[] {
   return [...new Bun.Glob("**/*.yaml.tpl").scanSync({ cwd: srcDir, absolute: true })].sort();
@@ -54,17 +62,43 @@ const isRenderedYaml = (path: string) => path.endsWith(".yaml") && existsSync(`$
 
 const hashFile = (path: string) => createHash("sha256").update(readFileSync(path, "utf8")).digest("hex");
 
-function loadManifest(): Record<string, string> {
+// Entries in the older format (a bare template hash) read as having no
+// recorded output, so those templates render once more.
+function loadManifest(): Manifest {
   if (!existsSync(manifestFile)) return {};
   try {
-    return JSON.parse(readFileSync(manifestFile, "utf8"));
+    const raw = JSON.parse(readFileSync(manifestFile, "utf8"));
+    return Object.fromEntries(
+      Object.entries(raw).map(([key, value]) => [key, typeof value == "string" ? { template: value } : (value as ManifestEntry)]),
+    );
   } catch {
     return {};
   }
 }
 
-function saveManifest(manifest: Record<string, string>) {
+function saveManifest(manifest: Manifest) {
   writeFileSync(manifestFile, JSON.stringify(manifest, null, 2) + "\n");
+}
+
+// A template's output is current when the .json exists and is exactly what
+// the last render produced.
+function outputIsCurrent(tpl: string, entry: ManifestEntry | undefined): boolean {
+  const json = renderedJsonPath(tpl);
+  return entry?.output != undefined && existsSync(json) && hashFile(json) == entry.output;
+}
+
+// .json files the build makes or the repo tracks: one per .yaml.tpl and per
+// plain .yaml under Library/Data, plus every committed .json under Library/.
+// Their iCloud copies are older output, never runtime state, so data() must
+// not pull them over what the repo and the build provide. Paths are relative
+// to Library/.
+function builtOrTrackedJson(): string[] {
+  const built = [...new Bun.Glob("**/*.{yaml.tpl,yaml}").scanSync({ cwd: dataDir })]
+    .map((source) => join("Data", source.replace(/(\.yaml\.tpl|\.yaml)$/, ".json")));
+  const tracked = Bun.spawnSync(["git", "ls-files", "-z", "--", "Library/*.json"], { cwd: root })
+    .stdout.toString().split("\0").filter((path) => path != "")
+    .map((path) => relative(srcDir, join(root, path)));
+  return [...new Set([...built, ...tracked])].sort();
 }
 
 async function ensureBuildDir() {
@@ -101,29 +135,40 @@ function debug() {
 
 // Pull back only .json data (runtime state Drafts writes, such as records).
 // The final --exclude=* keeps every other file type from overwriting local edits.
+//
+// Only runtime .json comes back: files with no source in the repo, such as
+// records.json, practicePlans.json, the BVR team files, and recentRecords.json.
+// Built and committed .json are excluded first (rsync uses the first rule that
+// matches), so a stale iCloud copy cannot replace them.
 async function data() {
+  const keepLocal = builtOrTrackedJson().map((path) => `--exclude=/${path}`);
   await run([
     "rsync", "-r", "--progress",
+    ...keepLocal,
     "--include=*/", "--include=*.json",
     `--exclude-from=${excludeFile}`, "--exclude=*",
     `${destDir}/Library/`, "Library",
   ]);
 }
 
-// Render each changed template. A template counts as current when its content hash
-// matches the manifest and its .json output exists. The manifest is rewritten
+// Render each changed template. A template counts as current when its content
+// hash matches the manifest and its .json is the output last recorded for it
+// (see outputIsCurrent). The manifest is rewritten
 // from the templates found this run, so entries for deleted templates drop out.
 async function inject() {
   const previous = loadManifest();
-  const current: Record<string, string> = {};
+  const current: Manifest = {};
 
   for (const tpl of templates()) {
     const key = relative(root, tpl);
     const hash = hashFile(tpl);
-    current[key] = hash;
-
-    const isCurrent = previous[key] == hash && existsSync(renderedJsonPath(tpl));
-    if (!force && isCurrent) continue;
+    const isCurrent = previous[key]?.template == hash && outputIsCurrent(tpl, previous[key]);
+    if (!force && isCurrent) {
+      current[key] = previous[key];
+      continue;
+    }
+    // yaml2json records the output hash once the new .json exists.
+    current[key] = { template: hash };
 
     const yamlPath = renderedYamlPath(tpl);
     let rendered: string;
@@ -146,13 +191,24 @@ async function inject() {
 
 // Same traversal and output as gulpfile.js: two-space JSON, no trailing
 // newline. A file that fails to convert is logged and skipped, as before.
+//
+// For a .yaml rendered from a template, the new .json's hash goes into the
+// manifest, so inject can tell later whether that .json is still its output.
 function yaml2json() {
+  const manifest = loadManifest();
+  let renderedOutputs = 0;
+
   const convertFile = (filePath: string) => {
     try {
       const jsonData = yaml.load(readFileSync(filePath, "utf8"));
       const jsonFilePath = filePath.replace(/\.yaml$/, ".json");
       writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2));
       log(`Converted: ${relative(root, filePath)} → ${relative(root, jsonFilePath)}`);
+      const entry = manifest[relative(root, `${filePath}.tpl`)];
+      if (isRenderedYaml(filePath) && entry != undefined) {
+        entry.output = hashFile(jsonFilePath);
+        renderedOutputs++;
+      }
     } catch (error) {
       logError(`Error converting ${relative(root, filePath)}: ${(error as Error).message}`);
     }
@@ -175,6 +231,7 @@ function yaml2json() {
   };
 
   walk(dataDir);
+  if (renderedOutputs > 0) saveManifest(manifest);
 }
 
 // Mirrors gulp-rsync with { recursive, incremental, clean, progress, exclude }:
