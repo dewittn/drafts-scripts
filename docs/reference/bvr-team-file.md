@@ -53,8 +53,8 @@ Each season entry:
 | `startDate` | `YYYY-MM-DD` or null | Week 1 of the practice-plan counter. Null falls back to `startDate` in `teams.yaml` |
 | `endDate` | `YYYY-MM-DD` or null | Not read yet. Reserved for the guided Start New Season flow |
 | `formURLs` | object | Form name (from `forms.yaml`) to a link for this team's season only, overriding the term's shared link (see "Form links"). Usually empty. Files written before this key carry `formURL: null`, which reads as `{}` and is dropped on the first save |
-| `recipients` | string[] or null | Not read yet. Initials of who gets notified, a later phase |
-| `attendanceDraftID` | string or null | Not read yet. `teams.yaml` still supplies it |
+| `recipients` | object or null | `{ attendance: [initials], gameReport: [initials] }`, either key optional: who gets this season's attendance and score messages, replacing the team's lists (`teams.yaml`, else the level). Only the lists change; message type, text, cc, and subject stay with the level or team, so for an email level (`us`) `attendance` replaces `recipients` and leaves `ccRecipients` alone. Null (the usual case) keeps the defaults, so a change to the level still reaches the team |
+| `attendanceDraftID` | string or null | The season's roster draft. Record Attendance and Update Roster use it first, then `attendanceDraftID` in `teams.yaml` |
 | `seasonRecordDraftID` | string or null | The season record draft. Copied verbatim from `records.json`, so an old `""` stays `""` |
 | `games` | Game[] | Exactly what `Game.toJSON()` writes, unchanged from `records.json`. Matched by `draftID`; a game without one is matched by its whole content, and repeats keep their count |
 | `practicePlans` | object | Week key (`W7`) to practice plan draft ID |
@@ -115,6 +115,22 @@ its level or `forms` in `teams.yaml`) that the season's term does not share
 yet, and saves the ones given for the term. Completing an existing season
 works the same way. A link still missing at Submit Game Report is asked for
 there.
+
+Then it asks who gets attendance and score messages: two fields of
+comma-separated initials, prefilled with the team default. Unknown initials
+are named and the prompt asked again, up to three times. A blank field means
+the default. Only a list that differs from the default (in any order) is
+saved in `recipients`; otherwise `recipients` stays null.
+
+Last comes the roster draft. If the team has one in use (the current
+season's, else `teams.yaml`'s), it asks whether to keep it for the new season
+or start a new one; Keep is the default, and cancelling keeps it too. A new
+one is made from `bvr/attendance.md` (override: `templates.attendance` in
+`teams.yaml`), tagged with the team's `defaultTag`, titled
+`# Attendance: <abbr> <season label>` (Update Roster needs a year in the
+title), with its `_For:` line set to today, and opened in the editor. A team
+with no roster draft gets a new one without being asked. Completing an
+existing season asks only if that season has no roster draft.
 
 ## Form links
 
@@ -250,6 +266,13 @@ current season of a team-file team in one prompt, prefilled from the file:
   season. A field left blank clears the link from both places, only after a
   yes/no prompt; on no, blanks are ignored. Text that is not a link leaves
   the saved link and says so.
+
+- **Attendance messages to / Score messages to**, as comma-separated
+  initials. A list with no season override is labeled "(team default)".
+  Unknown initials are named and the prompt asked again with what was typed,
+  up to three times. A list that matches the default clears the override.
+- **Roster draft**, shown by title, with a "Start a new roster draft" switch
+  that makes one as Start New Season does and opens it.
 
 It saves once, through the store's validation, and the success message lists
 what changed. A team still on `records.json` is told to run `bvr:migrate`

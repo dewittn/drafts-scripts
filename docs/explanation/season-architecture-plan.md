@@ -31,14 +31,20 @@ library runs; all three old teams are migrated to team files and
   `docs/reference/bvr-team-file.md`. Checked in Drafts: pending the first
   Edit Season run on soccer and basketball after the 2026-10-18 sync.
 
+**Done on the branch, not yet checked in Drafts:**
+
+- Step 3 remainder: Start New Season asks who gets attendance and score
+  messages (initials prefilled from the team default, unknown ones named and
+  asked again; only lists that differ are saved as the season's
+  `recipients`), then keeps the roster draft in use or starts a new one from
+  `attendance.md` and opens it. Edit Season shows both lists and the roster
+  draft, with a switch to start a new one. `Team.attendanceDraftID` prefers
+  the season's roster draft over `teams.yaml`'s.
+
 **In flight:** nothing.
 
 **Not started:**
 
-- Step 3 remainder: Start New Season steps for recipients (initials, prefilled
-  from the level and last season) and for the attendance draft (reuse or create
-  from `attendance.md`, then hand off to Update Roster). Season entries already
-  have `recipients` and `attendanceDraftID` slots.
 - Step 5: `bun run new-team <id> --sport --level --abbr` scaffold. Derive it
   from what adding `msg-basketball` by hand touched: `teams.yaml`,
   `sports.yaml`, `Templates/bvr/<id>-practice-plan.md`,
