@@ -179,11 +179,17 @@ function yaml2json() {
 // -c (checksum, from "incremental"), -r, -R (relative, its default), -v, then
 // the excludes, --progress, and --delete (from "clean"). No -t, so unchanged
 // files are detected by checksum, not mtime.
+//
+// The BVR team files are written by Drafts, so one can exist in iCloud before
+// `data` has pulled it here (Start New Season, or bvr:migrate writing straight
+// to iCloud). The protect filter keeps --delete from removing it in that window.
+// The folder matches teamFilesDir in Library/Data/bvr/settings.tpl.
 async function push() {
   log(destDir);
   await run([
     "rsync", "-crRv",
     "--exclude=*.tpl", "--exclude=*.yaml", "--exclude=.DS_Store",
+    "--filter=P /Library/Data/bvr/teams/***",
     "--progress", "--delete",
     "Library", destDir,
   ]);

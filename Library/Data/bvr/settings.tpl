@@ -5,6 +5,7 @@ teamSettingsFile: teams.json
 ppSettingsFile: practicePlans.json
 recordsFile: records.json
 ppDataFile: practicePlans.json
+teamFilesDir: teams/
 defaultTemplateFile: practice-plan.md
 weekIDTemplateTag: week_id
 workspace: BVR

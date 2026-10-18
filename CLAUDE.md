@@ -22,6 +22,7 @@ The build runs on Bun (`scripts/build.ts`). Gulp is still installed as a fallbac
 - `bun run clean` - Delete the `.yaml` files rendered from `.tpl` files (`sync` already does this as its last step)
 - `bun run checkpoint [promote]` - Report which dev commits have settled enough to move to main; `promote` fast-forwards main and tags it (see the `drafts-change-workflow` skill)
 - `bun run bvr:backup` - Copy every `.json` under the Drafts `Library/Data/bvr/` to `~/Backups/drafts-bvr/<YYYY-MM-DD_HHMMSS>/` and print the folder. Plain copy, contents never printed. `BVR_BACKUP_DIR` changes the backup root; `DRAFTS_DEST` changes the source
+- `bun run bvr:migrate [--dry-run]` - Back up, then fold `records.json` and `practicePlans.json` into one `Library/Data/bvr/teams/<teamID>.json` per team in the Drafts folder. Never changes the old files; safe to re-run. `--verify` compares the two sides; `--reverse --out <dir>` rebuilds the old files for `main` into `<dir>`. See `docs/reference/bvr-team-file.md`
 - `bun run gulp:sync`, `gulp:watch`, `gulp:debug` - The old Gulp pipeline, same behavior
 
 `DRAFTS_DEST=/some/scratch/dir bun run sync` sends the pipeline to a scratch folder instead of iCloud. Use it to try build changes without touching the live Drafts library.
