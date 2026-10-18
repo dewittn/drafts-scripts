@@ -14,6 +14,38 @@ Decisions so far:
   reach, not disk hygiene for its own sake. Delete rendered YAML after sync and
   use a content hash to keep the inject skip. No scratch build directory.
 
+Decided while building step 2 (2026-10-18; details in
+[`docs/reference/bvr-team-file.md`](../reference/bvr-team-file.md)):
+
+- Migrated seasons are named `<year>-<season>` from `teams.yaml`
+  (`2026-fall`). Start New Season accepts any name, so a winter sport can use
+  `2026-winter` or `2026-27`. The display label is derived from the ID
+  (`2026 Fall`) and gets its own template tag, `current_season_label`, which
+  now titles the season record draft. `current_season` is the ID.
+- The team file wins whenever both sides hold the same game or practice plan,
+  in both directions. A forward re-run only adds what the team file lacks and
+  keeps an existing `currentSeason`. So an edit made on `main` to a game the
+  team file already has is not carried forward; `--verify` lists it.
+- Reverse writes only to an `--out` folder, never over the live files, because
+  the migration must never rewrite its inputs. Handing data back to `main` is
+  a backup and a copy of two files. Forward backs up on its own before writing.
+- The teams folder is a `teamFilesDir` key in `settings.tpl`, read by both
+  the Drafts scripts and `bvr:migrate`. The build's push protects that folder
+  from `rsync --delete`, since Drafts can create a team file before the next
+  pull.
+- Only the season whose year matches the `teams.yaml` `startDate` gets that
+  date. Older seasons store null; Jan 1 of their year is used only to choose
+  `currentSeason`. If every season is still ahead, the earliest upcoming one
+  is current.
+- A team with no team file keeps the old behavior. Start New Season creates a
+  team file only for a team with no history in the old files, so an
+  unmigrated team's history is never hidden behind an empty team file.
+- "Migrate Current Season" stays for unmigrated teams. On a team file it only
+  says there is nothing to migrate, since `bvr:migrate` converts the 2024
+  bare-array seasons.
+- `endDate`, `formURL`, `recipients`, and `attendanceDraftID` are in every
+  season entry but nothing reads them yet. Step 3 fills them.
+
 ## What starting a season costs today
 
 Every season-start commit since 2024 touched the same handful of things. Nothing
