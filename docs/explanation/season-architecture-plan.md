@@ -33,6 +33,9 @@ library runs; all three old teams are migrated to team files and
 
 **Done on the branch, not yet checked in Drafts:**
 
+- Step 5: `bun run new-team` scaffold (see "A new team or sport" below).
+  Nothing in it runs in Drafts; it was checked against a scratch copy.
+
 - Step 3 remainder: Start New Season asks who gets attendance and score
   messages (initials prefilled from the team default, unknown ones named and
   asked again; only lists that differ are saved as the season's
@@ -45,12 +48,6 @@ library runs; all three old teams are migrated to team files and
 
 **Not started:**
 
-- Step 5: `bun run new-team <id> --sport --level --abbr` scaffold. Derive it
-  from what adding `msg-basketball` by hand touched: `teams.yaml`,
-  `sports.yaml`, `Templates/bvr/<id>-practice-plan.md`,
-  `Templates/bvr/<id>-game-day-project.mustache`, plus the manual checklist
-  (attendance draft and its ID in `teams.yaml`, calendar named by `abbr`,
-  Things project template, the two Shortcuts that take `abbr`).
 - Later cleanup, after a full season on team files: drop `startDate` from
   `teams.yaml` (seasons carry their own), stop pushing `records.json` and
   `practicePlans.json` and retire them, retire the `Score Report` items in
@@ -275,24 +272,30 @@ from the team file's current season instead of from `teams.yaml` +
 
 ## A new team or sport: a dev-side scaffold
 
-A new sport is the one case that still needs the build pipeline, because it
-needs new files, templates, and tags. Make it one command:
+A new team or sport is the one case that still needs the build pipeline,
+because it needs new files, templates, and tags. It is one command (built
+2026-10-18):
 
 ```
-bun run new-team <team-id> --sport basketball --level us --abbr VBB
+bun run new-team msg-basketball --name "MS Girls Basketball" --abbr MSGB \
+  --sport basketball --level ms --season winter --start 2026-10-30
 ```
 
-It would add the `sports.yaml` entry if the sport is new, append the team to
-`teams.yaml`, create `<team-id>-practice-plan.md` and the game-day
-`.mustache` from a starter, and print the manual checklist that code cannot
-do: create the attendance draft, create the team calendar named by `abbr`,
-add the Things project template, add the `Score Report/<ABBR>` 1Password item
-if you keep forms there, and confirm the "Mark Attendance As Complete" and
-"Complete Game Day Tasks" shortcuts handle the new `abbr`. Then run the
-in-app "Start New Season" for the first season.
+It appends the team to `teams.yaml` as text (the header comment survives),
+with `defaultTag` `bvr/<sport>/<level>` and practice-plan tag
+`bvr/<sport>/practice/plan`, and appends the sport to `sports.yaml` if it is
+new (`--max-score`/`--selected-score`, else the `--from` team's sport). It
+copies `<from>-practice-plan.md` and `<from>-game-day-project.mustache`,
+replacing the `--from` team's name, id, abbr, and tags, and lists every
+replacement; an existing file is skipped. `--from` defaults to the newest
+team at the same level, else in the same sport. Run against a copy of the
+repo without basketball, it reproduces the committed `msg-basketball` entry
+and `sports.yaml` byte for byte. Then it prints what code cannot do: the
+calendar named by `abbr`, the Things project template, the two Shortcuts
+that key on `abbr`, `bun run sync`, `bun run bvr:migrate`, and Start New
+Season in Drafts, which creates the season record and roster drafts.
 
-With the layering above, a new team needs no `.yaml.tpl` files of its own. Today it
-needs three.
+With the layering above, a new team needs no `.yaml.tpl` files of its own.
 
 ## Storage: one JSON file per team, not SQLite
 
