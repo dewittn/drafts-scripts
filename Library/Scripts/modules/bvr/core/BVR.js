@@ -134,6 +134,12 @@ class BVR {
     return `${this.dirPrefix}${dir}`;
   }
 
+  // Score-form links shared per term (see FormLinkStore).
+  get formLinksFile() {
+    const file = this.settings.formLinksFile == undefined ? "formLinks.json" : this.settings.formLinksFile;
+    return `${this.dirPrefix}${file}`;
+  }
+
   teamFilePath(teamID) {
     return `${this.teamFilesDir}${teamID}.json`;
   }

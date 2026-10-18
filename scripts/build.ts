@@ -239,8 +239,8 @@ function yaml2json() {
 // the excludes, --progress, and --delete (from "clean"). No -t, so unchanged
 // files are detected by checksum, not mtime.
 //
-// The BVR team files are runtime data written in iCloud, by Drafts and by
-// bvr:migrate. The local copies exist only because `data` pulls them for the
+// The BVR team files and the shared form links (formLinks.json) are runtime
+// data written in iCloud, by Drafts and by bvr:migrate. The local copies exist only because `data` pulls them for the
 // repo-side tools, and can be older than iCloud's. So push never sends them:
 // the exclude stops a stale copy overwriting a newer one, and excluded paths
 // are also safe from --delete. The folder matches teamFilesDir in
@@ -251,6 +251,7 @@ async function push() {
     "rsync", "-crRv",
     "--exclude=*.tpl", "--exclude=*.yaml", "--exclude=.DS_Store",
     "--exclude=/Library/Data/bvr/teams/***",
+    "--exclude=/Library/Data/bvr/formLinks.json",
     "--progress", "--delete",
     "Library", destDir,
   ]);
