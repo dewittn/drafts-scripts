@@ -250,9 +250,11 @@ class Season {
       this.store = TeamFileStore.create(this.teamFilePath, this.teamID);
     }
 
-    // Later phases add steps here (form URL, recipients, attendance draft)
-    // and pass what they collect to addSeason with the start date.
-    this.store.addSeason(details.seasonID, { startDate: details.startDate });
+    // Later phases add steps here (recipients, attendance draft) and pass
+    // what they collect to addSeason with the start date and form links.
+    const label = TeamFileStore.seasonLabel(details.seasonID);
+    const formURLs = this.#promptForFormURLs(this.team.formNames, label);
+    this.store.addSeason(details.seasonID, { startDate: details.startDate, formURLs });
     this.store.setCurrentSeason(details.seasonID);
     this.#createSeasonRecordDraft();
   }
@@ -266,26 +268,42 @@ class Season {
     const wasCurrent = this.currentSeasonID == seasonID;
     const hadDraft = Boolean(entry.seasonRecordDraftID);
     const filledStartDate = !entry.startDate;
+    const savedURLs = entry.formURLs || {};
+    const missingForms = this.team.formNames.filter((name) => !savedURLs[name]);
+    const newURLs = this.#promptForFormURLs(missingForms, entry.label || seasonID);
+    const addedURLs = Object.keys(newURLs).length > 0;
 
     if (filledStartDate) entry.startDate = startDate;
+    if (addedURLs) entry.formURLs = { ...savedURLs, ...newURLs };
     this.store.setCurrentSeason(seasonID);
     if (!hadDraft) return this.#createSeasonRecordDraft();
 
-    if (!wasCurrent || filledStartDate) this.store.saveGames();
+    if (!wasCurrent || filledStartDate || addedURLs) this.store.saveGames();
     const message = wasCurrent
       ? `${this.teamName} already has a ${seasonID} season.`
       : `${seasonID} is now the current season. It already had a season record draft.`;
     return this.ui.displayAppMessage("info", message);
   }
 
-  // Ask for the link to one score form, for this season. Blank skips it;
+  // Ask for each form's link in turn. Returns { <form name>: link } for the
+  // ones given; blanks are left out, to be asked for at Submit Game Report.
+  #promptForFormURLs(formNames, seasonLabel) {
+    const formURLs = {};
+    for (const formName of formNames) {
+      const url = this.#promptForFormURL(formName, seasonLabel);
+      if (url != undefined) formURLs[formName] = url;
+    }
+    return formURLs;
+  }
+
+  // Ask for the link to one score form, for a season. Blank skips it;
   // something that is not a link is reported and skipped.
-  #promptForFormURL(formName) {
+  #promptForFormURL(formName, seasonLabel = this.currentSeasonLabel) {
     if (typeof GoogleForm == "undefined") require("modules/bvr/services/GoogleForm.js");
     const section = JSON.parse(JSON.stringify(this.ui.settings("formURLPrompt")));
     const { menuSettings, urlField } = section;
     const title = this.team.form(formName).title || formName;
-    menuSettings.menuMessage = `${menuSettings.menuMessage}\n\n${title}, ${this.currentSeasonLabel}`;
+    menuSettings.menuMessage = `${menuSettings.menuMessage}\n\n${title}, ${seasonLabel}`;
     menuSettings.menuItems.push(urlField);
 
     const urlPrompt = this.ui.buildMenu(menuSettings);

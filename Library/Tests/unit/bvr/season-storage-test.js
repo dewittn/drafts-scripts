@@ -599,6 +599,52 @@ test.assertEqual(
   "each skipped form is reported",
 );
 
+// --- Start New Season form links ---
+test.section("Start New Season form links");
+
+const startAndLink = (seasonID, url) => ({ ...startResponse(seasonID), ...urlResponse(url) });
+
+bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-winter", "https://docs.google.com/forms/d/e/WINTER/viewform")));
+team = mockTeam(bvr);
+file = teamFixture();
+team.season.store = new TeamFileStore(file);
+team.season.startNewSeason();
+test.assertDeepEqual(
+  file.seasons["2026-winter"]?.formURLs,
+  { "varsity-score-report": "https://docs.google.com/forms/d/e/WINTER" },
+  "a new season stores the link given for each form",
+);
+const linkPrompt = bvr.ui.getInteractionsByType("buildMenu").find((i) => i.menuSettings.menuTitle == "Score Report Form");
+test.assert(linkPrompt?.menuSettings.menuMessage.endsWith("Varsity score report, 2026 Winter"), "the link prompt names the new season");
+
+bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-winter", "")));
+team = mockTeam(bvr);
+file = teamFixture();
+team.season.store = new TeamFileStore(file);
+team.season.startNewSeason();
+test.assertDeepEqual(file.seasons["2026-winter"]?.formURLs, {}, "a blank link is skipped, to be asked at Submit Game Report");
+test.assertEqual(file.currentSeason, "2026-winter", "and the season still starts");
+
+bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-winter", "https://docs.google.com/forms/d/e/W2")));
+team = mockTeam(bvr);
+file = teamFixtureWithWinter();
+team.season.store = new TeamFileStore(file);
+team.season.startNewSeason();
+test.assertDeepEqual(
+  file.seasons["2026-winter"].formURLs,
+  { "varsity-score-report": "https://docs.google.com/forms/d/e/W2" },
+  "completing an existing season asks for its missing links",
+);
+
+bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-fall", "https://docs.google.com/forms/d/e/FALL")));
+team = mockTeam(bvr);
+file = teamFixture();
+team.season.store = new TeamFileStore(file);
+team.season.startNewSeason();
+test.assertEqual(file.seasons["2026-fall"].formURLs?.["varsity-score-report"], "https://docs.google.com/forms/d/e/FALL", "an existing current season gets a missing link");
+test.assertEqual(file.saves, 1, "and is saved once");
+test.assert(infoMessages(bvr.ui).some((m) => m.includes("already has a 2026-fall season")), "while still saying the season exists");
+
 // --- shared schema fixture ---
 test.section("shared schema fixture");
 
