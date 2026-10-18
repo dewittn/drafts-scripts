@@ -22,15 +22,14 @@ import yaml from "js-yaml";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync, watch, writeFileSync } from "node:fs";
 import { copyFile, mkdir, unlink, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
+import { draftsDest } from "./lib/drafts-paths";
 
 const root = resolve(import.meta.dir, "..");
 const srcDir = join(root, "Library");
 const dataDir = join(srcDir, "Data");
 const excludeFile = join(root, "exclude-file.txt");
-const defaultDest = join(homedir(), "Library", "Mobile Documents", "iCloud~com~agiletortoise~Drafts5", "Documents");
-const destDir = process.env.DRAFTS_DEST ?? defaultDest;
+const destDir = draftsDest();
 
 const force = process.argv.includes("--force");
 

@@ -43,6 +43,7 @@
     "test": "bun scripts/test-runner.js",
     "typecheck": "bun scripts/typecheck.ts",
     "checkpoint": "bun scripts/checkpoint.ts",
+    "bvr:backup": "bun scripts/bvr-backup.ts",
     "gulp": "gulp",
     "gulp:sync": "gulp sync",
     "gulp:watch": "gulp watch",
