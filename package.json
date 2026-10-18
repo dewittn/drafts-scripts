@@ -46,6 +46,7 @@
     "checkpoint": "bun scripts/checkpoint.ts",
     "bvr:backup": "bun scripts/bvr-backup.ts",
     "bvr:migrate": "bun scripts/bvr-migrate.ts",
+    "new-team": "bun scripts/new-team.ts",
     "gulp": "gulp",
     "gulp:sync": "gulp sync",
     "gulp:watch": "gulp watch",
