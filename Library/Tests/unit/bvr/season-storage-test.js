@@ -267,6 +267,17 @@ test.assertDeepEqual(legacy(2024).games, [], "a bare-array season shows no games
 test.assertEqual(legacyStore.hasTeamData, true, "hasTeamData sees the team's records");
 test.assertEqual(legacy(2026, savable({}), savable({})).hasTeamData, false, "hasTeamData is false for a new team");
 
+const linkRecords = savable({ "test-team": { 2026: { seasonRecordDraftID: "R", seasonRecordData: [] } } });
+const linkStore = legacy(2026, linkRecords);
+test.assertDeepEqual(linkStore.formURLs, {}, "an unmigrated season starts with no form links");
+linkStore.saveFormURL("varsity-score-report", "https://docs.google.com/forms/d/e/OLD");
+test.assertDeepEqual(
+  linkRecords["test-team"][2026].formURLs,
+  { "varsity-score-report": "https://docs.google.com/forms/d/e/OLD" },
+  "an unmigrated team keeps form links on its records.json season",
+);
+test.assertEqual(linkRecords.saves, 1, "and saves records.json");
+
 // --- Season.updateWith ---
 test.section("Season.updateWith");
 
