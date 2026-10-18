@@ -9,7 +9,7 @@
       "endDate": null,
       "formURL": null,
       "recipients": null,
-      "attendanceDraftID": null,
+      "attendanceDraftID": "ROSTER-2025-FALL",
       "seasonRecordDraftID": "",
       "games": [{ "draftID": "OLD-GAME", "opponent": "Synthetic Rivals", "result": "Draw" }],
       "practicePlans": { "W3": "OLD-PLAN" }
@@ -20,7 +20,7 @@
       "endDate": null,
       "formURL": null,
       "recipients": null,
-      "attendanceDraftID": null,
+      "attendanceDraftID": "ROSTER-2026-FALL",
       "seasonRecordDraftID": "REC-2026-FALL",
       "games": [
         { "draftID": "GAME-1", "opponent": "Synthetic A", "result": "Win", "appended": true },

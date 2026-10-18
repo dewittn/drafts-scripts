@@ -18,6 +18,8 @@ require("modules/bvr/core/PracticePlan.js");
 require("modules/bvr/core/Game.js");
 require("modules/bvr/utils/TmplSettings.js");
 require("modules/bvr/services/GoogleForm.js");
+require("modules/bvr/utils/Staff.js");
+require("modules/bvr/core/Team.js");
 require("modules/bvr/storage/TeamFileStore.js");
 require("modules/bvr/storage/LegacySeasonStore.js");
 require("modules/bvr/storage/FormLinkStore.js");
@@ -35,7 +37,13 @@ class StubTemplate {
 
   constructor(settings) {
     this.settings = settings;
-    this.draftID = "NEW-RECORD-DRAFT";
+    const isRoster = settings.templateFile == "bvr/attendance.md";
+    this.draftID = isRoster ? "NEW-ROSTER-DRAFT" : "NEW-RECORD-DRAFT";
+    // The first lines of bvr/attendance.md, for the roster draft.
+    this.draft = {
+      uuid: this.draftID,
+      content: isRoster ? "# Attendance: \n[[bear:MOC: BVR Coaching]]\n_For: 2023-11-02_\n- [ ] Recorded" : "",
+    };
     StubTemplate.rendered.push(settings);
   }
 
@@ -48,6 +56,9 @@ class StubTemplate {
   }
 }
 /** @type {any} */ (globalThis).Template = StubTemplate;
+
+// Stand-in for Draft.find, for roster draft titles.
+/** @type {any} */ (globalThis).Draft = { find: (uuid) => ({ uuid, displayTitle: `Roster ${uuid}` }) };
 
 // A copy of plain data with a save() that counts calls, standing in for DataFile.
 function savable(data) {
@@ -74,6 +85,10 @@ const uiSettings = {
     hasEndDateField: { type: "switch", data: { name: "hasEndDate", label: "Has a last day" } },
     endDateField: { type: "datePicker", data: { name: "endDate", label: "Last Day" } },
     formField: { type: "textField", data: { options: { keyboard: "url" } } },
+    attendanceField: { type: "textField", data: { name: "attendance", label: "Attendance messages to" } },
+    gameReportField: { type: "textField", data: { name: "gameReport", label: "Score messages to" } },
+    rosterLabel: { type: "label", data: { name: "roster" } },
+    newRosterField: { type: "switch", data: { name: "newRoster", label: "Start a new roster draft" } },
     menuSettings: {
       menuTitle: "Edit Season",
       menuMessage: "Change this season.",
@@ -81,6 +96,25 @@ const uiSettings = {
     },
     startDateWarning: { menuTitle: "Change the first day?", menuMessage: "Weeks count from the first day." },
     clearLinksPrompt: { menuTitle: "Clear form links?", menuMessage: "These form links were left blank." },
+  },
+  recipientsPrompt: {
+    attendanceField: { type: "textField", data: { name: "attendance", label: "Attendance messages to" } },
+    gameReportField: { type: "textField", data: { name: "gameReport", label: "Score messages to" } },
+    menuSettings: {
+      menuTitle: "Who Gets Messages",
+      menuMessage: "Initials, separated by commas.",
+      menuItems: [{ type: "button", data: { name: "Save", value: "save" } }],
+    },
+  },
+  attendanceDraftPrompt: {
+    menuSettings: {
+      menuTitle: "Roster Draft",
+      menuMessage: "Keep or start a new one?",
+      menuItems: [
+        { type: "button", data: { name: "Keep", value: "keep" } },
+        { type: "button", data: { name: "Start a New One", value: "new" } },
+      ],
+    },
   },
   formURLPrompt: {
     urlField: { type: "textField", data: { name: "url", label: "Form link" } },
@@ -121,6 +155,11 @@ function mockBVR(teamFilePath, ui = mockUI()) {
     globalTags: {},
     recordsFile: "../Tests/fixtures/bvr/no-records.json",
     ppData: savable({}),
+    staff: new Staff({ AG: { cell: "555-0101" }, HM: { cell: "555-0102" }, WK: { cell: "555-0103" }, AN: { cell: "555-0104" } }),
+    pinned: [],
+    pinDraft(workingDraft) {
+      this.pinned.push(workingDraft.uuid);
+    },
     draftsCreated: 0,
     createDraftFromTemplate() {
       this.draftsCreated++;
@@ -141,6 +180,8 @@ function mockTeam(bvr, overrides = {}) {
     defaultTag: "bvr/test",
     linksFile: null,
     formNames: ["varsity-score-report"],
+    defaultRecipients: { attendance: ["AG", "HM"], gameReport: ["AG", "WK"] },
+    attendanceDraftID: undefined,
     form: (name) => ({ name, title: name == "varsity-score-report" ? "Varsity score report" : "MS score report" }),
     gameReportSettings: {
       googleFormSettings: [
@@ -711,6 +752,9 @@ const editAnswers = (overrides = {}) => ({
       hasEndDate: false,
       endDate: new Date(2026, 8, 7),
       "form:varsity-score-report": savedLink,
+      attendance: "AG, HM",
+      gameReport: "AG, WK",
+      newRoster: false,
       ...overrides,
     },
   },
@@ -866,6 +910,158 @@ team.season.store = legacy(2026);
 team.season.editCurrentSeason();
 test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 0, "an unmigrated team gets no prompt");
 test.assert(infoMessages(bvr.ui).some((m) => m.includes("Run bun run bvr:migrate first")), "and is told to migrate first");
+
+// --- Start New Season: recipients ---
+test.section("Start New Season recipients");
+
+const recipientsResponse = (attendance, gameReport) => ({
+  "Who Gets Messages": { button: "save", fieldValues: { attendance, gameReport } },
+});
+function startWith(responses, editFile = teamFixture()) {
+  bvr = mockBVR(teamFixturePath, mockUI({ ...startResponse("2026-winter"), ...responses }));
+  team = mockTeam(bvr);
+  team.season.store = new TeamFileStore(editFile);
+  team.season.startNewSeason();
+  return editFile;
+}
+
+file = startWith(recipientsResponse("AG, HM", "wk, ag"));
+test.assertEqual(file.seasons["2026-winter"].recipients, null, "lists equal to the team default (in any order or case) save no override");
+const recipientsMenu = bvr.ui.getInteractionsByType("buildMenu").find((i) => i.menuSettings.menuTitle == "Who Gets Messages")?.menuSettings;
+test.assertDeepEqual(
+  recipientsMenu?.menuItems.slice(1).map((item) => item.data.initialText),
+  ["AG, HM", "AG, WK"],
+  "the prompt is prefilled with the team default lists",
+);
+
+file = startWith(recipientsResponse("AG, AN", "AG, WK"));
+test.assertDeepEqual(file.seasons["2026-winter"].recipients, { attendance: ["AG", "AN"] }, "only a changed list is saved for the season");
+
+file = startWith(recipientsResponse("AG, ZZ, QQ", "AG"));
+test.assertEqual(
+  bvr.ui.getInteractionsByType("buildMenu").filter((i) => i.menuSettings.menuTitle == "Who Gets Messages").length,
+  3,
+  "unknown initials ask again, up to three times",
+);
+test.assert(infoMessages(bvr.ui).some((m) => m.includes("initials ZZ, QQ")), "naming the unknown initials");
+test.assertEqual(file.seasons["2026-winter"].recipients, null, "and give up without an override");
+
+file = startWith(recipientsResponse("", ""));
+test.assertEqual(file.seasons["2026-winter"].recipients, null, "blank fields mean the team default");
+
+// --- Start New Season: roster draft ---
+test.section("Start New Season roster draft");
+
+const rosterResponse = (button) => ({ "Roster Draft": { button, fieldValues: {} } });
+function startWithRoster(rosterBefore, responses) {
+  bvr = mockBVR(teamFixturePath, mockUI({ ...startResponse("2026-winter"), ...responses }));
+  team = mockTeam(bvr);
+  team.attendanceDraftID = rosterBefore;
+  const rosterFile = teamFixture();
+  team.season.store = new TeamFileStore(rosterFile);
+  StubTemplate.rendered = [];
+  team.season.startNewSeason();
+  return rosterFile;
+}
+const rosterRenders = () => StubTemplate.rendered.filter((settings) => settings.templateFile == "bvr/attendance.md");
+
+file = startWithRoster("OLD-ROSTER", rosterResponse("keep"));
+test.assertEqual(file.seasons["2026-winter"].attendanceDraftID, "OLD-ROSTER", "keeping the roster saves its ID on the new season");
+test.assertEqual(rosterRenders().length, 0, "without making a new draft");
+const rosterMenu = bvr.ui.getInteractionsByType("buildMenu").find((i) => i.menuSettings.menuTitle == "Roster Draft")?.menuSettings;
+test.assertEqual(rosterMenu?.menuMessage, 'Keep "Roster OLD-ROSTER" for 2026 Winter, or start a new one?', "the question names the draft and season");
+
+file = startWithRoster("OLD-ROSTER", {});
+test.assertEqual(file.seasons["2026-winter"].attendanceDraftID, "OLD-ROSTER", "cancelling the question keeps the roster");
+
+file = startWithRoster("OLD-ROSTER", rosterResponse("new"));
+test.assertEqual(file.seasons["2026-winter"].attendanceDraftID, "NEW-ROSTER-DRAFT", "a new roster draft's ID is saved on the season");
+test.assertDeepEqual(rosterRenders()[0]?.draftTags, ["bvr/test"], "tagged with the team's default tag");
+test.assertDeepEqual(bvr.pinned, ["NEW-ROSTER-DRAFT"], "and opened in the editor");
+test.assert(successMessages().some((m) => m.includes("Update Roster")), "the message mentions Update Roster");
+
+file = startWithRoster(undefined, {});
+test.assertEqual(
+  bvr.ui.getInteractionsByType("buildMenu").filter((i) => i.menuSettings.menuTitle == "Roster Draft").length,
+  0,
+  "a team with no roster draft is not asked",
+);
+test.assertEqual(file.seasons["2026-winter"].attendanceDraftID, "NEW-ROSTER-DRAFT", "and gets a new one");
+
+// The new draft's title and date line.
+bvr = mockBVR(teamFixturePath, mockUI(startResponse("2026-winter")));
+team = mockTeam(bvr);
+team.season.store = new TeamFileStore(teamFixture());
+/** @type {any} */
+let rosterDraft;
+const realPin = bvr.pinDraft;
+bvr.pinDraft = function (workingDraft) {
+  rosterDraft = workingDraft;
+  realPin.call(this, workingDraft);
+};
+team.season.startNewSeason();
+const today = bvr.formatDateYMD(new Date());
+test.assertEqual(rosterDraft?.content.split("\n")[0], "# Attendance: TT 2026 Winter", "the title names the team and season (with a year for Update Roster)");
+test.assertEqual(rosterDraft?.content.split("\n")[2], `_For: ${today}_`, "the date line is today");
+
+file = teamFixtureWithWinter();
+bvr = mockBVR(teamFixturePath, mockUI({ ...startResponse("2026-winter"), ...rosterResponse("keep") }));
+team = mockTeam(bvr);
+team.attendanceDraftID = "OLD-ROSTER";
+team.season.store = new TeamFileStore(file);
+team.season.startNewSeason();
+test.assertEqual(file.seasons["2026-winter"].attendanceDraftID, "OLD-ROSTER", "completing an existing season without a roster asks for one");
+
+// --- Edit Season: recipients and roster ---
+test.section("Edit Season recipients and roster");
+
+file = runEdit(editAnswers());
+fields = editFields();
+test.assertEqual(fields.attendance?.label, "Attendance messages to (team default)", "a list with no season override says it is the team default");
+test.assertEqual(fields.attendance?.initialText, "AG, HM", "and shows the default");
+test.assertEqual(fields.roster?.label, "Roster draft: Roster ROSTER-2026-FALL", "the roster draft is shown by title");
+test.assertEqual(fields.newRoster?.initialValue, false, "the new-roster switch starts off");
+
+file = runEdit(editAnswers({ gameReport: "AG, HM, WK" }));
+test.assertDeepEqual(file.seasons["2026-fall"].recipients, { gameReport: ["AG", "HM", "WK"] }, "a changed list is saved as a season override");
+test.assertDeepEqual(successMessages(), ["Updated 2026 Fall: recipients."], "and listed as changed");
+
+file = editFixture();
+file.seasons["2026-fall"].recipients = { gameReport: ["AG", "HM", "WK"] };
+file = runEdit(editAnswers({ gameReport: "AG, HM, WK" }), {}, file);
+fields = editFields();
+test.assertEqual(fields.gameReport?.label, "Score messages to", "an override is not marked as the team default");
+test.assertEqual(fields.gameReport?.initialText, "AG, HM, WK", "and is shown");
+test.assertEqual(file.saves, 0, "unchanged, it saves nothing");
+
+file = editFixture();
+file.seasons["2026-fall"].recipients = { gameReport: ["AG", "HM", "WK"] };
+file = runEdit(editAnswers({ gameReport: "AG, WK" }), {}, file);
+test.assertEqual(file.seasons["2026-fall"].recipients, null, "setting a list back to the default removes the override");
+
+file = runEdit(editAnswers({ attendance: "AG, NOPE" }));
+test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 3, "unknown initials ask again, up to three times");
+test.assertEqual(bvr.ui.getInteractionsByType("buildMenu")[1].menuSettings.menuItems.find((i) => i.data.name == "attendance").data.initialText, "AG, NOPE", "with what was typed");
+test.assertEqual(file.saves, 0, "and save nothing when they stay unknown");
+
+file = runEdit(editAnswers({ newRoster: true }));
+test.assertEqual(file.seasons["2026-fall"].attendanceDraftID, "NEW-ROSTER-DRAFT", "the switch starts a new roster draft for the season");
+test.assertDeepEqual(bvr.pinned, ["NEW-ROSTER-DRAFT"], "and opens it");
+test.assertDeepEqual(successMessages(), ["Updated 2026 Fall: roster draft."], "and lists it");
+
+// --- Team.attendanceDraftID ---
+test.section("Team.attendanceDraftID");
+
+/** @type {any} */ (globalThis).draft = { hasTag: () => false };
+const teamBVR = { ...mockBVR(teamFixturePath), teamSettingsFile: "../Tests/fixtures/bvr/teams.json" };
+ServiceContainer.getInstance().register("bvr", () => teamBVR, true);
+const realTeam = new Team("fixture-team");
+realTeam.season = { currentSeasonData: { attendanceDraftID: "ROSTER-FROM-SEASON" } };
+test.assertEqual(realTeam.attendanceDraftID, "ROSTER-FROM-SEASON", "the current season's roster draft comes first");
+realTeam.season = { currentSeasonData: { attendanceDraftID: null } };
+test.assertEqual(realTeam.attendanceDraftID, "ROSTER-FROM-TEAMS-YAML", "else the one in teams.yaml");
+realTeam.season = { currentSeasonData: undefined };
+test.assertEqual(realTeam.attendanceDraftID, "ROSTER-FROM-TEAMS-YAML", "also when there is no current season");
 
 // --- shared schema fixture ---
 test.section("shared schema fixture");

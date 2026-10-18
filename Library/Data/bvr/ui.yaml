@@ -118,6 +118,33 @@ editSeason:
         keyboard: url
         autocorrect: false
         autocapitalization: none
+  attendanceField:
+    type: textField
+    data:
+      name: attendance
+      label: Attendance messages to
+      options:
+        autocorrect: false
+        autocapitalization: allCharacters
+  gameReportField:
+    type: textField
+    data:
+      name: gameReport
+      label: Score messages to
+      options:
+        autocorrect: false
+        autocapitalization: allCharacters
+  rosterLabel:
+    type: label
+    data:
+      name: roster
+      options:
+        textSize: body
+  newRosterField:
+    type: switch
+    data:
+      name: newRoster
+      label: Start a new roster draft
   menuSettings:
     menuTitle: Edit Season
     menuMessage: "Change this season's name, dates, or form links. The last day is saved only when the switch is on."
@@ -132,6 +159,45 @@ editSeason:
   clearLinksPrompt:
     menuTitle: Clear form links?
     menuMessage: "These form links were left blank. Clear the saved links?"
+recipientsPrompt:
+  attendanceField:
+    type: textField
+    data:
+      name: attendance
+      label: Attendance messages to
+      options:
+        autocorrect: false
+        autocapitalization: allCharacters
+  gameReportField:
+    type: textField
+    data:
+      name: gameReport
+      label: Score messages to
+      options:
+        autocorrect: false
+        autocapitalization: allCharacters
+  menuSettings:
+    menuTitle: Who Gets Messages
+    menuMessage: "Initials from staff.yaml.tpl, separated by commas. Leave them as they are to keep the team's usual lists."
+    menuItems:
+      - type: button
+        data:
+          name: Save
+          value: save
+attendanceDraftPrompt:
+  menuSettings:
+    menuTitle: Roster Draft
+    menuMessage: "Keep the current roster draft, or start a new one?"
+    menuItems:
+      - type: button
+        data:
+          name: Keep
+          value: keep
+          isDefault: true
+      - type: button
+        data:
+          name: Start a New One
+          value: new
 formURLPrompt:
   urlField:
     type: textField

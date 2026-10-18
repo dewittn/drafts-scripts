@@ -1,0 +1,5 @@
+{
+  "teamsData": [
+    { "id": "fixture-team", "level": "ms", "name": "Fixture Team", "abbr": "FT", "defaultTag": "bvr/fixture", "attendanceDraftID": "ROSTER-FROM-TEAMS-YAML" }
+  ]
+}

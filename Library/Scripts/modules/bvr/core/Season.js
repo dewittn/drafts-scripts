@@ -237,7 +237,7 @@ class Season {
 
     const entry = this.currentSeasonData;
     this.#liftSeasonLinks(this.currentSeasonID, entry);
-    const answers = this.#showEditSeasonPrompt(entry);
+    const answers = this.#askSeasonEdits(entry);
     if (answers == undefined) return;
 
     const changes = this.#seasonEdits(entry, answers);
@@ -250,11 +250,30 @@ class Season {
     }
 
     const { changed, seasonChanged, sharedChanged } = this.#applySeasonEdits(entry, changes);
+    const roster = answers.newRoster ? this.#createAttendanceDraft(entry.label || `${this.currentSeasonID}`) : undefined;
+    if (roster != undefined) {
+      entry.attendanceDraftID = roster.draftID;
+      changed.push("roster draft");
+    }
     if (changed.length == 0) return this.ui.displayAppMessage("info", "Nothing changed.");
 
     if (sharedChanged) this.formLinks.save();
-    if (seasonChanged) this.store.saveGames();
+    if (seasonChanged || roster != undefined) this.store.saveGames();
+    if (roster != undefined) this.bvr.pinDraft(roster.draft);
     this.ui.displayAppMessage("success", `Updated ${entry.label || this.currentSeasonID}: ${changed.join(", ")}.`);
+  }
+
+  // Show the Edit Season prompt, asking again (up to three times, with what
+  // was typed) while the recipient lists name unknown initials.
+  #askSeasonEdits(entry) {
+    let previous;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const answers = this.#showEditSeasonPrompt(entry, previous);
+      if (answers == undefined) return undefined;
+      if (!this.#reportUnknownInitials(this.#typedRecipients(answers))) return answers;
+      previous = answers;
+    }
+    return undefined;
   }
 
   // **********************
@@ -264,25 +283,46 @@ class Season {
   // One prompt, prefilled from the season. The last day is a date picker plus
   // a switch, because a Drafts date picker cannot be left empty: the switch
   // off means no last day (endDate null).
-  #showEditSeasonPrompt(entry) {
+  // previous: the answers from an attempt being asked again, which prefill
+  // every field in place of the season's values.
+  #showEditSeasonPrompt(entry, previous) {
     const section = JSON.parse(JSON.stringify(this.ui.settings("editSeason")));
-    const { menuSettings, labelField, startDateField, hasEndDateField, endDateField, formField } = section;
+    const {
+      menuSettings, labelField, startDateField, hasEndDateField, endDateField, formField,
+      attendanceField, gameReportField, rosterLabel, newRosterField,
+    } = section;
     const startDate = this.#parseYMD(entry.startDate) || new Date();
+    const overrides = entry.recipients || {};
+    const defaults = this.team.defaultRecipients;
 
-    labelField.data.initialText = entry.label || `${this.currentSeasonID}`;
-    startDateField.data.initialDate = startDate;
-    hasEndDateField.data.initialValue = entry.endDate != undefined;
-    endDateField.data.initialDate = this.#parseYMD(entry.endDate) || startDate;
+    labelField.data.initialText = previous ? previous.label : entry.label || `${this.currentSeasonID}`;
+    startDateField.data.initialDate = previous ? previous.startDate : startDate;
+    hasEndDateField.data.initialValue = previous ? previous.hasEndDate : entry.endDate != undefined;
+    endDateField.data.initialDate = previous ? previous.endDate : this.#parseYMD(entry.endDate) || startDate;
     const formFields = this.team.formNames.map((formName) => {
       const effective = this.#effectiveLink(formName, entry.formURLs, this.term);
       const title = this.#formTitle(formName);
       const label = effective.source == "term" ? `${title} (shared for ${this.#termLabel(this.term)})` : title;
+      const typed = previous?.[`form:${formName}`];
       return {
         ...JSON.parse(JSON.stringify(formField)),
-        data: { ...formField.data, name: `form:${formName}`, label, initialText: effective.url || "" },
+        data: { ...formField.data, name: `form:${formName}`, label, initialText: previous ? typed : effective.url || "" },
       };
     });
-    menuSettings.menuItems.push(labelField, startDateField, hasEndDateField, endDateField, ...formFields);
+    const recipientField = (field, key) => {
+      if (!overrides[key]) field.data.label = `${field.data.label} (team default)`;
+      field.data.initialText = previous ? previous[key] : (overrides[key] || defaults[key]).join(", ");
+      return field;
+    };
+    rosterLabel.data.label = entry.attendanceDraftID
+      ? `Roster draft: ${this.#draftTitle(entry.attendanceDraftID)}`
+      : "This season has no roster draft yet.";
+    newRosterField.data.initialValue = previous ? previous.newRoster : false;
+    menuSettings.menuItems.push(
+      labelField, startDateField, hasEndDateField, endDateField, ...formFields,
+      recipientField(attendanceField, "attendance"), recipientField(gameReportField, "gameReport"),
+      rosterLabel, newRosterField,
+    );
 
     const seasonPrompt = this.ui.buildMenu(menuSettings);
     if (seasonPrompt.show() == false) return undefined;
@@ -303,6 +343,10 @@ class Season {
 
     const endDate = answers.hasEndDate ? this.bvr.formatDateYMD(answers.endDate) : null;
     if (endDate != (entry.endDate == undefined ? null : entry.endDate)) edits.endDate = endDate;
+
+    const recipients = this.#recipientOverrides(this.#typedRecipients(answers));
+    const savedRecipients = entry.recipients == undefined ? null : entry.recipients;
+    if (JSON.stringify(recipients) != JSON.stringify(savedRecipients)) edits.recipients = recipients;
 
     for (const formName of this.team.formNames) {
       const effective = this.#effectiveLink(formName, entry.formURLs, this.term);
@@ -342,6 +386,10 @@ class Season {
     if (edits.endDate !== undefined) {
       entry.endDate = edits.endDate;
       changed.push("last day");
+    }
+    if (edits.recipients !== undefined) {
+      entry.recipients = edits.recipients;
+      changed.push("recipients");
     }
     seasonChanged = changed.length > 0;
 
@@ -493,17 +541,25 @@ class Season {
     if (this.usesTeamFile && this.store.hasSeason(details.seasonID)) {
       return this.#completeExistingSeason(details);
     }
+    // The roster draft in use now, before the new season becomes current.
+    const rosterBefore = this.team.attendanceDraftID;
     if (!this.usesTeamFile) {
       this.store = TeamFileStore.create(this.teamFilePath, this.teamID);
     }
 
-    // Later phases add steps here (recipients, attendance draft) and pass
-    // what they collect to addSeason with the start date and form links.
+    // Each step asks for one thing: form links the term lacks, then who gets
+    // messages, then (after the season exists) the roster draft.
     const label = TeamFileStore.seasonLabel(details.seasonID);
     const formURLs = this.#promptForMissingLinks(details.seasonID, {}, label);
-    this.store.addSeason(details.seasonID, { startDate: details.startDate, formURLs });
+    const recipients = this.#promptForRecipients(this.team.defaultRecipients);
+    this.store.addSeason(details.seasonID, {
+      startDate: details.startDate,
+      formURLs,
+      recipients: recipients == undefined ? null : recipients,
+    });
     this.store.setCurrentSeason(details.seasonID);
     this.#createSeasonRecordDraft();
+    this.#settleAttendanceDraft(this.store.seasonFor(details.seasonID), rosterBefore, label);
   }
 
   // A season can exist without a record draft: bvr:migrate creates the
@@ -522,14 +578,128 @@ class Season {
 
     if (filledStartDate) entry.startDate = startDate;
     if (addedURLs) entry.formURLs = { ...savedURLs, ...newURLs };
+    const rosterBefore = this.team.attendanceDraftID;
+    const needsRoster = !entry.attendanceDraftID;
     this.store.setCurrentSeason(seasonID);
-    if (!hadDraft) return this.#createSeasonRecordDraft();
+    if (!hadDraft) this.#createSeasonRecordDraft();
+    if (needsRoster) this.#settleAttendanceDraft(entry, rosterBefore, entry.label || seasonID);
+    if (!hadDraft || needsRoster) return;
 
     if (!wasCurrent || filledStartDate || addedURLs) this.store.saveGames();
     const message = wasCurrent
       ? `${this.teamName} already has a ${seasonID} season.`
       : `${seasonID} is now the current season. It already had a season record draft.`;
     return this.ui.displayAppMessage("info", message);
+  }
+
+  // Ask who gets attendance and score messages, prefilled with the lists in
+  // effect (comma-separated initials). Unknown initials are named and the
+  // prompt asked again, up to three times. Returns the lists that differ
+  // from the team default, null when none do (so level changes still flow
+  // through), or undefined when cancelled.
+  #promptForRecipients(current) {
+    let lists = current;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const section = JSON.parse(JSON.stringify(this.ui.settings("recipientsPrompt")));
+      const { menuSettings, attendanceField, gameReportField } = section;
+      attendanceField.data.initialText = lists.attendance.join(", ");
+      gameReportField.data.initialText = lists.gameReport.join(", ");
+      menuSettings.menuItems.push(attendanceField, gameReportField);
+
+      const recipientsPrompt = this.ui.buildMenu(menuSettings);
+      if (recipientsPrompt.show() == false) return undefined;
+
+      lists = this.#typedRecipients(recipientsPrompt.fieldValues);
+      if (this.#reportUnknownInitials(lists)) continue;
+      return this.#recipientOverrides(lists);
+    }
+    return undefined;
+  }
+
+  // The two lists typed into a prompt. A blank field means the team default.
+  #typedRecipients(fieldValues) {
+    if (typeof Staff == "undefined") require("modules/bvr/utils/Staff.js");
+    const defaults = this.team.defaultRecipients;
+    const parse = (text, fallback) => {
+      const initials = Staff.parseInitials(text);
+      return initials.length > 0 ? initials : fallback;
+    };
+    return {
+      attendance: parse(fieldValues.attendance, defaults.attendance),
+      gameReport: parse(fieldValues.gameReport, defaults.gameReport),
+    };
+  }
+
+  // Shows which initials staff.yaml.tpl does not know. True if there were any.
+  #reportUnknownInitials(lists) {
+    const unknown = this.bvr.staff.unknown([...new Set([...lists.attendance, ...lists.gameReport])]);
+    if (unknown.length == 0) return false;
+    this.ui.displayAppMessage("info", `No one in staff.yaml.tpl has the initials ${unknown.join(", ")}. Check them and try again.`);
+    return true;
+  }
+
+  // Only the lists that differ from the team default (order does not
+  // matter), or null when both match it.
+  #recipientOverrides(lists) {
+    const defaults = this.team.defaultRecipients;
+    const same = (a, b) => a.length == b.length && a.every((initials) => b.includes(initials));
+    const overrides = {};
+    if (!same(lists.attendance, defaults.attendance)) overrides.attendance = lists.attendance;
+    if (!same(lists.gameReport, defaults.gameReport)) overrides.gameReport = lists.gameReport;
+    return Object.keys(overrides).length > 0 ? overrides : null;
+  }
+
+  // Give a season its roster draft: keep the one in use (rosterBefore) or
+  // start a new one, asking first when there is one to keep. A new draft is
+  // opened in the editor for the roster to be typed. Saves the season.
+  #settleAttendanceDraft(entry, rosterBefore, seasonLabel) {
+    const keep = rosterBefore && this.#askKeepRoster(rosterBefore, seasonLabel);
+    if (keep) {
+      entry.attendanceDraftID = rosterBefore;
+      this.store.saveGames();
+      return;
+    }
+
+    const roster = this.#createAttendanceDraft(seasonLabel);
+    entry.attendanceDraftID = roster.draftID;
+    this.store.saveGames();
+    this.bvr.pinDraft(roster.draft);
+    this.ui.displayAppMessage(
+      "success",
+      `Roster draft for ${seasonLabel} created and opened. Add the players; next season, keep it and run Update Roster to move everyone up a grade.`,
+    );
+  }
+
+  // True to keep the current roster draft. Keep is the default, and so is
+  // cancelling, so nothing is created by accident.
+  #askKeepRoster(draftID, seasonLabel) {
+    const section = JSON.parse(JSON.stringify(this.ui.settings("attendanceDraftPrompt")));
+    const { menuSettings } = section;
+    const title = this.#draftTitle(draftID);
+    menuSettings.menuMessage = `Keep "${title}" for ${seasonLabel}, or start a new one?`;
+    const rosterPrompt = this.ui.buildMenu(menuSettings);
+    if (rosterPrompt.show() == false) return true;
+    return rosterPrompt.buttonPressed != "new";
+  }
+
+  // A new roster draft from bvr/attendance.md, tagged for the team. The
+  // template has no tags, so its title and "_For:" date line are set here:
+  // the title names the team and season (Update Roster needs a year in it).
+  #createAttendanceDraft(seasonLabel) {
+    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
+    const templateFile = this.#tmplSettings?.attendance?.templateFile || "bvr/attendance.md";
+    const roster = new Template({ templateFile, draftTags: [this.team.defaultTag] });
+    const today = this.bvr.formatDateYMD(new Date());
+    roster.draft.content = `${roster.draft.content}`
+      .replace(/^# Attendance:.*$/m, `# Attendance: ${this.team.abbr} ${seasonLabel}`)
+      .replace(/_For: \d{4}-\d{2}-\d{2}_/, `_For: ${today}_`);
+    roster.save();
+    return roster;
+  }
+
+  #draftTitle(draftID) {
+    const found = typeof Draft == "undefined" ? undefined : Draft.find(draftID);
+    return found?.displayTitle || "the current roster draft";
   }
 
   // Ask for the links neither the season nor its term has. With a term, the
