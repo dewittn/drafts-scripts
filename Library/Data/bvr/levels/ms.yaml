@@ -1,0 +1,19 @@
+---
+# Middle school defaults: texts to coaches and staff. A team overrides any
+# part in teams.yaml (objects merge, lists replace). People are initials from
+# staff.yaml.tpl.
+attendance:
+  absences:
+    type: text
+    recipients: [AG, AN, HM, WK]
+    bodyText: "These students are absent from [[team_name]] today: "
+  noAbsences:
+    type: text
+    recipients: [AG, AN, HM, WK]
+    bodyText: "No one is absent from [[team_name]] today."
+gameReport:
+  messages:
+    - type: text
+      recipients: [AG, WK, HM]
+      bodyText: "[[game_summary]]"
+  forms: [varsity-score-report]
