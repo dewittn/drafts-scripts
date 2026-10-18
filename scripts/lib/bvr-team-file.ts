@@ -107,6 +107,26 @@ export function emptyTeamFile(teamID: string): TeamFile {
   return { schemaVersion: SCHEMA_VERSION, teamID, currentSeason: null, seasons: {} };
 }
 
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value == "object" && value != null && !Array.isArray(value);
+
+// Why data is not a usable team file, or undefined when it is. A half-synced
+// iCloud file reads as null or empty, and must never be merged into or
+// overwritten. TeamFileStore.validate in the Drafts scripts makes the same checks.
+export function teamFileProblem(data: unknown): string | undefined {
+  if (!isObject(data)) return "the file is empty or not a JSON object";
+  if (data.schemaVersion !== SCHEMA_VERSION) return `unknown schemaVersion ${JSON.stringify(data.schemaVersion)}`;
+  if (typeof data.teamID != "string" || data.teamID == "") return "teamID is missing";
+  if (!isObject(data.seasons)) return "seasons is missing or not an object";
+  if (data.currentSeason != null && typeof data.currentSeason != "string") return "currentSeason is not a string";
+  return undefined;
+}
+
+// A team ID that is safe to use as a file name: no folders, no "..".
+export function isSafeTeamID(teamID: string): boolean {
+  return /^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(teamID) && !teamID.includes("..");
+}
+
 // teams.yaml carries one startDate per team. It belongs to the season of the
 // same year; older seasons have no recorded start date.
 function startDateFor(team: TeamConfig, year: string): string | null {
@@ -117,7 +137,16 @@ function startDateFor(team: TeamConfig, year: string): string | null {
 function ensureSeason(file: TeamFile, seasonID: string, startDate: string | null): SeasonEntry {
   const entry = (file.seasons[seasonID] ??= emptySeason(seasonID, startDate));
   if (entry.startDate == null && startDate != null) entry.startDate = startDate;
+  entry.games ??= [];
+  entry.practicePlans ??= {};
   return entry;
+}
+
+// When a season starts, for ordering: its start date, else Jan 1 of its
+// year, else "" (sorts first).
+function seasonStart(seasonID: string, entry: SeasonEntry): string {
+  const year = seasonYear(seasonID);
+  return entry.startDate ?? (year ? `${year}-01-01` : "");
 }
 
 // The season a team is in on `today` (YYYY-MM-DD): the newest season that has
@@ -125,10 +154,7 @@ function ensureSeason(file: TeamFile, seasonID: string, startDate: string | null
 // every season is still ahead, the earliest upcoming one.
 export function chooseCurrentSeason(seasons: Record<string, SeasonEntry>, today: string): string | null {
   const starts = Object.entries(seasons)
-    .map(([id, entry]) => {
-      const year = seasonYear(id);
-      return { id, start: entry.startDate ?? (year ? `${year}-01-01` : "") };
-    })
+    .map(([id, entry]) => ({ id, start: seasonStart(id, entry) }))
     .filter(({ start }) => start != "")
     .sort((a, b) => a.start.localeCompare(b.start) || a.id.localeCompare(b.id));
 
@@ -149,21 +175,22 @@ export function gameKey(game: Game): string {
 export const gameLabel = (game: Game): string => game.draftID || "(game without draftID)";
 
 // Merge `incoming` into `target`, keeping target's order and appending games it
-// lacks. `prefer` decides which copy wins when both hold the same game.
+// lacks. `prefer` decides which copy wins when both hold the same game. Keys
+// are matched with their counts, so a game that appears twice on one side is
+// not collapsed into one.
 export function mergeGames(
-  target: Game[],
-  incoming: Game[],
+  target: Game[] | null | undefined,
+  incoming: Game[] | null | undefined,
   prefer: "target" | "incoming",
 ): { games: Game[]; added: number } {
-  const games = target.map((game) => structuredClone(game));
-  const index = new Map(games.map((game, i) => [gameKey(game), i]));
+  const games = (target ?? []).map((game) => structuredClone(game));
+  const slots = new Map<string, number[]>();
+  games.forEach((game, i) => slots.set(gameKey(game), [...(slots.get(gameKey(game)) ?? []), i]));
   let added = 0;
 
-  for (const game of incoming) {
-    const key = gameKey(game);
-    const at = index.get(key);
+  for (const game of incoming ?? []) {
+    const at = slots.get(gameKey(game))?.shift();
     if (at == undefined) {
-      index.set(key, games.length);
       games.push(structuredClone(game));
       added++;
     } else if (prefer == "incoming") {
@@ -174,8 +201,8 @@ export function mergeGames(
 }
 
 // A records.json season's games, whichever of the two shapes it has.
-const legacyGames = (season: LegacySeason | Game[]): Game[] =>
-  Array.isArray(season) ? season : season.seasonRecordData ?? [];
+const legacyGames = (season: LegacySeason | Game[] | null | undefined): Game[] =>
+  Array.isArray(season) ? season : season?.seasonRecordData ?? [];
 
 // The object form the old code expects, from either shape.
 function legacySeasonObject(season: LegacySeason | Game[] | undefined): LegacySeason {
@@ -251,16 +278,18 @@ export function forwardMigrate({ records, practicePlans, teams, existing = {}, t
       }
     }
 
-    // The season teams.yaml describes exists even before its first game.
+    // An explicit choice (from Start New Season or an earlier run) is kept.
+    const hasCurrentSeason = file.currentSeason != null && file.seasons[file.currentSeason] != undefined;
+
+    // The season teams.yaml describes exists even before its first game,
+    // unless the team already has a current season of its own (one started
+    // under a different name must not gain an empty sibling).
     if (team.startDate) {
-      const year = team.startDate.slice(0, 4);
-      ensureSeason(file, seasonIDFor(year, team.season), team.startDate);
+      const seasonID = seasonIDFor(team.startDate.slice(0, 4), team.season);
+      if (!hasCurrentSeason || file.seasons[seasonID]) ensureSeason(file, seasonID, team.startDate);
     }
 
-    // An explicit choice (from Start New Season or an earlier run) is kept.
-    if (file.currentSeason == null || file.seasons[file.currentSeason] == undefined) {
-      file.currentSeason = chooseCurrentSeason(file.seasons, today);
-    }
+    if (!hasCurrentSeason) file.currentSeason = chooseCurrentSeason(file.seasons, today);
 
     teamFiles[team.id] = file;
     for (const [seasonID, entry] of Object.entries(file.seasons).sort(([a], [b]) => a.localeCompare(b))) {
@@ -307,39 +336,49 @@ export interface ReverseResult {
 // Rebuild records.json and practicePlans.json for the old code. Each season
 // lands under the calendar year it starts in. Team-file games and plans win
 // over the old files', and old-file games the team file lacks are kept.
+//
+// Seasons are applied in start-date order, so when two share a year (2026-fall
+// and a 2026-winter starting in November) the later one's practice plan weeks
+// and season record draft win, and a warning names both. A season whose ID has
+// no leading year has nowhere to go in the old files, so the run fails rather
+// than drop its games.
 export function reverseMigrate({ teamFiles, records = {}, practicePlans = {} }: ReverseInput): ReverseResult {
   const outRecords: LegacyRecords = structuredClone(records);
   const outPlans: LegacyPracticePlans = structuredClone(practicePlans);
   const summary: SeasonSummary[] = [];
   const warnings: string[] = [];
 
+  const yearless = Object.entries(teamFiles).flatMap(([teamID, file]) =>
+    Object.keys(file.seasons ?? {}).filter((id) => !seasonYear(id)).map((id) => `${teamID}/${id}`)
+  );
+  if (yearless.length > 0) {
+    throw new Error(`These seasons have no leading year, so the old files cannot hold them: ${yearless.join(", ")}`);
+  }
+
   for (const [teamID, file] of Object.entries(teamFiles)) {
     const teamRecords = (outRecords[teamID] ??= {});
     const existingPlans = outPlans[teamID];
     const teamPlans: Record<string, string> = isPlanMap(existingPlans) ? existingPlans : {};
-    const seasonForYear: Record<string, string> = {};
+    const seasonsForYear: Record<string, string[]> = {};
+    const ordered = Object.entries(file.seasons ?? {}).sort(([a, entryA], [b, entryB]) =>
+      seasonStart(a, entryA).localeCompare(seasonStart(b, entryB)) || a.localeCompare(b)
+    );
 
-    for (const [seasonID, entry] of Object.entries(file.seasons).sort(([a], [b]) => a.localeCompare(b))) {
-      const year = seasonYear(seasonID);
-      if (!year) {
-        warnings.push(`${teamID}: season "${seasonID}" has no leading year, so the old code cannot see it`);
-        continue;
-      }
-      if (seasonForYear[year]) {
-        warnings.push(`${teamID}: seasons ${seasonForYear[year]} and ${seasonID} both map to ${year}; merged`);
-      }
-      seasonForYear[year] = seasonID;
+    for (const [seasonID, entry] of ordered) {
+      const year = seasonYear(seasonID) as string;
+      (seasonsForYear[year] ??= []).push(seasonID);
 
       const season = legacySeasonObject(teamRecords[year]);
-      const { games, added } = mergeGames(season.seasonRecordData ?? [], entry.games, "incoming");
+      const { games, added } = mergeGames(season.seasonRecordData, entry.games, "incoming");
       season.seasonRecordData = games;
       if (entry.seasonRecordDraftID || season.seasonRecordDraftID == undefined) {
-        season.seasonRecordDraftID = entry.seasonRecordDraftID;
+        season.seasonRecordDraftID = entry.seasonRecordDraftID ?? null;
       }
       teamRecords[year] = season;
 
+      const plans = entry.practicePlans ?? {};
       let plansAdded = 0;
-      for (const [week, draftID] of Object.entries(entry.practicePlans)) {
+      for (const [week, draftID] of Object.entries(plans)) {
         const planID = `${year}${week}`;
         if (teamPlans[planID] != draftID) plansAdded++;
         teamPlans[planID] = draftID;
@@ -354,9 +393,18 @@ export function reverseMigrate({ teamFiles, records = {}, practicePlans = {} }: 
         seasonID,
         games: games.length,
         gamesAdded: added,
-        practicePlans: Object.keys(entry.practicePlans).length,
+        practicePlans: Object.keys(plans).length,
         plansAdded,
       });
+    }
+
+    for (const [year, seasonIDs] of Object.entries(seasonsForYear)) {
+      if (seasonIDs.length < 2) continue;
+      const last = seasonIDs[seasonIDs.length - 1];
+      warnings.push(
+        `${teamID}: ${seasonIDs.join(" and ")} all land in ${year} for main. Their games are merged; ` +
+          `practice plans with the same week and the season record draft come from ${last}`,
+      );
     }
   }
 
@@ -408,17 +456,19 @@ export function verifyMigration(input: {
     for (const year of years) {
       const old = legacyGames(input.records[teamID]?.[year] ?? []);
       const fresh = legacyGames(rebuilt.records[teamID]?.[year] ?? []);
-      const freshByKey = new Map(fresh.map((game) => [gameKey(game), game]));
-      const oldKeys = new Set(old.map(gameKey));
       const row = rowFor(teamID, year);
       row.legacyGames = old.length;
 
+      // Pair games key by key, in order, so a key that appears twice in the
+      // old files must appear twice in the team file too.
+      const freshByKey = new Map<string, Game[]>();
+      fresh.forEach((game) => freshByKey.set(gameKey(game), [...(freshByKey.get(gameKey(game)) ?? []), game]));
       for (const game of old) {
-        const match = freshByKey.get(gameKey(game));
+        const match = freshByKey.get(gameKey(game))?.shift();
         if (match == undefined) row.missingGames.push(gameLabel(game));
         else if (JSON.stringify(match) != JSON.stringify(game)) row.changedGames.push(gameLabel(game));
       }
-      row.teamFileOnlyGames = fresh.filter((game) => !oldKeys.has(gameKey(game))).length;
+      row.teamFileOnlyGames = [...freshByKey.values()].reduce((count, left) => count + left.length, 0);
     }
   }
 

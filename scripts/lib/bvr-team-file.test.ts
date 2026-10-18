@@ -3,11 +3,17 @@
  * All data here is synthetic; no real records are read.
  */
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import vm from "node:vm";
+import { repoRoot } from "./drafts-paths";
 import {
   chooseCurrentSeason,
   emptySeason,
   forwardMigrate,
   isClean,
+  isSafeTeamID,
+  teamFileProblem,
   mergeGames,
   reverseMigrate,
   seasonIDFor,
@@ -132,6 +138,18 @@ describe("mergeGames", () => {
     expect(replace.games[0].comments).toBe("incoming");
   });
 
+  test("keeps repeated games instead of collapsing them, and stays idempotent", () => {
+    const twice = [game("A"), game("A")];
+    const first = mergeGames([], twice, "target");
+    expect(first.games).toHaveLength(2);
+    expect(mergeGames(first.games, twice, "target")).toMatchObject({ added: 0 });
+  });
+
+  test("tolerates a null game list on either side", () => {
+    expect(mergeGames(null, [game("A")], "target").games).toHaveLength(1);
+    expect(mergeGames([game("A")], undefined, "incoming").games).toHaveLength(1);
+  });
+
   test("matches games without a draft ID by content", () => {
     const loose = game("", { draftID: undefined });
     expect(mergeGames([loose], [structuredClone(loose)], "target").games).toHaveLength(1);
@@ -248,6 +266,25 @@ describe("forwardMigrate re-runs", () => {
     expect(second["msg-soccer"].seasons["2026-fall"].games[0].submitted).toBe(true);
   });
 
+  test("does not add the teams.yaml season next to one the user started", () => {
+    const first = forwardMigrate({ records: {}, practicePlans: {}, teams, today }).teamFiles;
+    const soccer = first["msg-soccer"];
+    soccer.seasons = { "2026-autumn": emptySeason("2026-autumn", "2026-08-31") };
+    soccer.currentSeason = "2026-autumn";
+    const second = forwardMigrate({ records: {}, practicePlans: {}, teams, existing: first, today }).teamFiles;
+    expect(Object.keys(second["msg-soccer"].seasons)).toEqual(["2026-autumn"]);
+  });
+
+  test("fills null games and practice plans in an existing season", () => {
+    const first = migrate().teamFiles;
+    const season = first["msg-soccer"].seasons["2026-fall"] as unknown as Record<string, unknown>;
+    season.games = null;
+    season.practicePlans = null;
+    const second = migrate(first).teamFiles["msg-soccer"].seasons["2026-fall"];
+    expect(second.games.map((g) => g.draftID)).toEqual(["S-2026-A"]);
+    expect(second.practicePlans).toEqual({ W1: "SPP-26-1", W2: "SPP-26-2" });
+  });
+
   test("keeps an explicitly chosen current season", () => {
     const first = migrate().teamFiles;
     first["us-ultimate"].seasons["2026-winter"] = emptySeason("2026-winter", "2026-11-16");
@@ -325,14 +362,48 @@ describe("reverseMigrate", () => {
         currentSeason: "2026-27",
         seasons: {
           "2026-27": { ...emptySeason("2026-27", "2026-11-16"), games: [game("B-1")], practicePlans: { W1: "BPP-1" } },
-          winter: emptySeason("winter"),
         },
       },
     };
-    const { records, practicePlans, warnings } = reverseMigrate({ teamFiles });
+    const { records, practicePlans } = reverseMigrate({ teamFiles });
     expect((records["us-basketball"]["2026"] as { seasonRecordData: Game[] }).seasonRecordData).toHaveLength(1);
     expect(practicePlans["us-basketball"]).toEqual({ "2026W1": "BPP-1" });
-    expect(warnings).toEqual(['us-basketball: season "winter" has no leading year, so the old code cannot see it']);
+  });
+
+  test("fails instead of dropping a season with no leading year", () => {
+    const teamFiles = migrate().teamFiles;
+    teamFiles["msg-soccer"].seasons["winter-2027"] = { ...emptySeason("winter-2027"), games: [game("W-1")] };
+    expect(() => reverseMigrate({ teamFiles })).toThrow("msg-soccer/winter-2027");
+  });
+
+  test("two seasons in one year: the later start wins plans and draft, games merge, warning names both", () => {
+    const teamFiles = migrate().teamFiles;
+    // Alphabetically 2026-fall sorts before 2026-early, but 2026-early starts first.
+    teamFiles["msg-soccer"].seasons["2026-early"] = {
+      ...emptySeason("2026-early", "2026-02-02"),
+      seasonRecordDraftID: "EARLY-REC",
+      games: [game("E-1")],
+      practicePlans: { W1: "EARLY-W1" },
+    };
+    const { records, practicePlans, warnings } = reverseMigrate({ teamFiles });
+    const season = records["msg-soccer"]["2026"] as LegacySeason;
+    expect(season.seasonRecordDraftID).toBe("SREC-2026");
+    expect((season.seasonRecordData ?? []).map((g) => g.draftID).sort()).toEqual(["E-1", "S-2026-A"]);
+    expect((practicePlans["msg-soccer"] as Record<string, string>)["2026W1"]).toBe("SPP-26-1");
+    expect(warnings).toEqual([
+      "msg-soccer: 2026-early and 2026-fall all land in 2026 for main. Their games are merged; " +
+        "practice plans with the same week and the season record draft come from 2026-fall",
+    ]);
+  });
+
+  test("tolerates seasons with null games and practice plans", () => {
+    const teamFiles = migrate().teamFiles;
+    const season = teamFiles["msg-soccer"].seasons["2026-fall"] as unknown as Record<string, unknown>;
+    season.games = null;
+    season.practicePlans = null;
+    const { records } = reverseMigrate({ teamFiles, records: legacyRecords() });
+    expect((records["msg-soccer"]["2026"] as LegacySeason).seasonRecordData).toHaveLength(1);
+    expect(() => verifyMigration({ records: legacyRecords(), practicePlans: legacyPlans(), teamFiles })).not.toThrow();
   });
 });
 
@@ -343,6 +414,18 @@ describe("verifyMigration", () => {
     const dirty = rows.filter((row) => !isClean(row));
     expect(dirty.map((row) => `${row.teamID}/${row.year}`)).toEqual(["old-team/2024"]);
     expect(dirty[0].missingGames).toEqual(["O-2024-A"]);
+  });
+
+  test("counts repeated keys, so a collapsed duplicate is reported", () => {
+    const records = legacyRecords();
+    (records["msg-soccer"]["2026"] as LegacySeason).seasonRecordData?.push(game("S-2026-A"));
+    const { teamFiles } = forwardMigrate({ records, practicePlans: legacyPlans(), teams, today });
+    expect(teamFiles["msg-soccer"].seasons["2026-fall"].games).toHaveLength(2);
+
+    teamFiles["msg-soccer"].seasons["2026-fall"].games.pop();
+    const row = verifyMigration({ records, practicePlans: legacyPlans(), teamFiles })
+      .find((r) => r.teamID == "msg-soccer" && r.year == "2026");
+    expect(row?.missingGames).toEqual(["S-2026-A"]);
   });
 
   test("reports missing, changed, and team-file-only games by draft ID", () => {
@@ -360,5 +443,39 @@ describe("verifyMigration", () => {
       teamFileOnlyGames: 1,
       missingPlans: ["2026W7"],
     });
+  });
+});
+
+describe("teamFileProblem and isSafeTeamID", () => {
+  test("accepts team IDs that are plain file names only", () => {
+    expect(["msg-soccer", "us_ultimate", "team.2"].every(isSafeTeamID)).toBe(true);
+    expect(["../records", "a/b", "a..b", ".hidden", "", "a\\b"].some(isSafeTeamID)).toBe(false);
+  });
+});
+
+// The schema helpers exist twice: here and in TeamFileStore.js for Drafts.
+// Both are checked against one fixture, and against each other.
+describe("schema helpers stay in step with TeamFileStore.js", () => {
+  const cases = JSON.parse(readFileSync(join(repoRoot, "Library/Tests/fixtures/bvr/schema-cases.json"), "utf8"));
+  const storeSource = readFileSync(join(repoRoot, "Library/Scripts/modules/bvr/storage/TeamFileStore.js"), "utf8");
+  const TeamFileStore = vm.runInNewContext(`${storeSource}\nTeamFileStore`);
+
+  test("labels", () => {
+    for (const [id, label] of Object.entries(cases.labels)) {
+      expect(seasonLabel(id)).toBe(label as string);
+      expect(TeamFileStore.seasonLabel(id)).toBe(label);
+    }
+  });
+
+  test("season entry keys", () => {
+    expect(Object.keys(emptySeason("2026-fall"))).toEqual(cases.seasonKeys);
+    expect(Object.keys(TeamFileStore.emptySeason("2026-fall"))).toEqual(cases.seasonKeys);
+  });
+
+  test("team file validation", () => {
+    for (const { name, valid, data } of cases.teamFiles) {
+      expect([name, teamFileProblem(data) == undefined]).toEqual([name, valid]);
+      expect([name, TeamFileStore.validate(data) == undefined]).toEqual([name, valid]);
+    }
   });
 });
