@@ -21,7 +21,7 @@ library runs; all three old teams are migrated to team files and
 - Step 4, config layering: `staff.yaml.tpl` (the only file with contact
   details), `levels/ms.yaml` and `levels/us.yaml`, `forms.yaml`, per-team
   overrides in `teams.yaml`; the three per-team settings folders are gone.
-- Step 3, partly: Start New Season prompts for season ID, start date and
+- Step 3, first part: Start New Season prompts for season ID, start date and
   form links, and completes a season the migration pre-created. Edit Season
   changes name, dates and links. Submit Game Report asks for a missing link.
 
