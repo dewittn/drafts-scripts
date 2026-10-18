@@ -33,3 +33,15 @@ teamsData:
       draftTags:
         - bvr/soccer/practice/plan
     startDate: "2026-08-31"
+  - id: msg-basketball
+    level: ms
+    name: MS Girls Basketball
+    abbr: MSGB
+    sport: basketball
+    season: winter
+    calendar: MSGB
+    defaultTag: bvr/basketball/ms
+    practicePlan:
+      draftTags:
+        - bvr/basketball/practice/plan
+    startDate: "2026-10-30"

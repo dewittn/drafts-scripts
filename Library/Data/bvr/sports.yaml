@@ -4,3 +4,6 @@ ultimate:
 soccer:
   maxScore: 10
   selectedValue: 1
+basketball:
+  maxScore: 50
+  selectedValue: 10
