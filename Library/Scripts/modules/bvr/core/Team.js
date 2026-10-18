@@ -287,6 +287,10 @@ class Team {
     this.season.startNewSeason();
   }
 
+  editSeason() {
+    this.season.editCurrentSeason();
+  }
+
   insertPlayerName() {
     const { menuSettings, pickerData } = this.bvr.ui.settings(
       "insertPlayerName",

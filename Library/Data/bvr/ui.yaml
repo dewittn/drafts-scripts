@@ -85,6 +85,53 @@ startNewSeason:
         data:
           name: Start Season
           value: start
+editSeason:
+  labelField:
+    type: textField
+    data:
+      name: label
+      label: Name
+  startDateField:
+    type: datePicker
+    data:
+      name: startDate
+      label: First Day
+      options:
+        mode: date
+  hasEndDateField:
+    type: switch
+    data:
+      name: hasEndDate
+      label: Has a last day
+  endDateField:
+    type: datePicker
+    data:
+      name: endDate
+      label: Last Day
+      options:
+        mode: date
+  formField:
+    type: textField
+    data:
+      options:
+        placeholder: https://docs.google.com/forms/...
+        keyboard: url
+        autocorrect: false
+        autocapitalization: none
+  menuSettings:
+    menuTitle: Edit Season
+    menuMessage: "Change this season's name, dates, or form links. The last day is saved only when the switch is on."
+    menuItems:
+      - type: button
+        data:
+          name: Save
+          value: save
+  startDateWarning:
+    menuTitle: Change the first day?
+    menuMessage: "Practice plan weeks are counted from the first day. Plans already made keep their week numbers (W1, W2, ...), so new plans may not line up with old ones. Change it anyway?"
+  clearLinksPrompt:
+    menuTitle: Clear form links?
+    menuMessage: "These form links were left blank. Clear the saved links?"
 formURLPrompt:
   urlField:
     type: textField

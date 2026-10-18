@@ -185,9 +185,151 @@ class Season {
     return this.#startTeamFileSeason();
   }
 
+  // Change the current season's name, dates, or form links in one prompt,
+  // and save once. Team files only: the old files have nowhere to keep them.
+  editCurrentSeason() {
+    if (!this.usesTeamFile) {
+      return this.ui.displayAppMessage(
+        "info",
+        `${this.teamName} still uses records.json. Run bun run bvr:migrate first, then edit its season.`,
+      );
+    }
+    if (!this.ensureCurrentSeason()) return;
+
+    const entry = this.currentSeasonData;
+    const answers = this.#showEditSeasonPrompt(entry);
+    if (answers == undefined) return;
+
+    const changes = this.#seasonEdits(entry, answers);
+    const plans = entry.practicePlans || {};
+    if (changes.startDate != undefined && Object.keys(plans).length > 0 && !this.#confirmStartDateChange()) {
+      return this.ui.displayAppMessage("info", "Nothing was changed.");
+    }
+    if (changes.clearedForms.length > 0 && !this.#confirmClearLinks(changes.clearedForms)) {
+      changes.clearedForms = [];
+    }
+
+    const changed = this.#applySeasonEdits(entry, changes);
+    if (changed.length == 0) return this.ui.displayAppMessage("info", "Nothing changed.");
+
+    this.store.saveGames();
+    this.ui.displayAppMessage("success", `Updated ${entry.label || this.currentSeasonID}: ${changed.join(", ")}.`);
+  }
+
   // **********************
   // Private Functions
   // **********************
+
+  // One prompt, prefilled from the season. The last day is a date picker plus
+  // a switch, because a Drafts date picker cannot be left empty: the switch
+  // off means no last day (endDate null).
+  #showEditSeasonPrompt(entry) {
+    const section = JSON.parse(JSON.stringify(this.ui.settings("editSeason")));
+    const { menuSettings, labelField, startDateField, hasEndDateField, endDateField, formField } = section;
+    const startDate = this.#parseYMD(entry.startDate) || new Date();
+    const savedURLs = entry.formURLs || {};
+
+    labelField.data.initialText = entry.label || `${this.currentSeasonID}`;
+    startDateField.data.initialDate = startDate;
+    hasEndDateField.data.initialValue = entry.endDate != undefined;
+    endDateField.data.initialDate = this.#parseYMD(entry.endDate) || startDate;
+    const formFields = this.team.formNames.map((formName) => ({
+      ...JSON.parse(JSON.stringify(formField)),
+      data: {
+        ...formField.data,
+        name: `form:${formName}`,
+        label: this.team.form(formName).title || formName,
+        initialText: savedURLs[formName] || "",
+      },
+    }));
+    menuSettings.menuItems.push(labelField, startDateField, hasEndDateField, endDateField, ...formFields);
+
+    const seasonPrompt = this.ui.buildMenu(menuSettings);
+    if (seasonPrompt.show() == false) return undefined;
+    return seasonPrompt.fieldValues;
+  }
+
+  // What the answers would change: new values for label and dates, links to
+  // set, and forms whose saved link was blanked (cleared only on a yes).
+  #seasonEdits(entry, answers) {
+    if (typeof GoogleForm == "undefined") require("modules/bvr/services/GoogleForm.js");
+    const edits = { links: {}, clearedForms: [] };
+
+    const label = `${answers.label || ""}`.trim();
+    if (label != "" && label != entry.label) edits.label = label;
+
+    const startDate = this.bvr.formatDateYMD(answers.startDate);
+    if (startDate != entry.startDate) edits.startDate = startDate;
+
+    const endDate = answers.hasEndDate ? this.bvr.formatDateYMD(answers.endDate) : null;
+    if (endDate != (entry.endDate == undefined ? null : entry.endDate)) edits.endDate = endDate;
+
+    const savedURLs = entry.formURLs || {};
+    for (const formName of this.team.formNames) {
+      const typed = `${answers[`form:${formName}`] || ""}`.trim();
+      if (typed == "") {
+        if (savedURLs[formName]) edits.clearedForms.push(formName);
+        continue;
+      }
+      const url = GoogleForm.baseURL(typed);
+      if (url == undefined) {
+        this.ui.displayAppMessage("info", `The ${this.#formTitle(formName)} link is not a link, so it was left as it was.`);
+      } else if (url != savedURLs[formName]) {
+        edits.links[formName] = url;
+      }
+    }
+    return edits;
+  }
+
+  // Write the edits into the season entry. Returns the names of what changed.
+  #applySeasonEdits(entry, edits) {
+    const changed = [];
+    if (edits.label != undefined) {
+      entry.label = edits.label;
+      changed.push("name");
+    }
+    if (edits.startDate != undefined) {
+      entry.startDate = edits.startDate;
+      changed.push("first day");
+    }
+    if (edits.endDate !== undefined) {
+      entry.endDate = edits.endDate;
+      changed.push("last day");
+    }
+
+    const formURLs = { ...(entry.formURLs || {}), ...edits.links };
+    edits.clearedForms.forEach((formName) => delete formURLs[formName]);
+    const linkChanges = [...Object.keys(edits.links), ...edits.clearedForms];
+    if (linkChanges.length > 0) {
+      entry.formURLs = formURLs;
+      if (entry.formURL === null) delete entry.formURL;
+      linkChanges.forEach((formName) => changed.push(`${this.#formTitle(formName)} link`));
+    }
+    return changed;
+  }
+
+  #confirmStartDateChange() {
+    const { startDateWarning } = this.ui.settings("editSeason");
+    return this.ui.yesNoPrompt({ ...startDateWarning }) == "yes";
+  }
+
+  #confirmClearLinks(formNames) {
+    const { clearLinksPrompt } = this.ui.settings("editSeason");
+    const titles = formNames.map((formName) => this.#formTitle(formName)).join(", ");
+    return this.ui.yesNoPrompt({ ...clearLinksPrompt, menuMessage: `${clearLinksPrompt.menuMessage}\n\n${titles}` }) == "yes";
+  }
+
+  #formTitle(formName) {
+    return this.team.form(formName).title || formName;
+  }
+
+  // "2026-09-07" as a local date (new Date("2026-09-07") would be UTC
+  // midnight, the day before in US time zones). Undefined for no date.
+  #parseYMD(value) {
+    if (!value) return undefined;
+    const [year, month, day] = `${value}`.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
 
   // The team file when there is one. A team file that exists but cannot be
   // read stops the action: falling back to records.json would hide its games,

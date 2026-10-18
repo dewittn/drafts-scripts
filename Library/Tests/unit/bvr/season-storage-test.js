@@ -65,8 +65,22 @@ function teamFixture() {
   return savable(DataFile.load(teamFixturePath));
 }
 
-// The startNewSeason and formURLPrompt entries from Library/Data/bvr/ui.yaml.
+// The startNewSeason, formURLPrompt, and editSeason entries from Library/Data/bvr/ui.yaml.
 const uiSettings = {
+  editSeason: {
+    labelField: { type: "textField", data: { name: "label", label: "Name" } },
+    startDateField: { type: "datePicker", data: { name: "startDate", label: "First Day" } },
+    hasEndDateField: { type: "switch", data: { name: "hasEndDate", label: "Has a last day" } },
+    endDateField: { type: "datePicker", data: { name: "endDate", label: "Last Day" } },
+    formField: { type: "textField", data: { options: { keyboard: "url" } } },
+    menuSettings: {
+      menuTitle: "Edit Season",
+      menuMessage: "Change this season.",
+      menuItems: [{ type: "button", data: { name: "Save", value: "save" } }],
+    },
+    startDateWarning: { menuTitle: "Change the first day?", menuMessage: "Weeks count from the first day." },
+    clearLinksPrompt: { menuTitle: "Clear form links?", menuMessage: "These form links were left blank." },
+  },
   formURLPrompt: {
     urlField: { type: "textField", data: { name: "url", label: "Form link" } },
     menuSettings: {
@@ -86,10 +100,15 @@ const uiSettings = {
   },
 };
 
-function mockUI(promptResponses = {}) {
+// yesNo: answers to yesNoPrompt by menu title ("yes" or "no"); unlisted is "no".
+function mockUI(promptResponses = {}, yesNo = {}) {
   /** @type {any} */
   const ui = new MockUI({ promptResponses });
   ui.settings = (name) => JSON.parse(JSON.stringify(uiSettings[name]));
+  ui.yesNoPrompt = (menuSettings) => {
+    ui.interactions.push({ type: "yesNo", menuSettings });
+    return yesNo[menuSettings.menuTitle] || "no";
+  };
   return ui;
 }
 
@@ -655,6 +674,106 @@ team.season.startNewSeason();
 test.assertEqual(file.seasons["2026-fall"].formURLs?.["varsity-score-report"], "https://docs.google.com/forms/d/e/FALL", "an existing current season gets a missing link");
 test.assertEqual(file.saves, 1, "and is saved once");
 test.assert(infoMessages(bvr.ui).some((m) => m.includes("already has a 2026-fall season")), "while still saying the season exists");
+
+// --- Edit Season ---
+test.section("Edit Season");
+
+const savedLink = "https://docs.google.com/forms/d/e/SAVED";
+// Answers for the Edit Season prompt. Every field is given, since the mock
+// answers an unknown field with the first value it has.
+const editAnswers = (overrides = {}) => ({
+  "Edit Season": {
+    button: "save",
+    fieldValues: {
+      label: "2026 Fall",
+      startDate: new Date(2026, 8, 7),
+      hasEndDate: false,
+      endDate: new Date(2026, 8, 7),
+      "form:varsity-score-report": savedLink,
+      ...overrides,
+    },
+  },
+});
+function editFixture() {
+  const editFile = teamFixture();
+  editFile.seasons["2026-fall"].formURLs = { "varsity-score-report": savedLink };
+  return editFile;
+}
+function runEdit(answers, yesNo = {}, editFile = editFixture()) {
+  bvr = mockBVR(teamFixturePath, mockUI(answers, yesNo));
+  team = mockTeam(bvr);
+  team.season.store = new TeamFileStore(editFile);
+  team.season.editCurrentSeason();
+  return editFile;
+}
+const yesNoTitles = () => bvr.ui.getInteractionsByType("yesNo").map((i) => i.menuSettings.menuTitle);
+const successMessages = () =>
+  bvr.ui.getInteractionsByType("appMessage").filter((m) => m.messageType == "success").map((m) => m.message);
+
+file = runEdit(editAnswers());
+const editMenu = bvr.ui.getInteractionsByType("buildMenu")[0]?.menuSettings;
+const fields = Object.fromEntries((editMenu?.menuItems || []).slice(1).map((item) => [item.data.name, item.data]));
+test.assertEqual(fields.label?.initialText, "2026 Fall", "prefills the name");
+test.assertEqual(fields.startDate?.initialDate?.getDate(), 7, "prefills the first day from the season");
+test.assertEqual(fields.startDate?.initialDate?.getMonth(), 8, "as a local date");
+test.assertEqual(fields.hasEndDate?.initialValue, false, "the last-day switch is off when there is none");
+test.assertEqual(fields["form:varsity-score-report"]?.initialText, savedLink, "prefills each form link");
+test.assertEqual(fields["form:varsity-score-report"]?.label, "Varsity score report", "labels the link with the form title");
+test.assertEqual(file.saves, 0, "unchanged answers save nothing");
+test.assert(infoMessages(bvr.ui).includes("Nothing changed."), "and say so");
+
+file = runEdit(editAnswers({ label: "Fall 2026", hasEndDate: true, endDate: new Date(2026, 10, 14) }));
+test.assertEqual(file.seasons["2026-fall"].label, "Fall 2026", "saves a new name");
+test.assertEqual(file.seasons["2026-fall"].endDate, "2026-11-14", "saves a last day when the switch is on");
+test.assertEqual(file.saves, 1, "in one save");
+test.assertDeepEqual(successMessages(), ["Updated Fall 2026: name, last day."], "the message lists what changed");
+
+file = editFixture();
+file.seasons["2026-fall"].endDate = "2026-11-14";
+file = runEdit(editAnswers({ hasEndDate: false }), {}, file);
+test.assertEqual(file.seasons["2026-fall"].endDate, null, "switching the last day off clears it");
+
+// The fixture season has a practice plan (W1).
+file = runEdit(editAnswers({ startDate: new Date(2026, 8, 14) }), { "Change the first day?": "yes" });
+test.assertDeepEqual(yesNoTitles(), ["Change the first day?"], "a new first day with plans asks first");
+test.assertEqual(file.seasons["2026-fall"].startDate, "2026-09-14", "and saves it on yes");
+test.assertDeepEqual(file.seasons["2026-fall"].practicePlans, { W1: "PLAN-1" }, "existing plans keep their week keys");
+
+file = runEdit(editAnswers({ startDate: new Date(2026, 8, 14), label: "Renamed" }), { "Change the first day?": "no" });
+test.assertEqual(file.seasons["2026-fall"].startDate, "2026-09-07", "on no, the first day stays");
+test.assertEqual(file.seasons["2026-fall"].label, "2026 Fall", "and nothing else changes either");
+test.assertEqual(file.saves, 0, "and nothing is saved");
+
+file = editFixture();
+file.seasons["2026-fall"].practicePlans = {};
+file = runEdit(editAnswers({ startDate: new Date(2026, 8, 14) }), {}, file);
+test.assertDeepEqual(yesNoTitles(), [], "without plans, a new first day needs no warning");
+test.assertEqual(file.seasons["2026-fall"].startDate, "2026-09-14", "and is saved");
+
+file = runEdit(editAnswers({ "form:varsity-score-report": "  " }), { "Clear form links?": "yes" });
+test.assertDeepEqual(file.seasons["2026-fall"].formURLs, {}, "a blanked link is cleared on yes");
+test.assertDeepEqual(successMessages(), ["Updated 2026 Fall: Varsity score report link."], "and listed as changed");
+
+file = runEdit(editAnswers({ "form:varsity-score-report": "" }), { "Clear form links?": "no" });
+test.assertEqual(file.seasons["2026-fall"].formURLs["varsity-score-report"], savedLink, "a blanked link is kept on no");
+test.assertEqual(file.saves, 0, "with nothing saved");
+
+file = runEdit(editAnswers({ "form:varsity-score-report": "https://docs.google.com/forms/d/e/NEWER/viewform?usp=sf_link" }));
+test.assertEqual(file.seasons["2026-fall"].formURLs["varsity-score-report"], "https://docs.google.com/forms/d/e/NEWER", "a new link is cleaned and saved");
+
+file = runEdit(editAnswers({ "form:varsity-score-report": "not a link" }));
+test.assertEqual(file.seasons["2026-fall"].formURLs["varsity-score-report"], savedLink, "a non-link leaves the saved link");
+test.assert(infoMessages(bvr.ui).some((m) => m.includes("is not a link")), "and says so");
+
+file = runEdit({});
+test.assertEqual(file.saves, 0, "cancelling the prompt changes nothing");
+
+bvr = mockBVR(missingTeamFilePath, mockUI(editAnswers()));
+team = mockTeam(bvr);
+team.season.store = legacy(2026);
+team.season.editCurrentSeason();
+test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 0, "an unmigrated team gets no prompt");
+test.assert(infoMessages(bvr.ui).some((m) => m.includes("Run bun run bvr:migrate first")), "and is told to migrate first");
 
 // --- shared schema fixture ---
 test.section("shared schema fixture");
