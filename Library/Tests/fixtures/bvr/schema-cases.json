@@ -1,0 +1,34 @@
+{
+  "comment": "Shared by scripts/lib/bvr-team-file.test.ts and Library/Tests/unit/bvr/season-storage-test.js so the schema helpers duplicated in TeamFileStore.js and bvr-team-file.ts cannot drift apart.",
+  "labels": {
+    "2026-fall": "2026 Fall",
+    "2026-winter": "2026 Winter",
+    "2026-27": "2026-27",
+    "2026": "2026",
+    "Winter League": "Winter League"
+  },
+  "seasonKeys": [
+    "label",
+    "startDate",
+    "endDate",
+    "formURL",
+    "recipients",
+    "attendanceDraftID",
+    "seasonRecordDraftID",
+    "games",
+    "practicePlans"
+  ],
+  "teamFiles": [
+    { "name": "a complete file", "valid": true, "data": { "schemaVersion": 1, "teamID": "t", "currentSeason": "2026-fall", "seasons": {} } },
+    { "name": "no current season yet", "valid": true, "data": { "schemaVersion": 1, "teamID": "t", "currentSeason": null, "seasons": {} } },
+    { "name": "null (half-synced file)", "valid": false, "data": null },
+    { "name": "an empty object", "valid": false, "data": {} },
+    { "name": "a JSON array", "valid": false, "data": [] },
+    { "name": "no teamID", "valid": false, "data": { "schemaVersion": 1, "currentSeason": null, "seasons": {} } },
+    { "name": "seasons missing", "valid": false, "data": { "schemaVersion": 1, "teamID": "t", "currentSeason": null } },
+    { "name": "seasons null", "valid": false, "data": { "schemaVersion": 1, "teamID": "t", "currentSeason": null, "seasons": null } },
+    { "name": "seasons an array", "valid": false, "data": { "schemaVersion": 1, "teamID": "t", "currentSeason": null, "seasons": [] } },
+    { "name": "unknown schemaVersion", "valid": false, "data": { "schemaVersion": 2, "teamID": "t", "currentSeason": null, "seasons": {} } },
+    { "name": "currentSeason a number", "valid": false, "data": { "schemaVersion": 1, "teamID": "t", "currentSeason": 2026, "seasons": {} } }
+  ]
+}

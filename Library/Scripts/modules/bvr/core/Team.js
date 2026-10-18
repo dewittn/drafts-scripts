@@ -181,6 +181,9 @@ class Team {
     return this.#bvr.globalTags;
   }
 
+  // Every template built from these settings reads the season ID and label,
+  // so this is where a run first picks its season storage (and shows the
+  // "not migrated" message for a team without a team file).
   get gblTmplSettings() {
     return {
       teamName: this.name,

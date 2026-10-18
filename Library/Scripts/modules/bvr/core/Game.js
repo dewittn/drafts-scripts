@@ -274,6 +274,8 @@ class Game {
   // **********************
 
   recordResult() {
+    if (!this.team.season.ensureCurrentSeason()) return;
+
     const funcsToRun = [
       "recordDate",
       "recordOpponent",
@@ -498,6 +500,8 @@ class Game {
   }
 
   submitReport() {
+    if (!this.team.season.ensureCurrentSeason()) return;
+
     if (this.submitted) {
       this.ui.displayAppMessage(
         "info",

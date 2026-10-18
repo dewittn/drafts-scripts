@@ -14,10 +14,35 @@ class TeamFileStore {
   }
 
   // The team's file, or undefined when the team has not been migrated yet.
+  // Throws when the file exists but is not a usable team file (a half-synced
+  // iCloud copy reads as empty), so nothing falls back or overwrites it.
   static load(path) {
     if (typeof DataFile == "undefined") require("modules/cp/filesystems/CloudFS.js");
     if (!DataFile.exists(path)) return undefined;
-    return new TeamFileStore(new DataFile(path));
+
+    const file = new DataFile(path);
+    const problem = this.validate(file);
+    if (problem != undefined) throw new Error(`${path} cannot be used: ${problem}`);
+    return new TeamFileStore(file);
+  }
+
+  // Why data is not a usable team file, or undefined when it is. Same checks
+  // as teamFileProblem in scripts/lib/bvr-team-file.ts (a shared fixture in
+  // Library/Tests/fixtures/bvr/schema-cases.json keeps them in step).
+  static validate(data) {
+    const isObject = (value) => typeof value == "object" && value != null && !Array.isArray(value);
+    if (!isObject(data)) return "the file is empty or not a JSON object";
+    if (data.schemaVersion !== this.schemaVersion) return `unknown schemaVersion ${JSON.stringify(data.schemaVersion)}`;
+    if (typeof data.teamID != "string" || data.teamID == "") return "teamID is missing";
+    if (!isObject(data.seasons)) return "seasons is missing or not an object";
+    if (data.currentSeason != null && typeof data.currentSeason != "string") return "currentSeason is not a string";
+    return undefined;
+  }
+
+  // Season IDs start with the year they begin in, then a name: 2026-fall,
+  // 2026-winter, 2026-27. The old files key seasons by that year.
+  static isValidSeasonID(seasonID) {
+    return /^\d{4}-[A-Za-z0-9][A-Za-z0-9-]*$/.test(`${seasonID}`);
   }
 
   // A new, empty team file. Nothing is written until the first save.
@@ -133,7 +158,10 @@ class TeamFileStore {
     this.save();
   }
 
+  // Refuses to write anything that would not load back as a team file.
   save() {
+    const problem = TeamFileStore.validate(this.#file);
+    if (problem != undefined) throw new Error(`Team file not saved: ${problem}`);
     return this.#file.save();
   }
 }

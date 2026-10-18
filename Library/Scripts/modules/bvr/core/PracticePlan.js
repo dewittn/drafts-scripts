@@ -113,6 +113,7 @@ class PracticePlan {
   }
 
   create() {
+    if (!this.team.season.ensureCurrentSeason()) return;
     if (this.ppTmplSettings == undefined) {
       return alert("ppTmplSettings is undefined!");
     }
@@ -140,6 +141,7 @@ class PracticePlan {
   }
 
   load() {
+    if (!this.team.season.ensureCurrentSeason()) return;
     const draftID = this.practicePlans?.[this.planID];
     if (draftID == undefined) {
       return this.bvr.ui.displayAppMessage("info", "No practice plan found.");

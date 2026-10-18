@@ -7,8 +7,9 @@ class TmplSettings {
         ...gblTmplSettings.teamTemplateTags,
         team_name: gblTmplSettings.teamName,
         team_abbr: gblTmplSettings.teamAbbr,
-        current_season: `${gblTmplSettings.currentSeasonID}`,
-        current_season_label: `${gblTmplSettings.currentSeasonLabel ?? gblTmplSettings.currentSeasonID}`,
+        // Empty, never "null", for a team file with no current season yet.
+        current_season: `${gblTmplSettings.currentSeasonID ?? ""}`,
+        current_season_label: `${gblTmplSettings.currentSeasonLabel ?? gblTmplSettings.currentSeasonID ?? ""}`,
         game_date: game.formattedDate,
         game_report_due_date: game.reportDueDate,
         game_location: game.location,

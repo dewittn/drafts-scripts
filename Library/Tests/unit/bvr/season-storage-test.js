@@ -15,6 +15,8 @@ require("../Tests/fixtures/mocks.js");
 require("modules/cp/filesystems/CloudFS.js");
 require("modules/bvr/core/Season.js");
 require("modules/bvr/core/PracticePlan.js");
+require("modules/bvr/core/Game.js");
+require("modules/bvr/utils/TmplSettings.js");
 require("modules/bvr/storage/TeamFileStore.js");
 require("modules/bvr/storage/LegacySeasonStore.js");
 
@@ -90,6 +92,10 @@ function mockBVR(teamFilePath, ui = mockUI()) {
     globalTags: {},
     recordsFile: "../Tests/fixtures/bvr/no-records.json",
     ppData: savable({}),
+    draftsCreated: 0,
+    createDraftFromTemplate() {
+      this.draftsCreated++;
+    },
     teamFilePath: () => teamFilePath,
     formatDateYMD: (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
   };
@@ -339,5 +345,97 @@ team = mockTeam(bvr);
 team.season.store = legacy(2026);
 team.season.startNewSeason();
 test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 0, "an unmigrated team with history keeps the old flow");
+
+// --- unusable team file ---
+test.section("unusable team file");
+
+bvr = mockBVR("../Tests/fixtures/bvr/team-file-half-synced.json");
+team = mockTeam(bvr);
+test.assertThrows(() => team.season.currentSeasonRecord, "a half-synced team file stops the action", "cannot be used");
+test.assert(
+  bvr.ui.getInteractionsByType("appMessage").some((m) => m.messageType == "error" && m.message.includes("Nothing was changed")),
+  "shows an error saying nothing was changed",
+);
+test.assertDeepEqual(infoMessages(bvr.ui), [], "does not fall back to records.json");
+
+file = savable({ teamID: "test-team", seasons: {} });
+test.assertThrows(() => new TeamFileStore(file).save(), "refuses to save a file that would not load back", "not saved");
+test.assertEqual(file.saves, 0, "nothing was written");
+
+// --- no current season ---
+test.section("no current season");
+
+const noSeasonFile = () => savable({ schemaVersion: 1, teamID: "test-team", currentSeason: null, seasons: {} });
+
+bvr = mockBVR(teamFixturePath);
+team = mockTeam(bvr);
+team.season.store = new TeamFileStore(noSeasonFile());
+new PracticePlan(team.dependencies).create();
+test.assertEqual(bvr.draftsCreated, 0, "Create Practice Plan makes no draft");
+new PracticePlan(team.dependencies).load();
+const game = new Game(team.dependencies, "ANY-DRAFT");
+game.recordResult();
+test.assertEqual(game.recorded, false, "Record Game Score records nothing");
+test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 0, "no prompt appears before the check");
+test.assertEqual(
+  bvr.ui.getInteractionsByType("appMessage").filter((m) => m.message.includes("Run Start New Season first")).length,
+  3,
+  "each says to run Start New Season",
+);
+
+// TmplSettings' constructor returns a plain settings object.
+/** @type {any} */
+const noSeasonSettings = new TmplSettings(
+  { currentSeasonID: null, currentSeasonLabel: null, defaultDraftTags: [] },
+  {},
+);
+const noSeasonTags = noSeasonSettings.templateTags;
+test.assertEqual(noSeasonTags.current_season, "", "current_season is empty, never \"null\"");
+test.assertEqual(noSeasonTags.current_season_label, "", "current_season_label is empty too");
+
+// --- season name validation ---
+test.section("season name validation");
+
+bvr = mockBVR(teamFixturePath, mockUI(startResponse("winter-2027")));
+team = mockTeam(bvr);
+file = teamFixture();
+team.season.store = new TeamFileStore(file);
+team.season.startNewSeason();
+const prompts = bvr.ui.getInteractionsByType("buildMenu");
+test.assertEqual(prompts.length, 3, "asks again, up to three times, for a name without a leading year");
+test.assertEqual(prompts[1].menuSettings.menuItems[1].data.initialText, "winter-2027", "re-asks with what was typed");
+test.assertEqual(file.saves, 0, "never saves an invalid season name");
+test.assert(infoMessages(bvr.ui).some((m) => m.includes("is not a season name")), "explains the expected shape");
+test.assertEqual(TeamFileStore.isValidSeasonID("2026-27"), true, "2026-27 is a valid name");
+test.assertEqual(TeamFileStore.isValidSeasonID("2026"), false, "a bare year needs a name");
+test.assertEqual(TeamFileStore.isValidSeasonID("2026-fall/x"), false, "no slashes");
+
+// --- legacy flows ---
+test.section("legacy flows");
+
+bvr = mockBVR(missingTeamFilePath, mockUI());
+team = mockTeam(bvr);
+team.season.store = legacy(2026);
+team.season.startNewSeason();
+test.assert(infoMessages(bvr.ui).some((m) => m.includes("already has a season record draft")), "says the record draft exists");
+
+const bareRecords = savable({ "test-team": { 2024: [{ draftID: "BARE" }], 2026: { seasonRecordData: [] } } });
+test.assertEqual(legacy(2024, bareRecords).migrateBareSeason(), "migrated", "converts a bare-array season");
+test.assertDeepEqual(bareRecords["test-team"][2024], { seasonRecordDraftID: "", seasonRecordData: [{ draftID: "BARE" }] }, "into the object form");
+test.assertEqual(bareRecords.saves, 1, "and saves records.json");
+test.assertEqual(legacy(2026, bareRecords).migrateBareSeason(), "already", "leaves an object season alone");
+test.assertEqual(legacy(2025, bareRecords).migrateBareSeason(), "wrong-type", "reports a missing season");
+
+// --- shared schema fixture ---
+test.section("shared schema fixture");
+
+const cases = DataFile.load("../Tests/fixtures/bvr/schema-cases.json");
+for (const [id, label] of Object.entries(cases.labels)) {
+  test.assertEqual(TeamFileStore.seasonLabel(id), label, `label of ${id}`);
+}
+test.assertDeepEqual(Object.keys(TeamFileStore.emptySeason("2026-fall")), cases.seasonKeys, "season entry keys");
+for (const { name, valid, data } of cases.teamFiles) {
+  test.assertEqual(TeamFileStore.validate(data) == undefined, valid, `validate: ${name}`);
+}
 
 test.summary();
