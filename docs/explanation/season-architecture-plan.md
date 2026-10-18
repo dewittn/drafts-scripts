@@ -25,9 +25,13 @@ library runs; all three old teams are migrated to team files and
   form links, and completes a season the migration pre-created. Edit Season
   changes name, dates and links. Submit Game Report asks for a missing link.
 
-**In flight:** shared form links per term (`formLinks.json`, keyed
-`<year>-<fall|winter|spring>`, used by every team in that term). See the
-"Form links" section of `docs/reference/bvr-team-file.md` once it lands.
+- Shared form links per term: `formLinks.json`, keyed
+  `<year>-<fall|winter|spring>`, used by every team in that term, with a
+  per-season override slot. See "Form links" in
+  `docs/reference/bvr-team-file.md`. Checked in Drafts: pending the first
+  Edit Season run on soccer and basketball after the 2026-10-18 sync.
+
+**In flight:** nothing.
 
 **Not started:**
 
