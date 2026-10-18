@@ -11,7 +11,7 @@ it, it lives in iCloud beside the old files, and it is never in git.
 <Drafts>/Library/Data/bvr/teams/<teamID>.json
 ```
 
-The folder name comes from `teamFilesDir` in `Library/Data/bvr/settings.tpl`.
+The folder name comes from `teamFilesDir` in `Library/Data/bvr/settings.yaml.tpl`.
 The Drafts scripts read it through `BVR.teamFilePath()`, and `bvr:migrate`
 reads the same key from the template.
 

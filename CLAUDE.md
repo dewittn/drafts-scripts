@@ -16,10 +16,10 @@ The build runs on Bun (`scripts/build.ts`). Gulp is still installed as a fallbac
 - `bun run test [filter] [--all]` - Run unit tests locally under Bun with a Drafts-style `require()` shim. Covers loading and pure logic only; tests that touch Drafts objects (Draft, editor, Workspace, ...) are reported as "needs Drafts" and must run in the app
 - `bun run test:scripts` - Run the `bun test` suites for the Bun tooling in `scripts/` (`*.test.ts`, such as the BVR team file migration). `bun run test` cannot load TypeScript, so these live apart from `Library/Tests/`
 - `bun run typecheck` - Type-check the scripts against `types/` (see `scripts/typecheck.ts`). Fails only on errors not in `scripts/typecheck-baseline.json`; `--all` shows every error, `--update-baseline` rewrites the baseline after fixing one (also update `docs/reference/typecheck-findings.md`)
-- `bun run inject [--force]` - Render `.tpl` files to `.yaml` with the 1Password CLI. Skips templates whose content has not changed since the last render (tracked by content hash in `.build/inject-manifest.json`); `--force` renders all, e.g. after rotating a secret
+- `bun run inject [--force]` - Render `<name>.yaml.tpl` files to `<name>.yaml` with the 1Password CLI. Skips templates whose content has not changed since the last render (tracked by content hash in `.build/inject-manifest.json`); `--force` renders all, e.g. after rotating a secret
 - `bun run data` - Copy JSON data files from iCloud to local Library
 - `bun run yaml2json` - Convert YAML config files to JSON (runs automatically during sync)
-- `bun run clean` - Delete the `.yaml` files rendered from `.tpl` files (`sync` already does this as its last step)
+- `bun run clean` - Delete the `.yaml` files rendered from `.yaml.tpl` files (`sync` already does this as its last step)
 - `bun run checkpoint [promote]` - Report which dev commits have settled enough to move to main; `promote` fast-forwards main and tags it (see the `drafts-change-workflow` skill)
 - `bun run bvr:backup` - Copy every `.json` under the Drafts `Library/Data/bvr/` to `~/Backups/drafts-bvr/<YYYY-MM-DD_HHMMSS>/` and print the folder. Plain copy, contents never printed. `BVR_BACKUP_DIR` changes the backup root; `DRAFTS_DEST` changes the source
 - `bun run bvr:migrate [--dry-run]` - Back up, then fold `records.json` and `practicePlans.json` into one `Library/Data/bvr/teams/<teamID>.json` per team in the Drafts folder. Never changes the old files; safe to re-run. `--verify` compares the two sides; `--reverse --out <dir>` rebuilds the old files for `main` into `<dir>`. See `docs/reference/bvr-team-file.md`
@@ -95,7 +95,7 @@ require("shared/core/ServiceInitializer.js");           // ✅ Correct
 ### Configuration System
 
 The project uses a build-time compilation approach for configuration:
-- Template files (`.tpl`) contain secrets managed by 1Password CLI
+- Template files (`<name>.yaml.tpl`) contain secrets managed by 1Password CLI. The name says what they render to, and editors highlight them as YAML
 - YAML files (`.yaml`) are human-friendly source files for configuration
 - JSON files (`.json`) are build artifacts generated from YAML files at build time
 - Scripts load JSON files at runtime (no YAML parsing overhead)
@@ -108,7 +108,7 @@ Files are developed locally in `Library/` and synchronized to the iCloud Drafts 
 
 The sync process:
 1. Copies JSON data from iCloud to local
-2. Processes template files to inject secrets (`.tpl` → `.yaml`)
+2. Processes template files to inject secrets (`.yaml.tpl` → `.yaml`)
 3. Converts YAML config files to JSON (`.yaml` → `.json`)
 4. Syncs all files to iCloud Drafts directory
 5. Optionally watches for changes in development mode

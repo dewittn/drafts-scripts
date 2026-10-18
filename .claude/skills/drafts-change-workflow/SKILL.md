@@ -1,6 +1,6 @@
 ---
 name: drafts-change-workflow
-description: How changes are made in the drafts-scripts repo, from finding existing helpers to committing and checkpointing main. Use this for every code or config change here, however small. That covers new Drafts actions, revisions to existing scripts (query letter, Fastmail, BVR, Content Pipeline), bug fixes, settings YAML or .tpl edits, tests, and build tooling. Also use it when the user wants to switch to the stable version, roll back, fix something on main, or asks about checkpoints or releases. Load it before writing the first line of code, not after.
+description: How changes are made in the drafts-scripts repo, from finding existing helpers to committing and checkpointing main. Use this for every code or config change here, however small. That covers new Drafts actions, revisions to existing scripts (query letter, Fastmail, BVR, Content Pipeline), bug fixes, settings YAML or .yaml.tpl edits, tests, and build tooling. Also use it when the user wants to switch to the stable version, roll back, fix something on main, or asks about checkpoints or releases. Load it before writing the first line of code, not after.
 ---
 
 # Drafts change workflow
@@ -50,7 +50,7 @@ If a helper almost fits, extend it and say so, rather than working around it. If
 
 - **Thin actions.** A file in `Library/Actions/` requires its modules, reads settings, calls a module class, and reports the result. Logic lives in a class under `Library/Scripts/modules/<area>/` or `shared/`, where it can be tested and reused. `Library/Actions/nr/send-to-fastmail.js` with `modules/nr/EmailDraft.js` is a good model.
 - **Match the surrounding code.** Use small named functions with a one or two line comment saying what each does and why, guard clauses over nesting, and descriptive names. Polish with the `code-styling` skill once it works.
-- **Config, not constants.** Settings go in `Library/Data/**/*.yaml`, and secrets go in `.tpl` files. Never edit the generated `.json`. Read settings with `loadSettings("<file>.json")`.
+- **Config, not constants.** Settings go in `Library/Data/**/*.yaml`, and secrets go in `<name>.yaml.tpl` files. Never edit the generated `.json`. Read settings with `loadSettings("<file>.json")`.
 - **Require paths** are always relative to `Library/Scripts/` (see CLAUDE.md).
 - **Know the runtime.** Read `docs/reference/drafts-runtime.md` before touching code that updates the open draft, holds state, or switches workspaces. Every run starts from a fresh context, and Drafts writes the global `draft` back to the editor when a script step ends. Both have caused real bugs.
 - **Airtable is legacy.** NocoDB is production. Don't invest in `airtable-v2.js`, and don't make gratuitous edits to it either, until the user decides whether to delete it.

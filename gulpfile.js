@@ -13,7 +13,7 @@ const srcDir = "./Library";
 const destDir =
   process.env.DRAFTS_DEST ?? `${process.env.HOME}/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents`;
 
-// Build artifacts: .yaml generated from .tpl by injectSecrets, .json generated from
+// Build artifacts: .yaml generated from .yaml.tpl by injectSecrets, .json generated from
 // .yaml by convertYamlToJson. Excluded from the watcher so a rebuild's own writes
 // don't retrigger it.
 const generatedSettings = [
@@ -115,10 +115,10 @@ function injectSecrets() {
     stderr: true, // default = true, false means don't write stderr
     stdout: false, // default = true, false means don't write stdout
   };
-  return src(`${srcDir}/**/*.tpl`)
+  return src(`${srcDir}/**/*.yaml.tpl`)
     .pipe(gulpExec((file) => `op inject -i ${file.path}`, options))
     .pipe(reporter(reportOptions))
-    .pipe(ext_replace(".yaml"))
+    .pipe(ext_replace(".yaml", ".yaml.tpl"))
     .pipe(dest(`${srcDir}`));
 }
 

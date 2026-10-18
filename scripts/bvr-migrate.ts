@@ -68,10 +68,10 @@ async function readYaml<T>(path: string): Promise<T> {
   return yaml.load(await Bun.file(path).text()) as T;
 }
 
-// The teams folder name comes from settings.tpl (teamFilesDir), the same key
+// The teams folder name comes from settings.yaml.tpl (teamFilesDir), the same key
 // the Drafts scripts read, so the two cannot drift apart. It is not a secret.
 async function teamsDir(): Promise<string> {
-  const settings = await readYaml<{ teamFilesDir?: string }>(join(repoRoot, "Library", "Data", "bvr", "settings.tpl"));
+  const settings = await readYaml<{ teamFilesDir?: string }>(join(repoRoot, "Library", "Data", "bvr", "settings.yaml.tpl"));
   return join(dataDir, (settings.teamFilesDir ?? "teams/").replace(/\/$/, ""));
 }
 

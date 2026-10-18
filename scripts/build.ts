@@ -7,13 +7,13 @@
  *   sync       data, inject, yaml2json, push, clean, in that order (also the default)
  *   watch      sync once, then rebuild on every change under Library/
  *   data       pull runtime .json files from iCloud into Library/
- *   inject     render each .tpl into its .yaml with `op inject`
- *              (skips a .tpl whose content has not changed since its last
+ *   inject     render each <name>.yaml.tpl into <name>.yaml with `op inject`
+ *              (skips a template whose content has not changed since its last
  *              render; --force renders all)
  *   yaml2json  convert every Library/Data/**\/*.yaml to .json
  *   push       mirror Library/ to iCloud with rsync --delete (never the
  *              BVR team files, which are written in iCloud)
- *   clean      delete the .yaml files rendered from .tpl files
+ *   clean      delete the .yaml files rendered from .yaml.tpl files
  *   debug      print the source and destination paths
  *
  * DRAFTS_DEST overrides the destination (the Drafts iCloud Documents folder).
@@ -36,20 +36,21 @@ const force = process.argv.includes("--force");
 
 // --- rendered templates ------------------------------------------------------
 
-// A .tpl renders to a sibling .yaml, which yaml2json turns into .json. The
+// A <name>.yaml.tpl renders to a sibling <name>.yaml, which yaml2json turns
+// into <name>.json. The
 // rendered .yaml holds secrets and contact details, so it exists only between
 // inject and clean. Because it is gone by the next run, inject cannot compare
 // file times to decide what is current. Instead it remembers a hash of each
-// .tpl's content here and re-renders only when the content changes.
+// template's content here and re-renders only when the content changes.
 const manifestFile = join(root, ".build", "inject-manifest.json");
 
 function templates(): string[] {
-  return [...new Bun.Glob("**/*.tpl").scanSync({ cwd: srcDir, absolute: true })].sort();
+  return [...new Bun.Glob("**/*.yaml.tpl").scanSync({ cwd: srcDir, absolute: true })].sort();
 }
 
-const renderedYamlPath = (tpl: string) => tpl.replace(/\.tpl$/, ".yaml");
-const renderedJsonPath = (tpl: string) => tpl.replace(/\.tpl$/, ".json");
-const isRenderedYaml = (path: string) => path.endsWith(".yaml") && existsSync(path.replace(/\.yaml$/, ".tpl"));
+const renderedYamlPath = (tpl: string) => tpl.replace(/\.yaml\.tpl$/, ".yaml");
+const renderedJsonPath = (tpl: string) => tpl.replace(/\.yaml\.tpl$/, ".json");
+const isRenderedYaml = (path: string) => path.endsWith(".yaml") && existsSync(`${path}.tpl`);
 
 const hashFile = (path: string) => createHash("sha256").update(readFileSync(path, "utf8")).digest("hex");
 
@@ -109,7 +110,7 @@ async function data() {
   ]);
 }
 
-// Render each changed .tpl. A template counts as current when its content hash
+// Render each changed template. A template counts as current when its content hash
 // matches the manifest and its .json output exists. The manifest is rewritten
 // from the templates found this run, so entries for deleted templates drop out.
 async function inject() {
@@ -186,7 +187,7 @@ function yaml2json() {
 // repo-side tools, and can be older than iCloud's. So push never sends them:
 // the exclude stops a stale copy overwriting a newer one, and excluded paths
 // are also safe from --delete. The folder matches teamFilesDir in
-// Library/Data/bvr/settings.tpl.
+// Library/Data/bvr/settings.yaml.tpl.
 async function push() {
   log(destDir);
   await run([
@@ -227,7 +228,7 @@ async function sync() {
 // --- watch -----------------------------------------------------------------
 
 // Paths the watcher skips, relative to Library/. Dotfiles match gulp's glob,
-// which does not match them. Data/**/*.json and the .yaml rendered from .tpl
+// which does not match them. Data/**/*.json and the .yaml rendered from .yaml.tpl
 // files are written (and deleted) by rebuilds themselves.
 function isIgnored(path: string): boolean {
   const parts = path.split(sep);
