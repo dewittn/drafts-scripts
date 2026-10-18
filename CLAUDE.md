@@ -14,6 +14,7 @@ The build runs on Bun (`scripts/build.ts`). Gulp is still installed as a fallbac
 - `bun run watch` - Run `sync` once, then rebuild on every change under `Library/`
 - `bun run debug` - Display sync paths for debugging
 - `bun run test [filter] [--all]` - Run unit tests locally under Bun with a Drafts-style `require()` shim. Covers loading and pure logic only; tests that touch Drafts objects (Draft, editor, Workspace, ...) are reported as "needs Drafts" and must run in the app
+- `bun run test:scripts` - Run the `bun test` suites for the Bun tooling in `scripts/` (`*.test.ts`, such as the BVR team file migration). `bun run test` cannot load TypeScript, so these live apart from `Library/Tests/`
 - `bun run typecheck` - Type-check the scripts against `types/` (see `scripts/typecheck.ts`). Fails only on errors not in `scripts/typecheck-baseline.json`; `--all` shows every error, `--update-baseline` rewrites the baseline after fixing one (also update `docs/reference/typecheck-findings.md`)
 - `bun run inject [--force]` - Render `.tpl` files to `.yaml` with the 1Password CLI. Skips templates whose content has not changed since the last render (tracked by content hash in `.build/inject-manifest.json`); `--force` renders all, e.g. after rotating a secret
 - `bun run data` - Copy JSON data files from iCloud to local Library

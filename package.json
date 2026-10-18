@@ -41,6 +41,7 @@
     "yaml2json": "bun scripts/build.ts yaml2json",
     "clean": "bun scripts/build.ts clean",
     "test": "bun scripts/test-runner.js",
+    "test:scripts": "bun test scripts",
     "typecheck": "bun scripts/typecheck.ts",
     "checkpoint": "bun scripts/checkpoint.ts",
     "bvr:backup": "bun scripts/bvr-backup.ts",
