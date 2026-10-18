@@ -40,7 +40,9 @@ export interface SeasonEntry {
   label: string;
   startDate: string | null;
   endDate: string | null;
-  formURL: string | null;
+  // Form name to this season's URL. Files written before this key existed
+  // carry `formURL: null` instead, which reads as no URLs.
+  formURLs: Record<string, string>;
   recipients: string[] | null;
   attendanceDraftID: string | null;
   seasonRecordDraftID: string | null;
@@ -94,7 +96,7 @@ export function emptySeason(seasonID: string, startDate: string | null = null): 
     label: seasonLabel(seasonID),
     startDate,
     endDate: null,
-    formURL: null,
+    formURLs: {},
     recipients: null,
     attendanceDraftID: null,
     seasonRecordDraftID: null,
@@ -139,6 +141,7 @@ function ensureSeason(file: TeamFile, seasonID: string, startDate: string | null
   if (entry.startDate == null && startDate != null) entry.startDate = startDate;
   entry.games ??= [];
   entry.practicePlans ??= {};
+  entry.formURLs ??= {};
   return entry;
 }
 

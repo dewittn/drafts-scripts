@@ -191,7 +191,7 @@ store.addSeason("2026-winter", { startDate: "2026-11-16" });
 test.assertEqual(store.hasSeason("2026-winter"), true, "addSeason creates the entry");
 test.assertDeepEqual(
   Object.keys(file.seasons["2026-winter"]),
-  ["label", "startDate", "endDate", "formURL", "recipients", "attendanceDraftID", "seasonRecordDraftID", "games", "practicePlans"],
+  ["label", "startDate", "endDate", "formURLs", "recipients", "attendanceDraftID", "seasonRecordDraftID", "games", "practicePlans"],
   "a new entry has every schema key",
 );
 test.assertEqual(file.seasons["2026-winter"].label, "2026 Winter", "a new entry is labeled from its ID");
@@ -200,6 +200,18 @@ test.assertEqual(TeamFileStore.seasonLabel("2026-27"), "2026-27", "an unusual ID
 store = new TeamFileStore(savable({ schemaVersion: 1, teamID: "x", currentSeason: null, seasons: {} }));
 test.assertDeepEqual(store.games, [], "no current season means no games");
 test.assertEqual(store.label, null, "no current season means no label");
+
+file = teamFixture();
+store = new TeamFileStore(file);
+test.assertDeepEqual(store.formURLs, {}, "a season with the old formURL: null has no form URLs");
+store.saveFormURL("varsity-score-report", "https://docs.google.com/forms/d/e/VARSITY");
+test.assertDeepEqual(
+  file.seasons["2026-fall"].formURLs,
+  { "varsity-score-report": "https://docs.google.com/forms/d/e/VARSITY" },
+  "saveFormURL stores the URL by form name in the current season",
+);
+test.assertEqual("formURL" in file.seasons["2026-fall"], false, "and drops the old null formURL key");
+test.assertEqual(file.saves, 1, "and saves the team file");
 
 // --- LegacySeasonStore ---
 test.section("LegacySeasonStore");

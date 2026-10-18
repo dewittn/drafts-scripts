@@ -80,6 +80,17 @@ class LegacySeasonStore {
     return this.ppData[this.#teamID];
   }
 
+  // Form URLs live on this year's season object in records.json, a key the
+  // old code ignores, so an unmigrated team can still submit its forms.
+  get formURLs() {
+    return this.season.formURLs ? this.season.formURLs : {};
+  }
+
+  saveFormURL(formName, url) {
+    this.season.formURLs = { ...this.formURLs, [formName]: url };
+    this.saveGames();
+  }
+
   practicePlanKey(weekID) {
     return `${this.#year}${weekID}`;
   }

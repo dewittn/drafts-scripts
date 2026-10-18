@@ -27,7 +27,7 @@ reads the same key from the template.
       "label": "2026 Fall",
       "startDate": "2026-08-31",
       "endDate": null,
-      "formURL": null,
+      "formURLs": { "varsity-score-report": "https://docs.google.com/forms/d/e/..." },
       "recipients": null,
       "attendanceDraftID": null,
       "seasonRecordDraftID": "0A1B2C3D-...",
@@ -52,7 +52,7 @@ Each season entry:
 | `label` | string | Display name, used by the `current_season_label` template tag |
 | `startDate` | `YYYY-MM-DD` or null | Week 1 of the practice-plan counter. Null falls back to `startDate` in `teams.yaml` |
 | `endDate` | `YYYY-MM-DD` or null | Not read yet. Reserved for the guided Start New Season flow |
-| `formURL` | string or null | Not read yet. This season's score-report form, a later phase |
+| `formURLs` | object | Form name (from `forms.yaml`) to this season's form URL. Submit Game Report asks for a missing one and saves it. Files written before this key carry `formURL: null`, which reads as `{}` and is dropped on the first save |
 | `recipients` | string[] or null | Not read yet. Initials of who gets notified, a later phase |
 | `attendanceDraftID` | string or null | Not read yet. `teams.yaml` still supplies it |
 | `seasonRecordDraftID` | string or null | The season record draft. Copied verbatim from `records.json`, so an old `""` stays `""` |

@@ -11,7 +11,7 @@
     "label",
     "startDate",
     "endDate",
-    "formURL",
+    "formURLs",
     "recipients",
     "attendanceDraftID",
     "seasonRecordDraftID",

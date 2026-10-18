@@ -67,13 +67,13 @@ class TeamFileStore {
   }
 
   // Every key a season entry has. Later Start New Season steps fill the
-  // null ones (formURL, recipients, attendanceDraftID).
+  // null ones (recipients, attendanceDraftID).
   static emptySeason(seasonID) {
     return {
       label: this.seasonLabel(seasonID),
       startDate: null,
       endDate: null,
-      formURL: null,
+      formURLs: {},
       recipients: null,
       attendanceDraftID: null,
       seasonRecordDraftID: null,
@@ -125,6 +125,18 @@ class TeamFileStore {
     return this.season?.practicePlans;
   }
 
+  // Form name to this season's URL. A file from before formURLs existed has
+  // formURL: null instead, which reads as none.
+  get formURLs() {
+    return this.season?.formURLs ? this.season.formURLs : {};
+  }
+
+  saveFormURL(formName, url) {
+    this.season.formURLs = { ...this.formURLs, [formName]: url };
+    if (this.season.formURL === null) delete this.season.formURL;
+    this.save();
+  }
+
   // Weeks restart with each season, so the week alone is the key.
   practicePlanKey(weekID) {
     return weekID;
@@ -146,7 +158,7 @@ class TeamFileStore {
   }
 
   // Add a season entry. details holds whatever the caller collected
-  // (startDate today; formURL, recipients and more in later phases).
+  // (startDate and formURLs today; recipients and more in later phases).
   addSeason(seasonID, details = {}) {
     if (this.#file.seasons == undefined) this.#file.seasons = {};
     this.#file.seasons[seasonID] = {
