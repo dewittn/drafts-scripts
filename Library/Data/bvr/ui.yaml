@@ -64,6 +64,27 @@ getDateFromPrompt:
         data:
           name: Ok
           value: ok
+startNewSeason:
+  seasonIDField:
+    type: textField
+    data:
+      name: seasonID
+      label: Season
+  startDateField:
+    type: datePicker
+    data:
+      name: startDate
+      label: First Day
+      options:
+        mode: date
+  menuSettings:
+    menuTitle: Start New Season
+    menuMessage: "Name the season and pick its first day. Any name works, such as 2026-winter for a winter sport."
+    menuItems:
+      - type: button
+        data:
+          name: Start Season
+          value: start
 recordOpponent:
   textField:
     type: textField

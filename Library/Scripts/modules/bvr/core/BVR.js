@@ -121,6 +121,18 @@ class BVR {
     return `${this.dirPrefix}${this.settings.recordsFile}`;
   }
 
+  // Folder of per-team season files (see docs/reference/bvr-team-file.md).
+  get teamFilesDir() {
+    const dir = this.settings.teamFilesDir == undefined
+      ? "teams/"
+      : this.settings.teamFilesDir;
+    return `${this.dirPrefix}${dir}`;
+  }
+
+  teamFilePath(teamID) {
+    return `${this.teamFilesDir}${teamID}.json`;
+  }
+
   get globalTags() {
     return this.settings.globalTemplateTags;
   }

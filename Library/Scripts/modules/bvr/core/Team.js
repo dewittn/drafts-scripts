@@ -123,6 +123,11 @@ class Team {
     return this.#teamData.startDate;
   }
 
+  // "fall" or "spring" from teams.yaml; names new seasons (2026-fall).
+  get seasonName() {
+    return this.#teamData.season;
+  }
+
   get calendar() {
     return this.#teamData.calendar;
   }
@@ -184,6 +189,7 @@ class Team {
       globalTemplateTags: this.globalTemplateTags,
       teamTemplateTags: this.teamTemplateTags,
       currentSeasonID: this.season.currentSeasonID,
+      currentSeasonLabel: this.season.currentSeasonLabel,
     };
   }
 

@@ -168,13 +168,6 @@
     "count": 1
   },
   {
-    "file": "Library/Scripts/modules/bvr/core/Season.js",
-    "code": 2367,
-    "message": "This comparison appears to be unintentional because the types '\"string\" | \"number\" | \"bigint\" | \"boolean\" | \"symbol\" | \"undefined\" | \"object\" | \"function\"' and '\"array\"' have no overlap.",
-    "line": "if (typeof this.teamHistory[this.currentSeasonID] == \"array\") {",
-    "count": 1
-  },
-  {
     "file": "Library/Scripts/modules/bvr/core/Sport.js",
     "code": 2339,
     "message": "Property 'settingsFile' does not exist on type 'Function'.",
