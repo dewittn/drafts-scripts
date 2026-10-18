@@ -15,6 +15,18 @@ class Staff {
     return new Staff(data?.people);
   }
 
+  // "ag, HM; wk" → ["AG", "HM", "WK"]: split on commas, semicolons, or
+  // spaces, uppercased, without repeats.
+  static parseInitials(text) {
+    const parts = `${text || ""}`.split(/[\s,;]+/).map((part) => part.trim().toUpperCase());
+    return [...new Set(parts.filter((part) => part != ""))];
+  }
+
+  // The initials in a list that no one in the directory has.
+  unknown(initialsList) {
+    return initialsList.filter((initials) => !this.has(initials));
+  }
+
   has(initials) {
     return this.#people[initials] != undefined;
   }

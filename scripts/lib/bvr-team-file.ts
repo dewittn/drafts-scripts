@@ -43,7 +43,9 @@ export interface SeasonEntry {
   // Form name to this season's URL. Files written before this key existed
   // carry `formURL: null` instead, which reads as no URLs.
   formURLs: Record<string, string>;
-  recipients: string[] | null;
+  // Initials that replace the team's attendance or score-message lists for
+  // this season only; null keeps the team and level defaults.
+  recipients: { attendance?: string[]; gameReport?: string[] } | null;
   attendanceDraftID: string | null;
   seasonRecordDraftID: string | null;
   games: Game[];

@@ -8,6 +8,7 @@ class TeamConfig {
     gameReport: "bvr/game-report.md",
     recordRow: "bvr/game-record-row.md",
     seasonRecord: "bvr/game-season-record.md",
+    attendance: "bvr/attendance.md",
   };
 
   #team;
@@ -16,10 +17,17 @@ class TeamConfig {
   #staff;
   #attendanceOffice;
   #templateExists;
+  #seasonRecipients;
+  #options;
 
   // team: the teams.yaml entry. level, forms: parsed settings. staff: a Staff.
   // templateExists(file) tells whether a Library/Templates file exists.
-  constructor({ team, level, forms, staff, attendanceOffice = "ATT", templateExists = (_file) => false }) {
+  // seasonRecipients: the current season's { attendance, gameReport }
+  // initials, which replace the recipient lists (nothing else) when set.
+  constructor(options) {
+    const { team, level, forms, staff, attendanceOffice = "ATT", templateExists = (_file) => false, seasonRecipients } = options;
+    this.#options = options;
+    this.#seasonRecipients = seasonRecipients == undefined ? {} : seasonRecipients;
     this.#team = team;
     this.#level = level == undefined ? {} : level;
     this.#forms = forms == undefined ? {} : forms;
@@ -42,8 +50,34 @@ class TeamConfig {
     return merged;
   }
 
+  // The same config with a season's recipient lists laid on top.
+  withSeasonRecipients(seasonRecipients) {
+    return new TeamConfig({ ...this.#options, seasonRecipients });
+  }
+
   get teamID() {
     return this.#team.id;
+  }
+
+  // Who gets attendance and score messages by default (team override, else
+  // level), as initials. The absences list stands for both attendance
+  // messages, and the first score message's list for all of them.
+  get defaultRecipients() {
+    const { absences, noAbsences } = this.attendance;
+    const firstMessage = (this.gameReport.messages || [])[0];
+    return {
+      attendance: [...((absences || noAbsences)?.recipients || [])],
+      gameReport: [...(firstMessage?.recipients || [])],
+    };
+  }
+
+  // The lists in effect: the season's override where set, else the default.
+  get recipients() {
+    const defaults = this.defaultRecipients;
+    return {
+      attendance: this.#seasonRecipients.attendance || defaults.attendance,
+      gameReport: this.#seasonRecipients.gameReport || defaults.gameReport,
+    };
   }
 
   // The forms this team submits after a game, by name.
@@ -64,9 +98,10 @@ class TeamConfig {
   // What Attendance reads: the two message configs with contacts filled in.
   get attendanceSettings() {
     const { absences, noAbsences } = this.attendance;
+    const seasonList = this.#seasonRecipients.attendance;
     return {
-      absencesMsgConfig: this.#resolveMessage(absences),
-      noAbsencesMsgConfig: this.#resolveMessage(noAbsences),
+      absencesMsgConfig: this.#resolveMessage(absences, seasonList),
+      noAbsencesMsgConfig: this.#resolveMessage(noAbsences, seasonList),
     };
   }
 
@@ -75,7 +110,7 @@ class TeamConfig {
   get gameReportSettings() {
     const messages = this.gameReport.messages || [];
     return {
-      messageSettings: messages.map((message) => this.#resolveMessage(message)),
+      messageSettings: messages.map((message) => this.#resolveMessage(message, this.#seasonRecipients.gameReport)),
       googleFormSettings: this.formNames.map((name) => this.form(name)),
     };
   }
@@ -105,6 +140,7 @@ class TeamConfig {
       recordRow: { templateFile: templates.recordRow || defaults.recordRow },
       seasonRecord: { templateFile: templates.seasonRecord || defaults.seasonRecord },
       practicePlan: { draftTags: [...(team.practicePlan?.draftTags || [])] },
+      attendance: { templateFile: templates.attendance || defaults.attendance },
     };
 
     const thingsProject = templates.thingsProject || this.#derivedThingsProject();
@@ -129,12 +165,14 @@ class TeamConfig {
   }
 
   // Swap initials for contacts: cell numbers for texts, emails for email
-  // (and always for cc).
-  #resolveMessage(message) {
+  // (and always for cc). seasonList, when given, replaces the recipients
+  // only; cc, subject, and text stay as the level or team set them.
+  #resolveMessage(message, seasonList) {
     if (message == undefined) return undefined;
 
     const field = `${message.type}`.toLowerCase() == "email" ? "email" : "cell";
-    const resolved = { ...message, recipients: this.#staff.contacts(message.recipients || [], field) };
+    const initials = seasonList || message.recipients || [];
+    const resolved = { ...message, recipients: this.#staff.contacts(initials, field) };
     if (message.ccRecipients != undefined) {
       resolved.ccRecipients = this.#staff.contacts(message.ccRecipients, "email");
     }

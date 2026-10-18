@@ -152,6 +152,41 @@ test.assertThrows(
 test.assertThrows(() => config({ forms: ["nope"] }).gameReportSettings, "an unknown form names itself and the team", "no form named nope (listed for test-hoops)");
 test.assertThrows(() => config({ assistantCoaches: ["BB"] }).teamTemplateTags, "an assistant coach needs a name", "no name for BB");
 
+// --- season recipients ---
+test.section("season recipients");
+
+team = config({ attendance: { absences: { recipients: ["CC"] } } });
+test.assertDeepEqual(team.defaultRecipients, { attendance: ["CC"], gameReport: ["AA"] }, "defaults come from the team override, else the level");
+test.assertDeepEqual(team.recipients, team.defaultRecipients, "with no season override, the defaults are in effect");
+
+let seasonal = team.withSeasonRecipients({ attendance: ["BB"] });
+test.assertDeepEqual(seasonal.recipients, { attendance: ["BB"], gameReport: ["AA"] }, "a season list replaces only its own list");
+test.assertDeepEqual(
+  seasonal.attendanceSettings.absencesMsgConfig,
+  { type: "text", recipients: ["555-0102"], bodyText: "Absent from [[team_name]]: " },
+  "season attendance recipients beat the team override, and keep the text",
+);
+test.assertDeepEqual(seasonal.attendanceSettings.noAbsencesMsgConfig.recipients, ["555-0102"], "for both attendance messages");
+test.assertDeepEqual(seasonal.gameReportSettings.messageSettings[0].recipients, ["555-0101"], "score messages keep their default");
+test.assertDeepEqual(team.attendanceSettings.absencesMsgConfig.recipients, ["555-0103"], "the original config is unchanged");
+
+seasonal = team.withSeasonRecipients({ gameReport: ["BB", "CC"] });
+test.assertDeepEqual(seasonal.gameReportSettings.messageSettings[0].recipients, ["555-0102", "555-0103"], "a season score list replaces the message recipients");
+
+const emailTeam = new TeamConfig({
+  team: baseTeam,
+  level: { attendance: { absences: { type: "email", recipients: ["ATT"], ccRecipients: ["AA"], subjectLine: "S", bodyText: "B" } } },
+  forms,
+  staff,
+}).withSeasonRecipients({ attendance: ["BB"] });
+test.assertDeepEqual(
+  emailTeam.attendanceSettings.absencesMsgConfig,
+  { type: "email", recipients: ["bea@example.com"], ccRecipients: ["alex@example.com"], subjectLine: "S", bodyText: "B" },
+  "for email, the season list replaces recipients and leaves cc alone",
+);
+test.assertDeepEqual(config({}).withSeasonRecipients(null).recipients, { attendance: ["AA", "BB"], gameReport: ["AA"] }, "a null season override means the defaults");
+test.assertEqual(config({}).templateSettings.attendance.templateFile, "bvr/attendance.md", "the roster template defaults to bvr/attendance.md");
+
 // --- Staff ---
 test.section("Staff");
 
@@ -159,5 +194,8 @@ test.assertDeepEqual(staff.contacts(["BB", "AA"], "cell"), ["555-0102", "555-010
 test.assertEqual(staff.contact("ATT", "email"), "attendance@example.com", "contact returns one field");
 test.assertEqual(staff.has("ZZ"), false, "has is false for unknown initials");
 test.assertEqual(new Staff(undefined).has("AA"), false, "an empty directory has no one");
+test.assertDeepEqual(Staff.parseInitials(" ag, HM;wk  ag "), ["AG", "HM", "WK"], "parseInitials splits, uppercases, and drops repeats");
+test.assertDeepEqual(Staff.parseInitials(""), [], "a blank field parses to no initials");
+test.assertDeepEqual(staff.unknown(["AA", "XX", "BB", "YY"]), ["XX", "YY"], "unknown lists the initials no one has");
 
 test.summary();

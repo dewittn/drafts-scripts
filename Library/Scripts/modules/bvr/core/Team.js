@@ -129,8 +129,10 @@ class Team {
     return this.#teamData.msgConfig;
   }
 
+  // The current season's roster draft if it has one, else teams.yaml's.
   get attendanceDraftID() {
-    return this.#teamData.attendanceDraftID;
+    const seasonDraft = this.season.currentSeasonData?.attendanceDraftID;
+    return seasonDraft ? seasonDraft : this.#teamData.attendanceDraftID;
   }
 
   get tags() {
@@ -159,12 +161,24 @@ class Team {
     return teamTags != undefined ? teamTags : {};
   }
 
+  // Message settings use the current season's recipient lists when it has
+  // them. Read only when sending, so building the config never needs the
+  // season (which itself needs the template settings).
   get gameReportSettings() {
-    return this.config.gameReportSettings;
+    return this.#seasonConfig.gameReportSettings;
   }
 
   get attendanceSettings() {
-    return this.config.attendanceSettings;
+    return this.#seasonConfig.attendanceSettings;
+  }
+
+  get #seasonConfig() {
+    return this.config.withSeasonRecipients(this.season.currentSeasonData?.recipients);
+  }
+
+  // Who gets attendance and score messages without a season override.
+  get defaultRecipients() {
+    return this.config.defaultRecipients;
   }
 
   // The score forms this team submits, by name (see forms.yaml).
