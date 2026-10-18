@@ -1,10 +1,60 @@
 # Season architecture plan
 
-Status: draft for review, 2026-10-18, revised the same day after discussion.
-High-level overview, not an execution plan.
-Proposed branch: `feature/season-architecture` off `dev`.
+Status: being built on `feature/season-architecture` (off `dev`). Written
+2026-10-18 as a high-level overview; the "Status and how to resume" section
+below is kept current as work lands.
 
-Decisions so far:
+## Status and how to resume
+
+Last updated 2026-10-18 (evening). The branch is what the live Drafts
+library runs; all three old teams are migrated to team files and
+`msg-basketball` has its `2026-winter` season.
+
+**Done, reviewed, synced to Drafts:**
+
+- Step 1, build cleanup, on `dev`: rendered YAML deleted after sync, inject
+  skip by content hash plus output hash, `data` pull never fetches built or
+  committed JSON, templates named `<name>.yaml.tpl`, Claude deny rules.
+- Step 2, storage: `teams/<id>.json` per team, `bun run bvr:backup`,
+  two-way `bun run bvr:migrate` with `--verify` and `--reverse --out`,
+  Season/PracticePlan/Game reading from the team file with a legacy fallback.
+- Step 4, config layering: `staff.yaml.tpl` (the only file with contact
+  details), `levels/ms.yaml` and `levels/us.yaml`, `forms.yaml`, per-team
+  overrides in `teams.yaml`; the three per-team settings folders are gone.
+- Step 3, partly: Start New Season prompts for season ID, start date and
+  form links, and completes a season the migration pre-created. Edit Season
+  changes name, dates and links. Submit Game Report asks for a missing link.
+
+**In flight:** shared form links per term (`formLinks.json`, keyed
+`<year>-<fall|winter|spring>`, used by every team in that term). See the
+"Form links" section of `docs/reference/bvr-team-file.md` once it lands.
+
+**Not started:**
+
+- Step 3 remainder: Start New Season steps for recipients (initials, prefilled
+  from the level and last season) and for the attendance draft (reuse or create
+  from `attendance.md`, then hand off to Update Roster). Season entries already
+  have `recipients` and `attendanceDraftID` slots.
+- Step 5: `bun run new-team <id> --sport --level --abbr` scaffold. Derive it
+  from what adding `msg-basketball` by hand touched: `teams.yaml`,
+  `sports.yaml`, `Templates/bvr/<id>-practice-plan.md`,
+  `Templates/bvr/<id>-game-day-project.mustache`, plus the manual checklist
+  (attendance draft and its ID in `teams.yaml`, calendar named by `abbr`,
+  Things project template, the two Shortcuts that take `abbr`).
+- Later cleanup, after a full season on team files: drop `startDate` from
+  `teams.yaml` (seasons carry their own), stop pushing `records.json` and
+  `practicePlans.json` and retire them, retire the `Score Report` items in
+  1Password (nothing reads them), remove Gulp.
+- Finish: open a PR from the branch into `dev`, merge with a merge commit,
+  delete the branch, then `bun run checkpoint`.
+
+**Working rules that held throughout:** code is written by Opus builders and
+reviewed before sync; the rendered settings files are never read; nothing on
+the branch modifies the old `records.json` or `practicePlans.json`; backups
+live in `~/Backups/drafts-bvr/`; before any `bun run sync`, confirm which
+branch the shared checkout is on, because builders switch it.
+
+## Decisions so far
 
 - Form entry IDs stay the same between seasons; only the form URL changes.
   No HTML fetching needed.
