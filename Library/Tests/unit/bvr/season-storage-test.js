@@ -20,6 +20,7 @@ require("modules/bvr/utils/TmplSettings.js");
 require("modules/bvr/services/GoogleForm.js");
 require("modules/bvr/storage/TeamFileStore.js");
 require("modules/bvr/storage/LegacySeasonStore.js");
+require("modules/bvr/storage/FormLinkStore.js");
 
 const test = new TestAssertions("Season storage");
 
@@ -138,6 +139,7 @@ function mockTeam(bvr, overrides = {}) {
     startDate: "2026-08-31",
     seasonName: "fall",
     defaultTag: "bvr/test",
+    linksFile: null,
     formNames: ["varsity-score-report"],
     form: (name) => ({ name, title: name == "varsity-score-report" ? "Varsity score report" : "MS score report" }),
     gameReportSettings: {
@@ -165,6 +167,8 @@ function mockTeam(bvr, overrides = {}) {
   });
   team.dependencies = { bvr, team, tmplSettings: { seasonRecord: { templateFile: "bvr/game-season-record.md" } } };
   team.season = new Season(team.dependencies);
+  team.linksFile = savable({ schemaVersion: 1, terms: {} });
+  team.season.formLinks = new FormLinkStore(team.linksFile);
   return team;
 }
 
@@ -577,8 +581,9 @@ team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
 test.assertEqual(team.season.ensureFormURL("varsity-score-report"), "https://docs.google.com/forms/d/e/NEW", "a missing link is asked for and cleaned");
-test.assertDeepEqual(file.seasons["2026-fall"].formURLs, { "varsity-score-report": "https://docs.google.com/forms/d/e/NEW" }, "and saved to the season");
-test.assertEqual(file.saves, 1, "with one save");
+test.assertDeepEqual(team.linksFile.terms["2026-fall"], { "varsity-score-report": "https://docs.google.com/forms/d/e/NEW" }, "and saved for the whole 2026 fall term");
+test.assertEqual(team.linksFile.saves, 1, "with one save of the shared file");
+test.assertEqual(file.saves, 0, "and none of the team file");
 const urlPrompt = bvr.ui.getInteractionsByType("buildMenu")[0]?.menuSettings;
 test.assert(urlPrompt?.menuMessage.endsWith("Varsity score report, 2026 Fall"), "the prompt names the form and season");
 test.assertDeepEqual(urlPrompt?.menuItems.map((item) => item.type), ["button", "textField"], "with one text field");
@@ -615,7 +620,9 @@ test.assertDeepEqual(
   ],
   "Submit Game Report gets every form with this season's link",
 );
-test.assertEqual(file.seasons["2026-fall"].formURLs["ms-score-report"], "https://docs.google.com/forms/d/e/MS", "the asked-for link is saved");
+test.assertEqual(team.linksFile.terms["2026-fall"]["ms-score-report"], "https://docs.google.com/forms/d/e/MS", "the asked-for link is saved for the term");
+test.assertEqual(team.linksFile.terms["2026-fall"]["varsity-score-report"], "https://docs.google.com/forms/d/e/VARSITY", "the season's old link moved up to the term");
+test.assertDeepEqual(file.seasons["2026-fall"].formURLs, {}, "and left the season");
 
 bvr = mockBVR(teamFixturePath, mockUI());
 team = mockTeam(bvr);
@@ -640,10 +647,11 @@ file = teamFixture();
 team.season.store = new TeamFileStore(file);
 team.season.startNewSeason();
 test.assertDeepEqual(
-  file.seasons["2026-winter"]?.formURLs,
+  team.linksFile.terms["2026-winter"],
   { "varsity-score-report": "https://docs.google.com/forms/d/e/WINTER" },
-  "a new season stores the link given for each form",
+  "a new season saves the link given for its term",
 );
+test.assertDeepEqual(file.seasons["2026-winter"]?.formURLs, {}, "not on the season");
 const linkPrompt = bvr.ui.getInteractionsByType("buildMenu").find((i) => i.menuSettings.menuTitle == "Score Report Form");
 test.assert(linkPrompt?.menuSettings.menuMessage.endsWith("Varsity score report, 2026 Winter"), "the link prompt names the new season");
 
@@ -653,6 +661,7 @@ file = teamFixture();
 team.season.store = new TeamFileStore(file);
 team.season.startNewSeason();
 test.assertDeepEqual(file.seasons["2026-winter"]?.formURLs, {}, "a blank link is skipped, to be asked at Submit Game Report");
+test.assertEqual(team.linksFile.terms["2026-winter"], undefined, "and nothing is shared");
 test.assertEqual(file.currentSeason, "2026-winter", "and the season still starts");
 
 bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-winter", "https://docs.google.com/forms/d/e/W2")));
@@ -660,10 +669,10 @@ team = mockTeam(bvr);
 file = teamFixtureWithWinter();
 team.season.store = new TeamFileStore(file);
 team.season.startNewSeason();
-test.assertDeepEqual(
-  file.seasons["2026-winter"].formURLs,
-  { "varsity-score-report": "https://docs.google.com/forms/d/e/W2" },
-  "completing an existing season asks for its missing links",
+test.assertEqual(
+  team.linksFile.terms["2026-winter"]?.["varsity-score-report"],
+  "https://docs.google.com/forms/d/e/W2",
+  "completing an existing season asks for its term's missing links",
 );
 
 bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-fall", "https://docs.google.com/forms/d/e/FALL")));
@@ -671,8 +680,20 @@ team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
 team.season.startNewSeason();
-test.assertEqual(file.seasons["2026-fall"].formURLs?.["varsity-score-report"], "https://docs.google.com/forms/d/e/FALL", "an existing current season gets a missing link");
-test.assertEqual(file.saves, 1, "and is saved once");
+test.assertEqual(team.linksFile.terms["2026-fall"]?.["varsity-score-report"], "https://docs.google.com/forms/d/e/FALL", "an existing current season gets its term's missing link");
+test.assertEqual(team.linksFile.saves, 1, "saved once, in the shared file");
+test.assertEqual(file.saves, 0, "with the team file untouched");
+
+bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-fall", "https://docs.google.com/forms/d/e/ASKED")));
+team = mockTeam(bvr);
+team.linksFile.terms["2026-fall"] = { "varsity-score-report": "https://docs.google.com/forms/d/e/SHARED" };
+team.season.store = new TeamFileStore(teamFixture());
+team.season.startNewSeason();
+test.assertEqual(
+  bvr.ui.getInteractionsByType("buildMenu").filter((i) => i.menuSettings.menuTitle == "Score Report Form").length,
+  0,
+  "a link the term already shares is not asked for",
+);
 test.assert(infoMessages(bvr.ui).some((m) => m.includes("already has a 2026-fall season")), "while still saying the season exists");
 
 // --- Edit Season ---
@@ -694,14 +715,13 @@ const editAnswers = (overrides = {}) => ({
     },
   },
 });
-function editFixture() {
-  const editFile = teamFixture();
-  editFile.seasons["2026-fall"].formURLs = { "varsity-score-report": savedLink };
-  return editFile;
-}
-function runEdit(answers, yesNo = {}, editFile = editFixture()) {
+const editFixture = () => teamFixture();
+// Runs Edit Season with the varsity link shared for 2026 fall unless
+// sharedTerms says otherwise.
+function runEdit(answers, yesNo = {}, editFile = editFixture(), sharedTerms = { "2026-fall": { "varsity-score-report": savedLink } }) {
   bvr = mockBVR(teamFixturePath, mockUI(answers, yesNo));
   team = mockTeam(bvr);
+  Object.assign(team.linksFile.terms, JSON.parse(JSON.stringify(sharedTerms)));
   team.season.store = new TeamFileStore(editFile);
   team.season.editCurrentSeason();
   return editFile;
@@ -709,23 +729,27 @@ function runEdit(answers, yesNo = {}, editFile = editFixture()) {
 const yesNoTitles = () => bvr.ui.getInteractionsByType("yesNo").map((i) => i.menuSettings.menuTitle);
 const successMessages = () =>
   bvr.ui.getInteractionsByType("appMessage").filter((m) => m.messageType == "success").map((m) => m.message);
+const editFields = () => {
+  const menu = bvr.ui.getInteractionsByType("buildMenu")[0]?.menuSettings;
+  return Object.fromEntries((menu?.menuItems || []).slice(1).map((item) => [item.data.name, item.data]));
+};
 
 file = runEdit(editAnswers());
-const editMenu = bvr.ui.getInteractionsByType("buildMenu")[0]?.menuSettings;
-const fields = Object.fromEntries((editMenu?.menuItems || []).slice(1).map((item) => [item.data.name, item.data]));
+let fields = editFields();
 test.assertEqual(fields.label?.initialText, "2026 Fall", "prefills the name");
 test.assertEqual(fields.startDate?.initialDate?.getDate(), 7, "prefills the first day from the season");
 test.assertEqual(fields.startDate?.initialDate?.getMonth(), 8, "as a local date");
 test.assertEqual(fields.hasEndDate?.initialValue, false, "the last-day switch is off when there is none");
-test.assertEqual(fields["form:varsity-score-report"]?.initialText, savedLink, "prefills each form link");
-test.assertEqual(fields["form:varsity-score-report"]?.label, "Varsity score report", "labels the link with the form title");
-test.assertEqual(file.saves, 0, "unchanged answers save nothing");
+test.assertEqual(fields["form:varsity-score-report"]?.initialText, savedLink, "prefills the link in effect");
+test.assertEqual(fields["form:varsity-score-report"]?.label, "Varsity score report (shared for 2026 Fall)", "and marks a shared link");
+test.assertEqual(file.saves + team.linksFile.saves, 0, "unchanged answers save nothing");
 test.assert(infoMessages(bvr.ui).includes("Nothing changed."), "and say so");
 
 file = runEdit(editAnswers({ label: "Fall 2026", hasEndDate: true, endDate: new Date(2026, 10, 14) }));
 test.assertEqual(file.seasons["2026-fall"].label, "Fall 2026", "saves a new name");
 test.assertEqual(file.seasons["2026-fall"].endDate, "2026-11-14", "saves a last day when the switch is on");
 test.assertEqual(file.saves, 1, "in one save");
+test.assertEqual(team.linksFile.saves, 0, "without touching the shared links");
 test.assertDeepEqual(successMessages(), ["Updated Fall 2026: name, last day."], "the message lists what changed");
 
 file = editFixture();
@@ -751,22 +775,90 @@ test.assertDeepEqual(yesNoTitles(), [], "without plans, a new first day needs no
 test.assertEqual(file.seasons["2026-fall"].startDate, "2026-09-14", "and is saved");
 
 file = runEdit(editAnswers({ "form:varsity-score-report": "  " }), { "Clear form links?": "yes" });
-test.assertDeepEqual(file.seasons["2026-fall"].formURLs, {}, "a blanked link is cleared on yes");
+test.assertEqual(team.linksFile.terms["2026-fall"]["varsity-score-report"], undefined, "a blanked shared link is cleared on yes");
 test.assertDeepEqual(successMessages(), ["Updated 2026 Fall: Varsity score report link."], "and listed as changed");
 
 file = runEdit(editAnswers({ "form:varsity-score-report": "" }), { "Clear form links?": "no" });
-test.assertEqual(file.seasons["2026-fall"].formURLs["varsity-score-report"], savedLink, "a blanked link is kept on no");
-test.assertEqual(file.saves, 0, "with nothing saved");
+test.assertEqual(team.linksFile.terms["2026-fall"]["varsity-score-report"], savedLink, "a blanked link is kept on no");
+test.assertEqual(file.saves + team.linksFile.saves, 0, "with nothing saved");
 
 file = runEdit(editAnswers({ "form:varsity-score-report": "https://docs.google.com/forms/d/e/NEWER/viewform?usp=sf_link" }));
-test.assertEqual(file.seasons["2026-fall"].formURLs["varsity-score-report"], "https://docs.google.com/forms/d/e/NEWER", "a new link is cleaned and saved");
+test.assertEqual(team.linksFile.terms["2026-fall"]["varsity-score-report"], "https://docs.google.com/forms/d/e/NEWER", "a new link is cleaned and shared with the term");
+test.assertEqual(file.saves, 0, "without saving the team file");
+test.assertDeepEqual(successMessages(), ["Updated 2026 Fall: Varsity score report link (shared)."], "the message says it is shared");
 
 file = runEdit(editAnswers({ "form:varsity-score-report": "not a link" }));
-test.assertEqual(file.seasons["2026-fall"].formURLs["varsity-score-report"], savedLink, "a non-link leaves the saved link");
+test.assertEqual(team.linksFile.terms["2026-fall"]["varsity-score-report"], savedLink, "a non-link leaves the saved link");
 test.assert(infoMessages(bvr.ui).some((m) => m.includes("is not a link")), "and says so");
 
+// A season's own link overrides the shared one.
+file = editFixture();
+file.seasons["2026-fall"].formURLs = { "varsity-score-report": "https://docs.google.com/forms/d/e/OWN" };
+file = runEdit(editAnswers({ "form:varsity-score-report": "https://docs.google.com/forms/d/e/OWN2" }), {}, file);
+fields = editFields();
+test.assertEqual(fields["form:varsity-score-report"]?.initialText, "https://docs.google.com/forms/d/e/OWN", "an override is the link shown");
+test.assertEqual(fields["form:varsity-score-report"]?.label, "Varsity score report", "without the shared mark");
+test.assertEqual(file.seasons["2026-fall"].formURLs["varsity-score-report"], "https://docs.google.com/forms/d/e/OWN2", "editing it changes the override");
+test.assertEqual(team.linksFile.terms["2026-fall"]["varsity-score-report"], savedLink, "and leaves the shared link");
+
+file = editFixture();
+file.seasons["2026-fall"].formURLs = { "varsity-score-report": "https://docs.google.com/forms/d/e/OWN" };
+file = runEdit(editAnswers({ "form:varsity-score-report": "" }), { "Clear form links?": "yes" }, file);
+test.assertDeepEqual(file.seasons["2026-fall"].formURLs, {}, "a confirmed clear removes the override");
+test.assertEqual(team.linksFile.terms["2026-fall"]["varsity-score-report"], undefined, "and the shared link");
+
 file = runEdit({});
-test.assertEqual(file.saves, 0, "cancelling the prompt changes nothing");
+test.assertEqual(file.saves + team.linksFile.saves, 0, "cancelling the prompt changes nothing");
+
+// --- shared form links ---
+test.section("shared form links");
+
+bvr = mockBVR(teamFixturePath, mockUI());
+team = mockTeam(bvr);
+file = teamFixture();
+file.seasons["2026-fall"].formURLs = { "varsity-score-report": "https://docs.google.com/forms/d/e/PASTED" };
+team.season.store = new TeamFileStore(file);
+test.assertEqual(team.season.ensureFormURL("varsity-score-report"), "https://docs.google.com/forms/d/e/PASTED", "a link saved on the season still works");
+test.assertEqual(team.linksFile.terms["2026-fall"]?.["varsity-score-report"], "https://docs.google.com/forms/d/e/PASTED", "and moves up to the term");
+test.assertDeepEqual(file.seasons["2026-fall"].formURLs, {}, "and off the season");
+test.assertEqual(team.linksFile.saves, 1, "one save of the shared file");
+test.assertEqual(file.saves, 1, "one save of the team file");
+
+bvr = mockBVR(teamFixturePath, mockUI());
+team = mockTeam(bvr);
+team.linksFile.terms["2026-fall"] = { "varsity-score-report": "https://docs.google.com/forms/d/e/SAME" };
+file = teamFixture();
+file.seasons["2026-fall"].formURLs = { "varsity-score-report": "https://docs.google.com/forms/d/e/SAME" };
+team.season.store = new TeamFileStore(file);
+team.season.ensureFormURL("varsity-score-report");
+test.assertDeepEqual(file.seasons["2026-fall"].formURLs, {}, "a season link equal to the shared one is dropped");
+
+bvr = mockBVR(teamFixturePath, mockUI());
+team = mockTeam(bvr);
+team.linksFile.terms["2026-fall"] = { "varsity-score-report": "https://docs.google.com/forms/d/e/SHARED" };
+file = teamFixture();
+file.seasons["2026-fall"].formURLs = { "varsity-score-report": "https://docs.google.com/forms/d/e/OWN" };
+team.season.store = new TeamFileStore(file);
+test.assertEqual(team.season.ensureFormURL("varsity-score-report"), "https://docs.google.com/forms/d/e/OWN", "a different season link wins, as an override");
+test.assertEqual(file.saves + team.linksFile.saves, 0, "and nothing moves");
+
+bvr = mockBVR(teamFixturePath, mockUI());
+team = mockTeam(bvr);
+team.linksFile.terms["2026-fall"] = { "varsity-score-report": "https://docs.google.com/forms/d/e/SHARED" };
+team.season.store = new TeamFileStore(teamFixture());
+test.assertEqual(team.season.ensureFormURL("varsity-score-report"), "https://docs.google.com/forms/d/e/SHARED", "another team's shared link is found without asking");
+test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 0, "so no prompt appears");
+
+bvr = mockBVR(teamFixturePath, mockUI(urlResponse("https://docs.google.com/forms/d/e/OWNTERMLESS")));
+team = mockTeam(bvr);
+file = teamFixture();
+file.seasons["2026-27"] = TeamFileStore.emptySeason("2026-27");
+file.currentSeason = "2026-27";
+team.season.store = new TeamFileStore(file);
+test.assertEqual(team.season.term, undefined, "a 2026-27 season has no term");
+team.season.ensureFormURL("varsity-score-report");
+test.assertEqual(file.seasons["2026-27"].formURLs["varsity-score-report"], "https://docs.google.com/forms/d/e/OWNTERMLESS", "so its link is saved on the season");
+test.assertDeepEqual(team.linksFile.terms, {}, "and nothing is shared");
 
 bvr = mockBVR(missingTeamFilePath, mockUI(editAnswers()));
 team = mockTeam(bvr);

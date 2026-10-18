@@ -7,6 +7,7 @@ class Season {
   #team;
   #tmplSettings;
   #store;
+  #formLinks;
   #dependencies;
 
   constructor(dependencies) {
@@ -44,6 +45,34 @@ class Season {
 
   set store(value) {
     this.#store = value;
+  }
+
+  // Score-form links shared by every team in a term (bvr/formLinks.json).
+  // An unusable file stops the action, as an unusable team file does.
+  get formLinks() {
+    if (!this.#formLinks) {
+      if (typeof FormLinkStore == "undefined") require("modules/bvr/storage/FormLinkStore.js");
+      try {
+        this.#formLinks = FormLinkStore.load(this.bvr.formLinksFile);
+      } catch (error) {
+        const message = `${error.message}. Nothing was changed. If iCloud is still syncing, wait and try again.`;
+        this.ui.displayAppMessage("error", message);
+        throw new Error(message);
+      }
+    }
+    return this.#formLinks;
+  }
+
+  set formLinks(value) {
+    this.#formLinks = value;
+  }
+
+  // "2026-fall" for a 2026-fall season; undefined for a season with no term
+  // (2026-27, or a team on the old files).
+  get term() {
+    if (!this.usesTeamFile) return undefined;
+    if (typeof FormLinkStore == "undefined") require("modules/bvr/storage/FormLinkStore.js");
+    return FormLinkStore.termFor(this.currentSeasonID);
   }
 
   get usesTeamFile() {
@@ -139,14 +168,24 @@ class Season {
     return false;
   }
 
-  // The current season's link for a form, asking for it (and saving it)
-  // when the season has none yet. Returns undefined if none is given.
+  // The current season's link for a form. Looks in the season's own
+  // formURLs (an override), then the term's shared link, then asks. A link
+  // given at the prompt is saved for the whole term when the season has
+  // one, else on the season. Returns undefined if none is given.
   ensureFormURL(formName) {
-    const saved = this.store.formURLs[formName];
-    if (saved) return saved;
+    if (this.usesTeamFile) this.#liftSeasonLinks(this.currentSeasonID, this.currentSeasonData);
+
+    const effective = this.#effectiveLink(formName, this.store.formURLs, this.term);
+    if (effective.url) return effective.url;
 
     const url = this.#promptForFormURL(formName);
-    if (url != undefined) this.store.saveFormURL(formName, url);
+    if (url == undefined) return undefined;
+    if (this.term == undefined) {
+      this.store.saveFormURL(formName, url);
+    } else {
+      this.formLinks.setLink(this.term, formName, url);
+      this.formLinks.save();
+    }
     return url;
   }
 
@@ -197,6 +236,7 @@ class Season {
     if (!this.ensureCurrentSeason()) return;
 
     const entry = this.currentSeasonData;
+    this.#liftSeasonLinks(this.currentSeasonID, entry);
     const answers = this.#showEditSeasonPrompt(entry);
     if (answers == undefined) return;
 
@@ -209,10 +249,11 @@ class Season {
       changes.clearedForms = [];
     }
 
-    const changed = this.#applySeasonEdits(entry, changes);
+    const { changed, seasonChanged, sharedChanged } = this.#applySeasonEdits(entry, changes);
     if (changed.length == 0) return this.ui.displayAppMessage("info", "Nothing changed.");
 
-    this.store.saveGames();
+    if (sharedChanged) this.formLinks.save();
+    if (seasonChanged) this.store.saveGames();
     this.ui.displayAppMessage("success", `Updated ${entry.label || this.currentSeasonID}: ${changed.join(", ")}.`);
   }
 
@@ -227,21 +268,20 @@ class Season {
     const section = JSON.parse(JSON.stringify(this.ui.settings("editSeason")));
     const { menuSettings, labelField, startDateField, hasEndDateField, endDateField, formField } = section;
     const startDate = this.#parseYMD(entry.startDate) || new Date();
-    const savedURLs = entry.formURLs || {};
 
     labelField.data.initialText = entry.label || `${this.currentSeasonID}`;
     startDateField.data.initialDate = startDate;
     hasEndDateField.data.initialValue = entry.endDate != undefined;
     endDateField.data.initialDate = this.#parseYMD(entry.endDate) || startDate;
-    const formFields = this.team.formNames.map((formName) => ({
-      ...JSON.parse(JSON.stringify(formField)),
-      data: {
-        ...formField.data,
-        name: `form:${formName}`,
-        label: this.team.form(formName).title || formName,
-        initialText: savedURLs[formName] || "",
-      },
-    }));
+    const formFields = this.team.formNames.map((formName) => {
+      const effective = this.#effectiveLink(formName, entry.formURLs, this.term);
+      const title = this.#formTitle(formName);
+      const label = effective.source == "term" ? `${title} (shared for ${this.#termLabel(this.term)})` : title;
+      return {
+        ...JSON.parse(JSON.stringify(formField)),
+        data: { ...formField.data, name: `form:${formName}`, label, initialText: effective.url || "" },
+      };
+    });
     menuSettings.menuItems.push(labelField, startDateField, hasEndDateField, endDateField, ...formFields);
 
     const seasonPrompt = this.ui.buildMenu(menuSettings);
@@ -264,26 +304,33 @@ class Season {
     const endDate = answers.hasEndDate ? this.bvr.formatDateYMD(answers.endDate) : null;
     if (endDate != (entry.endDate == undefined ? null : entry.endDate)) edits.endDate = endDate;
 
-    const savedURLs = entry.formURLs || {};
     for (const formName of this.team.formNames) {
+      const effective = this.#effectiveLink(formName, entry.formURLs, this.term);
       const typed = `${answers[`form:${formName}`] || ""}`.trim();
       if (typed == "") {
-        if (savedURLs[formName]) edits.clearedForms.push(formName);
+        if (effective.url) edits.clearedForms.push(formName);
         continue;
       }
       const url = GoogleForm.baseURL(typed);
       if (url == undefined) {
         this.ui.displayAppMessage("info", `The ${this.#formTitle(formName)} link is not a link, so it was left as it was.`);
-      } else if (url != savedURLs[formName]) {
+      } else if (url != effective.url) {
         edits.links[formName] = url;
       }
     }
     return edits;
   }
 
-  // Write the edits into the season entry. Returns the names of what changed.
+  // Write the edits into the season entry and the shared links. A new link
+  // replaces whichever one was in effect: the season's own override if it
+  // has one, else the term's shared link (so every team in the term gets
+  // it), else the season's. A confirmed clear removes both. Returns the
+  // names of what changed and which files need saving.
   #applySeasonEdits(entry, edits) {
     const changed = [];
+    let seasonChanged = false;
+    let sharedChanged = false;
+    const term = this.term;
     if (edits.label != undefined) {
       entry.label = edits.label;
       changed.push("name");
@@ -296,16 +343,74 @@ class Season {
       entry.endDate = edits.endDate;
       changed.push("last day");
     }
+    seasonChanged = changed.length > 0;
 
-    const formURLs = { ...(entry.formURLs || {}), ...edits.links };
-    edits.clearedForms.forEach((formName) => delete formURLs[formName]);
-    const linkChanges = [...Object.keys(edits.links), ...edits.clearedForms];
-    if (linkChanges.length > 0) {
+    const formURLs = { ...(entry.formURLs || {}) };
+    for (const [formName, url] of Object.entries(edits.links)) {
+      if (formURLs[formName] || term == undefined) {
+        formURLs[formName] = url;
+        seasonChanged = true;
+        changed.push(`${this.#formTitle(formName)} link`);
+      } else {
+        this.formLinks.setLink(term, formName, url);
+        sharedChanged = true;
+        changed.push(`${this.#formTitle(formName)} link (shared)`);
+      }
+    }
+    for (const formName of edits.clearedForms) {
+      if (formURLs[formName]) {
+        delete formURLs[formName];
+        seasonChanged = true;
+      }
+      if (term != undefined && this.formLinks.link(term, formName)) {
+        this.formLinks.clearLink(term, formName);
+        sharedChanged = true;
+      }
+      changed.push(`${this.#formTitle(formName)} link`);
+    }
+    if (seasonChanged) {
       entry.formURLs = formURLs;
       if (entry.formURL === null) delete entry.formURL;
-      linkChanges.forEach((formName) => changed.push(`${this.#formTitle(formName)} link`));
     }
-    return changed;
+    return { changed, seasonChanged, sharedChanged };
+  }
+
+  // The link in effect for a form, and where it comes from: the season's
+  // own formURLs ("season"), the term's shared links ("term"), or nowhere.
+  #effectiveLink(formName, seasonURLs, term) {
+    const own = (seasonURLs || {})[formName];
+    if (own) return { url: own, source: "season" };
+    const shared = term == undefined ? undefined : this.formLinks.link(term, formName);
+    if (shared) return { url: shared, source: "term" };
+    return { url: undefined, source: undefined };
+  }
+
+  // Links saved on a season before links were shared per term move up to
+  // the term's shared entry when the term has none for that form, and are
+  // removed from the season (one save each). A season link that differs
+  // from an existing shared one stays, as an override.
+  #liftSeasonLinks(seasonID, entry) {
+    if (typeof FormLinkStore == "undefined") require("modules/bvr/storage/FormLinkStore.js");
+    const term = FormLinkStore.termFor(seasonID);
+    const seasonURLs = entry?.formURLs || {};
+    if (term == undefined || Object.keys(seasonURLs).length == 0) return;
+
+    const lifted = Object.keys(seasonURLs).filter((formName) => {
+      const shared = this.formLinks.link(term, formName);
+      if (shared == undefined) this.formLinks.setLink(term, formName, seasonURLs[formName]);
+      return shared == undefined || shared == seasonURLs[formName];
+    });
+    if (lifted.length == 0) return;
+
+    const remaining = { ...seasonURLs };
+    lifted.forEach((formName) => delete remaining[formName]);
+    this.formLinks.save();
+    entry.formURLs = remaining;
+    this.store.saveGames();
+  }
+
+  #termLabel(term) {
+    return TeamFileStore.seasonLabel(term);
   }
 
   #confirmStartDateChange() {
@@ -395,7 +500,7 @@ class Season {
     // Later phases add steps here (recipients, attendance draft) and pass
     // what they collect to addSeason with the start date and form links.
     const label = TeamFileStore.seasonLabel(details.seasonID);
-    const formURLs = this.#promptForFormURLs(this.team.formNames, label);
+    const formURLs = this.#promptForMissingLinks(details.seasonID, {}, label);
     this.store.addSeason(details.seasonID, { startDate: details.startDate, formURLs });
     this.store.setCurrentSeason(details.seasonID);
     this.#createSeasonRecordDraft();
@@ -410,9 +515,9 @@ class Season {
     const wasCurrent = this.currentSeasonID == seasonID;
     const hadDraft = Boolean(entry.seasonRecordDraftID);
     const filledStartDate = !entry.startDate;
+    this.#liftSeasonLinks(seasonID, entry);
     const savedURLs = entry.formURLs || {};
-    const missingForms = this.team.formNames.filter((name) => !savedURLs[name]);
-    const newURLs = this.#promptForFormURLs(missingForms, entry.label || seasonID);
+    const newURLs = this.#promptForMissingLinks(seasonID, savedURLs, entry.label || seasonID);
     const addedURLs = Object.keys(newURLs).length > 0;
 
     if (filledStartDate) entry.startDate = startDate;
@@ -425,6 +530,23 @@ class Season {
       ? `${this.teamName} already has a ${seasonID} season.`
       : `${seasonID} is now the current season. It already had a season record draft.`;
     return this.ui.displayAppMessage("info", message);
+  }
+
+  // Ask for the links neither the season nor its term has. With a term, the
+  // links given are saved to the shared entry here and nothing is returned;
+  // without one, they are returned for the season entry.
+  #promptForMissingLinks(seasonID, seasonURLs, seasonLabel) {
+    if (typeof FormLinkStore == "undefined") require("modules/bvr/storage/FormLinkStore.js");
+    const term = FormLinkStore.termFor(seasonID);
+    const missing = this.team.formNames.filter((formName) => !this.#effectiveLink(formName, seasonURLs, term).url);
+    const given = this.#promptForFormURLs(missing, seasonLabel);
+    if (term == undefined) return given;
+
+    if (Object.keys(given).length > 0) {
+      Object.entries(given).forEach(([formName, url]) => this.formLinks.setLink(term, formName, url));
+      this.formLinks.save();
+    }
+    return {};
   }
 
   // Ask for each form's link in turn. Returns { <form name>: link } for the
