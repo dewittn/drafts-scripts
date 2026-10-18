@@ -189,6 +189,28 @@ arrays.
 `main`, back up, then copy the two files from `--out` into
 `<Drafts>/Library/Data/bvr/`.
 
+## Editing a season
+
+The Edit Season action (`Library/Actions/bvr/edit-season.js`) changes the
+current season of a team-file team in one prompt, prefilled from the file:
+
+- **Name** (`label`). A blank name keeps the old one. The season ID never
+  changes.
+- **First Day** (`startDate`). If the season has practice plans, a yes/no
+  prompt warns first: weeks are counted from this date, and plans already
+  made keep their `W<n>` keys.
+- **Last Day** (`endDate`). A Drafts date picker cannot be left empty, so a
+  "Has a last day" switch decides: off saves `null`, on saves the picked
+  date.
+- **One link per form** the team submits (`formURLs`). A new link is cleaned
+  the same way as at Submit Game Report. A field left blank clears its saved
+  link only after a yes/no prompt; on no, blanks are ignored. Text that is
+  not a link leaves the saved link and says so.
+
+It saves once, through the store's validation, and the success message lists
+what changed. A team still on `records.json` is told to run `bvr:migrate`
+first.
+
 ## The build and team files
 
 Team files are written in iCloud, by Drafts and by `bvr:migrate`. `data`

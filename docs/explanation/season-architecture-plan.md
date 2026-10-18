@@ -325,7 +325,10 @@ about which files are the source of truth.
    two-way `bvr:migrate` first, then the new `Season` storage with
    `PracticePlan` and `Game` reading from it. This is the piece basketball
    needs before the first practice.
-3. **"Start New Season" action** (branch): the guided flow above.
+3. **"Start New Season" action** (branch): the guided flow above. Form links
+   are done (asked at Start New Season and Submit Game Report), and an Edit
+   Season action changes the current season's name, dates, and links later;
+   recipients and the attendance draft remain.
 4. **Config layering** (branch): `staff.yaml.tpl`, `forms.yaml.tpl`, levels; collapse the
    three team folders.
 5. **`bun run new-team` scaffold** (branch): last, because it generates the
