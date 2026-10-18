@@ -18,8 +18,9 @@ Decided while building step 2 (2026-10-18; details in
 [`docs/reference/bvr-team-file.md`](../reference/bvr-team-file.md)):
 
 - Migrated seasons are named `<year>-<season>` from `teams.yaml`
-  (`2026-fall`). Start New Season accepts any name, so a winter sport can use
-  `2026-winter` or `2026-27`. The display label is derived from the ID
+  (`2026-fall`). Start New Season accepts any `<year>-<name>`, so a winter
+  sport can use `2026-winter` or `2026-27`; the leading year is required
+  because the old files key seasons by it. The display label is derived from the ID
   (`2026 Fall`) and gets its own template tag, `current_season_label`, which
   now titles the season record draft. `current_season` is the ID.
 - The team file wins whenever both sides hold the same game or practice plan,
@@ -30,9 +31,16 @@ Decided while building step 2 (2026-10-18; details in
   the migration must never rewrite its inputs. Handing data back to `main` is
   a backup and a copy of two files. Forward backs up on its own before writing.
 - The teams folder is a `teamFilesDir` key in `settings.tpl`, read by both
-  the Drafts scripts and `bvr:migrate`. The build's push protects that folder
-  from `rsync --delete`, since Drafts can create a team file before the next
-  pull.
+  the Drafts scripts and `bvr:migrate`. The build's push excludes that folder
+  entirely: team files are written in iCloud and only pulled locally.
+- An unusable team file (half-synced, wrong schema) stops the action or the
+  migration. It never falls back to `records.json` and is never overwritten.
+- Residual risk: `records.json` and `practicePlans.json` are still pushed.
+  `sync` and the watch rebuilds pull them first, but a game recorded on
+  another device that iCloud has not delivered to the Mac yet, or written in
+  the seconds between pull and push, can still be overwritten by the older
+  local copy. Same exposure as on `dev`; it shrinks to nothing once every team
+  is on a team file and the old files stop changing.
 - Only the season whose year matches the `teams.yaml` `startDate` gets that
   date. Older seasons store null; Jan 1 of their year is used only to choose
   `currentSeason`. If every season is still ahead, the earliest upcoming one

@@ -56,7 +56,7 @@ Each season entry:
 | `recipients` | string[] or null | Not read yet. Initials of who gets notified, a later phase |
 | `attendanceDraftID` | string or null | Not read yet. `teams.yaml` still supplies it |
 | `seasonRecordDraftID` | string or null | The season record draft. Copied verbatim from `records.json`, so an old `""` stays `""` |
-| `games` | Game[] | Exactly what `Game.toJSON()` writes, unchanged from `records.json` |
+| `games` | Game[] | Exactly what `Game.toJSON()` writes, unchanged from `records.json`. Matched by `draftID`; a game without one is matched by its whole content, and repeats keep their count |
 | `practicePlans` | object | Week key (`W7`) to practice plan draft ID |
 
 ## Season IDs
@@ -65,12 +65,27 @@ A season ID is an explicit string, decoupled from the calendar year.
 
 - Migrated seasons are `<year>-<season>`, with `season` from `teams.yaml`
   (`2026-fall`, `2025-spring`). A team without `season` gets the bare year.
-- Start New Season accepts any string, so a winter sport can use `2026-winter`
-  or `2026-27`.
+- Start New Season accepts any `<year>-<name>`, so a winter sport can use
+  `2026-winter` or `2026-27`. A name without a leading year is refused and the
+  prompt asks again, because the old files key seasons by that year.
 - The label is derived from the ID: `2026-fall` reads `2026 Fall`. Any other
   shape is its own label.
 - The old code keys seasons by calendar year. A reverse run files each season
   under the year its ID starts with, so `2026-27` lands under `2026`.
+
+## Validity
+
+A team file is usable only if it is a JSON object with `schemaVersion: 1`, a
+non-empty `teamID`, a `seasons` object, and a `currentSeason` that is null or
+a string. A half-synced iCloud copy reads as null or empty and fails this.
+`TeamFileStore.validate` (Drafts) and `teamFileProblem` (`bvr:migrate`) make
+the same checks, pinned by `Library/Tests/fixtures/bvr/schema-cases.json`.
+
+- In Drafts, an unusable team file stops the action with an error. There is
+  no fallback to `records.json` and nothing is written. `TeamFileStore` also
+  refuses to save anything that would not load back.
+- `bvr:migrate` stops before backing up or writing if any team file is
+  unusable.
 
 ## How the Drafts scripts choose storage
 
@@ -82,6 +97,10 @@ through it.
 - **No team file:** behave as before against `records.json` and
   `practicePlans.json`, and show one info message saying the team has not been
   migrated. `current_season` is the year and so is `current_season_label`.
+
+A team file with no current season (`currentSeason: null`) stops Record Game
+Score, Submit Game Report, and both practice plan actions before any prompt,
+with a message to run Start New Season. The season template tags render empty.
 
 Start New Season on a team with no team file and no data in the old files
 creates the team file. A team that has old data but no team file keeps the old
@@ -112,6 +131,9 @@ files, and it backs up the data folder before writing.
 - The `teams.yaml` `startDate` goes on the season of the same year. Older
   seasons get null. The season `teams.yaml` describes is created even if it
   has no games yet.
+- Once a team file has a current season, a re-run does not add the
+  `teams.yaml` season beside it, so a season started under another name does
+  not gain an empty sibling.
 - `currentSeason` is the newest season that has started, counting a season
   without a start date from Jan 1 of its year. If every season is still ahead,
   it is the earliest upcoming one.
@@ -128,7 +150,8 @@ team file already has (marking it submitted, say) is not carried forward.
 ### Verify
 
 Rebuilds the old files from the team files alone and compares them with the
-real ones, per team and year. It lists draft IDs missing from or different in
+real ones, per team and year, pairing games key by key so a duplicate that
+went missing is caught. It lists draft IDs missing from or different in
 the team files, practice-plan keys likewise, and counts games that exist only
 in the team file. Exits 1 when anything differs.
 
@@ -138,12 +161,24 @@ Lays the team files over the current `records.json` and `practicePlans.json`
 and writes the result to `--out`. Team-file games and plans win, and games
 only the old files have are kept, as are teams and keys the team files do not
 cover. Seasons come back in the object form even when they started as bare
-arrays. It refuses to write into the live data folder. To hand data back to
+arrays.
+
+- Seasons are applied in start-date order. When two land in the same year
+  (`2026-fall` and a `2026-winter` starting in November), their games merge
+  and the later season's practice-plan weeks and season record draft win. A
+  warning names both.
+- A season whose ID has no leading year fails the run instead of being
+  dropped.
+- It refuses an `--out` that is a live data folder, comparing with symlinks
+  resolved and case folded, against both the `DRAFTS_DEST` folder and the
+  real iCloud one. To hand data back to
 `main`, back up, then copy the two files from `--out` into
 `<Drafts>/Library/Data/bvr/`.
 
 ## The build and team files
 
-`bun run sync` pulls every runtime `.json`, team files included, before it
-pushes. The push step also protects `Library/Data/bvr/teams/` from
-`rsync --delete`, so a team file Drafts wrote before the next pull survives.
+Team files are written in iCloud, by Drafts and by `bvr:migrate`. `data`
+pulls them into the repo so the repo-side tools can read them, but push never
+sends them back: `Library/Data/bvr/teams/` is excluded, which also keeps
+`--delete` away from it. A stale local copy can therefore never overwrite a
+newer one. Watch rebuilds now pull before they push, as `sync` does.

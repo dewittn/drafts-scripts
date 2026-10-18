@@ -11,7 +11,8 @@
  *              (skips a .tpl whose content has not changed since its last
  *              render; --force renders all)
  *   yaml2json  convert every Library/Data/**\/*.yaml to .json
- *   push       mirror Library/ to iCloud with rsync --delete
+ *   push       mirror Library/ to iCloud with rsync --delete (never the
+ *              BVR team files, which are written in iCloud)
  *   clean      delete the .yaml files rendered from .tpl files
  *   debug      print the source and destination paths
  *
@@ -180,16 +181,18 @@ function yaml2json() {
 // the excludes, --progress, and --delete (from "clean"). No -t, so unchanged
 // files are detected by checksum, not mtime.
 //
-// The BVR team files are written by Drafts, so one can exist in iCloud before
-// `data` has pulled it here (Start New Season, or bvr:migrate writing straight
-// to iCloud). The protect filter keeps --delete from removing it in that window.
-// The folder matches teamFilesDir in Library/Data/bvr/settings.tpl.
+// The BVR team files are runtime data written in iCloud, by Drafts and by
+// bvr:migrate. The local copies exist only because `data` pulls them for the
+// repo-side tools, and can be older than iCloud's. So push never sends them:
+// the exclude stops a stale copy overwriting a newer one, and excluded paths
+// are also safe from --delete. The folder matches teamFilesDir in
+// Library/Data/bvr/settings.tpl.
 async function push() {
   log(destDir);
   await run([
     "rsync", "-crRv",
     "--exclude=*.tpl", "--exclude=*.yaml", "--exclude=.DS_Store",
-    "--filter=P /Library/Data/bvr/teams/***",
+    "--exclude=/Library/Data/bvr/teams/***",
     "--progress", "--delete",
     "Library", destDir,
   ]);
@@ -260,13 +263,22 @@ async function watchFiles() {
     });
   };
 
+  // Both rebuilds push all of Library/, so they pull runtime .json from iCloud
+  // first, as sync does. Otherwise a records.json Drafts wrote since the last
+  // pull would be overwritten by the older local copy.
   const rebuildFromTpl = async () => {
+    await data();
     await inject();
     yaml2json();
     await push();
     await clean();
   };
+  const pullThenPush = async () => {
+    await data();
+    await push();
+  };
   const rebuildFromYaml = async () => {
+    await data();
     yaml2json();
     await push();
   };
@@ -282,13 +294,13 @@ async function watchFiles() {
       if (removed.length == 0) return;
       removed.forEach((path) => known.delete(path));
       // push runs rsync --delete, which is what propagates a removal.
-      return enqueue(`${label} (removed)`, push);
+      return enqueue(`${label} (removed)`, pullThenPush);
     }
 
     if (statSync(file).isDirectory()) {
       // A folder moved or copied in: push picks up everything inside it.
       listFiles(file).forEach((path) => known.add(path));
-      return enqueue(`${label}/`, push);
+      return enqueue(`${label}/`, pullThenPush);
     }
 
     known.add(file);
