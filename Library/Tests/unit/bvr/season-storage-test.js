@@ -464,6 +464,21 @@ test.assertEqual(prompts.length, 3, "asks again, up to three times, for a name w
 test.assertEqual(prompts[1].menuSettings.menuItems[1].data.initialText, "winter-2027", "re-asks with what was typed");
 test.assertEqual(file.saves, 0, "never saves an invalid season name");
 test.assert(infoMessages(bvr.ui).some((m) => m.includes("is not a season name")), "explains the expected shape");
+// DraftsUI.settings() returns one shared object, so the mock does too here.
+bvr = mockBVR(teamFixturePath, mockUI(startResponse("winter-2027")));
+const sharedSettings = bvr.ui.settings("startNewSeason");
+bvr.ui.settings = () => sharedSettings;
+team = mockTeam(bvr);
+team.season.store = new TeamFileStore(teamFixture());
+team.season.startNewSeason();
+const thirdPrompt = bvr.ui.getInteractionsByType("buildMenu")[2]?.menuSettings;
+test.assertDeepEqual(
+  thirdPrompt?.menuItems.map((item) => item.type),
+  ["button", "textField", "datePicker"],
+  "the third prompt has one button, one text field, and one date picker",
+);
+test.assertEqual(sharedSettings.menuSettings.menuItems.length, 1, "the shared ui.yaml settings are left untouched");
+
 test.assertEqual(TeamFileStore.isValidSeasonID("2026-27"), true, "2026-27 is a valid name");
 test.assertEqual(TeamFileStore.isValidSeasonID("2026"), false, "a bare year needs a name");
 test.assertEqual(TeamFileStore.isValidSeasonID("2026-fall/x"), false, "no slashes");

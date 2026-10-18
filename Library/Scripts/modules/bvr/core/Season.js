@@ -286,8 +286,11 @@ class Season {
     return undefined;
   }
 
+  // ui.settings() hands back the same object every time, so each attempt
+  // works on a copy; pushing into the shared one would repeat the fields.
   #showNewSeasonPrompt(initialSeasonID) {
-    const { menuSettings, seasonIDField, startDateField } = this.ui.settings("startNewSeason");
+    const section = JSON.parse(JSON.stringify(this.ui.settings("startNewSeason")));
+    const { menuSettings, seasonIDField, startDateField } = section;
     seasonIDField.data.initialText = initialSeasonID;
     startDateField.data.initialDate = this.#comingMonday();
     menuSettings.menuItems.push(seasonIDField, startDateField);
