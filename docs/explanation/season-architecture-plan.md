@@ -22,11 +22,11 @@ else in the BVR config moves between seasons.
 | What changes | Where it lives now | How it gets changed |
 |---|---|---|
 | Season start date | `teams.yaml` → `startDate` | Edit YAML, `bun run sync` |
-| Score-report form URL | `gameReportSettings.tpl` → `op://BVR/Score Report/<ABBR>` | Edit 1Password item, `bun run inject --force`, sync |
-| Who gets absence and score texts | `attendanceSettings.tpl`, `gameReportSettings.tpl` recipient lists | Edit `.tpl`, sync |
+| Score-report form URL | `gameReportSettings.yaml.tpl` → `op://BVR/Score Report/<ABBR>` | Edit 1Password item, `bun run inject --force`, sync |
+| Who gets absence and score texts | `attendanceSettings.yaml.tpl`, `gameReportSettings.yaml.tpl` recipient lists | Edit `.yaml.tpl`, sync |
 | Season record draft | `records.json` → `seasonRecordDraftID` | "Start New Season" action creates it |
-| Attendance draft (when recreated) | `teams.yaml` **and** `attendanceSettings.tpl` (duplicated) | Edit both, sync |
-| Coaching-year counters (`hc_year`, `hc_years_coaching`, `ac_years_coaching`) | `settings.tpl`, `templateSettings.tpl` | Edit `.tpl`, sync (often forgotten) |
+| Attendance draft (when recreated) | `teams.yaml` **and** `attendanceSettings.yaml.tpl` (duplicated) | Edit both, sync |
+| Coaching-year counters (`hc_year`, `hc_years_coaching`, `ac_years_coaching`) | `settings.yaml.tpl`, `templateSettings.yaml.tpl` | Edit `.yaml.tpl`, sync (often forgotten) |
 | Roster | Attendance draft body | "Update Roster" action |
 
 Three structural problems sit underneath that list.
@@ -54,10 +54,10 @@ Split BVR configuration into layers by how often each changes and who changes it
 
 ```
 Library/Data/bvr/
-  settings.tpl              global: workspace, coaching draft, head coach tags   (rarely)
+  settings.yaml.tpl         global: workspace, coaching draft, head coach tags   (rarely)
   sports.yaml               per sport: score picker ranges                        (new sport only)
-  staff.tpl                 contact directory keyed by initials, from 1Password   (when staff changes)
-  forms.tpl                 school-wide score forms: field maps and entry IDs     (when the school changes the form)
+  staff.yaml.tpl            contact directory keyed by initials, from 1Password   (when staff changes)
+  forms.yaml.tpl            school-wide score forms: field maps and entry IDs     (when the school changes the form)
   teams.yaml                per team: id, name, abbr, sport, level, calendar,
                             tags, template files, which form it submits to        (new team only)
   levels/ms.yaml, us.yaml   per level: message type, default recipient roles      (rarely)
@@ -82,13 +82,13 @@ The key moves:
   string such as `2026-27` or `2026-fall`, decoupled from the calendar year,
   which fixes the winter-sport problem and the practice-plan week collision in
   one stroke.
-- **Secrets move out of per-team files into a directory.** `staff.tpl` renders
+- **Secrets move out of per-team files into a directory.** `staff.yaml.tpl` renders
   initials to cell numbers and emails from 1Password once. Team and season
   config then names people by initials (`recipients: [AG, HM]`), which is not
   secret and can live in a YAML or be edited from inside Drafts. Changing who
   gets absence texts stops being a secret-template edit.
 - **The score form becomes two things.** The *field map* (titles and entry
-  IDs) is school-wide and stable, so it goes in `forms.tpl` once instead of
+  IDs) is school-wide and stable, so it goes in `forms.yaml.tpl` once instead of
   three times. The *URL* for this season goes in the team file's season
   entry, pasted in when the season starts. The athletic department copies the
   form each year, so the entry IDs stay put and only the URL moves. The form
@@ -135,7 +135,7 @@ if you keep forms there, and confirm the "Mark Attendance As Complete" and
 "Complete Game Day Tasks" shortcuts handle the new `abbr`. Then run the
 in-app "Start New Season" for the first season.
 
-With the layering above, a new team needs no `.tpl` files of its own. Today it
+With the layering above, a new team needs no `.yaml.tpl` files of its own. Today it
 needs three.
 
 ## Storage: one JSON file per team, not SQLite
@@ -175,7 +175,7 @@ sitting in the repo where Claude Code can read them. Two changes:
   `.yaml` is gone. Comparing against the `.json` instead is fragile, because
   the `data` step pulls those files back from iCloud and refreshes their
   mtimes on every sync. So `inject` keeps a small gitignored manifest
-  (`.build/inject-manifest.json`) mapping each `.tpl` path to a hash of its
+  (`.build/inject-manifest.json`) mapping each template path to a hash of its
   content, and re-renders when the hash differs, the manifest entry is missing,
   the `.json` is missing, or `--force` is given. Same speed as today, same
   1Password behavior as today.
@@ -237,7 +237,7 @@ about which files are the source of truth.
    `PracticePlan` and `Game` reading from it. This is the piece basketball
    needs before the first practice.
 3. **"Start New Season" action** (branch): the guided flow above.
-4. **Config layering** (branch): `staff.tpl`, `forms.tpl`, levels; collapse the
+4. **Config layering** (branch): `staff.yaml.tpl`, `forms.yaml.tpl`, levels; collapse the
    three team folders.
 5. **`bun run new-team` scaffold** (branch): last, because it generates the
    shapes settled in step 4.
@@ -251,7 +251,7 @@ next one cheap.
   true, so the auto-migration branch is dead code.
 - `attendanceDraftID` is read from `teams.yaml` first and the team's
   `attendanceSettings` second. `ms-ultimate` and `msg-soccer` share the same ID
-  in their `attendanceSettings.tpl`, which looks like a copy-paste leftover
+  in their `attendanceSettings.yaml.tpl`, which looks like a copy-paste leftover
   that the `teams.yaml` value papers over.
 - `hc_year` style counters could be derived from a `coachingSince` year in the
   season or team file instead of being hand-incremented.

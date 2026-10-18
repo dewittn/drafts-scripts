@@ -43,6 +43,6 @@ Avoid actions that call `alert()` (such as "Singleton Simple") when driving Draf
 
 ## Build environment
 
-Commits are SSH-signed through `op-ssh-sign`, and `bun run sync` runs `op inject` for `.tpl` secrets. Both fail with "1Password: Could not connect to socket. Is the agent running?" when the 1Password **desktop app** is not running (the Safari extension alone does not count). Check `pgrep -x 1Password`. If it is absent, `open -a 1Password`, wait a few seconds, and retry. If it is running and Claude Code's sandbox is on, the sandbox is blocking the socket.
+Commits are SSH-signed through `op-ssh-sign`, and `bun run sync` runs `op inject` for `.yaml.tpl` secrets. Both fail with "1Password: Could not connect to socket. Is the agent running?" when the 1Password **desktop app** is not running (the Safari extension alone does not count). Check `pgrep -x 1Password`. If it is absent, `open -a 1Password`, wait a few seconds, and retry. If it is running and Claude Code's sandbox is on, the sandbox is blocking the socket.
 
 A failed `op inject` leaves the BVR and CP JSON untouched, because the YAML conversion errors out. Re-run `bun run sync` once 1Password is up.
