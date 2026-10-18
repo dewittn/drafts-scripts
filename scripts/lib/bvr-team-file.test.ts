@@ -8,6 +8,7 @@ import { join } from "node:path";
 import vm from "node:vm";
 import { repoRoot } from "./drafts-paths";
 import {
+  canonicalJSON,
   chooseCurrentSeason,
   emptySeason,
   forwardMigrate,
@@ -414,6 +415,17 @@ describe("verifyMigration", () => {
     const dirty = rows.filter((row) => !isClean(row));
     expect(dirty.map((row) => `${row.teamID}/${row.year}`)).toEqual(["old-team/2024"]);
     expect(dirty[0].missingGames).toEqual(["O-2024-A"]);
+  });
+
+  test("ignores key order when deciding a game changed", () => {
+    const { teamFiles } = migrate();
+    const games = teamFiles["us-ultimate"].seasons["2026-spring"].games;
+    games[0] = Object.fromEntries(Object.entries(games[0]).reverse());
+    expect(Object.keys(games[0])[0]).toBe("submitted");
+    const row = verifyMigration({ records: legacyRecords(), practicePlans: legacyPlans(), teamFiles })
+      .find((r) => r.teamID == "us-ultimate" && r.year == "2026");
+    expect(row?.changedGames).toEqual([]);
+    expect(canonicalJSON({ b: 1, a: { d: [{ y: 1, x: 2 }], c: 3 } })).toBe('{"a":{"c":3,"d":[{"x":2,"y":1}]},"b":1}');
   });
 
   test("counts repeated keys, so a collapsed duplicate is reported", () => {

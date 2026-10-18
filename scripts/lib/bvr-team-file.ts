@@ -413,6 +413,19 @@ export function reverseMigrate({ teamFiles, records = {}, practicePlans = {} }: 
 
 // --- verify ------------------------------------------------------------------
 
+// JSON with object keys sorted at every level, so two copies of a game that
+// differ only in key order (Drafts re-saving through Game.toJSON()) compare equal.
+export function canonicalJSON(value: unknown): string {
+  const sortKeys = (item: unknown): unknown => {
+    if (Array.isArray(item)) return item.map(sortKeys);
+    if (typeof item != "object" || item == null) return item;
+    return Object.fromEntries(
+      Object.keys(item).sort().map((key) => [key, sortKeys((item as Record<string, unknown>)[key])]),
+    );
+  };
+  return JSON.stringify(sortKeys(value));
+}
+
 export interface VerifyRow {
   teamID: string;
   year: string;
@@ -466,7 +479,7 @@ export function verifyMigration(input: {
       for (const game of old) {
         const match = freshByKey.get(gameKey(game))?.shift();
         if (match == undefined) row.missingGames.push(gameLabel(game));
-        else if (JSON.stringify(match) != JSON.stringify(game)) row.changedGames.push(gameLabel(game));
+        else if (canonicalJSON(match) != canonicalJSON(game)) row.changedGames.push(gameLabel(game));
       }
       row.teamFileOnlyGames = [...freshByKey.values()].reduce((count, left) => count + left.length, 0);
     }
