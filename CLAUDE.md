@@ -10,15 +10,15 @@ This repository contains JavaScript scripts and templates for the [Drafts app](h
 
 The build runs on Bun (`scripts/build.ts`). Gulp is still installed as a fallback while the Bun pipeline proves itself.
 
-- `bun run sync` - Full pipeline: pull runtime JSON from iCloud, inject secrets, convert YAML to JSON, push `Library/` to iCloud. Always runs every step
+- `bun run sync` - Full pipeline: pull runtime JSON from iCloud, inject secrets, convert YAML to JSON, push `Library/` to iCloud, then delete the rendered `.yaml` files so secrets and contact details do not stay on disk. Always runs every step
 - `bun run watch` - Run `sync` once, then rebuild on every change under `Library/`
 - `bun run debug` - Display sync paths for debugging
 - `bun run test [filter] [--all]` - Run unit tests locally under Bun with a Drafts-style `require()` shim. Covers loading and pure logic only; tests that touch Drafts objects (Draft, editor, Workspace, ...) are reported as "needs Drafts" and must run in the app
 - `bun run typecheck` - Type-check the scripts against `types/` (see `scripts/typecheck.ts`). Fails only on errors not in `scripts/typecheck-baseline.json`; `--all` shows every error, `--update-baseline` rewrites the baseline after fixing one (also update `docs/reference/typecheck-findings.md`)
-- `bun run inject [--force]` - Render `.tpl` files to `.yaml` with the 1Password CLI. Skips templates whose `.yaml` is current; `--force` renders all, e.g. after rotating a secret
+- `bun run inject [--force]` - Render `.tpl` files to `.yaml` with the 1Password CLI. Skips templates whose content has not changed since the last render (tracked by content hash in `.build/inject-manifest.json`); `--force` renders all, e.g. after rotating a secret
 - `bun run data` - Copy JSON data files from iCloud to local Library
 - `bun run yaml2json` - Convert YAML config files to JSON (runs automatically during sync)
-- `bun run clean` - Delete the generated settings `.yaml` files
+- `bun run clean` - Delete the `.yaml` files rendered from `.tpl` files (`sync` already does this as its last step)
 - `bun run checkpoint [promote]` - Report which dev commits have settled enough to move to main; `promote` fast-forwards main and tags it (see the `drafts-change-workflow` skill)
 - `bun run gulp:sync`, `gulp:watch`, `gulp:debug` - The old Gulp pipeline, same behavior
 

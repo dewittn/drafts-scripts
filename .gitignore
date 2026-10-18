@@ -12,3 +12,6 @@ templateSettings.yaml
 
 # Per-machine Claude Code settings
 .claude/settings.local.json
+
+# Build manifest for the inject skip (scripts/build.ts)
+.build/

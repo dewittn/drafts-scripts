@@ -4,22 +4,24 @@
  *
  * Usage: bun scripts/build.ts <task> [--force]
  *
- *   sync       data, inject, yaml2json, push, in that order (also the default)
+ *   sync       data, inject, yaml2json, push, clean, in that order (also the default)
  *   watch      sync once, then rebuild on every change under Library/
  *   data       pull runtime .json files from iCloud into Library/
  *   inject     render each .tpl into its .yaml with `op inject`
- *              (skips a .tpl whose .yaml is up to date; --force renders all)
+ *              (skips a .tpl whose content has not changed since its last
+ *              render; --force renders all)
  *   yaml2json  convert every Library/Data/**\/*.yaml to .json
  *   push       mirror Library/ to iCloud with rsync --delete
- *   clean      delete the generated settings .yaml files
+ *   clean      delete the .yaml files rendered from .tpl files
  *   debug      print the source and destination paths
  *
  * DRAFTS_DEST overrides the destination (the Drafts iCloud Documents folder).
  * Point it at a scratch directory to try the pipeline without touching iCloud.
  */
 import yaml from "js-yaml";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync, watch, writeFileSync } from "node:fs";
-import { copyFile, mkdir, readdir, stat, unlink, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
@@ -32,15 +34,41 @@ const destDir = process.env.DRAFTS_DEST ?? defaultDest;
 
 const force = process.argv.includes("--force");
 
-// Build artifacts: .yaml generated from .tpl by inject, .json generated from
-// .yaml by yaml2json. The watcher ignores them so a rebuild's own writes do
-// not retrigger it.
-const generatedSettings = [
-  "gameReportSettings.yaml",
-  "settings.yaml",
-  "attendanceSettings.yaml",
-  "templateSettings.yaml",
-];
+// --- rendered templates ------------------------------------------------------
+
+// A .tpl renders to a sibling .yaml, which yaml2json turns into .json. The
+// rendered .yaml holds secrets and contact details, so it exists only between
+// inject and clean. Because it is gone by the next run, inject cannot compare
+// file times to decide what is current. Instead it remembers a hash of each
+// .tpl's content here and re-renders only when the content changes.
+const manifestFile = join(root, ".build", "inject-manifest.json");
+
+function templates(): string[] {
+  return [...new Bun.Glob("**/*.tpl").scanSync({ cwd: srcDir, absolute: true })].sort();
+}
+
+const renderedYamlPath = (tpl: string) => tpl.replace(/\.tpl$/, ".yaml");
+const renderedJsonPath = (tpl: string) => tpl.replace(/\.tpl$/, ".json");
+const isRenderedYaml = (path: string) => path.endsWith(".yaml") && existsSync(path.replace(/\.yaml$/, ".tpl"));
+
+const hashFile = (path: string) => createHash("sha256").update(readFileSync(path, "utf8")).digest("hex");
+
+function loadManifest(): Record<string, string> {
+  if (!existsSync(manifestFile)) return {};
+  try {
+    return JSON.parse(readFileSync(manifestFile, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function saveManifest(manifest: Record<string, string>) {
+  writeFileSync(manifestFile, JSON.stringify(manifest, null, 2) + "\n");
+}
+
+async function ensureBuildDir() {
+  await mkdir(dirname(manifestFile), { recursive: true });
+}
 
 const timestamp = () => new Date().toTimeString().slice(0, 8);
 const log = (...parts: unknown[]) => console.log(`[${timestamp()}]`, ...parts);
@@ -81,13 +109,22 @@ async function data() {
   ]);
 }
 
+// Render each changed .tpl. A template counts as current when its content hash
+// matches the manifest and its .json output exists. The manifest is rewritten
+// from the templates found this run, so entries for deleted templates drop out.
 async function inject() {
-  const templates = [...new Bun.Glob("**/*.tpl").scanSync({ cwd: srcDir, absolute: true })].sort();
-  for (const tpl of templates) {
-    const yamlPath = tpl.replace(/\.tpl$/, ".yaml");
-    // Gulp stamped each .yaml with its .tpl's mtime, so equal counts as current.
-    if (!force && existsSync(yamlPath) && statSync(yamlPath).mtimeMs >= statSync(tpl).mtimeMs) continue;
+  const previous = loadManifest();
+  const current: Record<string, string> = {};
 
+  for (const tpl of templates()) {
+    const key = relative(root, tpl);
+    const hash = hashFile(tpl);
+    current[key] = hash;
+
+    const isCurrent = previous[key] == hash && existsSync(renderedJsonPath(tpl));
+    if (!force && isCurrent) continue;
+
+    const yamlPath = renderedYamlPath(tpl);
     let rendered: string;
     try {
       rendered = await run(["op", "inject", "-i", tpl], { capture: true });
@@ -99,8 +136,11 @@ async function inject() {
       throw new Error(`op inject failed for ${relative(root, tpl)}: ${message}${hint}`);
     }
     await writeFile(yamlPath, rendered);
-    log(`Injected: ${relative(root, tpl)} → ${relative(root, yamlPath)}`);
+    log(`Injected: ${key} → ${relative(root, yamlPath)}`);
   }
+
+  await ensureBuildDir();
+  saveManifest(current);
 }
 
 // Same traversal and output as gulpfile.js: two-space JSON, no trailing
@@ -150,54 +190,42 @@ async function push() {
   ]);
 }
 
+// Delete every .yaml that inject rendered, so secrets and contact details do
+// not stay on disk between runs. The .json outputs stay: Drafts reads them.
 async function clean() {
-  const targets = new Set(generatedSettings);
-  const walk = async (dir: string): Promise<void> => {
-    let entries: string[];
+  for (const tpl of templates()) {
+    const yamlPath = renderedYamlPath(tpl);
+    if (!existsSync(yamlPath)) continue;
     try {
-      entries = await readdir(dir);
+      await unlink(yamlPath);
+      log(`Deleted: ${relative(root, yamlPath)}`);
     } catch (error) {
-      (error as NodeJS.ErrnoException).code != "ENOENT" &&
-        logError(`Error reading directory ${dir}: ${(error as Error).message}`);
-      return;
+      logError(`Error deleting ${relative(root, yamlPath)}: ${(error as Error).message}`);
     }
-    await Promise.all(
-      entries.map(async (entry) => {
-        const filePath = join(dir, entry);
-        if ((await stat(filePath)).isDirectory()) return walk(filePath);
-        if (!targets.has(entry)) return;
-        try {
-          await unlink(filePath);
-          log(`Deleted: ${relative(root, filePath)}`);
-        } catch (error) {
-          logError(`Error deleting ${relative(root, filePath)}: ${(error as Error).message}`);
-        }
-      }),
-    );
-  };
-  await walk(dataDir);
+  }
 }
 
 // The full pipeline. Order matters: data pulls .json from iCloud, so it must
-// run before yaml2json for generated files to win over pulled copies.
+// run before yaml2json for generated files to win over pulled copies, and
+// clean runs last so the rendered .yaml exists for yaml2json but not after.
 async function sync() {
   await data();
   await inject();
   yaml2json();
   await push();
+  await clean();
 }
 
 // --- watch -----------------------------------------------------------------
 
 // Paths the watcher skips, relative to Library/. Dotfiles match gulp's glob,
-// which does not match them. Data/**/*.json and the generated settings files
-// are written by rebuilds themselves.
+// which does not match them. Data/**/*.json and the .yaml rendered from .tpl
+// files are written (and deleted) by rebuilds themselves.
 function isIgnored(path: string): boolean {
   const parts = path.split(sep);
   if (parts.some((part) => part.startsWith("."))) return true;
   if (parts[0] != "Data") return false;
-  const name = parts[parts.length - 1];
-  return name.endsWith(".json") || generatedSettings.includes(name);
+  return path.endsWith(".json") || isRenderedYaml(join(srcDir, path));
 }
 
 function listFiles(dir: string): string[] {
@@ -231,6 +259,7 @@ async function watchFiles() {
     await inject();
     yaml2json();
     await push();
+    await clean();
   };
   const rebuildFromYaml = async () => {
     yaml2json();
