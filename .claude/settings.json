@@ -5,6 +5,7 @@
       "Read(Library/Data/**/attendanceSettings.yaml)",
       "Read(Library/Data/**/gameReportSettings.yaml)",
       "Read(Library/Data/**/templateSettings.yaml)",
+      "Read(Library/Data/**/staff.yaml)",
       "Read(Library/Data/**/*.json)",
       "Read(~/Library/Mobile Documents/iCloud~com~agiletortoise~Drafts5/Documents/Library/Data/**)"
     ]
