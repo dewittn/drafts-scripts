@@ -51,8 +51,51 @@ Decided while building step 2 (2026-10-18; details in
 - "Migrate Current Season" stays for unmigrated teams. On a team file it only
   says there is nothing to migrate, since `bvr:migrate` converts the 2024
   bare-array seasons.
-- `endDate`, `formURL`, `recipients`, and `attendanceDraftID` are in every
-  season entry but nothing reads them yet. Step 3 fills them.
+- `endDate`, `recipients`, and `attendanceDraftID` are in every season entry
+  but nothing reads them yet. Step 3 fills them.
+
+Decided while building step 4, the config layering (2026-10-18, before the
+basketball team starts on 2026-10-30):
+
+- `staff.yaml.tpl` is the only file with contact details: `people`, keyed by
+  initials, each with only the `name`, `cell`, or `email` some message or tag
+  uses. That includes the head coach (`ME`), so `hc_name` and `hc_email` now
+  come from `headCoach: ME` in `settings.yaml.tpl`, and the attendance office
+  (`ATT`, from `attendanceOffice`). `settings.yaml.tpl` keeps its name and
+  role but no longer holds a secret.
+- `forms.yaml` is plain YAML, not a template: the two field maps
+  (`ms-score-report`, `varsity-score-report`) with titles and entry IDs. No
+  URLs, since the URL is per season.
+- A season entry holds `formURLs: { <form name>: url }` instead of one
+  `formURL`, because MS Ultimate submits two forms. Start New Season asks for
+  each link (blank skips); Submit Game Report asks for any still missing,
+  saves it, and skips a form left blank with a message. A pasted
+  `.../viewform?usp=...` link is cut back to the base link.
+- `levels/ms.yaml` and `levels/us.yaml` take today's MS Girls Soccer and
+  Varsity Ultimate values. In teams.yaml a team overrides any part: objects
+  merge, lists replace. MS Ultimate overrides attendance recipients, its
+  score-text list, and its forms.
+- Tags and template files are derived (recap tag `<defaultTag>/game/recap`,
+  the three game templates, `bvr/<id>-game-day-project.mustache` when it
+  exists). Only what does not fit is in teams.yaml: MS Girls Soccer's
+  `recapTag`, Varsity Ultimate's `templates.welcomeLetter`. Practice-plan tags
+  are now read from teams.yaml; the values there were changed to what each
+  team's old `templateSettings` used, since that was the live source (MS Girls
+  Soccer had two different values).
+- teams.yaml is the single source of `attendanceDraftID`. MS Girls Soccer's
+  came from its old `attendanceSettings` and is now in teams.yaml. Basketball
+  has none yet.
+- A check before deleting the nine per-team templates ran TeamConfig on the
+  raw `op://` references and matched them field for field (recipients, cc,
+  bodies, subject, forms, tags, template files). The only addition is the
+  `attendance_email` tag for MS Girls Soccer, which no template it uses reads.
+- The old per-team folders still hold rendered `.json` copies locally and in
+  iCloud (`data` pulls them back, so a local delete alone does not stick).
+  Nothing reads them. Delete `Library/Data/bvr/{ms-ultimate,msg-soccer,us-ultimate}/`
+  in iCloud and locally to clear the contact details they hold.
+- Claude deny rules: the rendered `staff.json` is covered by the existing
+  `Library/Data/**/*.json` rule, and `Read(Library/Data/**/staff.yaml)` covers
+  the rendered YAML.
 
 ## What starting a season costs today
 
@@ -94,16 +137,22 @@ Split BVR configuration into layers by how often each changes and who changes it
 
 ```
 Library/Data/bvr/
-  settings.yaml.tpl         global: workspace, coaching draft, head coach tags   (rarely)
+  settings.yaml.tpl         global: workspace, coaching draft, file names,
+                            headCoach and attendanceOffice initials              (rarely)
   sports.yaml               per sport: score picker ranges                        (new sport only)
-  staff.yaml.tpl            contact directory keyed by initials, from 1Password   (when staff changes)
-  forms.yaml.tpl            school-wide score forms: field maps and entry IDs     (when the school changes the form)
+  staff.yaml.tpl            contact directory keyed by initials, from 1Password;
+                            the only file with contact details                    (when staff changes)
+  forms.yaml                school-wide score forms: field maps and entry IDs     (when the school changes the form)
   teams.yaml                per team: id, name, abbr, sport, level, calendar,
-                            tags, template files, which form it submits to        (new team only)
-  levels/ms.yaml, us.yaml   per level: message type, default recipient roles      (rarely)
+                            defaultTag, attendanceDraftID, assistantCoaches,
+                            templateTags, practice-plan tags, and overrides of
+                            its level (attendance, gameReport, forms, recapTag,
+                            templates)                                            (new team only)
+  levels/ms.yaml, us.yaml   per level: attendance and score messages (type,
+                            recipients by initials, text), forms to submit        (rarely)
   teams/<team-id>.json      per team, written by Drafts, never in git:
                             currentSeason, then one entry per season with
-                            startDate, endDate, formURL, recipients (initials),
+                            startDate, endDate, formURLs, recipients (initials),
                             attendanceDraftID, seasonRecordDraftID, games[],
                             practicePlans{}                                      (every season, from inside Drafts)
 ```

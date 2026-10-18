@@ -101,6 +101,13 @@ The project uses a build-time compilation approach for configuration:
 - Scripts load JSON files at runtime (no YAML parsing overhead)
 - YAML files should be edited for configuration changes; JSON files are auto-generated
 
+BVR settings are layered (`Library/Scripts/modules/bvr/utils/TeamConfig.js` merges them):
+- `bvr/staff.yaml.tpl` - The only BVR file with contact details: people keyed by initials. Everything else names people by initials
+- `bvr/levels/ms.yaml`, `bvr/levels/us.yaml` - Defaults per level: who gets absence and score messages, which forms to submit
+- `bvr/forms.yaml` - School-wide score-form field maps. Each season's form links live in the team file (`teams/<id>.json`, `formURLs`), entered in Drafts
+- `bvr/teams.yaml` - Per team: level, attendance draft, assistant coaches, plain template tags, and only what differs from its level. Tags and template file names are derived from `id` and `defaultTag` (see the comment at the top of the file)
+- There are no per-team settings folders; a new team needs only a `teams.yaml` entry
+
 ### Sync Workflow
 
 Files are developed locally in `Library/` and synchronized to the iCloud Drafts directory at:

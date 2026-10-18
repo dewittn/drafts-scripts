@@ -110,6 +110,11 @@ season that is current and already has a draft is reported as existing.
 Practice plan actions on a season with no start date, on a team with none in
 `teams.yaml` either, stop with a message instead of counting weeks.
 
+Start New Season also asks for this season's link to each score form the
+team submits (from its level or `forms` in `teams.yaml`) and stores the ones
+given in `formURLs`. Completing an existing season asks only for missing
+links. A link still missing at Submit Game Report is asked for there.
+
 Start New Season on a team with no team file and no data in the old files
 creates the team file. A team that has old data but no team file keeps the old
 behavior until `bvr:migrate` runs, so its history is not hidden.
