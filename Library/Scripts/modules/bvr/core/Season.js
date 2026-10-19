@@ -198,24 +198,6 @@ class Season {
     this.#saveRecordsData(game);
   }
 
-  // Old files only: turn a bare-array season into the object form and give
-  // it a record draft. bun run bvr:migrate does both for team files.
-  migrateCurrentSeason() {
-    if (this.usesTeamFile) {
-      return this.ui.displayAppMessage(
-        "info",
-        `${this.teamName} already uses a team file. Nothing to migrate.`,
-      );
-    }
-
-    this.#reportBareSeasonMigration(this.store.migrateBareSeason());
-
-    if (this.seasonRecordDraftID == undefined) {
-      this.#createSeasonRecordDraft();
-      this.#populateSeasonRecordDraft();
-    }
-  }
-
   // A team with history in the old files but no team file keeps the old
   // behavior until it is migrated. Every other team gets a new season in its
   // team file, which is created here for a team with no history at all.
@@ -805,18 +787,6 @@ class Season {
     return monday;
   }
 
-  #reportBareSeasonMigration(result) {
-    const messages = {
-      already: ["info", "Current season has already been migrated."],
-      "wrong-type": ["error", "The current season is the wrong type and will not be migrated."],
-    };
-    if (result == "migrated") {
-      return alert(`The ${this.teamID} ${this.currentSeasonID} season has been migrated!`);
-    }
-    const [type, message] = messages[result];
-    return this.ui.displayAppMessage(type, message);
-  }
-
   #createSeasonRecordDraft() {
     if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
     const seasonRecordDraft = new Template(this.tmplSettingsSeasonRecord);
@@ -826,17 +796,6 @@ class Season {
     this.store.saveGames();
 
     return this.ui.displayAppMessage("success", "Season record draft created.");
-  }
-
-  #populateSeasonRecordDraft() {
-    this.currentSeasonRecord.forEach((gameReport) => {
-      const gameData = this.#loadGameDataFromUUID(gameReport.draftID);
-      this.#appendToRecordsDraft(gameData);
-    });
-    return this.ui.displayAppMessage(
-      "success",
-      "Season record draft populated with games.",
-    );
   }
 
   #appendToRecordsDraft(game) {
@@ -879,17 +838,5 @@ class Season {
     }
 
     this.store.saveGames();
-  }
-
-  #loadGameDataFromUUID(uuid = draft.uuid) {
-    const index = this.currentSeasonRecord.findIndex(
-      (game) => game.draftID == uuid,
-    );
-    if (index == -1) return undefined;
-
-    const data = this.currentSeasonRecord[index];
-    data.date = new Date(data.date);
-
-    return data;
   }
 }

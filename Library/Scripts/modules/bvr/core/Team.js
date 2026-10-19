@@ -12,7 +12,9 @@ class Team {
   #season;
   #config;
 
-  constructor(teamID = "") {
+  // allTeams: pick from every team, not just the active ones (Start New
+  // Season, whose team is usually between seasons).
+  constructor(teamID = "", { allTeams = false } = {}) {
     this.#services = ServiceContainer.getInstance();
 
     // Register BVR service if not already registered
@@ -23,7 +25,7 @@ class Team {
       }, true);
     }
 
-    this.#teamData = this.#getTeamData(teamID);
+    this.#teamData = this.#getTeamData(teamID, allTeams);
   }
 
   // Lazy getters for dependencies
@@ -293,10 +295,6 @@ class Team {
     teamNotes.every((note) => this.#processNote(note));
   }
 
-  migrateCurrentSeason() {
-    this.season.migrateCurrentSeason();
-  }
-
   startNewSeason() {
     this.season.startNewSeason();
   }
@@ -427,11 +425,12 @@ class Team {
     return cb.open();
   }
 
-  #getTeamData(teamID) {
+  // The draft's team tag wins, then a team ID passed in, then a choice.
+  #getTeamData(teamID, allTeams) {
     const teamData = this.#getTeamDataFromTag();
     if (teamData != undefined) return teamData;
 
-    const id = teamID == "" ? this.#getTeamIDFromPrompt() : teamID;
+    const id = teamID == "" ? this.#chooseTeamID(allTeams) : teamID;
     return this.teamsData.filter((team) => team.id == id)[0];
   }
 
@@ -439,9 +438,40 @@ class Team {
     return this.teamsData.filter((team) => draft.hasTag(team.defaultTag))[0];
   }
 
-  #getTeamIDFromPrompt() {
-    const { menuSettings } = this.bvr.ui.settings("getTeamIDFromPrompt");
-    this.teamsData.forEach((team) =>
+  // Choose from the active teams, using the only one without asking. With no
+  // active team (or allTeams), every team is offered. A team between seasons
+  // is still reachable by running the action from one of its tagged drafts.
+  #chooseTeamID(allTeams) {
+    if (allTeams) return this.#getTeamIDFromPrompt(this.teamsData);
+
+    const activeTeams = this.#activeTeams();
+    if (activeTeams.length == 0) return this.#getTeamIDFromPrompt(this.teamsData, { noneActive: true });
+    if (activeTeams.length > 1) return this.#getTeamIDFromPrompt(activeTeams);
+
+    const [onlyTeam] = activeTeams;
+    this.bvr.ui.displayAppMessage("info", `Using ${onlyTeam.name}.`);
+    return onlyTeam.id;
+  }
+
+  // Teams whose current season has not reached its last day. A team file
+  // that cannot be read counts as inactive here; an action run from one of
+  // that team's drafts reports the problem.
+  #activeTeams() {
+    if (typeof TeamFileStore == "undefined") require("modules/bvr/storage/TeamFileStore.js");
+    const today = this.bvr.formatDateYMD(new Date());
+    return this.teamsData.filter((team) => {
+      try {
+        return TeamFileStore.load(this.bvr.teamFilePath(team.id))?.isActiveOn(today) == true;
+      } catch (error) {
+        return false;
+      }
+    });
+  }
+
+  #getTeamIDFromPrompt(teams, { noneActive = false } = {}) {
+    const { menuSettings, noneActiveMessage } = this.bvr.ui.settings("getTeamIDFromPrompt");
+    if (noneActive) menuSettings.menuMessage = noneActiveMessage;
+    teams.forEach((team) =>
       menuSettings.menuItems.push({
         type: "button",
         data: { name: team.name, value: team.id },

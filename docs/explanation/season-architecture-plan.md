@@ -105,9 +105,8 @@ Decided while building step 2 (2026-10-18; details in
 - A team with no team file keeps the old behavior. Start New Season creates a
   team file only for a team with no history in the old files, so an
   unmigrated team's history is never hidden behind an empty team file.
-- "Migrate Current Season" stays for unmigrated teams. On a team file it only
-  says there is nothing to migrate, since `bvr:migrate` converts the 2024
-  bare-array seasons.
+- "Migrate Current Season" was retired on 2026-10-19: every team has a team
+  file, and `bvr:migrate` converts the 2024 bare-array seasons.
 - `endDate`, `recipients`, and `attendanceDraftID` are in every season entry
   but nothing reads them yet. Step 3 fills them.
 

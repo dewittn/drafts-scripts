@@ -121,6 +121,14 @@ class TeamFileStore {
     return this.season?.startDate ? this.season.startDate : undefined;
   }
 
+  // True from Start New Season until the season's last day (today is
+  // YYYY-MM-DD). A season with no last day stays active.
+  isActiveOn(today) {
+    if (this.season == undefined) return false;
+    const endDate = this.season.endDate;
+    return endDate == undefined || endDate >= today;
+  }
+
   get practicePlans() {
     return this.season?.practicePlans;
   }

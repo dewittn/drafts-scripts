@@ -51,7 +51,7 @@ Each season entry:
 |---|---|---|
 | `label` | string | Display name, used by the `current_season_label` template tag |
 | `startDate` | `YYYY-MM-DD` or null | Week 1 of the practice-plan counter. Null falls back to `startDate` in `teams.yaml` |
-| `endDate` | `YYYY-MM-DD` or null | Not read yet. Reserved for the guided Start New Season flow |
+| `endDate` | `YYYY-MM-DD` or null | The season's last day. The team picker lists a team only while its current season has not passed this date; null keeps it listed (see "Choosing a team") |
 | `formURLs` | object | Form name (from `forms.yaml`) to a link for this team's season only, overriding the term's shared link (see "Form links"). Usually empty. Files written before this key carry `formURL: null`, which reads as `{}` and is dropped on the first save |
 | `recipients` | object or null | `{ attendance: [initials], gameReport: [initials] }`, either key optional: who gets this season's attendance and score messages, replacing the team's lists (`teams.yaml`, else the level). Only the lists change; message type, text, cc, and subject stay with the level or team, so for an email level (`us`) `attendance` replaces `recipients` and leaves `ccRecipients` alone. Null (the usual case) keeps the defaults, so a change to the level still reaches the team |
 | `attendanceDraftID` | string or null | The season's roster draft. Record Attendance and Update Roster use it first, then `attendanceDraftID` in `teams.yaml` |
@@ -279,6 +279,23 @@ current season of a team-file team in one prompt, prefilled from the file:
 It saves once, through the store's validation, and the success message lists
 what changed. A team still on `records.json` is told to run `bvr:migrate`
 first.
+
+## Choosing a team
+
+A BVR action run on a draft tagged with a team's `defaultTag` uses that team.
+Otherwise it picks from the teams in season: those whose `currentSeason`
+exists and whose `endDate` is null or today or later. A season counts from
+Start New Season, before its first day, so preseason work (welcome letter,
+Update Roster, the first practice plan) finds it.
+
+- One team in season is used without asking ("Using MS Ultimate Frisbee.").
+- Two or more are offered in the Select Team prompt.
+- None in season offers every team.
+- Start New Season always offers every team.
+
+A team past its last day is reached by running the action from one of its
+tagged drafts, such as its roster draft. A team file that cannot be read
+counts as out of season in the picker.
 
 ## The build and team files
 

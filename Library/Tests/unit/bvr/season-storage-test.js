@@ -75,6 +75,10 @@ function teamFixture() {
 
 // The startNewSeason, formURLPrompt, and editSeason entries from Library/Data/bvr/ui.yaml.
 const uiSettings = {
+  getTeamIDFromPrompt: {
+    noneActiveMessage: "No team is in season.",
+    menuSettings: { menuTitle: "Select Team", menuMessage: "Which team?", isCancellable: false, menuItems: [] },
+  },
   editSeason: {
     labelField: { type: "textField", data: { name: "label", label: "Name" } },
     startDateField: { type: "datePicker", data: { name: "startDate", label: "First Day" } },
@@ -277,6 +281,14 @@ test.assertEqual(TeamFileStore.seasonLabel("2026-27"), "2026-27", "an unusual ID
 store = new TeamFileStore(savable({ schemaVersion: 1, teamID: "x", currentSeason: null, seasons: {} }));
 test.assertDeepEqual(store.games, [], "no current season means no games");
 test.assertEqual(store.label, null, "no current season means no label");
+test.assertEqual(store.isActiveOn("2026-10-19"), false, "no current season means not active");
+
+const seasonEnding = (endDate) =>
+  new TeamFileStore(savable({ schemaVersion: 1, teamID: "x", currentSeason: "2026-fall", seasons: { "2026-fall": { endDate } } }));
+test.assertEqual(seasonEnding(null).isActiveOn("2026-10-19"), true, "a season with no last day stays active");
+test.assertEqual(seasonEnding("2026-11-20").isActiveOn("2026-10-19"), true, "active before its last day");
+test.assertEqual(seasonEnding("2026-10-19").isActiveOn("2026-10-19"), true, "and on it");
+test.assertEqual(seasonEnding("2026-10-18").isActiveOn("2026-10-19"), false, "not after it");
 
 file = teamFixture();
 store = new TeamFileStore(file);
@@ -591,13 +603,6 @@ team = mockTeam(bvr);
 team.season.store = legacy(2026);
 team.season.startNewSeason();
 test.assert(infoMessages(bvr.ui).some((m) => m.includes("already has a season record draft")), "says the record draft exists");
-
-const bareRecords = savable({ "test-team": { 2024: [{ draftID: "BARE" }], 2026: { seasonRecordData: [] } } });
-test.assertEqual(legacy(2024, bareRecords).migrateBareSeason(), "migrated", "converts a bare-array season");
-test.assertDeepEqual(bareRecords["test-team"][2024], { seasonRecordDraftID: "", seasonRecordData: [{ draftID: "BARE" }] }, "into the object form");
-test.assertEqual(bareRecords.saves, 1, "and saves records.json");
-test.assertEqual(legacy(2026, bareRecords).migrateBareSeason(), "already", "leaves an object season alone");
-test.assertEqual(legacy(2025, bareRecords).migrateBareSeason(), "wrong-type", "reports a missing season");
 
 // --- form links ---
 test.section("form links");
@@ -1051,6 +1056,63 @@ realTeam.season = { currentSeasonData: { attendanceDraftID: null } };
 test.assertEqual(realTeam.attendanceDraftID, "ROSTER-FROM-TEAMS-YAML", "else the one in teams.yaml");
 realTeam.season = { currentSeasonData: undefined };
 test.assertEqual(realTeam.attendanceDraftID, "ROSTER-FROM-TEAMS-YAML", "also when there is no current season");
+
+// --- choosing a team ---
+test.section("choosing a team");
+
+// Each team's file by team ID: "active", "ended", "none" (no team file), or
+// "broken" (load throws). TeamFileStore.load is swapped for the section.
+const realLoad = TeamFileStore.load;
+/** @type {Record<string, string>} */
+let teamStates = {};
+TeamFileStore.load = (path) => {
+  const state = teamStates[path];
+  if (state == "broken") throw new Error(`${path} cannot be used`);
+  if (state == undefined || state == "none") return undefined;
+  const endDate = state == "ended" ? "2000-01-01" : null;
+  return new TeamFileStore(savable({ schemaVersion: 1, teamID: path, currentSeason: "s", seasons: { s: { endDate } } }));
+};
+
+// A Team built with no team ID, so it has to choose. pick answers the
+// prompt; tag is the one team tag the draft has.
+/** @param {Record<string, string>} states @param {{ pick?: string, allTeams?: boolean, tag?: string }} [options] */
+function chooseTeam(states, { pick, allTeams = false, tag } = {}) {
+  teamStates = states;
+  /** @type {any} */ (globalThis).draft = { hasTag: (t) => t == tag };
+  const ui = mockUI(pick ? { "Select Team": { button: pick, fieldValues: {} } } : {});
+  const pickerBVR = { ...mockBVR(teamFixturePath, ui), teamSettingsFile: "../Tests/fixtures/bvr/teams-picker.json", teamFilePath: (id) => id };
+  ServiceContainer.getInstance().register("bvr", () => pickerBVR, true);
+  const chosen = new Team("", { allTeams });
+  const menu = ui.getInteractionsByType("buildMenu").find((i) => i.menuSettings.menuTitle == "Select Team")?.menuSettings;
+  const offered = menu ? menu.menuItems.map((item) => item.data.value) : undefined;
+  return { id: chosen.id, offered, message: menu?.menuMessage, infos: infoMessages(ui) };
+}
+
+let chosen = chooseTeam({ "team-a": "active", "team-b": "ended", "team-c": "none" });
+test.assertEqual(chosen.id, "team-a", "the only active team is used");
+test.assertEqual(chosen.offered, undefined, "without a prompt");
+test.assert(chosen.infos.includes("Using Team A."), "and says which team");
+
+chosen = chooseTeam({ "team-a": "active", "team-b": "ended", "team-c": "active" }, { pick: "team-c" });
+test.assertDeepEqual(chosen.offered, ["team-a", "team-c"], "two active teams are offered, and only those");
+test.assertEqual(chosen.id, "team-c", "the picked team is used");
+
+chosen = chooseTeam({ "team-a": "ended", "team-b": "none", "team-c": "broken" }, { pick: "team-b" });
+test.assertDeepEqual(chosen.offered, ["team-a", "team-b", "team-c"], "with no active team, every team is offered");
+test.assertEqual(chosen.message, "No team is in season.", "saying none is in season");
+
+chosen = chooseTeam({ "team-a": "active", "team-b": "broken", "team-c": "active" }, { pick: "team-a" });
+test.assertDeepEqual(chosen.offered, ["team-a", "team-c"], "an unreadable team file counts as inactive");
+
+chosen = chooseTeam({ "team-a": "active", "team-b": "ended", "team-c": "none" }, { allTeams: true, pick: "team-b" });
+test.assertDeepEqual(chosen.offered, ["team-a", "team-b", "team-c"], "allTeams (Start New Season) offers every team");
+test.assertEqual(chosen.id, "team-b", "including one between seasons");
+
+chosen = chooseTeam({ "team-a": "active", "team-b": "ended", "team-c": "none" }, { tag: "bvr/b" });
+test.assertEqual(chosen.id, "team-b", "a tagged draft picks its team even between seasons");
+test.assertEqual(chosen.offered, undefined, "without a prompt");
+
+TeamFileStore.load = realLoad;
 
 // --- shared schema fixture ---
 test.section("shared schema fixture");

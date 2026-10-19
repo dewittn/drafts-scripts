@@ -6,8 +6,11 @@ displayMsgs:
   alreadySubmitted: Addendace has already been submitted today.
   noOneAbsent: No one is absent today!
 getTeamIDFromPrompt:
+  # Lists only the teams in season unless none are (then every team) or the
+  # action is Start New Season. One team in season is used without asking.
+  noneActiveMessage: No team is in season. Which team would you like to use?
   menuSettings:
-    menuTitle: Selcet Team
+    menuTitle: Select Team
     menuMessage: Which team would you like to use?
     isCancellable: false
     menuItems: []

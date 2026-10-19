@@ -108,21 +108,6 @@ class LegacySeasonStore {
     return hasKeys(this.records[this.#teamID]) || hasKeys(this.ppData[this.#teamID]);
   }
 
-  // Turn this year's bare-array season (some 2024 seasons) into the object
-  // form the code reads. Returns "migrated", "already", or "wrong-type".
-  migrateBareSeason() {
-    const season = this.teamHistory[this.#year];
-    if (season?.seasonRecordData != undefined) return "already";
-    if (!Array.isArray(season)) return "wrong-type";
-
-    this.teamHistory[this.#year] = {
-      seasonRecordDraftID: "",
-      seasonRecordData: season,
-    };
-    this.saveGames();
-    return "migrated";
-  }
-
   saveGames() {
     this.records.save();
   }
