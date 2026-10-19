@@ -328,47 +328,24 @@ class Team {
     this.#insertTextPosAtEnd(`${playerName} `);
   }
 
+  // Carry the roster kept from last season into the current one: retitle it
+  // for the season and move everyone up a grade, after showing the result.
+  // Run after Start New Season, in any month.
   updateRoster() {
-    const { menuSettings } = this.bvr.ui.settings("updateRoster");
+    if (!this.season.ensureCurrentSeason()) return;
+
     const attendaceDraft = Draft.find(this.attendanceDraftID);
-
-    const currentYear = new Date().getFullYear();
-    const yearPattern = new RegExp(`(\\d{4})`);
-    const yearMatch = attendaceDraft.lines[0].match(yearPattern);
-    const foundYear = parseInt(yearMatch[1], 10);
-
-    // Check if the found year matches the current year
-    if (foundYear !== currentYear) {
-      return this.ui.displayAppMessage(
-        "info",
-        "Roster has already been updated!",
-      );
+    if (attendaceDraft == undefined) {
+      return this.ui.displayAppMessage("error", `${this.name} has no roster draft.`);
     }
 
-    // Increment the year and append "(Potential)"
-    const newYear = foundYear + 1;
+    const title = `# Attendance: ${this.abbr} ${this.season.currentSeasonLabel}`;
+    const updatedContent = Team.promoteRoster(attendaceDraft.content, title);
+    if (updatedContent == undefined) {
+      return this.ui.displayAppMessage("info", "Roster has already been updated!");
+    }
 
-    const updatedContent = attendaceDraft.lines
-      .map((line, index) => {
-        if (index === 0) {
-          return line.replace(yearPattern, newYear) + " (Potential)";
-        }
-
-        // Use a regular expression to find the number in parentheses
-        const gradeMatch = line.match(/\((\d+)\)/);
-
-        if (!gradeMatch) return line;
-
-        // Extract the number, convert it to an integer, and increment it by 1
-        let number = parseInt(gradeMatch[1], 10);
-        number += 1;
-
-        // Replace the original number in the string with the incremented number
-        const updatedLine = line.replace(/\(\d+\)/, `(${number})`);
-        return updatedLine;
-      })
-      .join("\n");
-
+    const { menuSettings } = this.bvr.ui.settings("updateRoster");
     menuSettings.menuItems.push({
       type: "label",
       data: {
@@ -387,6 +364,17 @@ class Team {
       attendaceDraft.update();
       editor.load(attendaceDraft);
     }
+  }
+
+  // The roster with its first line replaced by title and every "(grade)"
+  // moved up one, or undefined when the first line is already title (the
+  // roster was updated for this season).
+  static promoteRoster(content, title) {
+    const [firstLine, ...rest] = `${content}`.split("\n");
+    if (firstLine.trim() == title) return undefined;
+
+    const promoted = rest.map((line) => line.replace(/\((\d+)\)/, (match, grade) => `(${Number(grade) + 1})`));
+    return [title, ...promoted].join("\n");
   }
 
   // **********************

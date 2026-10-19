@@ -123,7 +123,7 @@ JSDoc in Phases 4 and 5. Do not "fix" them now.
 | Date arithmetic | 4 | `new Date() - draft.createdAt` in `record-attendance.js:2` and `record-attendance-dry-run.js:5`. Valid JavaScript that TypeScript rejects. Separately, `oneSecond = 10000` is ten seconds. |
 | `const draft` in actions | 4 | `beyond-the-book.js:4` and `author-update.js:3` declare their own `draft`, shadowing the Drafts global. That works at runtime. The checker then types it as the global `Draft`. |
 | `Draft.prototype.isMorningPage` | 2 | `morning-pages.js` extends `Draft` locally. TypeScript ignores prototype assignments on declared classes. |
-| `replace()` with non-string arguments | 2 | `Team.js:317` passes a number and `Attendance.js:234` passes a match result. JavaScript coerces both. |
+| `replace()` with non-string arguments | 1 | `Attendance.js:234` passes a match result. JavaScript coerces it. (`Team.js` passed a number until Update Roster was rewritten on 2026-10-19.) |
 | Other inference | 2 | `DocumentFactory.js:49` compares a document with `false`. `DraftsDocument.js:260` reads `.draft` after an undefined guard TypeScript cannot see. |
 
 ## JSDoc does not match the code

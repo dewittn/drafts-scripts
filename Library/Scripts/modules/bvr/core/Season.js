@@ -665,8 +665,8 @@ class Season {
   }
 
   // A new roster draft from bvr/attendance.md, tagged for the team. Its
-  // title names the team and season (Update Roster needs a year in it); the
-  // template's [[date]] tag fills in the "_For:" line.
+  // title names the team and season, which Update Roster compares with the
+  // current season; the template's [[date]] tag fills in the "_For:" line.
   #createAttendanceDraft(seasonLabel) {
     if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
     const templateFile = this.#tmplSettings?.attendance?.templateFile || "bvr/attendance.md";

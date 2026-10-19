@@ -995,7 +995,7 @@ startWithRoster(undefined, {});
 test.assertDeepEqual(
   rosterRenders()[0]?.templateTags,
   { team_abbr: "TT", season_label: "2026 Winter" },
-  "the title tags name the team and season (with a year for Update Roster)",
+  "the title tags name the team and season",
 );
 
 file = teamFixtureWithWinter();
@@ -1056,6 +1056,35 @@ realTeam.season = { currentSeasonData: { attendanceDraftID: null } };
 test.assertEqual(realTeam.attendanceDraftID, "ROSTER-FROM-TEAMS-YAML", "else the one in teams.yaml");
 realTeam.season = { currentSeasonData: undefined };
 test.assertEqual(realTeam.attendanceDraftID, "ROSTER-FROM-TEAMS-YAML", "also when there is no current season");
+
+// --- Update Roster ---
+test.section("Team.promoteRoster");
+
+const keptRoster = [
+  "# Attendance: TT 2026 Fall",
+  "[[BVR Coaching]]",
+  "_For: 2026-11-20_",
+  "- [x] Recorded",
+  "---",
+  "- [ ] Synthetic Player (7)",
+  "- [ ] Another Player (8)",
+  "- [ ] No Grade",
+].join("\n");
+const fall2027 = "# Attendance: TT 2027 Fall";
+const promoted = Team.promoteRoster(keptRoster, fall2027);
+test.assertEqual(promoted?.split("\n")[0], fall2027, "the title becomes the current season's");
+test.assertDeepEqual(
+  promoted?.split("\n").slice(5),
+  ["- [ ] Synthetic Player (8)", "- [ ] Another Player (9)", "- [ ] No Grade"],
+  "every grade moves up one, other lines stay",
+);
+test.assertEqual(promoted?.split("\n")[2], "_For: 2026-11-20_", "the date line is left alone");
+test.assertEqual(Team.promoteRoster(promoted, fall2027), undefined, "a roster titled for this season is already updated");
+test.assertEqual(
+  Team.promoteRoster(keptRoster.replace("2026 Fall", "2026 Winter"), "# Attendance: TT 2026 Winter")?.split("\n")[0],
+  undefined,
+  "the same season in the new year (January) is still already updated",
+);
 
 // --- choosing a team ---
 test.section("choosing a team");

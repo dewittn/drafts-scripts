@@ -182,13 +182,6 @@
     "count": 1
   },
   {
-    "file": "Library/Scripts/modules/bvr/core/Team.js",
-    "code": 2769,
-    "message": "No overload matches this call.   The last overload gave the following error.     Argument of type 'number' is not assignable to parameter of type '(substring: string, ...args: any[]) => string'.",
-    "line": "return line.replace(yearPattern, newYear) + \" (Potential)\";",
-    "count": 1
-  },
-  {
     "file": "Library/Scripts/modules/bvr/messages/system_message.js",
     "code": 2339,
     "message": "Property 'attendaceDraft' does not exist on type 'SystemMessage'.",

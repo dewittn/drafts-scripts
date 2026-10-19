@@ -127,12 +127,17 @@ season's, else `teams.yaml`'s), it asks whether to keep it for the new season
 or start a new one; Keep is the default, and cancelling keeps it too. A new
 one is made from `bvr/attendance.md` (override: `templates.attendance` in
 `teams.yaml`), tagged with the team's `defaultTag`, titled
-`# Attendance: <abbr> <season label>` (Update Roster needs a year in the
-title), with its `_For:` line set to today, and opened in the editor. The
+`# Attendance: <abbr> <season label>`, with its `_For:` line set to today,
+and opened in the editor. The
 template fills these in itself with the `[[team_abbr]]`, `[[season_label]]`,
 and `[[date|%Y-%m-%d]]` tags, so an override template needs them too. A team
 with no roster draft gets a new one without being asked. Completing an
 existing season asks only if that season has no roster draft.
+
+A kept roster still carries last season's title. Update Roster, run any time
+after Start New Season, retitles it for the current season and moves every
+`(grade)` up one, after showing the result. A roster already titled for the
+current season counts as updated, so running it twice changes nothing.
 
 ## Form links
 

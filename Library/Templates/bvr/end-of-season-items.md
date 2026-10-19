@@ -1,5 +1,5 @@
 End of Season Items: @area(BVR Coaching)
-  *Checklist to end the [[team_abbr]] [[date|%Y]] season.*
+  *Checklist to end the [[team_abbr]] [[current_season_label]] season.*
   Organization:
     - Archive notes
     - Process notes in Bear
