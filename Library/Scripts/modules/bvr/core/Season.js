@@ -682,17 +682,17 @@ class Season {
     return rosterPrompt.buttonPressed != "new";
   }
 
-  // A new roster draft from bvr/attendance.md, tagged for the team. The
-  // template has no tags, so its title and "_For:" date line are set here:
-  // the title names the team and season (Update Roster needs a year in it).
+  // A new roster draft from bvr/attendance.md, tagged for the team. Its
+  // title names the team and season (Update Roster needs a year in it); the
+  // template's [[date]] tag fills in the "_For:" line.
   #createAttendanceDraft(seasonLabel) {
     if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
     const templateFile = this.#tmplSettings?.attendance?.templateFile || "bvr/attendance.md";
-    const roster = new Template({ templateFile, draftTags: [this.team.defaultTag] });
-    const today = this.bvr.formatDateYMD(new Date());
-    roster.draft.content = `${roster.draft.content}`
-      .replace(/^# Attendance:.*$/m, `# Attendance: ${this.team.abbr} ${seasonLabel}`)
-      .replace(/_For: \d{4}-\d{2}-\d{2}_/, `_For: ${today}_`);
+    const roster = new Template({
+      templateFile,
+      draftTags: [this.team.defaultTag],
+      templateTags: { team_abbr: this.team.abbr, season_label: seasonLabel },
+    });
     roster.save();
     return roster;
   }

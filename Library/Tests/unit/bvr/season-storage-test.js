@@ -39,11 +39,7 @@ class StubTemplate {
     this.settings = settings;
     const isRoster = settings.templateFile == "bvr/attendance.md";
     this.draftID = isRoster ? "NEW-ROSTER-DRAFT" : "NEW-RECORD-DRAFT";
-    // The first lines of bvr/attendance.md, for the roster draft.
-    this.draft = {
-      uuid: this.draftID,
-      content: isRoster ? "# Attendance: \n[[bear:MOC: BVR Coaching]]\n_For: 2023-11-02_\n- [ ] Recorded" : "",
-    };
+    this.draft = { uuid: this.draftID, content: "" };
     StubTemplate.rendered.push(settings);
   }
 
@@ -988,21 +984,14 @@ test.assertEqual(
 );
 test.assertEqual(file.seasons["2026-winter"].attendanceDraftID, "NEW-ROSTER-DRAFT", "and gets a new one");
 
-// The new draft's title and date line.
-bvr = mockBVR(teamFixturePath, mockUI(startResponse("2026-winter")));
-team = mockTeam(bvr);
-team.season.store = new TeamFileStore(teamFixture());
-/** @type {any} */
-let rosterDraft;
-const realPin = bvr.pinDraft;
-bvr.pinDraft = function (workingDraft) {
-  rosterDraft = workingDraft;
-  realPin.call(this, workingDraft);
-};
-team.season.startNewSeason();
-const today = bvr.formatDateYMD(new Date());
-test.assertEqual(rosterDraft?.content.split("\n")[0], "# Attendance: TT 2026 Winter", "the title names the team and season (with a year for Update Roster)");
-test.assertEqual(rosterDraft?.content.split("\n")[2], `_For: ${today}_`, "the date line is today");
+// The template tags for the new draft's title. The date line is the
+// template's own [[date]] tag, which only Drafts renders.
+startWithRoster(undefined, {});
+test.assertDeepEqual(
+  rosterRenders()[0]?.templateTags,
+  { team_abbr: "TT", season_label: "2026 Winter" },
+  "the title tags name the team and season (with a year for Update Roster)",
+);
 
 file = teamFixtureWithWinter();
 bvr = mockBVR(teamFixturePath, mockUI({ ...startResponse("2026-winter"), ...rosterResponse("keep") }));
