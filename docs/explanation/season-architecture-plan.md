@@ -48,6 +48,16 @@ library runs; all three old teams are migrated to team files and
 
 **Not started:**
 
+- Update Score action, on `dev` after this branch merges (decided
+  2026-10-20). Run on a game report draft: reopen the score picker preset to
+  the recorded score, recompute the result, rewrite only the Result and Score
+  sections of the report draft, replace the game's row in the season record
+  draft (matched by date and opponent; ask before rebuilding the table), and
+  re-save the game. For an already submitted game, ask before re-sending the
+  texts and only open the score forms for review, since the middle school form
+  posts directly. Current-season games only. Opponent, location and date could
+  follow later as Edit Game.
+
 - Later cleanup, after a full season on team files: drop `startDate` from
   `teams.yaml` (seasons carry their own), stop pushing `records.json` and
   `practicePlans.json` and retire them, retire the `Score Report` items in
