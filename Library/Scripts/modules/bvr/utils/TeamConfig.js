@@ -9,6 +9,7 @@ class TeamConfig {
     recordRow: "bvr/game-record-row.md",
     seasonRecord: "bvr/game-season-record.md",
     attendance: "bvr/attendance.md",
+    endOfSeasonProject: "bvr/end-of-season-project.mustache",
   };
 
   #team;
@@ -141,6 +142,7 @@ class TeamConfig {
       seasonRecord: { templateFile: templates.seasonRecord || defaults.seasonRecord },
       practicePlan: { draftTags: [...(team.practicePlan?.draftTags || [])] },
       attendance: { templateFile: templates.attendance || defaults.attendance },
+      endOfSeasonProject: { templateFile: templates.endOfSeasonProject || defaults.endOfSeasonProject },
     };
 
     const thingsProject = templates.thingsProject || this.#derivedThingsProject();

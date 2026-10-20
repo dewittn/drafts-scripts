@@ -7,6 +7,8 @@
 #   game report       bvr/game-report.md              (override: templates.gameReport)
 #   game-day project  bvr/<id>-game-day-project.mustache, if it exists
 #                                                     (override: templates.thingsProject)
+#   end of season     bvr/end-of-season-project.mustache
+#                                                     (override: templates.endOfSeasonProject)
 #   practice plan     bvr/<id>-practice-plan.md
 # Per-season values (start date, form URLs, record draft) live in the team
 # file, teams/<id>.json, and are set by Start New Season.

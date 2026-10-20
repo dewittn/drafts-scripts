@@ -9,6 +9,7 @@
 require("../Tests/fixtures/assertions.js");
 require("modules/bvr/utils/Staff.js");
 require("modules/bvr/utils/TeamConfig.js");
+require("modules/bvr/utils/TmplSettings.js");
 
 const test = new TestAssertions("TeamConfig and Staff");
 
@@ -186,6 +187,26 @@ test.assertDeepEqual(
 );
 test.assertDeepEqual(config({}).withSeasonRecipients(null).recipients, { attendance: ["AA", "BB"], gameReport: ["AA"] }, "a null season override means the defaults");
 test.assertEqual(config({}).templateSettings.attendance.templateFile, "bvr/attendance.md", "the roster template defaults to bvr/attendance.md");
+test.assertDeepEqual(
+  config({}).templateSettings.endOfSeasonProject,
+  { templateFile: "bvr/end-of-season-project.mustache" },
+  "the end-of-season project defaults to bvr/end-of-season-project.mustache",
+);
+test.assertEqual(
+  config({ templates: { endOfSeasonProject: "bvr/custom-end.mustache" } }).templateSettings.endOfSeasonProject.templateFile,
+  "bvr/custom-end.mustache",
+  "end-of-season project override",
+);
+
+// --- TmplSettings level tags ---
+test.section("TmplSettings level tags");
+
+// TmplSettings returns a plain settings object from its constructor.
+const levelTags = (teamLevel) => /** @type {any} */ (new TmplSettings({ teamLevel, defaultDraftTags: [] }, {})).templateTags;
+test.assertEqual(levelTags("us").level_us, true, "an upper school team gets level_us");
+test.assertEqual(levelTags("us").level_ms, false, "and not level_ms");
+test.assertEqual(levelTags("ms").level_ms, true, "a middle school team gets level_ms");
+test.assertEqual(levelTags("ms").level_us, false, "and not level_us");
 
 // --- Staff ---
 test.section("Staff");

@@ -7,6 +7,9 @@ class TmplSettings {
         ...gblTmplSettings.teamTemplateTags,
         team_name: gblTmplSettings.teamName,
         team_abbr: gblTmplSettings.teamAbbr,
+        // For Mustache sections that only one level gets, e.g. {{#level_us}}.
+        level_ms: gblTmplSettings.teamLevel == "ms",
+        level_us: gblTmplSettings.teamLevel == "us",
         // Empty, never "null", for a team file with no current season yet.
         current_season: `${gblTmplSettings.currentSeasonID ?? ""}`,
         current_season_label: `${gblTmplSettings.currentSeasonLabel ?? gblTmplSettings.currentSeasonID ?? ""}`,

@@ -216,6 +216,7 @@ class Team {
     return {
       teamName: this.name,
       teamAbbr: this.abbr,
+      teamLevel: this.#teamData.level,
       defaultDraftTags: this.defaultDraftTags,
       globalTemplateTags: this.globalTemplateTags,
       teamTemplateTags: this.teamTemplateTags,
@@ -281,6 +282,17 @@ class Team {
     game.recordLocation();
 
     const tmplSettings = game.generateTmplSettings("thingsProject");
+    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
+    const projectTemplate = new Template(tmplSettings);
+    const thingsParserAction = Action.find("Things Parser");
+    app.queueAction(thingsParserAction, projectTemplate.draft);
+  }
+
+  // The end-of-season checklist as a Things project, for the last week or
+  // two of the season. The template leaves out upper-school-only items for
+  // middle school teams ({{#level_us}}).
+  createEndOfSeasonTasks() {
+    const tmplSettings = new TmplSettings(this.gblTmplSettings, this.tmplSettings.endOfSeasonProject);
     if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
     const projectTemplate = new Template(tmplSettings);
     const thingsParserAction = Action.find("Things Parser");
