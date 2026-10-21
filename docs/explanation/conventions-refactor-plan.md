@@ -17,6 +17,32 @@ One commit per stage on the branch, each reviewed before the next starts. The br
 
 While the branch is synced, the fallback is `dev` (`git switch dev && bun run sync`), not `main`: main predates the season rebuild and can't read team files.
 
+## Testing week (for the session that fixes bugs)
+
+All stages are committed and the branch was synced to Drafts on 2026-10-21. The user is testing it in real use, often from their phone through Remote Control, and may be away from the Mac. Your job is to fix bugs they report in the refactored code, and to merge when they say it works. Don't add features or start new refactoring. Follow `.claude/skills/drafts-change-workflow/SKILL.md` and `docs/reference/drafts-runtime.md`.
+
+**A bug report:**
+1. Find the cause, starting with the refactor's commits (`git log --oneline dev..HEAD`). `git diff dev -- <file>` shows what changed in a file.
+2. Where the bug is pure logic, add a failing unit test first, then fix it. Keep the fix small, in the style of the surrounding code.
+3. Run `bun run test`, `bun run test:scripts`, and `bun run typecheck`. Then `bun run sync`, and tell the user what to retry in Drafts, in a line or two.
+4. Commit when the user says the retry works, one commit per fix (gitmoji style, see `git log`), and push.
+
+**1Password may be locked while the user is away.** Commits are SSH-signed and `git push` uses the 1Password SSH agent, so both fail or wait for approval. If a commit or push fails that way, don't bypass signing and don't retry in a loop. The fix is already synced, so the user can test it. Tell them it is synced but uncommitted, and commit when they're back. `bun run sync` needs 1Password only when a `.yaml.tpl` changed. `gh` uses a keychain token and works either way.
+
+**Switching back to dev** when the user asks (something broke and they need working code now):
+1. Stop `bun run watch` if it is running.
+2. `git stash push -u -m "<what it is>"` if there is uncommitted work.
+3. `git switch dev && bun run sync`.
+
+To return: `git switch feature/conventions-refactor && bun run sync`, then `git stash pop` if you stashed. Say plainly which branch Drafts is running.
+
+**Merging, only when the user gives the go-ahead:**
+1. Run `bun run checkpoint` on `dev` and promote if anything has settled. A worktree or `git -C` keeps the branch checked out.
+2. Open a PR from this branch into `dev` with `gh pr create` and a short summary of the stages. Merge it with a merge commit (`gh pr merge --merge --delete-branch`).
+3. `git switch dev && git pull && bun run sync`, so Drafts runs dev.
+4. Run `bun run checkpoint` again and report its status in one line.
+5. Update the Status table above, and the `conventions-refactor` project memory, to say the branch is merged.
+
 ## What this refactor is
 
 An audit compared the Drafts runtime code written since 2026-10-11 (commit ceef60e onward) with the code before it (`ceef60e^`) and with the style guide at `~/Programing/dewittn/agentic-docs/coding/style-guide.md`. The items below are the verified findings. The goal is to bring the new code in line with the established conventions. **Behavior must stay the same**, with one exception: keep a behavior change when it fixes a real defect (the audit names these, e.g. item 1). The user's words: "keep improvements where they genuinely add value... but I'd still like the conventions to be roughly the same."
