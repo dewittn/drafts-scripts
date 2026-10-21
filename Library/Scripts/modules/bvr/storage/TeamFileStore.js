@@ -1,3 +1,5 @@
+if (typeof DataFile == "undefined") require("modules/cp/filesystems/CloudFS.js");
+
 // Season data for one team, kept in bvr/teams/<teamID>.json: a currentSeason
 // pointer plus one entry per season holding its games, season record draft,
 // and practice plans. Schema: docs/reference/bvr-team-file.md.
@@ -17,20 +19,15 @@ class TeamFileStore {
   // Throws when the file exists but is not a usable team file (a half-synced
   // iCloud copy reads as empty), so nothing falls back or overwrites it.
   static load(path) {
-    if (typeof DataFile == "undefined") require("modules/cp/filesystems/CloudFS.js");
-    if (!DataFile.exists(path)) return undefined;
-
-    const file = new DataFile(path);
-    const problem = this.validate(file);
-    if (problem != undefined) throw new Error(`${path} cannot be used: ${problem}`);
-    return new TeamFileStore(file);
+    const file = DataFile.loadValidated(path, (data) => this.validate(data));
+    return file == undefined ? undefined : new TeamFileStore(file);
   }
 
   // Why data is not a usable team file, or undefined when it is. Same checks
   // as teamFileProblem in scripts/lib/bvr-team-file.ts (a shared fixture in
   // Library/Tests/fixtures/bvr/schema-cases.json keeps them in step).
   static validate(data) {
-    const isObject = (value) => typeof value == "object" && value != null && !Array.isArray(value);
+    const isObject = DataFile.isObject;
     if (!isObject(data)) return "the file is empty or not a JSON object";
     if (data.schemaVersion !== this.schemaVersion) return `unknown schemaVersion ${JSON.stringify(data.schemaVersion)}`;
     if (typeof data.teamID != "string" || data.teamID == "") return "teamID is missing";
@@ -45,12 +42,10 @@ class TeamFileStore {
     return /^\d{4}-[A-Za-z0-9][A-Za-z0-9-]*$/.test(`${seasonID}`);
   }
 
-  // A new, empty team file. Nothing is written until the first save.
+  // A new, empty team file. Nothing is written, and no folder is made,
+  // until the first save.
   static create(path, teamID) {
-    if (typeof DataFile == "undefined") require("modules/cp/filesystems/CloudFS.js");
-    DataFile.ensureDirectoryFor(path);
-    const file = new DataFile(path);
-    Object.assign(file, {
+    const file = DataFile.create(path, {
       schemaVersion: this.schemaVersion,
       teamID: teamID,
       currentSeason: null,
@@ -189,8 +184,6 @@ class TeamFileStore {
 
   // Refuses to write anything that would not load back as a team file.
   save() {
-    const problem = TeamFileStore.validate(this.#file);
-    if (problem != undefined) throw new Error(`Team file not saved: ${problem}`);
-    return this.#file.save();
+    return DataFile.saveValidated(this.#file, (data) => TeamFileStore.validate(data), "Team file");
   }
 }

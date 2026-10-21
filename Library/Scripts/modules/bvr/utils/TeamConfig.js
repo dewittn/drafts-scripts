@@ -1,3 +1,5 @@
+if (typeof DataFile == "undefined") require("modules/cp/filesystems/CloudFS.js");
+
 // A team's settings, assembled from layers: the level defaults
 // (bvr/levels/<level>.json), the team's own overrides in teams.yaml, the
 // school-wide forms (bvr/forms.json), and the staff directory for contact
@@ -40,8 +42,7 @@ class TeamConfig {
 
   // Objects merge key by key; lists and plain values in the override replace.
   static merge(base, override) {
-    const isObject = (value) => typeof value == "object" && value != null && !Array.isArray(value);
-    if (!isObject(base) || !isObject(override)) {
+    if (!DataFile.isObject(base) || !DataFile.isObject(override)) {
       return override === undefined ? base : override;
     }
 

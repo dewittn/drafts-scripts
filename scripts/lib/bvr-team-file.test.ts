@@ -470,7 +470,9 @@ describe("teamFileProblem and isSafeTeamID", () => {
 describe("schema helpers stay in step with TeamFileStore.js", () => {
   const cases = JSON.parse(readFileSync(join(repoRoot, "Library/Tests/fixtures/bvr/schema-cases.json"), "utf8"));
   const storeSource = readFileSync(join(repoRoot, "Library/Scripts/modules/bvr/storage/TeamFileStore.js"), "utf8");
-  const TeamFileStore = vm.runInNewContext(`${storeSource}\nTeamFileStore`);
+  // TeamFileStore's validate uses DataFile.isObject, so CloudFS.js loads first.
+  const cloudFSSource = readFileSync(join(repoRoot, "Library/Scripts/modules/cp/filesystems/CloudFS.js"), "utf8");
+  const TeamFileStore = vm.runInNewContext(`${cloudFSSource}\n${storeSource}\nTeamFileStore`);
 
   test("labels", () => {
     for (const [id, label] of Object.entries(cases.labels)) {

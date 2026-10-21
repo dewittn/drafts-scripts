@@ -94,6 +94,7 @@ class DataFile {
   static basePath = "/Library/Data";
   #fs;
   #file;
+  #needsFolder = false;
 
   constructor(file) {
     this.#fs = new CloudFS(this.basePath);
@@ -123,11 +124,47 @@ class DataFile {
     fs.ensureDirectory(fileName.split("/").slice(0, -1).join("/"));
   }
 
+  // A plain JSON object: not null, not an array.
+  static isObject(value) {
+    return typeof value == "object" && value != null && !Array.isArray(value);
+  }
+
+  // The file, or undefined when it does not exist. validate(data) returns a
+  // problem or undefined; a problem throws, so an unusable file (a half-synced
+  // iCloud copy reads as empty) is never used or overwritten.
+  static loadValidated(fileName, validate) {
+    if (!this.exists(fileName)) return undefined;
+
+    const file = new DataFile(fileName);
+    const problem = validate(file);
+    if (problem != undefined) throw new Error(`${fileName} cannot be used: ${problem}`);
+    return file;
+  }
+
+  // A new file holding data. Nothing is written, and no folder is made,
+  // until the first save.
+  static create(fileName, data) {
+    const file = new DataFile(fileName);
+    Object.assign(file, data);
+    file.#needsFolder = true;
+    return file;
+  }
+
+  // Saves file (a DataFile, or anything with save()) only when validate(file)
+  // finds no problem; otherwise throws "<what> not saved: <problem>".
+  static saveValidated(file, validate, what) {
+    const problem = validate(file);
+    if (problem != undefined) throw new Error(`${what} not saved: ${problem}`);
+    return file.save();
+  }
+
   #load(fileName) {
     return this.#fs.read(fileName);
   }
 
   save() {
+    if (this.#needsFolder) DataFile.ensureDirectoryFor(this.#file);
+    this.#needsFolder = false;
     return this.#fs.write(this.#file, this);
   }
 }
