@@ -9,6 +9,15 @@ class GoogleForm {
     this.#formData = dependencies.formData;
   }
 
+  // The form's base link, as submit() expects it, from whatever was pasted:
+  // drops a query string, a trailing /viewform, /formResponse or /edit, and
+  // a trailing slash. Returns undefined for anything that is not a web link.
+  static baseURL(pasted) {
+    const url = `${pasted || ""}`.trim().split(/[?#]/)[0];
+    if (!/^https?:\/\/\S+$/.test(url)) return undefined;
+    return url.replace(/\/(viewform|formResponse|edit)\/?$/, "").replace(/\/+$/, "");
+  }
+
   get fields() {
     return this.#settings.fields;
   }

@@ -1,6 +1,20 @@
 ---
+# One entry per team. Settings come in layers: levels/<level>.yaml gives the
+# defaults (who gets absence and score texts, which forms to submit), and the
+# keys below override them (objects merge, lists replace). People are initials
+# from staff.yaml.tpl. Tags and template files follow from id and defaultTag:
+#   recap drafts      <defaultTag>/game/recap         (override: recapTag)
+#   game report       bvr/game-report.md              (override: templates.gameReport)
+#   game-day project  bvr/<id>-game-day-project.mustache, if it exists
+#                                                     (override: templates.thingsProject)
+#   end of season     bvr/end-of-season-project.mustache
+#                                                     (override: templates.endOfSeasonProject)
+#   practice plan     bvr/<id>-practice-plan.md
+# Per-season values (start date, form URLs, record draft) live in the team
+# file, teams/<id>.json, and are set by Start New Season.
 teamsData:
   - id: us-ultimate
+    level: us
     name: Varsity Ultimate Frisbee
     abbr: VUF
     sport: ultimate
@@ -9,7 +23,17 @@ teamsData:
     calendar: VUF
     attendanceDraftID: 5E1337A5-F964-4DEC-95A8-091AE789F0B1
     defaultTag: bvr/ultimate/us
+    assistantCoaches: [DG]
+    templateTags:
+      hc_year: 4th
+      ac_years_coaching: 4th
+    templates:
+      welcomeLetter: bvr/welcome-letter.md
+    practicePlan:
+      draftTags:
+        - bvr/ultimate/practice/plan
   - id: ms-ultimate
+    level: ms
     name: "MS Ultimate Frisbee"
     abbr: MSUF
     sport: ultimate
@@ -19,17 +43,49 @@ teamsData:
     attendanceDraftID: "07AFCA9A-F93B-42F3-8E61-39DA3E599032"
     recordDraft: 359AC178-208F-42D9-84F3-935ABA6BB38E
     defaultTag: bvr/ultimate/ms
+    assistantCoaches: [DG]
+    templateTags:
+      hc_year: 4th
+      ac_years_coaching: 4th
+    forms: [ms-score-report, varsity-score-report]
+    attendance:
+      absences:
+        recipients: [CK, AJ]
+      noAbsences:
+        recipients: [CK, AJ]
+    gameReport:
+      messages:
+        - type: text
+          recipients: [AG, AH]
+          bodyText: "[[game_summary]]"
     practicePlan:
       draftTags:
         - bvr/ultimate/ms/practice/plan
   - id: msg-soccer
+    level: ms
     name: MS Girls Soccer
     abbr: MSGS
     sport: soccer
     season: fall
     calendar: MSGS
+    attendanceDraftID: BE66E397-6DDE-44E4-AAF0-31A80DD64B4F
     defaultTag: bvr/soccer/ms
+    recapTag: bvr/soccer/msg/game/recap
+    templateTags:
+      hc_year: 4th
     practicePlan:
       draftTags:
-        - bvr/soccer/practice/plan
+        - bvr/soccer/msg/practice/plan
     startDate: "2026-08-31"
+  - id: msg-basketball
+    level: ms
+    name: MS Girls Basketball
+    abbr: MSGB
+    sport: basketball
+    season: winter
+    calendar: MSGB
+    defaultTag: bvr/basketball/ms
+    practicePlan:
+      draftTags:
+        - bvr/basketball/practice/plan
+    startDate: "2026-10-30"

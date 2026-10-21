@@ -1,0 +1,7 @@
+{
+  "teamsData": [
+    { "id": "team-a", "level": "ms", "name": "Team A", "abbr": "TA", "defaultTag": "bvr/a" },
+    { "id": "team-b", "level": "ms", "name": "Team B", "abbr": "TB", "defaultTag": "bvr/b" },
+    { "id": "team-c", "level": "us", "name": "Team C", "abbr": "TC", "defaultTag": "bvr/c" }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "teamID": "test-team",
+  "currentSeason": "2026-fall",
+  "seasons": {
+    "2025-fall": {
+      "label": "2025 Fall",
+      "startDate": null,
+      "endDate": null,
+      "formURL": null,
+      "recipients": null,
+      "attendanceDraftID": "ROSTER-2025-FALL",
+      "seasonRecordDraftID": "",
+      "games": [{ "draftID": "OLD-GAME", "opponent": "Synthetic Rivals", "result": "Draw" }],
+      "practicePlans": { "W3": "OLD-PLAN" }
+    },
+    "2026-fall": {
+      "label": "2026 Fall",
+      "startDate": "2026-09-07",
+      "endDate": null,
+      "formURL": null,
+      "recipients": null,
+      "attendanceDraftID": "ROSTER-2026-FALL",
+      "seasonRecordDraftID": "REC-2026-FALL",
+      "games": [
+        { "draftID": "GAME-1", "opponent": "Synthetic A", "result": "Win", "appended": true },
+        { "draftID": "GAME-2", "opponent": "Synthetic B", "result": "Loss", "appended": true }
+      ],
+      "practicePlans": { "W1": "PLAN-1" }
+    }
+  }
+}

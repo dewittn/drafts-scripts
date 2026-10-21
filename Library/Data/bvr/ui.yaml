@@ -6,8 +6,11 @@ displayMsgs:
   alreadySubmitted: Addendace has already been submitted today.
   noOneAbsent: No one is absent today!
 getTeamIDFromPrompt:
+  # Lists only the teams in season unless none are (then every team) or the
+  # action is Start New Season. One team in season is used without asking.
+  noneActiveMessage: No team is in season. Which team would you like to use?
   menuSettings:
-    menuTitle: Selcet Team
+    menuTitle: Select Team
     menuMessage: Which team would you like to use?
     isCancellable: false
     menuItems: []
@@ -64,6 +67,159 @@ getDateFromPrompt:
         data:
           name: Ok
           value: ok
+startNewSeason:
+  seasonIDField:
+    type: textField
+    data:
+      name: seasonID
+      label: Season
+  startDateField:
+    type: datePicker
+    data:
+      name: startDate
+      label: First Day
+      options:
+        mode: date
+  menuSettings:
+    menuTitle: Start New Season
+    menuMessage: "Name the season and pick its first day. Any name works, such as 2026-winter for a winter sport."
+    menuItems:
+      - type: button
+        data:
+          name: Start Season
+          value: start
+editSeason:
+  labelField:
+    type: textField
+    data:
+      name: label
+      label: Name
+  startDateField:
+    type: datePicker
+    data:
+      name: startDate
+      label: First Day
+      options:
+        mode: date
+  hasEndDateField:
+    type: switch
+    data:
+      name: hasEndDate
+      label: Has a last day
+  endDateField:
+    type: datePicker
+    data:
+      name: endDate
+      label: Last Day
+      options:
+        mode: date
+  formField:
+    type: textField
+    data:
+      options:
+        placeholder: https://docs.google.com/forms/...
+        keyboard: url
+        autocorrect: false
+        autocapitalization: none
+  attendanceField:
+    type: textField
+    data:
+      name: attendance
+      label: Attendance messages to
+      options:
+        autocorrect: false
+        autocapitalization: allCharacters
+  gameReportField:
+    type: textField
+    data:
+      name: gameReport
+      label: Score messages to
+      options:
+        autocorrect: false
+        autocapitalization: allCharacters
+  rosterLabel:
+    type: label
+    data:
+      name: roster
+      options:
+        textSize: body
+  newRosterField:
+    type: switch
+    data:
+      name: newRoster
+      label: Start a new roster draft
+  menuSettings:
+    menuTitle: Edit Season
+    menuMessage: "Change this season's name, dates, or form links. The last day is saved only when the switch is on."
+    menuItems:
+      - type: button
+        data:
+          name: Save
+          value: save
+  startDateWarning:
+    menuTitle: Change the first day?
+    menuMessage: "Practice plan weeks are counted from the first day. Plans already made keep their week numbers (W1, W2, ...), so new plans may not line up with old ones. Change it anyway?"
+  clearLinksPrompt:
+    menuTitle: Clear form links?
+    menuMessage: "These form links were left blank. Clear the saved links?"
+recipientsPrompt:
+  attendanceField:
+    type: textField
+    data:
+      name: attendance
+      label: Attendance messages to
+      options:
+        autocorrect: false
+        autocapitalization: allCharacters
+  gameReportField:
+    type: textField
+    data:
+      name: gameReport
+      label: Score messages to
+      options:
+        autocorrect: false
+        autocapitalization: allCharacters
+  menuSettings:
+    menuTitle: Who Gets Messages
+    menuMessage: "Initials from staff.yaml.tpl, separated by commas. Leave them as they are to keep the team's usual lists."
+    menuItems:
+      - type: button
+        data:
+          name: Save
+          value: save
+attendanceDraftPrompt:
+  menuSettings:
+    menuTitle: Roster Draft
+    menuMessage: "Keep the current roster draft, or start a new one?"
+    menuItems:
+      - type: button
+        data:
+          name: Keep
+          value: keep
+          isDefault: true
+      - type: button
+        data:
+          name: Start a New One
+          value: new
+formURLPrompt:
+  urlField:
+    type: textField
+    data:
+      name: url
+      label: Form link
+      options:
+        placeholder: https://docs.google.com/forms/...
+        keyboard: url
+        autocorrect: false
+        autocapitalization: none
+  menuSettings:
+    menuTitle: Score Report Form
+    menuMessage: "Paste this season's link to the form, from the athletic department's email. Leave it blank to skip."
+    menuItems:
+      - type: button
+        data:
+          name: Save
+          value: save
 recordOpponent:
   textField:
     type: textField

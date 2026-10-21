@@ -1,6 +1,6 @@
-# Attendance: 
-[[bear:MOC: BVR Coaching]]
-_For: 2023-11-02_
+# Attendance: [[team_abbr]] [[season_label]]
+[[BVR Coaching]]
+_For: [[date|%Y-%m-%d]]_
 - [ ] Recorded
 - [ ] Submitted
 ---

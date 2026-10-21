@@ -53,12 +53,18 @@ class PracticePlan {
     return this.#tmplSettings?.practicePlan;
   }
 
-  get practicePlans() {
-    return this.ppData[this.teamID];
+  // The team's season storage (team file or old files), chosen by Season.
+  get store() {
+    return this.team.season.store;
   }
 
+  get practicePlans() {
+    return this.store.practicePlans;
+  }
+
+  // "W7" in a team file, "2026W7" in practicePlans.json.
   get planID() {
-    return `${this.bvr.getYear()}${this.weekID}`;
+    return this.store.practicePlanKey(this.weekID);
   }
 
   get weekID() {
@@ -73,8 +79,9 @@ class PracticePlan {
   get teamName() {
     return this.team.name;
   }
+  // The current season's start date, or the team's from teams.yaml.
   get teamStartDate() {
-    return this.team.startDate;
+    return this.team.season.startDate;
   }
 
   get ppTemplateFile() {
@@ -106,6 +113,7 @@ class PracticePlan {
   }
 
   create() {
+    if (!this.team.season.ensureCurrentSeason() || !this.#hasStartDate()) return;
     if (this.ppTmplSettings == undefined) {
       return alert("ppTmplSettings is undefined!");
     }
@@ -133,22 +141,18 @@ class PracticePlan {
   }
 
   load() {
-    if (this.practicePlans == undefined) {
+    if (!this.team.season.ensureCurrentSeason() || !this.#hasStartDate()) return;
+    const draftID = this.practicePlans?.[this.planID];
+    if (draftID == undefined) {
       return this.bvr.ui.displayAppMessage("info", "No practice plan found.");
     }
-    const draftID = this.practicePlans[this.planID];
     const practicePlan = Draft.find(draftID);
 
     this.bvr.pinDraft(practicePlan);
   }
 
   #savePracticePlan(draftID) {
-    if (this.practicePlans == undefined) {
-      this.ppData[this.teamID] = {};
-    }
-
-    this.practicePlans[this.planID] = draftID;
-    this.ppData.save();
+    this.store.savePracticePlan(this.planID, draftID);
   }
 
   #insertPraticePlanLink(linkTxt) {
@@ -165,17 +169,33 @@ class PracticePlan {
     coachingDraft.update();
   }
 
-  #getCurrentWeek() {
-    const currentDate = new Date();
-    const parts = this.teamStartDate.split("-");
-    const startDate = new Date(parts[0], parts[1] - 1, parts[2]);
-    const currentMonday = this.#getISOMonday(currentDate);
-    const startMonday = this.#getISOMonday(startDate);
-    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-    return Math.floor((currentMonday - startMonday) / msPerWeek) + 1;
+  // The week number needs a start date, from the season or teams.yaml.
+  #hasStartDate() {
+    if (this.teamStartDate != undefined) return true;
+
+    this.bvr.ui.displayAppMessage(
+      "info",
+      `${this.teamName}'s current season has no start date. Run Start New Season, or set startDate in its team file.`,
+    );
+    return false;
   }
 
-  #getISOMonday(date) {
+  #getCurrentWeek() {
+    return PracticePlan.weekNumber(this.teamStartDate);
+  }
+
+  // Season week of currentDate, counting ISO weeks (Monday to Sunday) from
+  // startDate ("YYYY-MM-DD"). The week holding the start date is week 1.
+  static weekNumber(startDate, currentDate = new Date()) {
+    const parts = startDate.split("-");
+    const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    const weeks = (this.isoMonday(currentDate) - this.isoMonday(start)) / msPerWeek;
+    return Math.floor(weeks) + 1;
+  }
+
+  // Midnight UTC of the Monday starting date's ISO week, as a timestamp.
+  static isoMonday(date) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     const day = d.getUTCDay() || 7; // Convert Sunday (0) to 7
     d.setUTCDate(d.getUTCDate() - day + 1); // Back to Monday

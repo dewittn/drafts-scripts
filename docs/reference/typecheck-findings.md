@@ -23,6 +23,11 @@ Updated 2026-10-17: 289 errors in 251 entries. All 59 removed errors were test-o
 came from `mockui-test.js`. `2aa9e16` dropped the `displayMenu` calls, and a JSDoc
 `@type` on its `let` variables cleared the callback-assignment errors.
 
+Updated 2026-10-18: 288 errors in 250 entries. The season storage rewrite on
+`feature/season-architecture` removed the dead `typeof ... == "array"` check in
+`Season.js`. Old array-format seasons are converted by `bun run bvr:migrate`
+instead.
+
 | Group | Errors | Meaning |
 |-------|--------|---------|
 | Real-bug candidates | 36 | Likely wrong at runtime when the line runs. 8 entries are on production paths, 3 of them dead code. 4 errors are legacy/Airtable |
@@ -61,7 +66,7 @@ action.
 |----------|-------|----------------|
 | `Library/Scripts/modules/cp/documents/UlyssesDocument.js:278` | `ui` does not exist | Uses `this.ui`, but the class stores `#ui`. When Ulysses fails to load a sheet, this throws a TypeError instead of showing the error message. Reachable from `#loadSheet()`. |
 | `Library/Scripts/shared/libraries/ulysses-v2.js:318` | Expected 0-2 arguments, got 3 | `open()` passes `false` as a third argument that `#openURL` ignores. It may have been meant for `#openCallback`, which can wait for a callback. Behavior today is "open without waiting". Check that this is intended. |
-| `Library/Scripts/modules/bvr/core/Season.js:86` | Comparison with `"array"` has no overlap | `typeof` never returns `"array"`, so `currentSeasonData` never triggers `migrateCurrentSeason()`. This only matters if some team history is still in the old array format. `Array.isArray` was probably meant. |
+| `Library/Scripts/modules/bvr/core/Season.js:86` | Comparison with `"array"` has no overlap | `typeof` never returns `"array"`, so `currentSeasonData` never triggers `migrateCurrentSeason()`. This only matters if some team history is still in the old array format. `Array.isArray` was probably meant. **Resolved 2026-10-18:** the check is gone; `bvr:migrate` converts array-format seasons. |
 | `Library/Scripts/modules/bvr/core/Game.js:367` | `descrition` does not exist | **Data shape, do not "fix" as a typo.** `toJSON()` writes `descrition: this.descrition`, which is undefined and so dropped from new records. Existing `Data/bvr/records.json` entries do carry a `descrition` key with values. Decide which key records should use before changing it. |
 | `Library/Scripts/modules/bvr/messages/system_message.js:16` | `attendaceDraft` does not exist | Latent. `SystemMessage.subjectLine` would throw, but nothing reads it today. `compose()` and `send()` do not use it. |
 | `Library/Scripts/modules/bvr/core/Game.js:412` | `seasonRecord` does not exist | Dead code. `#lookupDraftID()` is never called. |
@@ -118,7 +123,7 @@ JSDoc in Phases 4 and 5. Do not "fix" them now.
 | Date arithmetic | 4 | `new Date() - draft.createdAt` in `record-attendance.js:2` and `record-attendance-dry-run.js:5`. Valid JavaScript that TypeScript rejects. Separately, `oneSecond = 10000` is ten seconds. |
 | `const draft` in actions | 4 | `beyond-the-book.js:4` and `author-update.js:3` declare their own `draft`, shadowing the Drafts global. That works at runtime. The checker then types it as the global `Draft`. |
 | `Draft.prototype.isMorningPage` | 2 | `morning-pages.js` extends `Draft` locally. TypeScript ignores prototype assignments on declared classes. |
-| `replace()` with non-string arguments | 2 | `Team.js:317` passes a number and `Attendance.js:234` passes a match result. JavaScript coerces both. |
+| `replace()` with non-string arguments | 1 | `Attendance.js:234` passes a match result. JavaScript coerces it. (`Team.js` passed a number until Update Roster was rewritten on 2026-10-19.) |
 | Other inference | 2 | `DocumentFactory.js:49` compares a document with `false`. `DraftsDocument.js:260` reads `.draft` after an undefined guard TypeScript cannot see. |
 
 ## JSDoc does not match the code

@@ -10,8 +10,11 @@ class Team {
   #services;
   #attendance;
   #season;
+  #config;
 
-  constructor(teamID = "") {
+  // allTeams: pick from every team, not just the active ones (Start New
+  // Season, whose team is usually between seasons).
+  constructor(teamID = "", { allTeams = false } = {}) {
     this.#services = ServiceContainer.getInstance();
 
     // Register BVR service if not already registered
@@ -22,7 +25,7 @@ class Team {
       }, true);
     }
 
-    this.#teamData = this.#getTeamData(teamID);
+    this.#teamData = this.#getTeamData(teamID, allTeams);
   }
 
   // Lazy getters for dependencies
@@ -43,9 +46,28 @@ class Team {
 
   get tmplSettings() {
     if (!this.#tmplSettings) {
-      this.#tmplSettings = this.#loadTemplateSettings();
+      this.#tmplSettings = this.config.templateSettings;
     }
     return this.#tmplSettings;
+  }
+
+  // This team's settings, merged from its level, its teams.yaml entry, the
+  // school-wide forms, and the staff directory.
+  get config() {
+    if (!this.#config) {
+      if (this.#teamData.level == undefined) {
+        throw new Error(`teams.yaml: ${this.id} has no level (ms or us)`);
+      }
+      this.#config = new TeamConfig({
+        team: this.#teamData,
+        level: this.bvr.levelSettings(this.#teamData.level),
+        forms: this.bvr.forms,
+        staff: this.bvr.staff,
+        attendanceOffice: this.bvr.attendanceOffice,
+        templateExists: (file) => new CloudFS(Template.basePath).exists(file),
+      });
+    }
+    return this.#config;
   }
 
   get attendace() {
@@ -109,10 +131,10 @@ class Team {
     return this.#teamData.msgConfig;
   }
 
+  // The current season's roster draft if it has one, else teams.yaml's.
   get attendanceDraftID() {
-    return this.#teamData.attendanceDraftID != undefined
-      ? this.#teamData.attendanceDraftID
-      : this.attendanceSettings.attendanceDraftID;
+    const seasonDraft = this.season.currentSeasonData?.attendanceDraftID;
+    return seasonDraft ? seasonDraft : this.#teamData.attendanceDraftID;
   }
 
   get tags() {
@@ -121,6 +143,11 @@ class Team {
 
   get startDate() {
     return this.#teamData.startDate;
+  }
+
+  // "fall" or "spring" from teams.yaml; names new seasons (2026-fall).
+  get seasonName() {
+    return this.#teamData.season;
   }
 
   get calendar() {
@@ -136,28 +163,34 @@ class Team {
     return teamTags != undefined ? teamTags : {};
   }
 
+  // Message settings use the current season's recipient lists when it has
+  // them. Read only when sending, so building the config never needs the
+  // season (which itself needs the template settings).
   get gameReportSettings() {
-    if (this.#teamData.gameReportSettings != undefined) {
-      return this.#teamData.gameReportSettings;
-    }
-
-    const settingsFile = this.#teamData.gameReportSettingsFile == undefined
-      ? `${this.id}/gameReportSettings.json`
-      : this.#teamData.gameReportSettingsFile;
-    if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
-    return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
+    return this.#seasonConfig.gameReportSettings;
   }
 
   get attendanceSettings() {
-    if (this.#teamData.attendanceSettings != undefined) {
-      return this.#teamData.attendanceSettings;
-    }
+    return this.#seasonConfig.attendanceSettings;
+  }
 
-    const settingsFile = this.#teamData.attendanceSettingsFile == undefined
-      ? `${this.id}/attendanceSettings.json`
-      : this.#teamData.attendanceSettingsFile;
-    if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
-    return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
+  get #seasonConfig() {
+    return this.config.withSeasonRecipients(this.season.currentSeasonData?.recipients);
+  }
+
+  // Who gets attendance and score messages without a season override.
+  get defaultRecipients() {
+    return this.config.defaultRecipients;
+  }
+
+  // The score forms this team submits, by name (see forms.yaml).
+  get formNames() {
+    return this.config.formNames;
+  }
+
+  // A form's title and fields, for prompts.
+  form(name) {
+    return this.config.form(name);
   }
 
   get defaultTag() {
@@ -176,14 +209,19 @@ class Team {
     return this.#bvr.globalTags;
   }
 
+  // Every template built from these settings reads the season ID and label,
+  // so this is where a run first picks its season storage (and shows the
+  // "not migrated" message for a team without a team file).
   get gblTmplSettings() {
     return {
       teamName: this.name,
       teamAbbr: this.abbr,
+      teamLevel: this.#teamData.level,
       defaultDraftTags: this.defaultDraftTags,
       globalTemplateTags: this.globalTemplateTags,
       teamTemplateTags: this.teamTemplateTags,
       currentSeasonID: this.season.currentSeasonID,
+      currentSeasonLabel: this.season.currentSeasonLabel,
     };
   }
 
@@ -250,6 +288,17 @@ class Team {
     app.queueAction(thingsParserAction, projectTemplate.draft);
   }
 
+  // The end-of-season checklist as a Things project, for the last week or
+  // two of the season. The template leaves out upper-school-only items for
+  // middle school teams ({{#level_us}}).
+  createEndOfSeasonTasks() {
+    const tmplSettings = new TmplSettings(this.gblTmplSettings, this.tmplSettings.endOfSeasonProject);
+    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
+    const projectTemplate = new Template(tmplSettings);
+    const thingsParserAction = Action.find("Things Parser");
+    app.queueAction(thingsParserAction, projectTemplate.draft);
+  }
+
   archiveNotes() {
     const teamNotes = Draft.query("", "archive", this.defaultDraftTags);
     if (teamNotes == undefined) {
@@ -258,12 +307,12 @@ class Team {
     teamNotes.every((note) => this.#processNote(note));
   }
 
-  migrateCurrentSeason() {
-    this.season.migrateCurrentSeason();
-  }
-
   startNewSeason() {
     this.season.startNewSeason();
+  }
+
+  editSeason() {
+    this.season.editCurrentSeason();
   }
 
   insertPlayerName() {
@@ -291,47 +340,24 @@ class Team {
     this.#insertTextPosAtEnd(`${playerName} `);
   }
 
+  // Carry the roster kept from last season into the current one: retitle it
+  // for the season and move everyone up a grade, after showing the result.
+  // Run after Start New Season, in any month.
   updateRoster() {
-    const { menuSettings } = this.bvr.ui.settings("updateRoster");
+    if (!this.season.ensureCurrentSeason()) return;
+
     const attendaceDraft = Draft.find(this.attendanceDraftID);
-
-    const currentYear = new Date().getFullYear();
-    const yearPattern = new RegExp(`(\\d{4})`);
-    const yearMatch = attendaceDraft.lines[0].match(yearPattern);
-    const foundYear = parseInt(yearMatch[1], 10);
-
-    // Check if the found year matches the current year
-    if (foundYear !== currentYear) {
-      return this.ui.displayAppMessage(
-        "info",
-        "Roster has already been updated!",
-      );
+    if (attendaceDraft == undefined) {
+      return this.ui.displayAppMessage("error", `${this.name} has no roster draft.`);
     }
 
-    // Increment the year and append "(Potential)"
-    const newYear = foundYear + 1;
+    const title = `# Attendance: ${this.abbr} ${this.season.currentSeasonLabel}`;
+    const updatedContent = Team.promoteRoster(attendaceDraft.content, title);
+    if (updatedContent == undefined) {
+      return this.ui.displayAppMessage("info", "Roster has already been updated!");
+    }
 
-    const updatedContent = attendaceDraft.lines
-      .map((line, index) => {
-        if (index === 0) {
-          return line.replace(yearPattern, newYear) + " (Potential)";
-        }
-
-        // Use a regular expression to find the number in parentheses
-        const gradeMatch = line.match(/\((\d+)\)/);
-
-        if (!gradeMatch) return line;
-
-        // Extract the number, convert it to an integer, and increment it by 1
-        let number = parseInt(gradeMatch[1], 10);
-        number += 1;
-
-        // Replace the original number in the string with the incremented number
-        const updatedLine = line.replace(/\(\d+\)/, `(${number})`);
-        return updatedLine;
-      })
-      .join("\n");
-
+    const { menuSettings } = this.bvr.ui.settings("updateRoster");
     menuSettings.menuItems.push({
       type: "label",
       data: {
@@ -350,6 +376,17 @@ class Team {
       attendaceDraft.update();
       editor.load(attendaceDraft);
     }
+  }
+
+  // The roster with its first line replaced by title and every "(grade)"
+  // moved up one, or undefined when the first line is already title (the
+  // roster was updated for this season).
+  static promoteRoster(content, title) {
+    const [firstLine, ...rest] = `${content}`.split("\n");
+    if (firstLine.trim() == title) return undefined;
+
+    const promoted = rest.map((line) => line.replace(/\((\d+)\)/, (match, grade) => `(${Number(grade) + 1})`));
+    return [title, ...promoted].join("\n");
   }
 
   // **********************
@@ -388,11 +425,12 @@ class Team {
     return cb.open();
   }
 
-  #getTeamData(teamID) {
+  // The draft's team tag wins, then a team ID passed in, then a choice.
+  #getTeamData(teamID, allTeams) {
     const teamData = this.#getTeamDataFromTag();
     if (teamData != undefined) return teamData;
 
-    const id = teamID == "" ? this.#getTeamIDFromPrompt() : teamID;
+    const id = teamID == "" ? this.#chooseTeamID(allTeams) : teamID;
     return this.teamsData.filter((team) => team.id == id)[0];
   }
 
@@ -400,9 +438,40 @@ class Team {
     return this.teamsData.filter((team) => draft.hasTag(team.defaultTag))[0];
   }
 
-  #getTeamIDFromPrompt() {
-    const { menuSettings } = this.bvr.ui.settings("getTeamIDFromPrompt");
-    this.teamsData.forEach((team) =>
+  // Choose from the active teams, using the only one without asking. With no
+  // active team (or allTeams), every team is offered. A team between seasons
+  // is still reachable by running the action from one of its tagged drafts.
+  #chooseTeamID(allTeams) {
+    if (allTeams) return this.#getTeamIDFromPrompt(this.teamsData);
+
+    const activeTeams = this.#activeTeams();
+    if (activeTeams.length == 0) return this.#getTeamIDFromPrompt(this.teamsData, { noneActive: true });
+    if (activeTeams.length > 1) return this.#getTeamIDFromPrompt(activeTeams);
+
+    const [onlyTeam] = activeTeams;
+    this.bvr.ui.displayAppMessage("info", `Using ${onlyTeam.name}.`);
+    return onlyTeam.id;
+  }
+
+  // Teams whose current season has not reached its last day. A team file
+  // that cannot be read counts as inactive here; an action run from one of
+  // that team's drafts reports the problem.
+  #activeTeams() {
+    if (typeof TeamFileStore == "undefined") require("modules/bvr/storage/TeamFileStore.js");
+    const today = this.bvr.formatDateYMD(new Date());
+    return this.teamsData.filter((team) => {
+      try {
+        return TeamFileStore.load(this.bvr.teamFilePath(team.id))?.isActiveOn(today) == true;
+      } catch (error) {
+        return false;
+      }
+    });
+  }
+
+  #getTeamIDFromPrompt(teams, { noneActive = false } = {}) {
+    const { menuSettings, noneActiveMessage } = this.bvr.ui.settings("getTeamIDFromPrompt");
+    if (noneActive) menuSettings.menuMessage = noneActiveMessage;
+    teams.forEach((team) =>
       menuSettings.menuItems.push({
         type: "button",
         data: { name: team.name, value: team.id },
@@ -412,18 +481,6 @@ class Team {
 
     selectMenu.show();
     return selectMenu.buttonPressed;
-  }
-
-  #loadTemplateSettings() {
-    if (this.#teamData.templateSettings != undefined) {
-      return this.#teamData.templateSettings;
-    }
-
-    const settingsFile = this.#teamData.templateSettingsFile == undefined
-      ? `${this.id}/templateSettings.json`
-      : this.#teamData.templateSettingsFile;
-    if (typeof Settings == "undefined") require("modules/cp/filesystems/CloudFS.js");
-    return new Settings(`${this.bvr.dirPrefix}${settingsFile}`);
   }
 
   #insertTextPosAtEnd(text) {

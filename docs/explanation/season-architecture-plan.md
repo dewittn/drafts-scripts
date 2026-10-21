@@ -1,10 +1,77 @@
 # Season architecture plan
 
-Status: draft for review, 2026-10-18, revised the same day after discussion.
-High-level overview, not an execution plan.
-Proposed branch: `feature/season-architecture` off `dev`.
+Status: being built on `feature/season-architecture` (off `dev`). Written
+2026-10-18 as a high-level overview; the "Status and how to resume" section
+below is kept current as work lands.
 
-Decisions so far:
+## Status and how to resume
+
+Last updated 2026-10-18 (evening). The branch is what the live Drafts
+library runs; all three old teams are migrated to team files and
+`msg-basketball` has its `2026-winter` season.
+
+**Done, reviewed, synced to Drafts:**
+
+- Step 1, build cleanup, on `dev`: rendered YAML deleted after sync, inject
+  skip by content hash plus output hash, `data` pull never fetches built or
+  committed JSON, templates named `<name>.yaml.tpl`, Claude deny rules.
+- Step 2, storage: `teams/<id>.json` per team, `bun run bvr:backup`,
+  two-way `bun run bvr:migrate` with `--verify` and `--reverse --out`,
+  Season/PracticePlan/Game reading from the team file with a legacy fallback.
+- Step 4, config layering: `staff.yaml.tpl` (the only file with contact
+  details), `levels/ms.yaml` and `levels/us.yaml`, `forms.yaml`, per-team
+  overrides in `teams.yaml`; the three per-team settings folders are gone.
+- Step 3, first part: Start New Season prompts for season ID, start date and
+  form links, and completes a season the migration pre-created. Edit Season
+  changes name, dates and links. Submit Game Report asks for a missing link.
+
+- Shared form links per term: `formLinks.json`, keyed
+  `<year>-<fall|winter|spring>`, used by every team in that term, with a
+  per-season override slot. See "Form links" in
+  `docs/reference/bvr-team-file.md`. Checked in Drafts: pending the first
+  Edit Season run on soccer and basketball after the 2026-10-18 sync.
+
+**Done on the branch, not yet checked in Drafts:**
+
+- Step 5: `bun run new-team` scaffold (see "A new team or sport" below).
+  Nothing in it runs in Drafts; it was checked against a scratch copy.
+
+- Step 3 remainder: Start New Season asks who gets attendance and score
+  messages (initials prefilled from the team default, unknown ones named and
+  asked again; only lists that differ are saved as the season's
+  `recipients`), then keeps the roster draft in use or starts a new one from
+  `attendance.md` and opens it. Edit Season shows both lists and the roster
+  draft, with a switch to start a new one. `Team.attendanceDraftID` prefers
+  the season's roster draft over `teams.yaml`'s.
+
+**In flight:** nothing.
+
+**Not started:**
+
+- Update Score action, on `dev` after this branch merges (decided
+  2026-10-20). Run on a game report draft: reopen the score picker preset to
+  the recorded score, recompute the result, rewrite only the Result and Score
+  sections of the report draft, replace the game's row in the season record
+  draft (matched by date and opponent; ask before rebuilding the table), and
+  re-save the game. For an already submitted game, ask before re-sending the
+  texts and only open the score forms for review, since the middle school form
+  posts directly. Current-season games only. Opponent, location and date could
+  follow later as Edit Game.
+
+- Later cleanup, after a full season on team files: drop `startDate` from
+  `teams.yaml` (seasons carry their own), stop pushing `records.json` and
+  `practicePlans.json` and retire them, retire the `Score Report` items in
+  1Password (nothing reads them), remove Gulp.
+- Finish: open a PR from the branch into `dev`, merge with a merge commit,
+  delete the branch, then `bun run checkpoint`.
+
+**Working rules that held throughout:** code is written by Opus builders and
+reviewed before sync; the rendered settings files are never read; nothing on
+the branch modifies the old `records.json` or `practicePlans.json`; backups
+live in `~/Backups/drafts-bvr/`; before any `bun run sync`, confirm which
+branch the shared checkout is on, because builders switch it.
+
+## Decisions so far
 
 - Form entry IDs stay the same between seasons; only the form URL changes.
   No HTML fetching needed.
@@ -13,6 +80,95 @@ Decisions so far:
 - The secrets goal is keeping PII (phone numbers, emails) out of Claude Code's
   reach, not disk hygiene for its own sake. Delete rendered YAML after sync and
   use a content hash to keep the inject skip. No scratch build directory.
+
+Decided while building step 2 (2026-10-18; details in
+[`docs/reference/bvr-team-file.md`](../reference/bvr-team-file.md)):
+
+- Migrated seasons are named `<year>-<season>` from `teams.yaml`
+  (`2026-fall`). Start New Season accepts any `<year>-<name>`, so a winter
+  sport can use `2026-winter` or `2026-27`; the leading year is required
+  because the old files key seasons by it. The display label is derived from the ID
+  (`2026 Fall`) and gets its own template tag, `current_season_label`, which
+  now titles the season record draft. `current_season` is the ID.
+- The team file wins whenever both sides hold the same game or practice plan,
+  in both directions. A forward re-run only adds what the team file lacks and
+  keeps an existing `currentSeason`. So an edit made on `main` to a game the
+  team file already has is not carried forward; `--verify` lists it.
+- Reverse writes only to an `--out` folder, never over the live files, because
+  the migration must never rewrite its inputs. Handing data back to `main` is
+  a backup and a copy of two files. Forward backs up on its own before writing.
+- The teams folder is a `teamFilesDir` key in `settings.yaml.tpl`, read by both
+  the Drafts scripts and `bvr:migrate`. The build's push excludes that folder
+  entirely: team files are written in iCloud and only pulled locally.
+- An unusable team file (half-synced, wrong schema) stops the action or the
+  migration. It never falls back to `records.json` and is never overwritten.
+- Residual risk: `records.json` and `practicePlans.json` are still pushed.
+  `sync` and the watch rebuilds pull them first, but a game recorded on
+  another device that iCloud has not delivered to the Mac yet, or written in
+  the seconds between pull and push, can still be overwritten by the older
+  local copy. Same exposure as on `dev`; it shrinks to nothing once every team
+  is on a team file and the old files stop changing.
+- Only the season whose year matches the `teams.yaml` `startDate` gets that
+  date. Older seasons store null; Jan 1 of their year is used only to choose
+  `currentSeason`. If every season is still ahead, the earliest upcoming one
+  is current.
+- A team with no team file keeps the old behavior. Start New Season creates a
+  team file only for a team with no history in the old files, so an
+  unmigrated team's history is never hidden behind an empty team file.
+- "Migrate Current Season" was retired on 2026-10-19: every team has a team
+  file, and `bvr:migrate` converts the 2024 bare-array seasons.
+- `endDate`, `recipients`, and `attendanceDraftID` are in every season entry
+  but nothing reads them yet. Step 3 fills them.
+
+Decided while building step 4, the config layering (2026-10-18, before the
+basketball team starts on 2026-10-30):
+
+- `staff.yaml.tpl` is the only file with contact details: `people`, keyed by
+  initials, each with only the `name`, `cell`, or `email` some message or tag
+  uses. That includes the head coach (`ME`), so `hc_name` and `hc_email` now
+  come from `headCoach: ME` in `settings.yaml.tpl`, and the attendance office
+  (`ATT`, from `attendanceOffice`). `settings.yaml.tpl` keeps its name and
+  role but no longer holds a secret.
+- `forms.yaml` is plain YAML, not a template: the two field maps
+  (`ms-score-report`, `varsity-score-report`) with titles and entry IDs. No
+  URLs, since the URL is per season.
+- A season entry holds `formURLs: { <form name>: url }` instead of one
+  `formURL`, because MS Ultimate submits two forms. Start New Season asks for
+  each link (blank skips); Submit Game Report asks for any still missing,
+  saves it, and skips a form left blank with a message. A pasted
+  `.../viewform?usp=...` link is cut back to the base link.
+- Form links turned out to be per term, not per team: the athletic
+  department issues one link per form for fall, winter, and spring each
+  year, shared by every team in that term. They live in a runtime
+  `bvr/formLinks.json` keyed by `<year>-<term>`; a season's own `formURLs`
+  stays as an override and as the home for seasons with no term (`2026-27`).
+  Links already saved on a season move up to the term the first time they
+  are used in Drafts.
+- `levels/ms.yaml` and `levels/us.yaml` take today's MS Girls Soccer and
+  Varsity Ultimate values. In teams.yaml a team overrides any part: objects
+  merge, lists replace. MS Ultimate overrides attendance recipients, its
+  score-text list, and its forms.
+- Tags and template files are derived (recap tag `<defaultTag>/game/recap`,
+  the three game templates, `bvr/<id>-game-day-project.mustache` when it
+  exists). Only what does not fit is in teams.yaml: MS Girls Soccer's
+  `recapTag`, Varsity Ultimate's `templates.welcomeLetter`. Practice-plan tags
+  are now read from teams.yaml; the values there were changed to what each
+  team's old `templateSettings` used, since that was the live source (MS Girls
+  Soccer had two different values).
+- teams.yaml is the single source of `attendanceDraftID`. MS Girls Soccer's
+  came from its old `attendanceSettings` and is now in teams.yaml. Basketball
+  has none yet.
+- A check before deleting the nine per-team templates ran TeamConfig on the
+  raw `op://` references and matched them field for field (recipients, cc,
+  bodies, subject, forms, tags, template files). The only addition is the
+  `attendance_email` tag for MS Girls Soccer, which no template it uses reads.
+- The old per-team folders still hold rendered `.json` copies locally and in
+  iCloud (`data` pulls them back, so a local delete alone does not stick).
+  Nothing reads them. Delete `Library/Data/bvr/{ms-ultimate,msg-soccer,us-ultimate}/`
+  in iCloud and locally to clear the contact details they hold.
+- Claude deny rules: the rendered `staff.json` is covered by the existing
+  `Library/Data/**/*.json` rule, and `Read(Library/Data/**/staff.yaml)` covers
+  the rendered YAML.
 
 ## What starting a season costs today
 
@@ -54,16 +210,22 @@ Split BVR configuration into layers by how often each changes and who changes it
 
 ```
 Library/Data/bvr/
-  settings.yaml.tpl         global: workspace, coaching draft, head coach tags   (rarely)
+  settings.yaml.tpl         global: workspace, coaching draft, file names,
+                            headCoach and attendanceOffice initials              (rarely)
   sports.yaml               per sport: score picker ranges                        (new sport only)
-  staff.yaml.tpl            contact directory keyed by initials, from 1Password   (when staff changes)
-  forms.yaml.tpl            school-wide score forms: field maps and entry IDs     (when the school changes the form)
+  staff.yaml.tpl            contact directory keyed by initials, from 1Password;
+                            the only file with contact details                    (when staff changes)
+  forms.yaml                school-wide score forms: field maps and entry IDs     (when the school changes the form)
   teams.yaml                per team: id, name, abbr, sport, level, calendar,
-                            tags, template files, which form it submits to        (new team only)
-  levels/ms.yaml, us.yaml   per level: message type, default recipient roles      (rarely)
+                            defaultTag, attendanceDraftID, assistantCoaches,
+                            templateTags, practice-plan tags, and overrides of
+                            its level (attendance, gameReport, forms, recapTag,
+                            templates)                                            (new team only)
+  levels/ms.yaml, us.yaml   per level: attendance and score messages (type,
+                            recipients by initials, text), forms to submit        (rarely)
   teams/<team-id>.json      per team, written by Drafts, never in git:
                             currentSeason, then one entry per season with
-                            startDate, endDate, formURL, recipients (initials),
+                            startDate, endDate, formURLs, recipients (initials),
                             attendanceDraftID, seasonRecordDraftID, games[],
                             practicePlans{}                                      (every season, from inside Drafts)
 ```
@@ -119,24 +281,30 @@ from the team file's current season instead of from `teams.yaml` +
 
 ## A new team or sport: a dev-side scaffold
 
-A new sport is the one case that still needs the build pipeline, because it
-needs new files, templates, and tags. Make it one command:
+A new team or sport is the one case that still needs the build pipeline,
+because it needs new files, templates, and tags. It is one command (built
+2026-10-18):
 
 ```
-bun run new-team <team-id> --sport basketball --level us --abbr VBB
+bun run new-team msg-basketball --name "MS Girls Basketball" --abbr MSGB \
+  --sport basketball --level ms --season winter --start 2026-10-30
 ```
 
-It would add the `sports.yaml` entry if the sport is new, append the team to
-`teams.yaml`, create `<team-id>-practice-plan.md` and the game-day
-`.mustache` from a starter, and print the manual checklist that code cannot
-do: create the attendance draft, create the team calendar named by `abbr`,
-add the Things project template, add the `Score Report/<ABBR>` 1Password item
-if you keep forms there, and confirm the "Mark Attendance As Complete" and
-"Complete Game Day Tasks" shortcuts handle the new `abbr`. Then run the
-in-app "Start New Season" for the first season.
+It appends the team to `teams.yaml` as text (the header comment survives),
+with `defaultTag` `bvr/<sport>/<level>` and practice-plan tag
+`bvr/<sport>/practice/plan`, and appends the sport to `sports.yaml` if it is
+new (`--max-score`/`--selected-score`, else the `--from` team's sport). It
+copies `<from>-practice-plan.md` and `<from>-game-day-project.mustache`,
+replacing the `--from` team's name, id, abbr, and tags, and lists every
+replacement; an existing file is skipped. `--from` defaults to the newest
+team at the same level, else in the same sport. Run against a copy of the
+repo without basketball, it reproduces the committed `msg-basketball` entry
+and `sports.yaml` byte for byte. Then it prints what code cannot do: the
+calendar named by `abbr`, the Things project template, the two Shortcuts
+that key on `abbr`, `bun run sync`, `bun run bvr:migrate`, and Start New
+Season in Drafts, which creates the season record and roster drafts.
 
-With the layering above, a new team needs no `.yaml.tpl` files of its own. Today it
-needs three.
+With the layering above, a new team needs no `.yaml.tpl` files of its own.
 
 ## Storage: one JSON file per team, not SQLite
 
@@ -236,7 +404,10 @@ about which files are the source of truth.
    two-way `bvr:migrate` first, then the new `Season` storage with
    `PracticePlan` and `Game` reading from it. This is the piece basketball
    needs before the first practice.
-3. **"Start New Season" action** (branch): the guided flow above.
+3. **"Start New Season" action** (branch): the guided flow above. Form links
+   are done (asked at Start New Season and Submit Game Report), and an Edit
+   Season action changes the current season's name, dates, and links later;
+   recipients and the attendance draft remain.
 4. **Config layering** (branch): `staff.yaml.tpl`, `forms.yaml.tpl`, levels; collapse the
    three team folders.
 5. **`bun run new-team` scaffold** (branch): last, because it generates the

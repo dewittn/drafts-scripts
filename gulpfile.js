@@ -21,6 +21,7 @@ const generatedSettings = [
   "settings.yaml",
   "attendanceSettings.yaml",
   "templateSettings.yaml",
+  "staff.yaml",
 ];
 const watchGlobs = [
   `${srcDir}/**`,

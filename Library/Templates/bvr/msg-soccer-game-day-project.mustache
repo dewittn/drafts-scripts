@@ -4,17 +4,17 @@ Game Day Checklist: @area(BVR Coaching) @when([[game_date]])
     {{^game_isHome}}
     - AirPods
     {{/game_isHome}}
-    - Clipboard w/Magnets
     - Ball Pump
   Pre-game:
     {{#game_isHome}}
-    - Get Veo Camera from Abby
+    - Ask for Veo Camera
     {{/game_isHome}}
+    - Pick up Phone Bag @when([[game_date]]@14:15)
     - Make sure we have Water
     - Make sure we have Med kit
     - Make sure we have soccer balls
   Post-game:
     - Record Score @when([[game_date]])
       drafts://x-callback-url/runAction?action=Record%20Game%20Score
-    - Report Score @due({{ game_report_due_date }})
+    - Report Score @when([[game_date]]@18:00) @due({{ game_report_due_date }})
       drafts://x-callback-url/runAction?action=Submit%20Game%20Report

@@ -1,0 +1,17 @@
+---
+# Upper school defaults: absences go to the attendance office by email with
+# coaches on copy. A team overrides any part in teams.yaml (objects merge,
+# lists replace). People are initials from staff.yaml.tpl.
+attendance:
+  absences:
+    type: email
+    recipients: [ATT]
+    ccRecipients: [AG, AH]
+    subjectLine: Attendance for [[team_name]] ([[date|%m-%d-%Y]])
+    bodyText: "Hello,\n\nThese students are absent from [[team_name]] today:\n\n"
+gameReport:
+  messages:
+    - type: text
+      recipients: [AG, AH]
+      bodyText: "[[game_summary]]"
+  forms: [varsity-score-report]

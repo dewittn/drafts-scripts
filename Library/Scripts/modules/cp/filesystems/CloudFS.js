@@ -64,6 +64,22 @@ class CloudFS {
     }
   }
 
+  exists(fileName) {
+    if (fileName == undefined) return false;
+    return this.#fmCloud.exists(`${this.basePath}/${fileName}`);
+  }
+
+  // Create each missing folder along dirPath (relative to basePath), so a
+  // write to a new folder does not fail.
+  ensureDirectory(dirPath) {
+    let parent = this.basePath;
+    for (const name of dirPath.split("/").filter((part) => part != "")) {
+      const path = `${parent}/${name}`;
+      if (!this.#fmCloud.exists(path)) this.#fmCloud.createDirectory(name, parent);
+      parent = path;
+    }
+  }
+
   // Deprecated: callers should name the .json file the build produces.
   // The swap to .json keeps old references working while this flags them.
   #warnYaml(fileName) {
@@ -92,6 +108,18 @@ class DataFile {
   static load(fileName) {
     const fs = new CloudFS(this.basePath);
     return fs.read(fileName);
+  }
+
+  static exists(fileName) {
+    const fs = new CloudFS(this.basePath);
+    return fs.exists(fileName);
+  }
+
+  // Create the folders a new data file needs, e.g. "bvr/teams/" for
+  // "bvr/teams/msg-soccer.json".
+  static ensureDirectoryFor(fileName) {
+    const fs = new CloudFS(this.basePath);
+    fs.ensureDirectory(fileName.split("/").slice(0, -1).join("/"));
   }
 
   #load(fileName) {
