@@ -13,18 +13,24 @@
  * through it. A test that touches any other Drafts global without stubbing
  * it is reported as "needs Drafts", not as a failure.
  *
+ * Tests also get loadRepoYAML(path), which parses a committed YAML file under
+ * Library/Data/ (e.g. "bvr/ui.yaml") the way the build does, so a test can use
+ * the real settings without a generated .json being present.
+ *
  * Usage:
  *   bun run test                 # all unit tests
  *   bun run test query-letter    # only files whose path contains the filter
  *   bun run test --all           # unit + integration + top-level tests
  */
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import vm from "node:vm";
+import yaml from "js-yaml";
 
 const root = resolve(import.meta.dir, "..");
 const scriptsDir = join(root, "Library", "Scripts");
 const testsDir = join(root, "Library", "Tests");
+const dataDir = join(root, "Library", "Data");
 
 const args = process.argv.slice(2);
 const runAll = args.includes("--all");
@@ -91,6 +97,21 @@ function createFileManagerStub() {
   return { createCloud: () => instance, createLocal: () => instance, create: () => instance };
 }
 
+// Parse a committed YAML file under Library/Data/ as yaml2json would, and
+// return it as plain data made in the test's context. A .yaml rendered from a
+// .yaml.tpl holds secrets and contact details, so it is refused.
+function createYAMLLoader(context) {
+  const contextJSON = vm.runInContext("JSON", context);
+  return (path) => {
+    const full = join(dataDir, path);
+    if (!path.endsWith(".yaml") || existsSync(`${full}.tpl`)) {
+      throw new Error(`loadRepoYAML("${path}"): only plain committed .yaml files with no .yaml.tpl can be loaded`);
+    }
+    const data = yaml.load(readFileSync(full, "utf8"));
+    return contextJSON.parse(JSON.stringify(data));
+  };
+}
+
 function runTest(file) {
   const logs = [];
   const sandboxConsole = {
@@ -100,6 +121,7 @@ function runTest(file) {
   };
 
   const context = vm.createContext({ console: sandboxConsole, FileManager: createFileManagerStub() });
+  context.loadRepoYAML = createYAMLLoader(context);
   const loaded = new Set();
   const stack = [file];
 

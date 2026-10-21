@@ -173,6 +173,8 @@ source = makeSourceDraft([makeTask("Hal Hyphen", false)]);
 ui = makeUI(0, { queryType: ["Query Manager"] });
 new QueryLetter(settings, ui, source).create();
 test.assertDeepEqual(createdTemplates[0].settings.draftTags, ["authoring/wfid/query", "query-manager"], "multi-word choice tags with hyphens");
+test.assertEqual(createdTemplates[0].settings.templateTags.queryType, "query manager", "multi-word choice fills its tag lowercased");
+test.assertEqual(createdTemplates[0].settings.templateTags.queryType_query_manager, "query manager", "and sets a section tag with underscores");
 test.assertDeepEqual(settings.draftTags, ["authoring/wfid/query"], "shared draftTags setting is not mutated");
 
 // Cancelled prompt
@@ -222,6 +224,37 @@ test.assertEqual(lookup.sourceDraft, draft, "uses the global draft when the agen
 draft = { uuid: "OTHER", ...makeSourceDraft([]) };
 lookup = new QueryLetter({ ...settings, sourceDraftUUID: "LIST-1", sourceTag: "t" }, makeUI(0), null);
 test.assertEqual(lookup.sourceDraft, storedCopy, "ignores the global draft when a different draft is open");
+
+// --- choice tags from nr-settings.yaml ---
+test.section("choice tags from nr-settings.yaml");
+
+// The committed queryLetter settings (the built .json inside Drafts), so a
+// renamed key or choice there fails here. Each select choice's draft tag (tagFields only) and template tags.
+const realSettings = (typeof loadRepoYAML != "undefined"
+  ? loadRepoYAML("nr-settings.yaml")
+  : FileManager.createCloud().readJSON("/Library/Data/nr-settings.json")).queryLetter;
+const realChoices = Object.fromEntries(
+  realSettings.menuSettings.menuItems.filter((item) => item.type == "select").map((item) => [item.data.name, item.data.values]),
+);
+test.assertDeepEqual(realSettings.tagFields, ["queryType"], "only queryType tags the draft");
+
+const choiceCases = [
+  { field: "queryType", choice: "Email", draftTags: ["authoring/wfid/query", "email"], sectionTag: "queryType_email" },
+  { field: "queryType", choice: "Query Manager", draftTags: ["authoring/wfid/query", "query-manager"], sectionTag: "queryType_query_manager" },
+  { field: "genre", choice: "Upmarket literary fiction", draftTags: ["authoring/wfid/query"], sectionTag: "genre_upmarket_literary_fiction" },
+  { field: "genre", choice: "Literary fiction", draftTags: ["authoring/wfid/query"], sectionTag: "genre_literary_fiction" },
+];
+for (const { field, choice, draftTags, sectionTag } of choiceCases) {
+  test.assertIncludes(realChoices[field], choice, `${field} offers "${choice}"`);
+  createdTemplates = [];
+  source = makeSourceDraft([makeTask("Ivy Index", false)]);
+  new QueryLetter(realSettings, makeUI(0, { [field]: [choice] }), source).create();
+  const made = createdTemplates[0]?.settings;
+  test.assertDeepEqual(made?.draftTags, draftTags, `"${choice}": draft tags`);
+  test.assertEqual(made?.templateTags[field], choice.toLowerCase(), `"${choice}": ${field} tag`);
+  test.assertEqual(made?.templateTags[sectionTag], choice.toLowerCase(), `"${choice}": ${sectionTag} tag`);
+}
+test.assertDeepEqual(realSettings.draftTags, ["authoring/wfid/query"], "the settings' draftTags are not mutated");
 
 Template = originalTemplate;
 test.summary();

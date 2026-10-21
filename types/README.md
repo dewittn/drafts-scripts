@@ -8,6 +8,7 @@ here is synced to Drafts or used at runtime.
 | `drafts.d.ts` | Official Drafts definitions, vendored and patched. Do not edit by hand. |
 | `drafts-extensions.d.ts` | Project additions: globals and fixes the official file lacks. |
 | `checker-shim.d.ts` | Names used only by `scripts/typecheck.ts` (see that file's header). |
+| `test-runner.d.ts` | Globals `scripts/test-runner.js` gives unit tests (`loadRepoYAML`). |
 
 ## Vendored source
 

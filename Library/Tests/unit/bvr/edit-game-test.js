@@ -6,13 +6,15 @@
  * Game flow on a mocked team: prompt, report rewrite, table rebuild, save,
  * and the extra steps for a game already submitted. All data is synthetic.
  * The real game-report.md, game-record-row.md, and game-season-record.md
- * templates are rendered by a stand-in for Template.
+ * templates are rendered by a stand-in for Template, and prompt settings are
+ * the real Library/Data/bvr/ui.yaml (see fixtures/bvr-stubs.js).
  *
  * Not covered here (needs Drafts): the prompt itself and writing real drafts.
  */
 
 require("../Tests/fixtures/assertions.js");
 require("../Tests/fixtures/mocks.js");
+require("../Tests/fixtures/bvr-stubs.js");
 require("modules/cp/filesystems/CloudFS.js");
 require("modules/bvr/utils/MarkdownSections.js");
 require("modules/bvr/utils/SeasonRecordTable.js");
@@ -188,61 +190,15 @@ class RenderingTemplate {
 /** @type {any} */ (globalThis).Template = RenderingTemplate;
 /** @type {any} */ (globalThis).adjustDate = (date) => date;
 
-// A draft as Drafts has it: content, lines, and update() counted.
-function fakeDraft(uuid, content) {
-  return {
-    uuid,
-    content,
-    updates: 0,
-    get lines() {
-      return this.content.split("\n");
-    },
-    append(text) {
-      this.content = `${this.content}\n${text}`;
-    },
-    update() {
-      this.updates++;
-    },
-  };
-}
-
-const editSettings = {
-  notFoundMessage: "Run Edit Game on a game report from the current season.",
-  reportSections: ["## Opponent", "## Result", "## Score"],
-  opponentField: { type: "textField", data: { name: "opponent", label: "Opponent" } },
-  locationField: { type: "select", data: { name: "location", label: "Location", values: ["Home", "Away"] } },
-  scorePicker: { type: "picker", data: { name: "score", label: "Score" } },
-  menuSettings: { menuTitle: "Edit Game", menuMessage: "Change it.", menuItems: [{ type: "button", data: { name: "Save", value: "save" } }] },
-  removeRowsPrompt: { menuTitle: "Rebuild the season record?", menuMessage: "Rows would be removed." },
-  resendTextsPrompt: { menuTitle: "Re-send the score texts?", menuMessage: "Send again?" },
-  reviewFormsPrompt: { menuTitle: "Open the score forms?", menuMessage: "Open them?" },
-};
-const uiSettings = {
-  editGame: editSettings,
-  submitGoogleForm: { menuSettings: { menuTitle: "Google Form Submitted", menuMessage: "Submitted?", menuItems: [] } },
-};
-
 const gameEntry = (draftID, opponent, location, score, result, formattedDate, extra = {}) => ({
   draftID, opponent, location, score, result, formattedDate,
   date: "2026-10-01T16:00:00.000Z", recorded: true, appended: true, submitted: false, ...extra,
 });
 
-function savable(data) {
-  const file = JSON.parse(JSON.stringify(data));
-  Object.defineProperty(file, "saves", { value: 0, writable: true, enumerable: false });
-  Object.defineProperty(file, "save", { value() { this.saves++; }, enumerable: false });
-  return file;
-}
-
 // A team, season, and open report draft wired the way Team wires them.
 // edits: the Edit Game prompt's answers; yesNo: answers by prompt title.
 function setUp({ games, edits, yesNo = {}, openDraftID = "GAME-1", recordDraftID = "REC" }) {
-  const ui = /** @type {any} */ (new MockUI({ promptResponses: edits == undefined ? {} : { "Edit Game": { button: "save", fieldValues: edits } } }));
-  ui.settings = (name) => JSON.parse(JSON.stringify(uiSettings[name]));
-  ui.yesNoPrompt = (menuSettings) => {
-    ui.interactions.push({ type: "yesNo", menuSettings });
-    return yesNo[menuSettings.menuTitle] || "no";
-  };
+  const ui = mockBVRUI(edits == undefined ? {} : { "Edit Game": { button: "save", fieldValues: edits } }, yesNo);
 
   const bvr = { ui, globalTags: { hc_name: "Coach Test" }, formatDateMDY: () => "10/2/2026", formatDateYMD: () => "2026-10-01" };
   const file = savable({
@@ -448,5 +404,98 @@ test.assertEqual(run.recordDraft.lines[0], "# Season Record: TT 2026 Fall (1-1-1
 test.assertEqual(run.recordDraft.lines.slice(-1)[0], "| 10/15/2026 | Synthetic C | Home | Draw | 2 | 2 |", "and its row is appended");
 test.assertEqual(run.recordDraft.updates, 1, "in one save");
 test.assertEqual(seasonGames(run.file).length, 3, "the game is saved");
+
+// --- report highlights and comments ---
+test.section("report highlights and comments");
+
+// Submit Game Report on GAME-1 with its report draft holding reportText.
+// Returns the highlights and comments saved for the game. The report is
+// found with Draft.find.
+/** @type {any} */ (globalThis).Shortcut = { create: () => ({ run() {} }) };
+function submitWith(editReport = (text) => text) {
+  const games = [gameEntry("GAME-1", "Old Rivals", "Home", ["4", "2"], "Win", "10/1/2026"), twoGames()[1]];
+  const run = setUp({ games, edits: undefined });
+  run.reportDraft.content = editReport(run.reportText);
+  /** @type {any} */ (globalThis).Draft = { find: (uuid) => (uuid == "GAME-1" ? run.reportDraft : run.recordDraft) };
+  run.game.submitReport();
+  const { highlights, comments } = seasonGames(run.file)[0];
+  return { highlights, comments };
+}
+
+let submittedReport = submitWith();
+test.assertEqual(submittedReport.highlights, "Great defense.", "highlights are the lines typed under the instructions, trimmed");
+test.assertEqual(submittedReport.comments, "Bus was late.", "comments likewise");
+
+submittedReport = submitWith((text) => text
+  .replace("Great defense.  \n", "Great defense.\n\nTwo goals from the wing.\n")
+  .replace("Bus was late.\n", "Bus was late.\nRefs were fair.\n"));
+test.assertEqual(submittedReport.highlights, "Great defense.\n\nTwo goals from the wing.", "line breaks in highlights are kept");
+test.assertEqual(submittedReport.comments, "Bus was late.\nRefs were fair.", "and in comments");
+
+submittedReport = submitWith((text) => text.replace("Great defense.  \n", "").replace("Bus was late.\n", ""));
+test.assertEqual(submittedReport.highlights, "", "an untouched report has no highlights");
+test.assertEqual(submittedReport.comments, "", "and no comments");
+
+// Item 1 of docs/explanation/conventions-refactor-plan.md may change the
+// cases below; they record what the splice-based reader does today.
+submittedReport = submitWith((text) => text.replace("## Highlights?\n", ""));
+test.assertEqual(submittedReport.highlights, "", "[may change, item 1] no Highlights heading: highlights are empty");
+test.assertEqual(submittedReport.comments, "Bus was late.", "[may change, item 1] and comments are still read");
+
+submittedReport = submitWith((text) => text.replace("## Other/Comments\n", ""));
+test.assertEqual(submittedReport.comments, "", "[may change, item 1] no Other/Comments heading: comments are empty");
+test.assertEqual(
+  submittedReport.highlights,
+  "Great defense.  \n\n\n\n_(Any notes about refs, buses, etc)_\nBus was late.",
+  "[may change, item 1] and highlights run to the end of the report",
+);
+
+submittedReport = submitWith((text) => text.replace("_Check for grammar and spelling. Please include some statistical info if possible._\n", ""));
+test.assertEqual(submittedReport.highlights, "", "[may change, item 1] with the instruction line deleted, the first typed line is dropped");
+
+// Edit Game on a submitted game reads them the same way, from the open draft.
+games = [gameEntry("GAME-1", "Old Rivals", "Home", ["4", "2"], "Win", "10/1/2026", { submitted: true }), twoGames()[1]];
+run = setUp({ games, edits: { opponent: "Old Rivals", location: ["Home"], score: [5, 2] } });
+run.reportDraft.content = run.reportText.replace("Great defense.  \n", "Great defense.\n\nTwo goals.\n");
+run.game.editGame();
+test.assertEqual(seasonGames(run.file)[0].highlights, "Great defense.\n\nTwo goals.", "Edit Game saves the same highlights");
+test.assertEqual(seasonGames(run.file)[0].comments, "Bus was late.", "and comments");
+
+// --- open draft lookup ---
+test.section("open draft lookup");
+
+// Drafts writes the global draft back when the script ends (see
+// docs/reference/drafts-runtime.md), so the open draft is used when it is the
+// target, and Draft.find otherwise.
+run = setUp({ games: twoGames(), edits: { opponent: "Old Rivals", location: ["Home"], score: [1, 2] } });
+let openDraft = fakeDraft("SOMETHING-ELSE", "# Unrelated");
+let foundReport = fakeDraft("GAME-1", run.reportDraft.content);
+/** @type {any} */ (globalThis).draft = openDraft;
+/** @type {any} */ (globalThis).Draft = { find: (uuid) => (uuid == "GAME-1" ? foundReport : uuid == "REC" ? run.recordDraft : undefined) };
+run.game.editGame();
+test.assertEqual(foundReport.updates, 1, "Edit Game rewrites the report found by Draft.find when another draft is open");
+test.assertDeepEqual(MarkdownSections.body(foundReport.lines, "## Result"), ["", "Loss", ""], "with the new result");
+test.assertEqual(openDraft.updates + run.reportDraft.updates, 0, "and leaves the open draft alone");
+
+run = setUp({ games: twoGames(), edits: { opponent: "Old Rivals", location: ["Home"], score: [1, 2] } });
+let foundRecord = fakeDraft("REC", run.recordDraft.content);
+/** @type {any} */ (globalThis).draft = run.recordDraft;
+/** @type {any} */ (globalThis).Draft = { find: (uuid) => (uuid == "GAME-1" ? run.reportDraft : uuid == "REC" ? foundRecord : undefined) };
+run.game.editGame();
+test.assertEqual(run.recordDraft.updates, 1, "the season record rebuild uses the open draft when it is the record draft");
+test.assertEqual(run.recordDraft.lines[5], "| 10/1/2026 | Old Rivals | Home | Loss | 1 | 2 |", "and writes the rebuilt table to it");
+test.assertEqual(foundRecord.updates, 0, "not to a Draft.find copy");
+test.assertEqual(run.reportDraft.updates, 1, "the report, not open, is found with Draft.find");
+
+// Current behavior, which item 10 of the plan changes: appending a new game's
+// row always uses Draft.find, even when the record draft is the open one.
+run = setUp({ games: twoGames(), edits: undefined });
+foundRecord = fakeDraft("REC", run.recordDraft.content);
+/** @type {any} */ (globalThis).draft = run.recordDraft;
+/** @type {any} */ (globalThis).Draft = { find: (uuid) => (uuid == "REC" ? foundRecord : undefined) };
+run.team.season.updateWith(run.renderGame(gameEntry("GAME-3", "Synthetic C", "Home", ["2", "2"], "Draw", "10/15/2026", { appended: false })));
+test.assertEqual(foundRecord.updates, 1, "[changes in item 10] Record Game Score appends to the Draft.find copy");
+test.assertEqual(foundRecord.lines.slice(-1)[0], "| 10/15/2026 | Synthetic C | Home | Draw | 2 | 2 |", "[changes in item 10] with the new row");
+test.assertEqual(run.recordDraft.updates, 0, "[changes in item 10] even when the record draft is the open draft");
 
 test.summary();
