@@ -1,10 +1,34 @@
 // Rebuilds the table in a season record draft, held as an array of lines.
 // Everything up to and including the table's separator row (|:--|:--|...) is
-// kept; every line after it is replaced by the rows given. Pure: no Drafts
-// objects, and the lines passed in are never changed.
+// kept; every line after it is replaced by the rows given. Also keeps the
+// season's record, (wins-losses-draws), at the end of the title. Pure: no
+// Drafts objects, and the lines passed in are never changed.
 class SeasonRecordTable {
   // A Markdown table separator row: |:--|:--| (colons and spaces optional).
   static separatorPattern = /^\|(\s*:?-+:?\s*\|)+$/;
+
+  // The record at the end of a title: (4-2-2), with any spaces around it.
+  static tallyPattern = /\s*\(\d+-\d+-\d+\)\s*$/;
+
+  // "4-2-2": wins, losses, and draws among the recorded games. Counted from
+  // the games every time, never from the numbers already in the title.
+  static tally(games) {
+    const recorded = games.filter((game) => game.recorded);
+    const count = (result) => recorded.filter((game) => game.result == result).length;
+    return `${count("Win")}-${count("Loss")}-${count("Draw")}`;
+  }
+
+  // The lines with the title (the first "# " line) ending in (tally), in
+  // place of the record it had, if any. Unchanged when there is no title.
+  static withTally(lines, tally) {
+    const updated = [...lines];
+    const title = updated.findIndex((line) => line.startsWith("# "));
+    if (title == -1) return updated;
+
+    const bareTitle = updated[title].replace(SeasonRecordTable.tallyPattern, "").trimEnd();
+    updated[title] = `${bareTitle} (${tally})`;
+    return updated;
+  }
 
   // Index of the table's separator row, or -1 when the draft has no table.
   static separatorIndex(lines) {

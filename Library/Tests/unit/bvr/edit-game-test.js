@@ -155,6 +155,19 @@ test.assertDeepEqual(rebuilt?.lines.slice(0, 5), recordHead, "everything above t
 test.assertDeepEqual(before, recordHead, "the lines passed in are not changed");
 test.assertEqual(SeasonRecordTable.rebuild(["# Season Record"], [rowA]), undefined, "no table gives undefined");
 
+const results = (...list) => list.map((result) => ({ result, recorded: true }));
+test.assertEqual(SeasonRecordTable.tally([]), "0-0-0", "no games is 0-0-0");
+test.assertEqual(SeasonRecordTable.tally(results("Win", "Loss", "Win", "Draw")), "2-1-1", "counts wins, losses, and draws");
+test.assertEqual(SeasonRecordTable.tally([...results("Win"), { result: "Loss", recorded: false }]), "1-0-0", "a game not recorded is not counted");
+
+const titled = (title) => SeasonRecordTable.withTally([title, "[[BVR Coaching]]"], "4-2-2");
+test.assertEqual(titled("# Season Record: TT 2026 Fall (0-0-0)")[0], "# Season Record: TT 2026 Fall (4-2-2)", "the record in the title is replaced");
+test.assertEqual(titled("# Season Record: TT 2026 Fall ")[0], "# Season Record: TT 2026 Fall (4-2-2)", "a title without one gets it");
+test.assertEqual(titled("# Season Record: TT 2026 Fall (1-0-0) ")[0], "# Season Record: TT 2026 Fall (4-2-2)", "trailing spaces are dropped");
+test.assertEqual(titled("# Season Record: TT 2026 (Fall)")[0], "# Season Record: TT 2026 (Fall) (4-2-2)", "other parentheses are kept");
+test.assertEqual(titled("# Season Record: TT")[1], "[[BVR Coaching]]", "only the title changes");
+test.assertDeepEqual(SeasonRecordTable.withTally(["No title", rowA], "1-0-0"), ["No title", rowA], "a draft with no title is unchanged");
+
 // --- Edit Game flow ---
 test.section("Edit Game flow");
 
@@ -183,6 +196,9 @@ function fakeDraft(uuid, content) {
     updates: 0,
     get lines() {
       return this.content.split("\n");
+    },
+    append(text) {
+      this.content = `${this.content}\n${text}`;
     },
     update() {
       this.updates++;
@@ -329,6 +345,8 @@ const recordLines = run.recordDraft.content.split("\n");
 test.assertEqual(recordLines[5], "| 10/1/2026 | Old Rivals | Home | Loss | 1 | 2 |", "the record table shows the new score");
 test.assertEqual(recordLines[6], "| 10/8/2026 | Synthetic B | Away | Loss | 0 | 3 |", "and keeps the other game");
 test.assertEqual(recordLines.length, 7, "with no extra rows");
+test.assertEqual(run.head.split("\n")[0], "# Season Record: TT 2026 Fall (0-0-0)", "a new season record draft starts at 0-0-0");
+test.assertEqual(recordLines[0], "# Season Record: TT 2026 Fall (0-2-0)", "the title's record is recounted");
 test.assertEqual(lastMessage(run.ui)?.messageType, "success", "ends with a success message");
 test.assertEqual(lastMessage(run.ui)?.message, "Score 4 - 2 → 1 - 2, now a Loss.", "naming what changed");
 test.assertEqual(run.ui.getInteractionsByType("yesNo").length, 0, "an unsubmitted game asks nothing more");
@@ -418,5 +436,17 @@ test.assertEqual(lastMessage(run.ui)?.message, "Score 4 - 2 → 5 - 2, still a W
 run = setUp({ games, edits: { opponent: "Old Rivals", location: ["Home"], score: [5, 2] } });
 run.game.editGame();
 test.assertEqual(run.sent.length + run.opened.length, 0, "on no, nothing is sent or opened");
+
+// --- Record Game Score ---
+test.section("Record Game Score");
+
+// A new game appended to the record draft recounts the title.
+run = setUp({ games: twoGames(), edits: undefined });
+const newGame = run.renderGame(gameEntry("GAME-3", "Synthetic C", "Home", ["2", "2"], "Draw", "10/15/2026", { appended: false }));
+run.team.season.updateWith(newGame);
+test.assertEqual(run.recordDraft.lines[0], "# Season Record: TT 2026 Fall (1-1-1)", "the title counts the new game");
+test.assertEqual(run.recordDraft.lines.slice(-1)[0], "| 10/15/2026 | Synthetic C | Home | Draw | 2 | 2 |", "and its row is appended");
+test.assertEqual(run.recordDraft.updates, 1, "in one save");
+test.assertEqual(seasonGames(run.file).length, 3, "the game is saved");
 
 test.summary();

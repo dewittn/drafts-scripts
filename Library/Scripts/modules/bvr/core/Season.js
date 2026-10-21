@@ -198,8 +198,9 @@ class Season {
     this.#saveRecordsData(game);
   }
 
-  // Save an edited game, then rewrite the season record draft's table from
-  // this season's games: one row per recorded game, in games[] order (the
+  // Save an edited game, then rewrite the season record draft's table, and
+  // the record in its title, from this season's games: one row per recorded
+  // game, in games[] order (the
   // order rows were appended). The table is rebuilt rather than patched
   // because the draft is never edited by hand. oldRow is the edited game's
   // row before the edit, which is expected to go; removing any other row is
@@ -831,11 +832,14 @@ class Season {
       return false;
     }
 
+    if (typeof SeasonRecordTable == "undefined") require("modules/bvr/utils/SeasonRecordTable.js");
     if (this.recordsDraft == undefined) {
       this.recordsDraft = Draft.find(this.seasonRecordDraftID);
     }
 
     this.recordsDraft.append(this.recordRow(game));
+    const tally = SeasonRecordTable.tally(this.#gamesWith(game));
+    this.recordsDraft.content = SeasonRecordTable.withTally(this.recordsDraft.content.split("\n"), tally).join("\n");
     this.recordsDraft.update();
     return true;
   }
@@ -854,7 +858,8 @@ class Season {
     if (rebuilt == undefined) return "noTable";
     if (rebuilt.vanished.length > 0 && !this.#confirmRemoveRows(rebuilt.vanished)) return "declined";
 
-    recordsDraft.content = rebuilt.lines.join("\n");
+    const tally = SeasonRecordTable.tally(written.map(({ game: rowGame }) => rowGame));
+    recordsDraft.content = SeasonRecordTable.withTally(rebuilt.lines, tally).join("\n");
     recordsDraft.update();
     written.forEach(({ entry, game: rowGame }) => {
       entry.appended = true;
@@ -902,16 +907,16 @@ class Season {
       );
     }
 
-    const index = this.currentSeasonRecord.findIndex(
-      (recordItem) => recordItem.draftID == game.draftID,
-    );
-
-    if (index !== -1) {
-      this.currentSeasonRecord[index] = game.toJSON();
-    } else {
-      this.currentSeasonRecord = [...this.currentSeasonRecord, game.toJSON()];
-    }
-
+    this.currentSeasonRecord = this.#gamesWith(game);
     this.store.saveGames();
+  }
+
+  // This season's games with game in them: in place of its entry, or added
+  // at the end when it is new. The stored games are not changed.
+  #gamesWith(game) {
+    const games = this.currentSeasonRecord;
+    const index = games.findIndex((recordItem) => recordItem.draftID == game.draftID);
+    if (index == -1) return [...games, game.toJSON()];
+    return games.map((recordItem, i) => (i == index ? game.toJSON() : recordItem));
   }
 }
