@@ -60,7 +60,8 @@ queryLetter:
         data:
           name: email
           label: Email Address
-          options:
+          # Shared with the fastmail prompt below.
+          options: &emailAddressOptions
             keyboard: emailAddress
             autocapitalization: none
             autocorrect: false
@@ -77,3 +78,36 @@ fastmail:
     Nelson/Roberto
     Author/Filmmaker/Developer
     [nelsonroberto.com](https://nelsonroberto.com/)
+  # Asked before the signature is appended. Skipped when signature is empty.
+  signaturePrompt:
+    menuTitle: Send to Fastmail
+    menuMessage: Attach your signature?
+  # Asks for the Subject: and Email: lines a draft is missing. Only the missing
+  # fields are shown, and a field left blank creates the draft without it.
+  missingFields:
+    messages:
+      subject: "No Subject: line found."
+      recipient: "No Email: line found."
+      both: "No Subject: or Email: line found."
+    # Shown when a typed address cannot be read. [[address]] is what was typed.
+    invalidAddress: '"[[address]]" is not a valid email address.'
+    menuSettings:
+      menuTitle: Send to Fastmail
+      menuItems:
+        - type: textField
+          data:
+            name: subject
+            label: Subject
+        - type: textField
+          data:
+            name: to
+            label: To
+        - type: textField
+          data:
+            name: email
+            label: Email Address
+            options: *emailAddressOptions
+        - type: button
+          data:
+            name: Create Draft
+            value: create

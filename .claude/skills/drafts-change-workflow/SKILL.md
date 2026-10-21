@@ -48,7 +48,7 @@ If a helper almost fits, extend it and say so, rather than working around it. If
 
 ## 3. Write it
 
-- **Thin actions.** A file in `Library/Actions/` requires its modules, reads settings, calls a module class, and reports the result. Logic lives in a class under `Library/Scripts/modules/<area>/` or `shared/`, where it can be tested and reused. `Library/Actions/nr/send-to-fastmail.js` with `modules/nr/EmailDraft.js` is a good model.
+- **Thin actions.** A file in `Library/Actions/` requires its modules, reads settings, calls a module class, and reports the result. Logic lives in a class under `Library/Scripts/modules/<area>/` or `shared/`, where it can be tested and reused. `Library/Actions/nr/send-to-fastmail.js` with `modules/nr/FastmailSender.js` is a good model.
 - **Match the surrounding code.** Use small named functions with a one or two line comment saying what each does and why, guard clauses over nesting, and descriptive names. Polish with the `code-styling` skill once it works.
 - **Config, not constants.** Settings go in `Library/Data/**/*.yaml`, and secrets go in `<name>.yaml.tpl` files. Never edit the generated `.json`. Read settings with `loadSettings("<file>.json")`.
 - **Require paths** are always relative to `Library/Scripts/` (see CLAUDE.md).
