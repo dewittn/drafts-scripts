@@ -43,6 +43,10 @@ To return: `git switch feature/conventions-refactor && bun run sync`, then `git 
 4. Run `bun run checkpoint` again and report its status in one line.
 5. Update the Status table above, and the `conventions-refactor` project memory, to say the branch is merged.
 
+**Follow-ups found during the refactor (not bugs in it; leave unless the user asks):**
+- `Library/Actions/nr/new-meats.js` seems to call `draft.activate("default", actionGroup)` with its arguments swapped. `Draft.prototype.activate(actionGroup, workspaceName)` takes the action group first, so the action group lands in the workspace slot.
+- EmailDraft calls its own statics two ways (`this.constructor.x` and `EmailDraft.x`). Using `EmailDraft.x` throughout clears two baselined typecheck errors, but needs `--update-baseline` and a note in `docs/reference/typecheck-findings.md`.
+
 ## What this refactor is
 
 An audit compared the Drafts runtime code written since 2026-10-11 (commit ceef60e onward) with the code before it (`ceef60e^`) and with the style guide at `~/Programing/dewittn/agentic-docs/coding/style-guide.md`. The items below are the verified findings. The goal is to bring the new code in line with the established conventions. **Behavior must stay the same**, with one exception: keep a behavior change when it fixes a real defect (the audit names these, e.g. item 1). The user's words: "keep improvements where they genuinely add value... but I'd still like the conventions to be roughly the same."
