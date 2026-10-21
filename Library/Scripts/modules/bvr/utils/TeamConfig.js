@@ -57,6 +57,31 @@ class TeamConfig {
     return new TeamConfig({ ...this.#options, seasonRecipients });
   }
 
+  // The two lists of initials typed into a recipients prompt. A blank field
+  // means the default list (defaults: defaultRecipients).
+  static typedRecipients(fieldValues, defaults) {
+    if (typeof Staff == "undefined") require("modules/bvr/utils/Staff.js");
+    const parse = (text, fallback) => {
+      const initials = Staff.parseInitials(text);
+      return initials.length > 0 ? initials : fallback;
+    };
+    return {
+      attendance: parse(fieldValues.attendance, defaults.attendance),
+      gameReport: parse(fieldValues.gameReport, defaults.gameReport),
+    };
+  }
+
+  // The season override to save: only the lists that differ from the
+  // defaults (in any order), or null when both match, so level changes
+  // still reach the team.
+  static recipientOverrides(lists, defaults) {
+    const same = (a, b) => a.length == b.length && a.every((initials) => b.includes(initials));
+    const overrides = {};
+    if (!same(lists.attendance, defaults.attendance)) overrides.attendance = lists.attendance;
+    if (!same(lists.gameReport, defaults.gameReport)) overrides.gameReport = lists.gameReport;
+    return Object.keys(overrides).length > 0 ? overrides : null;
+  }
+
   get teamID() {
     return this.#team.id;
   }

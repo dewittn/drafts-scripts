@@ -140,8 +140,7 @@ class TeamFileStore {
   }
 
   saveFormURL(formName, url) {
-    this.season.formURLs = { ...this.formURLs, [formName]: url };
-    if (this.season.formURL === null) delete this.season.formURL;
+    this.updateSeason(this.seasonID, { formURLs: { ...this.formURLs, [formName]: url } });
     this.save();
   }
 
@@ -179,8 +178,13 @@ class TeamFileStore {
     this.#file.currentSeason = seasonID;
   }
 
-  saveGames() {
-    this.save();
+  // Change some of a season's fields (label, dates, recipients, formURLs,
+  // attendanceDraftID); save() writes them. Writing formURLs drops the
+  // formURL: null that files from before formURLs carry.
+  updateSeason(seasonID, fields) {
+    const entry = this.seasonFor(seasonID);
+    Object.assign(entry, fields);
+    if ("formURLs" in fields && entry.formURL === null) delete entry.formURL;
   }
 
   // Refuses to write anything that would not load back as a team file.
