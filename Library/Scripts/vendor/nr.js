@@ -1,5 +1,6 @@
 // NR Scripts for Drafts App
 // This is a test
+if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
 //------------
 // Extend Draft Object
 
@@ -21,9 +22,9 @@ Draft.prototype.activate = function (actionGroup, workspaceName = "default") {
   editor.load(this);
   editor.activate();
 
-  // find workspace and load it in drafts list
-  const workspace = Workspace.find(workspaceName);
-  app.currentWindow.applyWorkspace(workspace);
+  // find workspace and load it in drafts list, unless it is showing. The
+  // built-in one shows as "Default", so "default" always resets to it
+  DraftsRuntime.loadWorkspace(workspaceName);
 
   if (actionGroup != undefined) {
     const group = ActionGroup.find(actionGroup);
@@ -216,10 +217,8 @@ function getWorkingTitle() {
 function loadSettings(file) {
   const fmCloud = FileManager.createCloud(); // iCloud
   if (file.endsWith(".yaml")) {
-    // Deprecated: name the .json file the build produces
-    const message = `Deprecated .yaml reference: ${file} (use .json)`;
-    console.log(`[loadSettings] ${message}`);
-    if (typeof app != "undefined") app.displayWarningMessage(message);
+    if (typeof CloudFS == "undefined") require("modules/cp/filesystems/CloudFS.js");
+    CloudFS.warnDeprecatedYAML(file, "loadSettings");
   }
   const jsonFile = file.replace(/\.yaml$/, ".json");
   return fmCloud.readJSON(`/Library/Data/${jsonFile}`);

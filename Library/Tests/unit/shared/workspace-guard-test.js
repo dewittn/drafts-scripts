@@ -173,7 +173,10 @@ test.section("Draft.prototype.activate");
 const stubDraft = /** @type {any} */ (new StubDraft());
 showing("Writing");
 stubDraft.activate(undefined, "Writing");
-test.assertDeepEqual(calls(), ["Writing"], "always applied, even when that workspace is showing");
+test.assertDeepEqual(calls(), [], "[item 11 change] skipped when that workspace is showing");
+showing("Default");
+stubDraft.activate(undefined, "Writing");
+test.assertDeepEqual(calls(), ["Writing"], "[item 11 change] applied when another workspace is showing");
 showing("Default");
 stubDraft.activate();
 test.assertDeepEqual(calls(), [undefined], "with no name, applies Workspace.find(\"default\"), which is undefined");
@@ -182,7 +185,9 @@ test.assertDeepEqual(calls(), [undefined], "with no name, applies Workspace.find
 test.section("morning pages action");
 
 // Starting morning pages (the open draft is not one) applies "default"
-// directly and again through Draft.prototype.activate, unguarded.
+// directly and again through Draft.prototype.activate. Both go through
+// DraftsRuntime.loadWorkspace, but "default" never matches the "Default"
+// shown, so both still reset the window.
 /** @type {any} */ (globalThis).Prompt = {
   create: () => ({ addButton() {}, show: () => true }),
 };

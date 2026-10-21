@@ -127,12 +127,11 @@ class Attendance {
     return this.names.length == 0;
   }
 
-  // When the attendance draft is the one the action was run on, work on the
-  // global draft object. Drafts writes that object back to the editor when the
-  // script finishes, so a separate Draft.find() copy gets overwritten.
+  // The attendance draft, as the global draft when the action was run on it
+  // (see DraftsRuntime.findDraft).
   loadDraft() {
-    if (draft.uuid == this.attendanceDraftID) return draft;
-    return Draft.find(this.attendanceDraftID);
+    if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
+    return DraftsRuntime.findDraft(this.attendanceDraftID);
   }
 
   take() {

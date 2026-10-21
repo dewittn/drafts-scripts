@@ -1,4 +1,5 @@
 if (typeof CloudFS == "undefined") require("modules/cp/filesystems/CloudFS.js");
+if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
 class Template {
   static basePath = "/Library/Templates";
   #fs;
@@ -80,10 +81,7 @@ class Template {
     if (this.draft == undefined) return;
 
     // find workspace and load it in drafts list
-    if (this.workspaceName && app.currentWorkspace.name != this.workspaceName) {
-      const workspace = Workspace.find(this.workspaceName);
-      app.currentWindow.applyWorkspace(workspace);
-    }
+    if (this.workspaceName) DraftsRuntime.loadWorkspace(this.workspaceName);
 
     editor.load(this.draft);
     editor.activate();

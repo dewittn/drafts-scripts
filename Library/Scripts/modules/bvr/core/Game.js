@@ -637,7 +637,7 @@ class Game {
   editGame() {
     if (!this.team.season.ensureCurrentSeason()) return;
 
-    const settings = JSON.parse(JSON.stringify(this.ui.settings("editGame")));
+    const settings = this.ui.settingsCopy("editGame");
     if (this.recorded == false || this.draftID == undefined) {
       return this.ui.displayAppMessage("error", settings.notFoundMessage);
     }
@@ -650,7 +650,8 @@ class Game {
     if (changes.length == 0) return this.ui.displayAppMessage("info", "Nothing changed.");
     this.#applyGameEdits(answers);
 
-    const reportDraft = draft.uuid == this.draftID ? draft : Draft.find(this.draftID);
+    if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
+    const reportDraft = DraftsRuntime.findDraft(this.draftID);
     if (this.submitted) this.#readReportComments(reportDraft);
     const notes = this.#rewriteReportDraft(reportDraft, settings.reportSections);
     const recordOutcome = this.team.season.rebuildRecordWith(this, oldRow);

@@ -487,15 +487,15 @@ test.assertEqual(run.recordDraft.lines[5], "| 10/1/2026 | Old Rivals | Home | Lo
 test.assertEqual(foundRecord.updates, 0, "not to a Draft.find copy");
 test.assertEqual(run.reportDraft.updates, 1, "the report, not open, is found with Draft.find");
 
-// Current behavior, which item 10 of the plan changes: appending a new game's
-// row always uses Draft.find, even when the record draft is the open one.
+// Item 10 of the plan changed this: appending a new game's row used
+// Draft.find even when the record draft was the open one.
 run = setUp({ games: twoGames(), edits: undefined });
 foundRecord = fakeDraft("REC", run.recordDraft.content);
 /** @type {any} */ (globalThis).draft = run.recordDraft;
 /** @type {any} */ (globalThis).Draft = { find: (uuid) => (uuid == "REC" ? foundRecord : undefined) };
 run.team.season.updateWith(run.renderGame(gameEntry("GAME-3", "Synthetic C", "Home", ["2", "2"], "Draw", "10/15/2026", { appended: false })));
-test.assertEqual(foundRecord.updates, 1, "[changes in item 10] Record Game Score appends to the Draft.find copy");
-test.assertEqual(foundRecord.lines.slice(-1)[0], "| 10/15/2026 | Synthetic C | Home | Draw | 2 | 2 |", "[changes in item 10] with the new row");
-test.assertEqual(run.recordDraft.updates, 0, "[changes in item 10] even when the record draft is the open draft");
+test.assertEqual(run.recordDraft.updates, 1, "[item 10 change] Record Game Score appends to the open draft when it is the record draft");
+test.assertEqual(run.recordDraft.lines.slice(-1)[0], "| 10/15/2026 | Synthetic C | Home | Draw | 2 | 2 |", "[item 10 change] with the new row");
+test.assertEqual(foundRecord.updates, 0, "[item 10 change] not to a Draft.find copy");
 
 test.summary();

@@ -14,6 +14,7 @@ if (typeof DraftsUI == "undefined") require("shared/libraries/DraftsUI.js");
 if (typeof CloudFS == "undefined") require("modules/cp/filesystems/CloudFS.js");
 if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
 if (typeof ServiceContainer == "undefined") require("shared/core/ServiceContainer.js");
+if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
 require("modules/bvr/messages/message_factory.js");
 
 class BVR {
@@ -245,11 +246,7 @@ class BVR {
   }
 
   #loadWorkspace() {
-    if (app.currentWorkspace.name == this.workspace) {
-      return this.ui.displayAppMessage("info", "Workspace is already loaded.");
-    }
-
-    const bvrWorkspace = Workspace.find(this.workspace);
-    app.currentWindow.applyWorkspace(bvrWorkspace);
+    if (DraftsRuntime.loadWorkspace(this.workspace)) return;
+    this.ui.displayAppMessage("info", "Workspace is already loaded.");
   }
 }

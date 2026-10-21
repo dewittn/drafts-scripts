@@ -25,6 +25,12 @@ class DraftsUI {
     return this.#settings[fnName];
   }
 
+  // A copy of settings(fnName) to change freely: settings() hands back the
+  // same object every call. JSON, since structuredClone is unreliable in Drafts.
+  settingsCopy(fnName) {
+    return JSON.parse(JSON.stringify(this.settings(fnName)));
+  }
+
   // Version 3 of the buildMenu function
   // Builds and returns a prompt based on the menuSettings object
   buildMenu(menuSettings) {

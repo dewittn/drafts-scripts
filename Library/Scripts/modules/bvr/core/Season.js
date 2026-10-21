@@ -292,19 +292,20 @@ class Season {
   // previous: the answers from an attempt being asked again, which prefill
   // every field in place of the season's values.
   #showEditSeasonPrompt(entry, previous) {
-    const section = JSON.parse(JSON.stringify(this.ui.settings("editSeason")));
+    if (typeof BVRUtilities == "undefined") require("modules/bvr/utils/BVRUtilities.js");
+    const section = this.ui.settingsCopy("editSeason");
     const {
       menuSettings, labelField, startDateField, hasEndDateField, endDateField, formField,
       attendanceField, gameReportField, rosterLabel, newRosterField,
     } = section;
-    const startDate = this.#parseYMD(entry.startDate) || new Date();
+    const startDate = BVRUtilities.parseDateYMD(entry.startDate) || new Date();
     const overrides = entry.recipients || {};
     const defaults = this.team.defaultRecipients;
 
     labelField.data.initialText = previous ? previous.label : this.currentSeasonLabel;
     startDateField.data.initialDate = previous ? previous.startDate : startDate;
     hasEndDateField.data.initialValue = previous ? previous.hasEndDate : entry.endDate != undefined;
-    endDateField.data.initialDate = previous ? previous.endDate : this.#parseYMD(entry.endDate) || startDate;
+    endDateField.data.initialDate = previous ? previous.endDate : BVRUtilities.parseDateYMD(entry.endDate) || startDate;
     const formFields = this.team.formNames.map((formName) => {
       const effective = this.#effectiveLink(formName, entry.formURLs, this.term);
       const title = this.#formTitle(formName);
@@ -483,14 +484,6 @@ class Season {
     return this.team.form(formName).title || formName;
   }
 
-  // "2026-09-07" as a local date (new Date("2026-09-07") would be UTC
-  // midnight, the day before in US time zones). Undefined for no date.
-  #parseYMD(value) {
-    if (!value) return undefined;
-    const [year, month, day] = `${value}`.split("-").map(Number);
-    return new Date(year, month - 1, day);
-  }
-
   // The team file when there is one. A team file that exists but cannot be
   // read stops the action: falling back to records.json would hide its games,
   // and writing would overwrite them.
@@ -607,7 +600,7 @@ class Season {
   #promptForRecipients(current) {
     let lists = current;
     for (let attempt = 1; attempt <= 3; attempt++) {
-      const section = JSON.parse(JSON.stringify(this.ui.settings("recipientsPrompt")));
+      const section = this.ui.settingsCopy("recipientsPrompt");
       const { menuSettings, attendanceField, gameReportField } = section;
       attendanceField.data.initialText = lists.attendance.join(", ");
       gameReportField.data.initialText = lists.gameReport.join(", ");
@@ -681,7 +674,7 @@ class Season {
   // cancelling, so nothing is created by accident. The question is ui.yaml's,
   // with [[roster]] and [[season]] filled in.
   #askKeepRoster(draftID, seasonLabel) {
-    const section = JSON.parse(JSON.stringify(this.ui.settings("attendanceDraftPrompt")));
+    const section = this.ui.settingsCopy("attendanceDraftPrompt");
     const { menuSettings } = section;
     menuSettings.menuMessage = menuSettings.menuMessage
       .replace("[[roster]]", () => this.#draftTitle(draftID))
@@ -743,7 +736,7 @@ class Season {
   // something that is not a link is reported and skipped.
   #promptForFormURL(formName, seasonLabel = this.currentSeasonLabel) {
     if (typeof GoogleForm == "undefined") require("modules/bvr/services/GoogleForm.js");
-    const section = JSON.parse(JSON.stringify(this.ui.settings("formURLPrompt")));
+    const section = this.ui.settingsCopy("formURLPrompt");
     const { menuSettings, urlField } = section;
     const title = this.#formTitle(formName);
     menuSettings.menuMessage = `${menuSettings.menuMessage}\n\n${title}, ${seasonLabel}`;
@@ -784,7 +777,7 @@ class Season {
   // ui.settings() hands back the same object every time, so each attempt
   // works on a copy; pushing into the shared one would repeat the fields.
   #showNewSeasonPrompt(initialSeasonID) {
-    const section = JSON.parse(JSON.stringify(this.ui.settings("startNewSeason")));
+    const section = this.ui.settingsCopy("startNewSeason");
     const { menuSettings, seasonIDField, startDateField } = section;
     seasonIDField.data.initialText = initialSeasonID;
     startDateField.data.initialDate = this.#comingMonday();
@@ -836,8 +829,9 @@ class Season {
     }
 
     if (typeof SeasonRecordTable == "undefined") require("modules/bvr/utils/SeasonRecordTable.js");
+    if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
     if (this.recordsDraft == undefined) {
-      this.recordsDraft = Draft.find(this.seasonRecordDraftID);
+      this.recordsDraft = DraftsRuntime.findDraft(this.seasonRecordDraftID);
     }
 
     this.recordsDraft.append(this.recordRow(game));
@@ -885,12 +879,12 @@ class Season {
   }
 
   // The season record draft, as the global draft when it is the open one
-  // (see docs/reference/drafts-runtime.md). Undefined when there is none.
+  // (see DraftsRuntime.findDraft). Undefined when there is none.
   #findRecordsDraft() {
+    if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
     const draftID = this.seasonRecordDraftID;
     if (draftID == undefined) return undefined;
-    if (typeof draft != "undefined" && draft.uuid == draftID) return draft;
-    return Draft.find(draftID);
+    return DraftsRuntime.findDraft(draftID);
   }
 
   // Ask before a rebuild drops rows that no game in the team file accounts
