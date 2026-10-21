@@ -39,6 +39,50 @@ recordScore:
         data:
           name: Go
           value: go
+editGame:
+  # Edit Game: change a recorded game's opponent, location, or score. The
+  # report sections listed are rewritten from game-report.md; the rest of the
+  # report (Highlights, Other/Comments) is left as typed.
+  notFoundMessage: Run Edit Game on a game report from the current season.
+  reportSections:
+    - "## Opponent"
+    - "## Result"
+    - "## Score"
+  opponentField:
+    type: textField
+    data:
+      name: opponent
+      label: Opponent
+  locationField:
+    type: select
+    data:
+      name: location
+      label: Location
+      values:
+        - Home
+        - Away
+  scorePicker:
+    type: picker
+    data:
+      name: score
+      label: Score (your team first)
+  menuSettings:
+    menuTitle: Edit Game
+    menuMessage: "Change the opponent, location, or score. Highlights and comments in the report are left as they are."
+    menuItems:
+      - type: button
+        data:
+          name: Save
+          value: save
+  removeRowsPrompt:
+    menuTitle: Rebuild the season record?
+    menuMessage: "Rebuilding the season record table from the team file would remove rows that no game in the team file matches. Rebuild it anyway?"
+  resendTextsPrompt:
+    menuTitle: Re-send the score texts?
+    menuMessage: This game was already submitted. Send the score texts again with the new details?
+  reviewFormsPrompt:
+    menuTitle: Open the score forms?
+    menuMessage: "Open each score form, filled in with the new details, to correct the submission? Nothing is sent until you submit the form yourself."
 recordDate:
   menuSettings:
     menuTitle: Day of Game

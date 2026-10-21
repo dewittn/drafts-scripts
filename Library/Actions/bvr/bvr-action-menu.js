@@ -3,6 +3,7 @@ const actionList = [
   "Record Attendace",
   "Record Game Score",
   "Submit Game Report",
+  "Edit Game",
   "Create Practice Plan",
 ];
 

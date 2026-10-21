@@ -22,6 +22,16 @@ class Game {
     this.#gameData = this.#loadGameDataFromUUID(uuid);
   }
 
+  // A Game for any entry in the season's games[], not just the open draft's
+  // (Season renders every season record row with these). The entry is copied,
+  // so the game can be read without changing the stored data.
+  static fromJSON(dependencies, gameData) {
+    const game = new Game(dependencies, null);
+    const date = gameData.date == undefined ? undefined : new Date(gameData.date);
+    game.#gameData = { ...gameData, date };
+    return game;
+  }
+
   get bvr() {
     if (!this.#bvr && this.#dependencies == undefined) {
       if (typeof BVR == "undefined") require("modules/bvr/core/BVR.js");
@@ -524,15 +534,7 @@ class Game {
       );
     }
 
-    const { modifiedArray: modifiedDraft, sectionText: comments } = this
-      .#extractSectionText(gameReportDraft.lines, `## Other/Comments`);
-    const { sectionText: highlights } = this.#extractSectionText(
-      modifiedDraft,
-      `## Highlights?`,
-    );
-
-    this.comments = comments;
-    this.highlights = highlights;
+    this.#readReportComments(gameReportDraft);
 
     const googleForms = this.resolveGoogleForms();
     if (this.msgSettings != undefined) this.#sendMessages();
@@ -605,6 +607,158 @@ class Game {
 
     const formSubmittedPrompt = this.ui.buildMenu(menuSettings);
     formSubmittedPrompt.show();
+  }
+
+  // Highlights and comments as typed into the game report draft.
+  #readReportComments(gameReportDraft) {
+    const { modifiedArray: modifiedDraft, sectionText: comments } = this
+      .#extractSectionText(gameReportDraft.lines, `## Other/Comments`);
+    const { sectionText: highlights } = this.#extractSectionText(
+      modifiedDraft,
+      `## Highlights?`,
+    );
+
+    this.comments = comments;
+    this.highlights = highlights;
+  }
+
+  // **********************
+  // Edit Game Functions
+  // **********************
+
+  // Edit Game, run on a game report draft from the current season: change
+  // the opponent, location, or score. The prompt is prefilled from the team
+  // file, never from the report. Rewrites the report's title and its
+  // Opponent, Result, and Score sections, rebuilds the season record table,
+  // and saves the game. A submitted game can then re-send its texts and
+  // open its score forms for review.
+  editGame() {
+    if (!this.team.season.ensureCurrentSeason()) return;
+
+    const settings = JSON.parse(JSON.stringify(this.ui.settings("editGame")));
+    if (this.recorded == false || this.draftID == undefined) {
+      return this.ui.displayAppMessage("error", settings.notFoundMessage);
+    }
+
+    const oldRow = this.team.season.recordRow(this);
+    const answers = this.#askGameEdits(settings);
+    if (answers == undefined) return;
+
+    const changes = this.#describeGameEdits(answers);
+    if (changes.length == 0) return this.ui.displayAppMessage("info", "Nothing changed.");
+    this.#applyGameEdits(answers);
+
+    const reportDraft = draft.uuid == this.draftID ? draft : Draft.find(this.draftID);
+    if (this.submitted) this.#readReportComments(reportDraft);
+    const notes = this.#rewriteReportDraft(reportDraft, settings.reportSections);
+    const recordOutcome = this.team.season.rebuildRecordWith(this, oldRow);
+    notes.push(...this.#recordNotes(recordOutcome));
+
+    if (this.submitted) this.#correctSubmission(settings);
+
+    this.ui.displayAppMessage(this.#editMessageType(recordOutcome, notes), [...changes, ...notes].join(" "));
+  }
+
+  // One prompt with the opponent, location, and score, preset to what the
+  // team file holds. Returns the answers, or undefined when cancelled. A
+  // blank opponent or an unpicked location keeps the current one.
+  #askGameEdits(settings) {
+    const { menuSettings, opponentField, locationField, scorePicker } = settings;
+    const columns = this.#pickerColumns(this.sport.maxScore);
+    opponentField.data.initialText = this.opponent || "";
+    locationField.data.selectedValues = this.location ? [this.location] : [];
+    scorePicker.data.columns = columns;
+    scorePicker.data.selectedRows = this.#recordedScoreRows(this.sport.maxScore);
+    menuSettings.menuItems.push(opponentField, locationField, scorePicker);
+
+    const editPrompt = this.ui.buildMenu(menuSettings);
+    if (editPrompt.show() == false) return undefined;
+
+    const values = editPrompt.fieldValues;
+    const [location] = values[locationField.data.name] || [];
+    const opponent = `${values[opponentField.data.name] || ""}`.trim();
+    return {
+      opponent: opponent == "" ? this.opponent : opponent,
+      location: location || this.location,
+      score: values[scorePicker.data.name].map((row, i) => columns[i][row]),
+    };
+  }
+
+  // The picker rows for the recorded score (row n is the score n), held to
+  // 0..maxScore. A game with no score starts at the sport's usual value.
+  #recordedScoreRows(maxScore) {
+    if (this.score == undefined) return this.selectedRows;
+    return this.score.map((value) => Math.min(Math.max(Number(value) || 0, 0), maxScore));
+  }
+
+  // One sentence per changed field, e.g. "Score 4 - 2 → 5 - 2, now a Win."
+  // Empty when nothing changed.
+  #describeGameEdits({ opponent, location, score }) {
+    const changes = [];
+    if (opponent != this.opponent) changes.push(`Opponent ${this.opponent} → ${opponent}.`);
+    if (location != this.location) changes.push(`Location ${this.location} → ${location}.`);
+
+    const fullScore = score.join(" - ");
+    if (fullScore != this.fullScore) {
+      const result = this.#winLoseOrDraw(score);
+      const resultText = result == this.result ? `still a ${result}` : `now a ${result}`;
+      changes.push(`Score ${this.fullScore} → ${fullScore}, ${resultText}.`);
+    }
+    return changes;
+  }
+
+  #applyGameEdits({ opponent, location, score }) {
+    this.#gameData.opponent = opponent;
+    this.#gameData.location = location;
+    this.#gameData.score = score;
+    this.#gameData.result = this.#winLoseOrDraw(score);
+  }
+
+  // Render game-report.md with the edited game and copy its title line and
+  // the given sections into the report draft; every other line stays as it
+  // was. Returns a note naming any heading the draft is missing.
+  #rewriteReportDraft(reportDraft, headings) {
+    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
+    if (typeof MarkdownSections == "undefined") require("modules/bvr/utils/MarkdownSections.js");
+    const rendered = new Template(this.tmplSettingsGameReport).content.split("\n");
+    const { lines, missing } = MarkdownSections.transplant(reportDraft.content.split("\n"), rendered, headings);
+
+    reportDraft.content = lines.join("\n");
+    reportDraft.update();
+    if (missing.length == 0) return [];
+    const names = missing.map((heading) => heading.replace(/^#+\s*/, ""));
+    return [`Not found in the report, so not updated: ${names.join(", ")}.`];
+  }
+
+  // What to add to the final message about the season record draft.
+  #recordNotes(outcome) {
+    const notes = {
+      declined: "The season record draft was not updated.",
+      missing: "The season record draft could not be found, so it was not updated.",
+      noTable: "The season record draft has no table, so it was not updated.",
+    };
+    return notes[outcome] == undefined ? [] : [notes[outcome]];
+  }
+
+  // An error when the season record draft could not be rebuilt, a warning
+  // for anything else left undone, otherwise success.
+  #editMessageType(recordOutcome, notes) {
+    if (recordOutcome == "missing" || recordOutcome == "noTable") return "error";
+    if (notes.length > 0) return "warning";
+    return "success";
+  }
+
+  // For a game already submitted: offer to re-send the score texts, then to
+  // open each score form prefilled for review. Forms are never posted, even
+  // one set to post directly, and the game day tasks are not run again.
+  #correctSubmission({ resendTextsPrompt, reviewFormsPrompt }) {
+    if (this.msgSettings != undefined && this.ui.yesNoPrompt({ ...resendTextsPrompt }) == "yes") {
+      this.#sendMessages();
+    }
+    if (this.googleFormSettings == undefined || this.googleFormSettings.length == 0) return;
+    if (this.ui.yesNoPrompt({ ...reviewFormsPrompt }) != "yes") return;
+
+    this.resolveGoogleForms().forEach((gform) => this.#submitGoogleForm({ ...gform, postData: false }));
   }
 
   #extractSectionText(array, sectionHeader) {

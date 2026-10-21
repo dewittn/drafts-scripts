@@ -270,6 +270,14 @@ class Team {
     game.submitReport();
   }
 
+  // Edit Game, run on a game report draft: change its opponent, location,
+  // or score.
+  editGame() {
+    if (typeof Game == "undefined") require("modules/bvr/core/Game.js");
+    const game = new Game(this.dependencies);
+    game.editGame();
+  }
+
   createGameDayTasks() {
     if (this.tmplSettings?.thingsProject == undefined) {
       return this.ui.displayAppMessage("info", "No game day tasks found.");

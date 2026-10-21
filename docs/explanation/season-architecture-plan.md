@@ -44,19 +44,21 @@ library runs; all three old teams are migrated to team files and
   draft, with a switch to start a new one. `Team.attendanceDraftID` prefers
   the season's roster draft over `teams.yaml`'s.
 
-**In flight:** nothing.
+**In flight:**
+
+- Edit Game action, on `dev` (built 2026-10-21, not yet checked in Drafts).
+  It replaced the planned Update Score. Run on a current-season game report
+  draft, it changes the score, opponent and location in one prompt prefilled
+  from the team file, never from the report, so hand edits to the report's
+  Score or Opponent are not picked up. It rewrites only the report's title and
+  its Opponent, Result and Score sections from `game-report.md`. The season
+  record table is rebuilt from `games[]` instead of patching one row, since
+  that draft is never edited by hand; it asks first only if a row other than
+  the edited game's would disappear. For a submitted game it asks before
+  re-sending the texts and opens the score forms for review only, never
+  posting. Date could follow later.
 
 **Not started:**
-
-- Update Score action, on `dev` after this branch merges (decided
-  2026-10-20). Run on a game report draft: reopen the score picker preset to
-  the recorded score, recompute the result, rewrite only the Result and Score
-  sections of the report draft, replace the game's row in the season record
-  draft (matched by date and opponent; ask before rebuilding the table), and
-  re-save the game. For an already submitted game, ask before re-sending the
-  texts and only open the score forms for review, since the middle school form
-  posts directly. Current-season games only. Opponent, location and date could
-  follow later as Edit Game.
 
 - Later cleanup, after a full season on team files: drop `startDate` from
   `teams.yaml` (seasons carry their own), stop pushing `records.json` and

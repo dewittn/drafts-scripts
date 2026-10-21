@@ -198,6 +198,29 @@ class Season {
     this.#saveRecordsData(game);
   }
 
+  // Save an edited game, then rewrite the season record draft's table from
+  // this season's games: one row per recorded game, in games[] order (the
+  // order rows were appended). The table is rebuilt rather than patched
+  // because the draft is never edited by hand. oldRow is the edited game's
+  // row before the edit, which is expected to go; removing any other row is
+  // asked about first. Returns "rebuilt", "declined", "missing" (no record
+  // draft), or "noTable". The game is saved whatever happens to the draft.
+  rebuildRecordWith(game, oldRow) {
+    if (game == undefined) {
+      return this.ui.displayAppMessage("error", "Game data missing!");
+    }
+    if (!this.ensureCurrentSeason()) return undefined;
+    const outcome = this.#rebuildRecordsDraft(game, oldRow);
+    this.#saveRecordsData(game);
+    return outcome;
+  }
+
+  // A game's season record row, rendered from game-record-row.md.
+  recordRow(game) {
+    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
+    return new Template(game.tmplSettingsRecordRow).content;
+  }
+
   // A team with history in the old files but no team file keeps the old
   // behavior until it is migrated. Every other team gets a new season in its
   // team file, which is created here for a team with no history at all.
@@ -812,11 +835,63 @@ class Season {
       this.recordsDraft = Draft.find(this.seasonRecordDraftID);
     }
 
-    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
-    const newTableLine = new Template(game.tmplSettingsRecordRow);
-    this.recordsDraft.append(newTableLine.content);
+    this.recordsDraft.append(this.recordRow(game));
     this.recordsDraft.update();
     return true;
+  }
+
+  // Rewrite the record draft's rows from games[] (see rebuildRecordWith).
+  // Every game written gets appended = true; nothing is marked when the
+  // draft is left alone.
+  #rebuildRecordsDraft(game, oldRow) {
+    if (typeof SeasonRecordTable == "undefined") require("modules/bvr/utils/SeasonRecordTable.js");
+    const recordsDraft = this.#findRecordsDraft();
+    if (recordsDraft == undefined) return "missing";
+
+    const written = this.#recordedGames(game);
+    const rows = written.map(({ game: rowGame }) => this.recordRow(rowGame));
+    const rebuilt = SeasonRecordTable.rebuild(recordsDraft.content.split("\n"), rows, [oldRow]);
+    if (rebuilt == undefined) return "noTable";
+    if (rebuilt.vanished.length > 0 && !this.#confirmRemoveRows(rebuilt.vanished)) return "declined";
+
+    recordsDraft.content = rebuilt.lines.join("\n");
+    recordsDraft.update();
+    written.forEach(({ entry, game: rowGame }) => {
+      entry.appended = true;
+      rowGame.appended = true;
+    });
+    return "rebuilt";
+  }
+
+  // The season's recorded games in games[] order, each with its stored
+  // entry and a Game to render it. The edited game is used as given, so
+  // its row shows the edit.
+  #recordedGames(editedGame) {
+    if (typeof Game == "undefined") require("modules/bvr/core/Game.js");
+    return this.currentSeasonRecord
+      .map((entry) => {
+        const isEdited = entry.draftID != undefined && entry.draftID == editedGame.draftID;
+        return { entry, game: isEdited ? editedGame : Game.fromJSON(this.#dependencies, entry) };
+      })
+      .filter(({ game }) => game.recorded);
+  }
+
+  // The season record draft, as the global draft when it is the open one
+  // (see docs/reference/drafts-runtime.md). Undefined when there is none.
+  #findRecordsDraft() {
+    const draftID = this.seasonRecordDraftID;
+    if (draftID == undefined) return undefined;
+    if (typeof draft != "undefined" && draft.uuid == draftID) return draft;
+    return Draft.find(draftID);
+  }
+
+  // Ask before a rebuild drops rows that no game in the team file accounts
+  // for, listing them. True on a yes.
+  #confirmRemoveRows(rows) {
+    const { removeRowsPrompt } = this.ui.settings("editGame");
+    const count = rows.length == 1 ? "1 row" : `${rows.length} rows`;
+    const menuMessage = `${removeRowsPrompt.menuMessage}\n\n${count}:\n${rows.join("\n")}`;
+    return this.ui.yesNoPrompt({ ...removeRowsPrompt, menuMessage }) == "yes";
   }
 
   #saveRecordsData(game) {
