@@ -47,7 +47,7 @@ varsity-score-report:
     - key: hcName
       title: Your Name
       entryID: 1506871634
-    - key: formattedDate
+    - key: googleFormDate
       title: Date of Contest
       entryID: 1355820554
     - key: opponent
