@@ -615,7 +615,8 @@ class Game {
     const sectionText = array
       .splice(sectionStart, sectionEnd)
       .slice(2)
-      .join("");
+      .join("\n")
+      .trim();
     return { modifiedArray: array, sectionText: sectionText };
   }
 
