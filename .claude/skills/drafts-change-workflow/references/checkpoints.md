@@ -34,7 +34,14 @@ That second behavior is the goal. During a sprint, main is the last known-good s
 
 ## When to run it
 
-- **When starting work**, before the first edit. In the sprint pattern the quiet window passes with no commits, so this is when a finished sprint is usually first eligible. Offer it before new edits pile on top.
+- **When starting work**, before the first edit. In the sprint pattern the quiet window passes with no commits, so this is when a finished sprint is usually first eligible. Promote before new edits pile on top.
 - **After each commit.**
+- **Before merging a feature branch into dev**, so main holds the newest settled dev work right before the riskiest change lands. The merge then settles 3 days later as one commit.
 
-Mention a checkpoint only when commits have settled and you have not already offered them in this session. Promote only after the user says yes.
+Whenever commits have settled, run `bun run checkpoint promote` without asking and report it in one line. The point of the buffer is that a production workflow (recording attendance at school, a game report on the bus) never breaks because of an edit that had not proved itself yet. The settle rule already makes that call, and every promotion is a fast-forward with a tag, so an older stable state is always one command away.
+
+## When to hold main
+
+Hold main only while a feature is still in testing. The usual case: the user is mid-test on a change to a production workflow and has to leave before finishing, so they fall back to main for the day (see "Working on main" in SKILL.md). Don't promote again until they say the feature works. Untested rounds are never committed, so the hold only matters for committed rounds of a feature that hasn't been fully tested.
+
+Also skip promotion while the checkout is on `main`. `promote` ends with `git fetch origin main:main`, which git refuses for the checked-out branch, and by then the push to `origin/main` has already happened. Promote after switching back to `dev`.

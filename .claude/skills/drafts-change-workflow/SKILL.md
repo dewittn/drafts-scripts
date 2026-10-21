@@ -11,7 +11,7 @@ Readability and modularity drive about 90% of the user's code choices. When in d
 
 ## At the start of work
 
-Run `bun run checkpoint`. If commits have settled, offer the checkpoint in one line before starting edits, for example: "12 commits from the last sprint have settled. Want me to move main forward before we start?" Promote only on a yes (`bun run checkpoint promote`). A finished sprint usually becomes eligible during the quiet stretch, when nobody is committing, so the start of the next sprint is when to catch it. See [references/checkpoints.md](references/checkpoints.md) for the rule and why it is 3 days.
+Run `bun run checkpoint`. If commits have settled, run `bun run checkpoint promote` without asking, then report it in one line, for example: "Moved main to 2026.10.002 (12 commits from the last sprint)." The settle rule is the judgment the user wants applied. Asking each time adds a question, not safety. A finished sprint usually becomes eligible during the quiet stretch, when nobody is committing, so the start of the next sprint is when to catch it. See [references/checkpoints.md](references/checkpoints.md) for the rule, why it is 3 days, and the two cases where main is held back.
 
 Check the branch. Work normally happens on `dev`. If the user is on `main`, see "Working on main" below.
 
@@ -76,20 +76,23 @@ Expect a few rounds. The user often doesn't have the full picture until they use
 When the user says a round works in Drafts, commit right away without asking, following the global `commit` skill. Make one commit per working round, in the gitmoji style of `git log` (for example "✨ Ask before attaching the signature in Send to Fastmail"). Never commit a round that failed or hasn't been tried. Changes that never reach Drafts (docs, build tooling, tests) can be committed once their own checks pass.
 
 - **On dev:** commit and push, with no PR. The global commit skill opens a PR for any branch other than main. Skip that here, because main only moves through checkpoints.
-- **On a feature branch:** commit and push each working round. When the feature is done, open a PR into `dev`, merge it with a merge commit, and delete the branch (as with PRs #4 to #8).
+- **On a feature branch:** commit and push each working round. When the feature is done, run a checkpoint on `dev` first, so main holds the newest settled work before the riskiest change lands. Then open a PR into `dev`, merge it with a merge commit, and delete the branch (as with PRs #4 to #8).
 
-Then run `bun run checkpoint` and offer a checkpoint if commits have settled that you haven't offered yet this session. If nothing has settled, give the date the script reports ("these settle on Oct 20"), but don't promise to follow up. A later session won't remember the promise. The start-of-work check in whichever session runs next makes the offer.
+Then run `bun run checkpoint` and promote if anything has settled, as at the start of work. If nothing has settled, give the date the script reports ("these settle on Oct 20"), but don't promise to follow up. A later session won't remember the promise. The start-of-work check in whichever session runs next does the promotion.
 
 Keep the report short: what was committed, and the checkpoint status. Don't explain the workflow back to the user (why there's no PR, why main didn't move). They wrote these rules.
 
 ## Working on main
 
-Main is where the user goes when dev is broken and they need a working script.
+Main is where the user goes when dev is broken and they need a working script. They also go there before work when a change to a production workflow, such as recording attendance at school, is still in testing and they need the stable version in their pocket. The whole buffer exists for that moment.
 
 1. Stop `bun run watch` if it is running.
-2. `git switch main`, then `bun run sync`. Main may still use the older Gulp pipeline. `bun run sync` works on both.
-3. Commit a fix on main the same way as on dev, push it, then merge main into dev right away (`git switch dev && git merge main`). This keeps main an ancestor of dev. Otherwise checkpoints can't fast-forward and the fix gets lost.
-4. Run `bun run sync` again after switching back to dev, so iCloud matches the checkout.
+2. If dev has uncommitted work, stash it (`git stash push -u -m "<what it is>"`) so it survives the switch, and say so.
+3. `git switch main`, then `bun run sync`. Main may still use the older Gulp pipeline. `bun run sync` works on both.
+4. Commit a fix on main the same way as on dev, push it, then merge main into dev right away (`git switch dev && git merge main`). This keeps main an ancestor of dev. Otherwise checkpoints can't fast-forward and the fix gets lost.
+5. Run `bun run sync` again after switching back to dev (and `git stash pop` if you stashed), so iCloud matches the checkout.
+
+If main itself turns out to be broken, for example a seasonal script that settled months ago but had not run since, fall back further to an earlier checkpoint tag: `git switch --detach <tag>`, then `bun run sync`. `git tag --sort=-creatordate` lists them, newest first.
 
 ## Delegating
 
