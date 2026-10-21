@@ -9,7 +9,7 @@ One commit per stage on the branch, each reviewed before the next starts. The br
 
 | Stage | Items | State |
 |---|---|---|
-| 0. Safety net | tests for touched-but-uncovered paths; tests read the real `ui.yaml`; Drafts load check | done (load check not yet run in Drafts) |
+| 0. Safety net | tests for touched-but-uncovered paths; tests read the real `ui.yaml`; Drafts load check (replaced by the `bun run typecheck` require check) | done |
 | 1. Use what exists | 1–3, 5–9 | done |
 | 2. Send to Fastmail | 4, 20 | done |
 | 3. Shared helpers | 10–12, 15, 17 | done |

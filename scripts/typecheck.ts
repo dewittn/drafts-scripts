@@ -25,8 +25,16 @@
  *    in its own program holding only that file plus what it transitively
  *    require()s, the same set of files Drafts would load for it.
  *
+ * 3. Require check. Library files are checked together, where every class is
+ *    visible, so a missing require() in one never shows there. For each action,
+ *    the "Cannot find name" errors (TS2304, TS2552) in the library files of its
+ *    program are reported too, once per file and position, naming the first
+ *    action by path that hit it. The action is kept out of the baseline key.
+ *    Limit: a class counts as loaded when any file in the chain requires it,
+ *    even inside a method that has not run yet, so load order is not checked.
+ *
  * Compiler options and the file list come from tsconfig.json, so editors see
- * the same settings (minus the two fixes above). The Bun tooling in scripts/
+ * the same settings (minus fixes 1 and 2 above). The Bun tooling in scripts/
  * is checked as well, under scripts/tsconfig.json.
  *
  * Known errors that predate type checking are recorded in
@@ -131,9 +139,38 @@ const libraryProgram = ts.createProgram([...typeFiles, ...vendorFiles, ...librar
 diagnostics.push(...libraryProgram.getOptionsDiagnostics(), ...libraryProgram.getGlobalDiagnostics());
 for (const file of [...typeFiles, ...libraries]) diagnostics.push(...fileDiagnostics(libraryProgram, file));
 
-for (const entry of entries) {
+// Require check: "Cannot find name" (and its "Did you mean" form) in a library
+// file means a class or function that file uses is not loaded by this action.
+const nameNotFound = new Set([2304, 2552]);
+const isAction = (file: string) => file.startsWith(`${actionsDir}/`) && !file.endsWith("-test.js");
+const isLibraryFile = (file: string) => file.startsWith(`${scriptsDir}/`);
+
+// One name-not-found error per file and position, however many actions hit it,
+// so it counts once against the baseline. The library program's own errors are
+// seeded first and so are never counted twice.
+const positionOf = (diagnostic: ts.Diagnostic) => `${diagnostic.file!.fileName}:${diagnostic.start}`;
+const seenNotFound = new Set(diagnostics.filter((d) => d.file && nameNotFound.has(d.code)).map(positionOf));
+
+// The action that exposed each require-check error. Shown in the output only,
+// never part of the baseline key. Actions run in sorted order, so it is the
+// first such action by path.
+const loadedVia = new Map<ts.Diagnostic, string>();
+
+function requireCheck(program: ts.Program, action: string) {
+  for (const file of program.getRootFileNames().filter(isLibraryFile)) {
+    for (const diagnostic of fileDiagnostics(program, file)) {
+      if (!nameNotFound.has(diagnostic.code) || seenNotFound.has(positionOf(diagnostic))) continue;
+      seenNotFound.add(positionOf(diagnostic));
+      loadedVia.set(diagnostic, relative(root, action));
+      diagnostics.push(diagnostic);
+    }
+  }
+}
+
+for (const entry of entries.toSorted()) {
   const program = ts.createProgram([...typeFiles, ...loadedBy(entry)], options, host);
   diagnostics.push(...fileDiagnostics(program, entry));
+  isAction(entry) && requireCheck(program, entry);
 }
 
 // The Bun tooling in scripts/ is TypeScript with its own strict config. It is
@@ -205,7 +242,15 @@ const formatHost: ts.FormatDiagnosticsHost = {
   getNewLine: () => "\n",
 };
 const format = process.stdout.isTTY ? ts.formatDiagnosticsWithColorAndContext : ts.formatDiagnostics;
-reported.length > 0 && console.log(format(reported, formatHost));
+
+// Name the action on require-check errors, after baseline matching.
+const withAction = (diagnostic: ts.Diagnostic): ts.Diagnostic => {
+  const action = loadedVia.get(diagnostic);
+  if (action == undefined) return diagnostic;
+  const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, " ");
+  return { ...diagnostic, messageText: `${message} (loaded by ${action})` };
+};
+reported.length > 0 && console.log(format(reported.map(withAction), formatHost));
 
 console.log(
   `Checked ${libraries.length} library files, ${entries.length} entry points, and ` +

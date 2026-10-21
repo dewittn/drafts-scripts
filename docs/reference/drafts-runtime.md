@@ -41,6 +41,8 @@ To run a unit test file this way, capture `console.log` into an array, `require(
 
 Avoid actions that call `alert()` (such as "Singleton Simple") when driving Drafts through the MCP server. An alert blocks until someone dismisses it.
 
+- Each iCloud `FileManager` call is slow: one `listContents` plus two `isDirectory` calls took about 20 seconds on 2026-10-21. A probe run through Eval Draft should not list folders or read many files.
+
 ## Build environment
 
 Commits are SSH-signed through `op-ssh-sign`, and `bun run sync` runs `op inject` for `.yaml.tpl` secrets. Both fail with "1Password: Could not connect to socket. Is the agent running?" when the 1Password **desktop app** is not running (the Safari extension alone does not count). Check `pgrep -x 1Password`. If it is absent, `open -a 1Password`, wait a few seconds, and retry. If it is running and Claude Code's sandbox is on, the sandbox is blocking the socket.

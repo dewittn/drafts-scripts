@@ -34,11 +34,12 @@ Where things usually live:
 
 | Need | Look at |
 |---|---|
-| Prompts, menus, yes/no, success and error messages | `shared/libraries/DraftsUI.js` (`buildMenu`, `yesNoPrompt`, `display*Message`) |
+| Prompts, menus, yes/no, success and error messages | `shared/libraries/DraftsUI.js` (`buildMenu`, `yesNoPrompt`, `display*Message`, `settingsCopy`) |
+| The open draft, switching workspaces | `shared/libraries/DraftsRuntime.js` (`findDraft`, `loadWorkspace`) |
 | Loading settings, new drafts, templates, tags | `vendor/nr.js` (`loadSettings`, `newDraft`, `fetchTemplate`, `appendTags`) |
 | Service APIs | `shared/libraries/` (`nocodb.js`, `fastmail.js`, `bear.js`, `ulysses-v2.js`, `kutt.js`, `PushoverAlert.js`) |
 | Pickers built from records, action menus | `shared/libraries/UIUtilities.js`, `ActionMenu.js` |
-| Text helpers | `modules/cp/utils/TextUtilities.js`, `modules/bvr/utils/BVRUtilities.js` |
+| Text and date helpers | `modules/cp/utils/TextUtilities.js`, `modules/bvr/utils/BVRUtilities.js` (`formatDateYMD`, `parseDateYMD`) |
 | How a similar action is put together | Sibling files in `Library/Actions/<area>/` |
 | Test mocks | `Library/Tests/fixtures/mocks.js` |
 
