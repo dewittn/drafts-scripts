@@ -234,7 +234,8 @@ recipientsPrompt:
 attendanceDraftPrompt:
   menuSettings:
     menuTitle: Roster Draft
-    menuMessage: "Keep the current roster draft, or start a new one?"
+    # [[roster]] is the current roster draft's title, [[season]] the new season.
+    menuMessage: 'Keep "[[roster]]" for [[season]], or start a new one?'
     menuItems:
       - type: button
         data:

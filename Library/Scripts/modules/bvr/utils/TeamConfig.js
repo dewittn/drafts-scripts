@@ -22,11 +22,12 @@ class TeamConfig {
   #options;
 
   // team: the teams.yaml entry. level, forms: parsed settings. staff: a Staff.
+  // attendanceOffice: the office's initials (settings.yaml.tpl).
   // templateExists(file) tells whether a Library/Templates file exists.
   // seasonRecipients: the current season's { attendance, gameReport }
   // initials, which replace the recipient lists (nothing else) when set.
   constructor(options) {
-    const { team, level, forms, staff, attendanceOffice = "ATT", templateExists = (_file) => false, seasonRecipients } = options;
+    const { team, level, forms, staff, attendanceOffice, templateExists = (_file) => false, seasonRecipients } = options;
     this.#options = options;
     this.#seasonRecipients = seasonRecipients == undefined ? {} : seasonRecipients;
     this.#team = team;

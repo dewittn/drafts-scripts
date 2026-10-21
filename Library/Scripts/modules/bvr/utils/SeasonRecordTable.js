@@ -21,13 +21,12 @@ class SeasonRecordTable {
   // The lines with the title (the first "# " line) ending in (tally), in
   // place of the record it had, if any. Unchanged when there is no title.
   static withTally(lines, tally) {
-    const updated = [...lines];
-    const title = updated.findIndex((line) => line.startsWith("# "));
-    if (title == -1) return updated;
+    if (typeof MarkdownSections == "undefined") require("modules/bvr/utils/MarkdownSections.js");
+    const title = MarkdownSections.titleIndex(lines);
+    if (title == -1) return [...lines];
 
-    const bareTitle = updated[title].replace(SeasonRecordTable.tallyPattern, "").trimEnd();
-    updated[title] = `${bareTitle} (${tally})`;
-    return updated;
+    const bareTitle = lines[title].replace(SeasonRecordTable.tallyPattern, "").trimEnd();
+    return MarkdownSections.replaceTitle(lines, `${bareTitle} (${tally})`);
   }
 
   // Index of the table's separator row, or -1 when the draft has no table.

@@ -436,22 +436,22 @@ submittedReport = submitWith((text) => text.replace("Great defense.  \n", "").re
 test.assertEqual(submittedReport.highlights, "", "an untouched report has no highlights");
 test.assertEqual(submittedReport.comments, "", "and no comments");
 
-// Item 1 of docs/explanation/conventions-refactor-plan.md may change the
-// cases below; they record what the splice-based reader does today.
+// Edge cases. Item 1 of docs/explanation/conventions-refactor-plan.md moved
+// the reader to MarkdownSections.body; a missing heading still reads as empty.
 submittedReport = submitWith((text) => text.replace("## Highlights?\n", ""));
-test.assertEqual(submittedReport.highlights, "", "[may change, item 1] no Highlights heading: highlights are empty");
-test.assertEqual(submittedReport.comments, "Bus was late.", "[may change, item 1] and comments are still read");
+test.assertEqual(submittedReport.highlights, "", "no Highlights heading: highlights are empty");
+test.assertEqual(submittedReport.comments, "Bus was late.", "and comments are still read");
 
 submittedReport = submitWith((text) => text.replace("## Other/Comments\n", ""));
-test.assertEqual(submittedReport.comments, "", "[may change, item 1] no Other/Comments heading: comments are empty");
+test.assertEqual(submittedReport.comments, "", "no Other/Comments heading: comments are empty");
 test.assertEqual(
   submittedReport.highlights,
   "Great defense.  \n\n\n\n_(Any notes about refs, buses, etc)_\nBus was late.",
-  "[may change, item 1] and highlights run to the end of the report",
+  "and highlights run to the end of the report",
 );
 
 submittedReport = submitWith((text) => text.replace("_Check for grammar and spelling. Please include some statistical info if possible._\n", ""));
-test.assertEqual(submittedReport.highlights, "", "[may change, item 1] with the instruction line deleted, the first typed line is dropped");
+test.assertEqual(submittedReport.highlights, "Great defense.", "[item 1 fix] with the instruction line deleted, the first typed line is kept");
 
 // Edit Game on a submitted game reads them the same way, from the open draft.
 games = [gameEntry("GAME-1", "Old Rivals", "Home", ["4", "2"], "Win", "10/1/2026", { submitted: true }), twoGames()[1]];

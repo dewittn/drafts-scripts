@@ -6,8 +6,6 @@
  * child classes to access dependencies on-demand, eliminating
  * initialization order issues.
  */
-if (typeof ServiceContainer == "undefined") require("shared/core/ServiceContainer.js");
-
 class DependencyProvider {
   #context;
   #tableName;
@@ -62,6 +60,6 @@ class DependencyProvider {
   }
 
   get ulysses() {
-    return ServiceContainer.getInstance().get('ulysses');
+    return this.#context.ulysses;
   }
 }

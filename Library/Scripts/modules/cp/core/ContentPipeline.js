@@ -25,6 +25,7 @@ class ContentPipeline {
   #ui;
   #db;
   #text;
+  #ulysses;
   #recent;
   #statuses;
   #settings;
@@ -151,6 +152,13 @@ class ContentPipeline {
       this.#text = this.#services.get("textUtilities");
     }
     return this.#text;
+  }
+
+  get ulysses() {
+    if (!this.#ulysses) {
+      this.#ulysses = this.#services.get("ulysses");
+    }
+    return this.#ulysses;
   }
 
   get statuses() {

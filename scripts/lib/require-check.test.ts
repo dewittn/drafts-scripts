@@ -21,7 +21,6 @@ const allowlist = [
   "modules/bvr/core/Sport.js Settings",
   "modules/bvr/core/Team.js PracticePlan",
   "modules/bvr/core/Team.js TeamConfig",
-  "modules/bvr/core/Team.js TmplSettings",
   "shared/libraries/nocodb.js Settings",
 ];
 

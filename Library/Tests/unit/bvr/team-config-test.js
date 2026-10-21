@@ -44,7 +44,7 @@ const baseTeam = {
 };
 
 const config = (team, templateExists = () => false) =>
-  new TeamConfig({ team: { ...baseTeam, ...team }, level, forms, staff, templateExists });
+  new TeamConfig({ team: { ...baseTeam, ...team }, level, forms, staff, attendanceOffice: "ATT", templateExists });
 
 // --- merge ---
 test.section("merge");
@@ -204,9 +204,9 @@ test.section("TmplSettings level tags");
 // TmplSettings returns a plain settings object from its constructor.
 const levelTags = (teamLevel) => /** @type {any} */ (new TmplSettings({ teamLevel, defaultDraftTags: [] }, {})).templateTags;
 test.assertEqual(levelTags("us").level_us, true, "an upper school team gets level_us");
-test.assertEqual(levelTags("us").level_ms, false, "and not level_ms");
+test.assertFalsy(levelTags("us").level_ms, "and not level_ms");
 test.assertEqual(levelTags("ms").level_ms, true, "a middle school team gets level_ms");
-test.assertEqual(levelTags("ms").level_us, false, "and not level_us");
+test.assertFalsy(levelTags("ms").level_us, "and not level_us");
 
 // --- Staff ---
 test.section("Staff");

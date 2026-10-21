@@ -121,7 +121,11 @@ function mockTeam(bvr, overrides = {}) {
       };
     },
   });
-  team.dependencies = { bvr, team, tmplSettings: { seasonRecord: { templateFile: "bvr/game-season-record.md" } } };
+  team.dependencies = {
+    bvr,
+    team,
+    tmplSettings: { seasonRecord: { templateFile: "bvr/game-season-record.md" }, attendance: { templateFile: "bvr/attendance.md" } },
+  };
   team.season = new Season(team.dependencies);
   team.linksFile = savable({ schemaVersion: 1, terms: {} });
   team.season.formLinks = new FormLinkStore(team.linksFile);

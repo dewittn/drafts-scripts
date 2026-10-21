@@ -611,15 +611,17 @@ class Game {
 
   // Highlights and comments as typed into the game report draft.
   #readReportComments(gameReportDraft) {
-    const { modifiedArray: modifiedDraft, sectionText: comments } = this
-      .#extractSectionText(gameReportDraft.lines, `## Other/Comments`);
-    const { sectionText: highlights } = this.#extractSectionText(
-      modifiedDraft,
-      `## Highlights?`,
-    );
+    if (typeof MarkdownSections == "undefined") require("modules/bvr/utils/MarkdownSections.js");
+    this.comments = this.#typedSectionText(gameReportDraft.lines, "## Other/Comments");
+    this.highlights = this.#typedSectionText(gameReportDraft.lines, "## Highlights?");
+  }
 
-    this.comments = comments;
-    this.highlights = highlights;
+  // A report section's text without the template's italic instruction line
+  // (when it is still there), trimmed. Empty when the heading is missing.
+  #typedSectionText(lines, heading) {
+    const body = MarkdownSections.body(lines, heading) || [];
+    const isInstruction = /^_.*_$/.test(`${body[0] || ""}`.trim());
+    return (isInstruction ? body.slice(1) : body).join("\n").trim();
   }
 
   // **********************
@@ -759,25 +761,5 @@ class Game {
     if (this.ui.yesNoPrompt({ ...reviewFormsPrompt }) != "yes") return;
 
     this.resolveGoogleForms().forEach((gform) => this.#submitGoogleForm({ ...gform, postData: false }));
-  }
-
-  #extractSectionText(array, sectionHeader) {
-    const { sectionStart, sectionEnd } = this.#getSectionStartEnd(
-      array,
-      sectionHeader,
-    );
-    const sectionText = array
-      .splice(sectionStart, sectionEnd)
-      .slice(2)
-      .join("\n")
-      .trim();
-    return { modifiedArray: array, sectionText: sectionText };
-  }
-
-  #getSectionStartEnd(array, text) {
-    return {
-      sectionStart: array.findIndex((item) => item == text),
-      sectionEnd: array.length,
-    };
   }
 }

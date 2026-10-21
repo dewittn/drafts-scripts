@@ -256,7 +256,7 @@ class Season {
     }
 
     const { changed, seasonChanged, sharedChanged } = this.#applySeasonEdits(entry, changes);
-    const roster = answers.newRoster ? this.#createAttendanceDraft(entry.label || `${this.currentSeasonID}`) : undefined;
+    const roster = answers.newRoster ? this.#createAttendanceDraft(this.currentSeasonLabel) : undefined;
     if (roster != undefined) {
       entry.attendanceDraftID = roster.draftID;
       changed.push("roster draft");
@@ -266,7 +266,7 @@ class Season {
     if (sharedChanged) this.formLinks.save();
     if (seasonChanged || roster != undefined) this.store.saveGames();
     if (roster != undefined) this.bvr.pinDraft(roster.draft);
-    this.ui.displayAppMessage("success", `Updated ${entry.label || this.currentSeasonID}: ${changed.join(", ")}.`);
+    this.ui.displayAppMessage("success", `Updated ${this.currentSeasonLabel}: ${changed.join(", ")}.`);
   }
 
   // Show the Edit Season prompt, asking again (up to three times, with what
@@ -301,7 +301,7 @@ class Season {
     const overrides = entry.recipients || {};
     const defaults = this.team.defaultRecipients;
 
-    labelField.data.initialText = previous ? previous.label : entry.label || `${this.currentSeasonID}`;
+    labelField.data.initialText = previous ? previous.label : this.currentSeasonLabel;
     startDateField.data.initialDate = previous ? previous.startDate : startDate;
     hasEndDateField.data.initialValue = previous ? previous.hasEndDate : entry.endDate != undefined;
     endDateField.data.initialDate = previous ? previous.endDate : this.#parseYMD(entry.endDate) || startDate;
@@ -464,6 +464,7 @@ class Season {
   }
 
   #termLabel(term) {
+    if (typeof TeamFileStore == "undefined") require("modules/bvr/storage/TeamFileStore.js");
     return TeamFileStore.seasonLabel(term);
   }
 
@@ -677,26 +678,28 @@ class Season {
   }
 
   // True to keep the current roster draft. Keep is the default, and so is
-  // cancelling, so nothing is created by accident.
+  // cancelling, so nothing is created by accident. The question is ui.yaml's,
+  // with [[roster]] and [[season]] filled in.
   #askKeepRoster(draftID, seasonLabel) {
     const section = JSON.parse(JSON.stringify(this.ui.settings("attendanceDraftPrompt")));
     const { menuSettings } = section;
-    const title = this.#draftTitle(draftID);
-    menuSettings.menuMessage = `Keep "${title}" for ${seasonLabel}, or start a new one?`;
+    menuSettings.menuMessage = menuSettings.menuMessage
+      .replace("[[roster]]", () => this.#draftTitle(draftID))
+      .replace("[[season]]", () => seasonLabel);
     const rosterPrompt = this.ui.buildMenu(menuSettings);
     if (rosterPrompt.show() == false) return true;
     return rosterPrompt.buttonPressed != "new";
   }
 
-  // A new roster draft from bvr/attendance.md, tagged for the team. Its
-  // title names the team and season, which Update Roster compares with the
-  // current season; the template's [[date]] tag fills in the "_For:" line.
+  // A new roster draft from the team's attendance template, tagged for the
+  // team. Its title names the team and season (Team.rosterTitle, which Update
+  // Roster compares); the template's [[date]] tag fills in the "_For:" line.
   #createAttendanceDraft(seasonLabel) {
     if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
-    const templateFile = this.#tmplSettings?.attendance?.templateFile || "bvr/attendance.md";
+    const { templateFile } = this.#tmplSettings.attendance;
     const roster = new Template({
       templateFile,
-      draftTags: [this.team.defaultTag],
+      draftTags: this.defaultDraftTags,
       templateTags: { team_abbr: this.team.abbr, season_label: seasonLabel },
     });
     roster.save();
@@ -742,7 +745,7 @@ class Season {
     if (typeof GoogleForm == "undefined") require("modules/bvr/services/GoogleForm.js");
     const section = JSON.parse(JSON.stringify(this.ui.settings("formURLPrompt")));
     const { menuSettings, urlField } = section;
-    const title = this.team.form(formName).title || formName;
+    const title = this.#formTitle(formName);
     menuSettings.menuMessage = `${menuSettings.menuMessage}\n\n${title}, ${seasonLabel}`;
     menuSettings.menuItems.push(urlField);
 
