@@ -9,6 +9,7 @@ if (typeof NocoController == "undefined") require("modules/cp/databases/NocoDB.j
 if (typeof DocumentFactory == "undefined") require("modules/cp/documents/DocumentFactory.js");
 if (typeof TemplateFactory == "undefined") require("modules/cp/templates/template_factory.js");
 if (typeof ServiceContainer == "undefined") require("shared/core/ServiceContainer.js");
+if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
 
 // Manager classes
 if (typeof BaseManager == "undefined") require("modules/cp/managers/BaseManager.js");
@@ -25,6 +26,7 @@ class ContentPipeline {
   #ui;
   #db;
   #text;
+  #ulysses;
   #recent;
   #statuses;
   #settings;
@@ -151,6 +153,13 @@ class ContentPipeline {
       this.#text = this.#services.get("textUtilities");
     }
     return this.#text;
+  }
+
+  get ulysses() {
+    if (!this.#ulysses) {
+      this.#ulysses = this.#services.get("ulysses");
+    }
+    return this.#ulysses;
   }
 
   get statuses() {
@@ -480,11 +489,6 @@ class ContentPipeline {
 
   #loadWorkspace() {
     const { defaultWorkspace } = this.settings;
-    // Each applyWorkspace call leaks native memory in Drafts, so skip it when
-    // the workspace is already showing
-    if (app.currentWorkspace.name == defaultWorkspace) return;
-
-    const workspace = Workspace.find(defaultWorkspace);
-    app.currentWindow.applyWorkspace(workspace);
+    DraftsRuntime.loadWorkspace(defaultWorkspace);
   }
 }

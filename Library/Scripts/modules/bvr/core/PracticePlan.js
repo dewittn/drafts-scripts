@@ -187,8 +187,8 @@ class PracticePlan {
   // Season week of currentDate, counting ISO weeks (Monday to Sunday) from
   // startDate ("YYYY-MM-DD"). The week holding the start date is week 1.
   static weekNumber(startDate, currentDate = new Date()) {
-    const parts = startDate.split("-");
-    const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    if (typeof BVRUtilities == "undefined") require("modules/bvr/utils/BVRUtilities.js");
+    const start = BVRUtilities.parseDateYMD(startDate);
     const msPerWeek = 7 * 24 * 60 * 60 * 1000;
     const weeks = (this.isoMonday(currentDate) - this.isoMonday(start)) / msPerWeek;
     return Math.floor(weeks) + 1;

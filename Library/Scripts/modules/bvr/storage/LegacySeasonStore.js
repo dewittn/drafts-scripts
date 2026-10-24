@@ -88,7 +88,7 @@ class LegacySeasonStore {
 
   saveFormURL(formName, url) {
     this.season.formURLs = { ...this.formURLs, [formName]: url };
-    this.saveGames();
+    this.save();
   }
 
   practicePlanKey(weekID) {
@@ -108,7 +108,9 @@ class LegacySeasonStore {
     return hasKeys(this.records[this.#teamID]) || hasKeys(this.ppData[this.#teamID]);
   }
 
-  saveGames() {
+  // Writes records.json. There is no updateSeason: records.json has nowhere
+  // to keep labels and dates, so Edit Season refuses an unmigrated team.
+  save() {
     this.records.save();
   }
 }

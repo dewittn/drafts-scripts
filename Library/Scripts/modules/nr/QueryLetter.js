@@ -1,4 +1,5 @@
 if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
+if (typeof TextUtilities == "undefined") require("modules/cp/utils/TextUtilities.js");
 
 // Generates a personalized query letter for a literary agent.
 //
@@ -99,14 +100,19 @@ class QueryLetter {
 
     const { [pickerData.name]: pickerValue, ...fieldValues } = prompt.fieldValues;
     const agent = agents[pickerValue[0]];
+    const templateTags = { agent: agent.name, agentNote: agent.note, ...this.#templateTagsFrom(fieldValues) };
 
-    // Every other prompt field becomes a template tag with the same name.
-    // Select fields return arrays, so their choices are lowercased (the prompt
-    // shows them capitalized, the letter uses them mid-sentence) and joined
-    // into one string. Each chosen value also sets a "<field>_<choice>" tag,
-    // with spaces as underscores, so Mustache sections like {{#queryType_email}}
-    // or {{#queryType_query_manager}} can switch on it.
-    const templateTags = { agent: agent.name, agentNote: agent.note };
+    return { agent, templateTags, choiceTags: this.#choiceTags(fieldValues) };
+  }
+
+  // Every other prompt field becomes a template tag with the same name.
+  // Select fields return arrays, so their choices are lowercased (the prompt
+  // shows them capitalized, the letter uses them mid-sentence) and joined
+  // into one string. Each chosen value also sets a "<field>_<choice>" tag,
+  // with spaces as underscores, so Mustache sections like {{#queryType_email}}
+  // or {{#queryType_query_manager}} can switch on it.
+  #templateTagsFrom(fieldValues) {
+    const templateTags = {};
     for (const [key, value] of Object.entries(fieldValues)) {
       if (typeof value == "string") templateTags[key] = value;
       if (Array.isArray(value)) {
@@ -115,18 +121,18 @@ class QueryLetter {
         choices.forEach((choice) => (templateTags[`${key}_${choice.replace(/\s+/g, "_")}`] = choice));
       }
     }
-
-    return { agent, templateTags, choiceTags: this.#choiceTags(fieldValues) };
+    return templateTags;
   }
 
   // Draft tags from the select fields listed in tagFields. Each chosen value
-  // becomes a tag, lowercased with spaces as hyphens ("Query Manager" ->
-  // query-manager), so a new choice added in settings tags itself.
+  // becomes a tag slug ("Query Manager" -> query-manager), so a new choice
+  // added in settings tags itself.
   #choiceTags(fieldValues) {
     const { tagFields = [] } = this.settings;
+    const text = new TextUtilities();
     return tagFields
       .flatMap((field) => fieldValues[field] ?? [])
-      .map((choice) => choice.toLowerCase().replace(/\s+/g, "-"));
+      .map((choice) => text.convertTitleToSlug(choice));
   }
 
   #createLetter(agent, templateTags, choiceTags = []) {

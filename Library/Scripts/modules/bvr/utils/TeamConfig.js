@@ -1,3 +1,5 @@
+if (typeof DataFile == "undefined") require("modules/cp/filesystems/CloudFS.js");
+
 // A team's settings, assembled from layers: the level defaults
 // (bvr/levels/<level>.json), the team's own overrides in teams.yaml, the
 // school-wide forms (bvr/forms.json), and the staff directory for contact
@@ -22,11 +24,12 @@ class TeamConfig {
   #options;
 
   // team: the teams.yaml entry. level, forms: parsed settings. staff: a Staff.
+  // attendanceOffice: the office's initials (settings.yaml.tpl).
   // templateExists(file) tells whether a Library/Templates file exists.
   // seasonRecipients: the current season's { attendance, gameReport }
   // initials, which replace the recipient lists (nothing else) when set.
   constructor(options) {
-    const { team, level, forms, staff, attendanceOffice = "ATT", templateExists = (_file) => false, seasonRecipients } = options;
+    const { team, level, forms, staff, attendanceOffice, templateExists = (_file) => false, seasonRecipients } = options;
     this.#options = options;
     this.#seasonRecipients = seasonRecipients == undefined ? {} : seasonRecipients;
     this.#team = team;
@@ -39,8 +42,7 @@ class TeamConfig {
 
   // Objects merge key by key; lists and plain values in the override replace.
   static merge(base, override) {
-    const isObject = (value) => typeof value == "object" && value != null && !Array.isArray(value);
-    if (!isObject(base) || !isObject(override)) {
+    if (!DataFile.isObject(base) || !DataFile.isObject(override)) {
       return override === undefined ? base : override;
     }
 
@@ -54,6 +56,31 @@ class TeamConfig {
   // The same config with a season's recipient lists laid on top.
   withSeasonRecipients(seasonRecipients) {
     return new TeamConfig({ ...this.#options, seasonRecipients });
+  }
+
+  // The two lists of initials typed into a recipients prompt. A blank field
+  // means the default list (defaults: defaultRecipients).
+  static typedRecipients(fieldValues, defaults) {
+    if (typeof Staff == "undefined") require("modules/bvr/utils/Staff.js");
+    const parse = (text, fallback) => {
+      const initials = Staff.parseInitials(text);
+      return initials.length > 0 ? initials : fallback;
+    };
+    return {
+      attendance: parse(fieldValues.attendance, defaults.attendance),
+      gameReport: parse(fieldValues.gameReport, defaults.gameReport),
+    };
+  }
+
+  // The season override to save: only the lists that differ from the
+  // defaults (in any order), or null when both match, so level changes
+  // still reach the team.
+  static recipientOverrides(lists, defaults) {
+    const same = (a, b) => a.length == b.length && a.every((initials) => b.includes(initials));
+    const overrides = {};
+    if (!same(lists.attendance, defaults.attendance)) overrides.attendance = lists.attendance;
+    if (!same(lists.gameReport, defaults.gameReport)) overrides.gameReport = lists.gameReport;
+    return Object.keys(overrides).length > 0 ? overrides : null;
   }
 
   get teamID() {

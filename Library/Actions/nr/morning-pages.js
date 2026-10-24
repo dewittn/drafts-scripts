@@ -1,12 +1,13 @@
 require("vendor/nr.js");
+if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
 const defaultTag = "morning pages";
 
 Draft.prototype.isMorningPage = (tagName = defaultTag) => draft.hasTag(tagName);
 
 function startMorningPages(tagName = defaultTag) {
-  // Load default workspace
-  const workspace = Workspace.find("default");
-  app.currentWindow.applyWorkspace(workspace);
+  // Load default workspace. Applied even when Default is showing (it shows as
+  // "Default", not "default"), since the reset may also change the drafts list
+  DraftsRuntime.loadWorkspace("default");
 
   // Display morning pages prompt
   let p = Prompt.create();

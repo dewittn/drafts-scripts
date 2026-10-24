@@ -14,18 +14,18 @@ The October 2025 singleton work (`getInstance()` on BVR, Team, ContentPipeline) 
 
 When an action runs on a draft that is open in the editor, Drafts writes the global `draft` object back to the editor when the script step finishes. Changes made to the same draft through a separate `Draft.find()` copy appear briefly and then revert, even after `editor.setText()`.
 
-Mutate the global `draft` when it is the target:
+Mutate the global `draft` when it is the target. `DraftsRuntime.findDraft()` in `shared/libraries/DraftsRuntime.js` does this:
 
 ```javascript
-const target = draft.uuid == targetID ? draft : Draft.find(targetID);
+const target = DraftsRuntime.findDraft(targetID); // draft when draft.uuid == targetID, else Draft.find(targetID)
 ```
 
-`Attendance.loadDraft()` in `modules/bvr/core/Attendance.js` is the reference pattern. Found on the Record Attendance action (PR #5, 2026-10-10).
+Found on the Record Attendance action (PR #5, 2026-10-10).
 
 ## Workspaces
 
-- `app.currentWindow.applyWorkspace()` keeps about 1 MB of native memory per call. CP, BVR, and Template skip the call when `app.currentWorkspace.name` already matches.
-- `applyWorkspace(undefined)` resets the window to the built-in "Default" workspace. No saved workspace is named "default".
+- `app.currentWindow.applyWorkspace()` keeps about 1 MB of native memory per call. `DraftsRuntime.loadWorkspace()` skips the call when `app.currentWorkspace.name` already matches; every call site goes through it.
+- `applyWorkspace(undefined)` resets the window to the built-in "Default" workspace. No saved workspace is named "default". It shows as "Default", so `loadWorkspace("default")` always resets; `loadWorkspace("default", "Default")` skips while it is showing (DraftsDocument does this).
 - Native methods such as `applyWorkspace` cannot be monkeypatched from JS, so a wrapper never sees the calls.
 
 ## Testing inside Drafts with the Eval Draft action
@@ -40,6 +40,8 @@ The Drafts MCP server's `drafts_run_action` only returns "Ran action", never out
 To run a unit test file this way, capture `console.log` into an array, `require("../Tests/unit/...-test.js")` inside try/catch, restore `console.log`, and end with the joined output. Run one test file per Eval run: test files declare a top-level `const test`, so a second file in the same context throws a redeclaration error.
 
 Avoid actions that call `alert()` (such as "Singleton Simple") when driving Drafts through the MCP server. An alert blocks until someone dismisses it.
+
+- Each iCloud `FileManager` call is slow: one `listContents` plus two `isDirectory` calls took about 20 seconds on 2026-10-21. A probe run through Eval Draft should not list folders or read many files.
 
 ## Build environment
 

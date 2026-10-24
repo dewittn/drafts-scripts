@@ -1,4 +1,5 @@
 require("modules/cp/templates/template_factory.js");
+if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
 
 class DraftsDoc {
   static docIDType = "DraftsID";
@@ -212,12 +213,9 @@ class DraftsDoc {
       console.log('[DraftsDoc] Cannot open: workingDraft is undefined');
       return;
     }
-    // No workspace is named "default", so find() returns undefined and
-    // applyWorkspace resets the window to Drafts' built-in "Default" workspace
-    if (app.currentWorkspace.name != "Default") {
-      const workspace = Workspace.find("default");
-      app.currentWindow.applyWorkspace(workspace);
-    }
+    // Drafts' built-in workspace, shown as "Default". No workspace is named
+    // "default", so find() returns undefined and applyWorkspace resets to it
+    DraftsRuntime.loadWorkspace("default", "Default");
     editor.load(this.workingDraft);
     editor.activate();
   }

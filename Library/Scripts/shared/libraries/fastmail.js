@@ -41,20 +41,39 @@ class Fastmail {
     const session = this.#getSession();
     if (session.error) return session;
 
+    const mailbox = this.#draftsMailboxId(session);
+    if (mailbox.error) return mailbox;
+
+    const email = this.#buildEmail(mailbox.id, { to, subject, text, html });
+    const result = this.#call([["Email/set", { accountId: session.accountId, create: { draft: email } }, "email"]]);
+    if (result.error) return result;
+
+    const notCreated = result.email.notCreated?.draft;
+    if (notCreated) return this.#error(`Draft not created: ${notCreated.description ?? notCreated.type}`);
+
+    return { success: true, email: result.email.created.draft };
+  }
+
+  // The Drafts mailbox as { id }, or an error result when it can't be found.
+  #draftsMailboxId(session) {
     const lookup = this.#call([
       ["Mailbox/query", { accountId: session.accountId, filter: { role: "drafts" } }, "mailbox"],
     ]);
     if (lookup.error) return lookup;
 
-    const draftsMailboxId = lookup.mailbox.ids?.[0];
-    if (draftsMailboxId == undefined) return this.#error("Drafts mailbox not found");
+    const id = lookup.mailbox.ids?.[0];
+    if (id == undefined) return this.#error("Drafts mailbox not found");
+    return { id };
+  }
 
+  // A JMAP Email object filed in the Drafts mailbox, with an HTML part when given.
+  #buildEmail(mailboxId, { to, subject, text, html }) {
     // Fastmail matches the From address to your identity when the draft is opened.
     const from = [{ email: this.#username }];
 
     const bodyValues = { text: { value: text } };
     const email = {
-      mailboxIds: { [draftsMailboxId]: true },
+      mailboxIds: { [mailboxId]: true },
       keywords: { $draft: true, $seen: true },
       from,
       to,
@@ -66,14 +85,7 @@ class Fastmail {
       bodyValues.html = { value: html };
       email.htmlBody = [{ partId: "html", type: "text/html" }];
     }
-
-    const result = this.#call([["Email/set", { accountId: session.accountId, create: { draft: email } }, "email"]]);
-    if (result.error) return result;
-
-    const notCreated = result.email.notCreated?.draft;
-    if (notCreated) return this.#error(`Draft not created: ${notCreated.description ?? notCreated.type}`);
-
-    return { success: true, email: result.email.created.draft };
+    return email;
   }
 
   // Fetches the JMAP session once per instance for the API URL and mail account.

@@ -1,3 +1,5 @@
+if (typeof DataFile == "undefined") require("modules/cp/filesystems/CloudFS.js");
+
 // Score-form links shared by every team in a term, kept in bvr/formLinks.json:
 // { schemaVersion: 1, terms: { "2026-fall": { "<form name>": url } } }.
 // The athletic department issues one link per form per term each year, so a
@@ -12,27 +14,18 @@ class FormLinkStore {
     this.#file = file;
   }
 
-  // The shared links. A missing file starts empty and is written on the
-  // first save. A file that exists but is not usable (a half-synced iCloud
-  // copy reads as empty) throws, so it is never overwritten.
+  // The shared links. A missing file starts empty, and it and its folder are
+  // written on the first save. A file that exists but is not usable (a
+  // half-synced iCloud copy reads as empty) throws, so it is never overwritten.
   static load(path) {
-    if (typeof DataFile == "undefined") require("modules/cp/filesystems/CloudFS.js");
-    if (!DataFile.exists(path)) {
-      DataFile.ensureDirectoryFor(path);
-      const file = new DataFile(path);
-      Object.assign(file, { schemaVersion: this.schemaVersion, terms: {} });
-      return new FormLinkStore(file);
-    }
-
-    const file = new DataFile(path);
-    const problem = this.validate(file);
-    if (problem != undefined) throw new Error(`${path} cannot be used: ${problem}`);
-    return new FormLinkStore(file);
+    const file = DataFile.loadValidated(path, (data) => this.validate(data));
+    if (file != undefined) return new FormLinkStore(file);
+    return new FormLinkStore(DataFile.create(path, { schemaVersion: this.schemaVersion, terms: {} }));
   }
 
   // Why data is not a usable links file, or undefined when it is.
   static validate(data) {
-    const isObject = (value) => typeof value == "object" && value != null && !Array.isArray(value);
+    const isObject = DataFile.isObject;
     if (!isObject(data)) return "the file is empty or not a JSON object";
     if (data.schemaVersion !== this.schemaVersion) return `unknown schemaVersion ${JSON.stringify(data.schemaVersion)}`;
     if (!isObject(data.terms)) return "terms is missing or not an object";
@@ -63,8 +56,6 @@ class FormLinkStore {
 
   // Refuses to write anything that would not load back.
   save() {
-    const problem = FormLinkStore.validate(this.#file);
-    if (problem != undefined) throw new Error(`Form links not saved: ${problem}`);
-    return this.#file.save();
+    return DataFile.saveValidated(this.#file, (data) => FormLinkStore.validate(data), "Form links");
   }
 }

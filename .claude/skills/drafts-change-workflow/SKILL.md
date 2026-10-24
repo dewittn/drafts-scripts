@@ -34,11 +34,12 @@ Where things usually live:
 
 | Need | Look at |
 |---|---|
-| Prompts, menus, yes/no, success and error messages | `shared/libraries/DraftsUI.js` (`buildMenu`, `yesNoPrompt`, `display*Message`) |
+| Prompts, menus, yes/no, success and error messages | `shared/libraries/DraftsUI.js` (`buildMenu`, `yesNoPrompt`, `display*Message`, `settingsCopy`) |
+| The open draft, switching workspaces | `shared/libraries/DraftsRuntime.js` (`findDraft`, `loadWorkspace`) |
 | Loading settings, new drafts, templates, tags | `vendor/nr.js` (`loadSettings`, `newDraft`, `fetchTemplate`, `appendTags`) |
 | Service APIs | `shared/libraries/` (`nocodb.js`, `fastmail.js`, `bear.js`, `ulysses-v2.js`, `kutt.js`, `PushoverAlert.js`) |
 | Pickers built from records, action menus | `shared/libraries/UIUtilities.js`, `ActionMenu.js` |
-| Text helpers | `modules/cp/utils/TextUtilities.js`, `modules/bvr/utils/BVRUtilities.js` |
+| Text and date helpers | `modules/cp/utils/TextUtilities.js`, `modules/bvr/utils/BVRUtilities.js` (`formatDateYMD`, `parseDateYMD`) |
 | How a similar action is put together | Sibling files in `Library/Actions/<area>/` |
 | Test mocks | `Library/Tests/fixtures/mocks.js` |
 
@@ -48,7 +49,7 @@ If a helper almost fits, extend it and say so, rather than working around it. If
 
 ## 3. Write it
 
-- **Thin actions.** A file in `Library/Actions/` requires its modules, reads settings, calls a module class, and reports the result. Logic lives in a class under `Library/Scripts/modules/<area>/` or `shared/`, where it can be tested and reused. `Library/Actions/nr/send-to-fastmail.js` with `modules/nr/EmailDraft.js` is a good model.
+- **Thin actions.** A file in `Library/Actions/` requires its modules, reads settings, calls a module class, and reports the result. Logic lives in a class under `Library/Scripts/modules/<area>/` or `shared/`, where it can be tested and reused. `Library/Actions/nr/send-to-fastmail.js` with `modules/nr/FastmailSender.js` is a good model.
 - **Match the surrounding code.** Use small named functions with a one or two line comment saying what each does and why, guard clauses over nesting, and descriptive names. Polish with the `code-styling` skill once it works.
 - **Config, not constants.** Settings go in `Library/Data/**/*.yaml`, and secrets go in `<name>.yaml.tpl` files. Never edit the generated `.json`. Read settings with `loadSettings("<file>.json")`.
 - **Require paths** are always relative to `Library/Scripts/` (see CLAUDE.md).

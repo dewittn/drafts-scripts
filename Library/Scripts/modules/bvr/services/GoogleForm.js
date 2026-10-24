@@ -15,7 +15,8 @@ class GoogleForm {
   static baseURL(pasted) {
     const url = `${pasted || ""}`.trim().split(/[?#]/)[0];
     if (!/^https?:\/\/\S+$/.test(url)) return undefined;
-    return url.replace(/\/(viewform|formResponse|edit)\/?$/, "").replace(/\/+$/, "");
+    const pagePath = new RegExp(`/(${GoogleForm.viewPath}|${GoogleForm.submitPath}|edit)/?$`);
+    return url.replace(pagePath, "").replace(/\/+$/, "");
   }
 
   get fields() {

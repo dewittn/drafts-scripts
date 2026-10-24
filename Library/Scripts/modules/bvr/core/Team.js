@@ -289,22 +289,15 @@ class Team {
     game.recordOpponent();
     game.recordLocation();
 
-    const tmplSettings = game.generateTmplSettings("thingsProject");
-    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
-    const projectTemplate = new Template(tmplSettings);
-    const thingsParserAction = Action.find("Things Parser");
-    app.queueAction(thingsParserAction, projectTemplate.draft);
+    this.#queueThingsProject(game.generateTmplSettings("thingsProject"));
   }
 
   // The end-of-season checklist as a Things project, for the last week or
   // two of the season. The template leaves out upper-school-only items for
   // middle school teams ({{#level_us}}).
   createEndOfSeasonTasks() {
-    const tmplSettings = new TmplSettings(this.gblTmplSettings, this.tmplSettings.endOfSeasonProject);
-    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
-    const projectTemplate = new Template(tmplSettings);
-    const thingsParserAction = Action.find("Things Parser");
-    app.queueAction(thingsParserAction, projectTemplate.draft);
+    if (typeof TmplSettings == "undefined") require("modules/bvr/utils/TmplSettings.js");
+    this.#queueThingsProject(new TmplSettings(this.gblTmplSettings, this.tmplSettings.endOfSeasonProject));
   }
 
   archiveNotes() {
@@ -359,7 +352,7 @@ class Team {
       return this.ui.displayAppMessage("error", `${this.name} has no roster draft.`);
     }
 
-    const title = `# Attendance: ${this.abbr} ${this.season.currentSeasonLabel}`;
+    const title = Team.rosterTitle(this.abbr, this.season.currentSeasonLabel);
     const updatedContent = Team.promoteRoster(attendaceDraft.content, title);
     if (updatedContent == undefined) {
       return this.ui.displayAppMessage("info", "Roster has already been updated!");
@@ -386,6 +379,12 @@ class Team {
     }
   }
 
+  // A roster draft's first line for a season. bvr/attendance.md renders the
+  // same line from its [[team_abbr]] and [[season_label]] tags.
+  static rosterTitle(abbr, seasonLabel) {
+    return `# Attendance: ${abbr} ${seasonLabel}`;
+  }
+
   // The roster with its first line replaced by title and every "(grade)"
   // moved up one, or undefined when the first line is already title (the
   // roster was updated for this season).
@@ -400,6 +399,15 @@ class Team {
   // **********************
   // Private Functions
   // **********************
+
+  // Render a Things project template and hand its draft to the Things
+  // Parser action, which runs after this script ends.
+  #queueThingsProject(tmplSettings) {
+    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
+    const projectTemplate = new Template(tmplSettings);
+    const thingsParserAction = Action.find("Things Parser");
+    app.queueAction(thingsParserAction, projectTemplate.draft);
+  }
 
   #processNote(workingDraft) {
     const { menuSettings, tempMessage } = this.bvr.ui.settings("notePrompt");

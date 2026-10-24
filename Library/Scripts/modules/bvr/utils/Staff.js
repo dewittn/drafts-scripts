@@ -40,7 +40,7 @@ class Staff {
   // The same field for a list of people, in order. Throws once, naming every
   // initial that is missing, so a typo in teams.yaml is easy to find.
   contacts(initialsList, field) {
-    const missing = initialsList.filter((initials) => !this.has(initials));
+    const missing = this.unknown(initialsList);
     if (missing.length > 0) {
       throw new Error(`No one in staff.yaml.tpl has the initials ${missing.join(", ")}`);
     }

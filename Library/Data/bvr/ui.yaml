@@ -165,7 +165,8 @@ editSeason:
         keyboard: url
         autocorrect: false
         autocapitalization: none
-  attendanceField:
+  # The recipient fields, shared with recipientsPrompt below.
+  attendanceField: &attendanceField
     type: textField
     data:
       name: attendance
@@ -173,7 +174,7 @@ editSeason:
       options:
         autocorrect: false
         autocapitalization: allCharacters
-  gameReportField:
+  gameReportField: &gameReportField
     type: textField
     data:
       name: gameReport
@@ -207,22 +208,8 @@ editSeason:
     menuTitle: Clear form links?
     menuMessage: "These form links were left blank. Clear the saved links?"
 recipientsPrompt:
-  attendanceField:
-    type: textField
-    data:
-      name: attendance
-      label: Attendance messages to
-      options:
-        autocorrect: false
-        autocapitalization: allCharacters
-  gameReportField:
-    type: textField
-    data:
-      name: gameReport
-      label: Score messages to
-      options:
-        autocorrect: false
-        autocapitalization: allCharacters
+  attendanceField: *attendanceField
+  gameReportField: *gameReportField
   menuSettings:
     menuTitle: Who Gets Messages
     menuMessage: "Initials from staff.yaml.tpl, separated by commas. Leave them as they are to keep the team's usual lists."
@@ -234,7 +221,8 @@ recipientsPrompt:
 attendanceDraftPrompt:
   menuSettings:
     menuTitle: Roster Draft
-    menuMessage: "Keep the current roster draft, or start a new one?"
+    # [[roster]] is the current roster draft's title, [[season]] the new season.
+    menuMessage: 'Keep "[[roster]]" for [[season]], or start a new one?'
     menuItems:
       - type: button
         data:

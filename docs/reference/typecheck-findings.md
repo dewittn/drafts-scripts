@@ -166,6 +166,17 @@ These were definition problems, fixed in `types/` and not baselined. See
 - **`console`**, optional `cancel()` and `fail()` messages, `readJSON()` returning
   `any`, the `vendor/nr.js` `Draft` methods, and static `MustacheTemplate` factories.
 
+## Require check
+
+Added 2026-10-21. For each action, `bun run typecheck` also reports "Cannot find name"
+errors in the library files that action loads, which is how a missing `require()`
+shows up. The first run found no new errors, so nothing was fixed or baselined. It
+replaced the Drafts load check and `scripts/lib/require-check.test.ts`. The five gaps
+that test allowlisted (`GoogleForm` in Game.js, `Settings` in Sport.js and nocodb.js,
+`PracticePlan` and `TeamConfig` in Team.js) are not reported, because every action that
+loads the using file also loads the class through another file (`BVR.js`, `Season.js`,
+`ContentPipeline.js`, ...).
+
 ## Incidental
 
 Noticed while reading code. These are outside the checked files.

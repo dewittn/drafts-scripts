@@ -1,28 +1,21 @@
 /**
  * PracticePlan Week Calculation Unit Test
  *
- * Tests the ISO-week-based season week calculation.
- * Functions are extracted from PracticePlan's private methods
- * so they can be tested directly without instantiating the full class.
+ * Tests the ISO-week-based season week calculation, through PracticePlan's
+ * own isoMonday and weekNumber statics.
  */
 
 // Load test infrastructure (path is relative to Library/Scripts/)
 require("../Tests/fixtures/assertions.js");
+require("modules/bvr/core/PracticePlan.js");
 
-// Extract the pure functions matching PracticePlan's private methods
-function getISOMonday(date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const day = d.getUTCDay() || 7; // Convert Sunday (0) to 7
-  d.setUTCDate(d.getUTCDate() - day + 1); // Back to Monday
-  return d.getTime();
-}
+const pad = (value) => `${value}`.padStart(2, "0");
+const ymd = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
-function getCurrentWeek(currentDate, startDate) {
-  const currentMonday = getISOMonday(currentDate);
-  const startMonday = getISOMonday(startDate);
-  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-  return Math.floor((currentMonday - startMonday) / msPerWeek) + 1;
-}
+const getISOMonday = (date) => PracticePlan.isoMonday(date);
+
+// weekNumber takes the start date as "YYYY-MM-DD", as seasons store it.
+const getCurrentWeek = (currentDate, startDate) => PracticePlan.weekNumber(ymd(startDate), currentDate);
 
 const test = new TestAssertions("PracticePlan Week Calculation");
 

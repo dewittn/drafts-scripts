@@ -4,7 +4,8 @@
  * Covers how Season picks between the team file and the old records.json /
  * practicePlans.json, the two stores themselves, PracticePlan's week keys,
  * and the Start New Season prompt. All data is synthetic: the team file comes
- * from Library/Tests/fixtures/bvr/, everything else is built here.
+ * from Library/Tests/fixtures/bvr/, everything else is built here. Prompt
+ * settings are the real Library/Data/bvr/ui.yaml (see fixtures/bvr-stubs.js).
  *
  * Not covered here (needs Drafts): creating a brand-new team file on disk,
  * appending rows to a real season record draft, and the date picker itself.
@@ -12,6 +13,7 @@
 
 require("../Tests/fixtures/assertions.js");
 require("../Tests/fixtures/mocks.js");
+require("../Tests/fixtures/bvr-stubs.js");
 require("modules/cp/filesystems/CloudFS.js");
 require("modules/bvr/core/Season.js");
 require("modules/bvr/core/PracticePlan.js");
@@ -56,100 +58,13 @@ class StubTemplate {
 // Stand-in for Draft.find, for roster draft titles.
 /** @type {any} */ (globalThis).Draft = { find: (uuid) => ({ uuid, displayTitle: `Roster ${uuid}` }) };
 
-// A copy of plain data with a save() that counts calls, standing in for DataFile.
-function savable(data) {
-  const file = JSON.parse(JSON.stringify(data));
-  Object.defineProperty(file, "saves", { value: 0, writable: true, enumerable: false });
-  Object.defineProperty(file, "save", {
-    value() {
-      this.saves++;
-    },
-    enumerable: false,
-  });
-  return file;
-}
-
 function teamFixture() {
   return savable(DataFile.load(teamFixturePath));
 }
 
-// The startNewSeason, formURLPrompt, and editSeason entries from Library/Data/bvr/ui.yaml.
-const uiSettings = {
-  getTeamIDFromPrompt: {
-    noneActiveMessage: "No team is in season.",
-    menuSettings: { menuTitle: "Select Team", menuMessage: "Which team?", isCancellable: false, menuItems: [] },
-  },
-  editSeason: {
-    labelField: { type: "textField", data: { name: "label", label: "Name" } },
-    startDateField: { type: "datePicker", data: { name: "startDate", label: "First Day" } },
-    hasEndDateField: { type: "switch", data: { name: "hasEndDate", label: "Has a last day" } },
-    endDateField: { type: "datePicker", data: { name: "endDate", label: "Last Day" } },
-    formField: { type: "textField", data: { options: { keyboard: "url" } } },
-    attendanceField: { type: "textField", data: { name: "attendance", label: "Attendance messages to" } },
-    gameReportField: { type: "textField", data: { name: "gameReport", label: "Score messages to" } },
-    rosterLabel: { type: "label", data: { name: "roster" } },
-    newRosterField: { type: "switch", data: { name: "newRoster", label: "Start a new roster draft" } },
-    menuSettings: {
-      menuTitle: "Edit Season",
-      menuMessage: "Change this season.",
-      menuItems: [{ type: "button", data: { name: "Save", value: "save" } }],
-    },
-    startDateWarning: { menuTitle: "Change the first day?", menuMessage: "Weeks count from the first day." },
-    clearLinksPrompt: { menuTitle: "Clear form links?", menuMessage: "These form links were left blank." },
-  },
-  recipientsPrompt: {
-    attendanceField: { type: "textField", data: { name: "attendance", label: "Attendance messages to" } },
-    gameReportField: { type: "textField", data: { name: "gameReport", label: "Score messages to" } },
-    menuSettings: {
-      menuTitle: "Who Gets Messages",
-      menuMessage: "Initials, separated by commas.",
-      menuItems: [{ type: "button", data: { name: "Save", value: "save" } }],
-    },
-  },
-  attendanceDraftPrompt: {
-    menuSettings: {
-      menuTitle: "Roster Draft",
-      menuMessage: "Keep or start a new one?",
-      menuItems: [
-        { type: "button", data: { name: "Keep", value: "keep" } },
-        { type: "button", data: { name: "Start a New One", value: "new" } },
-      ],
-    },
-  },
-  formURLPrompt: {
-    urlField: { type: "textField", data: { name: "url", label: "Form link" } },
-    menuSettings: {
-      menuTitle: "Score Report Form",
-      menuMessage: "Paste this season's link to the form.",
-      menuItems: [{ type: "button", data: { name: "Save", value: "save" } }],
-    },
-  },
-  startNewSeason: {
-    seasonIDField: { type: "textField", data: { name: "seasonID", label: "Season" } },
-    startDateField: { type: "datePicker", data: { name: "startDate", label: "First Day", options: { mode: "date" } } },
-    menuSettings: {
-      menuTitle: "Start New Season",
-      menuMessage: "Name the season and pick its first day.",
-      menuItems: [{ type: "button", data: { name: "Start Season", value: "start" } }],
-    },
-  },
-};
-
-// yesNo: answers to yesNoPrompt by menu title ("yes" or "no"); unlisted is "no".
-function mockUI(promptResponses = {}, yesNo = {}) {
-  /** @type {any} */
-  const ui = new MockUI({ promptResponses });
-  ui.settings = (name) => JSON.parse(JSON.stringify(uiSettings[name]));
-  ui.yesNoPrompt = (menuSettings) => {
-    ui.interactions.push({ type: "yesNo", menuSettings });
-    return yesNo[menuSettings.menuTitle] || "no";
-  };
-  return ui;
-}
-
 const pad = (value) => `${value}`.padStart(2, "0");
 
-function mockBVR(teamFilePath, ui = mockUI()) {
+function mockBVR(teamFilePath, ui = mockBVRUI()) {
   return {
     ui,
     globalTags: {},
@@ -206,7 +121,11 @@ function mockTeam(bvr, overrides = {}) {
       };
     },
   });
-  team.dependencies = { bvr, team, tmplSettings: { seasonRecord: { templateFile: "bvr/game-season-record.md" } } };
+  team.dependencies = {
+    bvr,
+    team,
+    tmplSettings: { seasonRecord: { templateFile: "bvr/game-season-record.md" }, attendance: { templateFile: "bvr/attendance.md" } },
+  };
   team.season = new Season(team.dependencies);
   team.linksFile = savable({ schemaVersion: 1, terms: {} });
   team.season.formLinks = new FormLinkStore(team.linksFile);
@@ -412,7 +331,7 @@ const startResponse = (seasonID) => ({
   "Start New Season": { button: "start", fieldValues: { seasonID, startDate: new Date(2026, 10, 16) } },
 });
 
-bvr = mockBVR(teamFixturePath, mockUI(startResponse(" 2026-winter ")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startResponse(" 2026-winter ")));
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
@@ -429,7 +348,7 @@ test.assert(file.saves >= 1, "the team file is saved");
 test.assertEqual(StubTemplate.rendered[0]?.templateTags?.current_season, "2026-winter", "record draft gets the season ID tag");
 test.assertEqual(StubTemplate.rendered[0]?.templateTags?.current_season_label, "2026 Winter", "record draft gets the label tag");
 
-bvr = mockBVR(teamFixturePath, mockUI(startResponse("2026-fall")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startResponse("2026-fall")));
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
@@ -438,21 +357,21 @@ test.assertEqual(file.saves, 0, "an existing season is refused without saving");
 test.assertEqual(file.currentSeason, "2026-fall", "refusing leaves the current season alone");
 test.assert(infoMessages(bvr.ui).some((m) => m.includes("already has a 2026-fall season")), "says the season exists");
 
-bvr = mockBVR(teamFixturePath, mockUI(startResponse("   ")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startResponse("   ")));
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
 team.season.startNewSeason();
 test.assertEqual(file.saves, 0, "a blank season name changes nothing");
 
-bvr = mockBVR(teamFixturePath, mockUI());
+bvr = mockBVR(teamFixturePath, mockBVRUI());
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
 team.season.startNewSeason();
 test.assertEqual(file.saves, 0, "cancelling the prompt changes nothing");
 
-bvr = mockBVR(missingTeamFilePath, mockUI(startResponse("2026-winter")));
+bvr = mockBVR(missingTeamFilePath, mockBVRUI(startResponse("2026-winter")));
 team = mockTeam(bvr);
 team.season.store = legacy(2026);
 team.season.startNewSeason();
@@ -466,7 +385,7 @@ function teamFixtureWithWinter(startDate = null) {
   return winterFile;
 }
 
-bvr = mockBVR(teamFixturePath, mockUI(startResponse("2026-winter")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startResponse("2026-winter")));
 team = mockTeam(bvr);
 file = teamFixtureWithWinter();
 team.season.store = new TeamFileStore(file);
@@ -479,14 +398,14 @@ test.assert(file.saves >= 1, "and is saved");
 test.assertEqual(StubTemplate.rendered[0]?.templateTags?.current_season, "2026-winter", "the draft is for that season");
 test.assert(!infoMessages(bvr.ui).some((m) => m.includes("already has")), "is not reported as already existing");
 
-bvr = mockBVR(teamFixturePath, mockUI(startResponse("2026-winter")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startResponse("2026-winter")));
 team = mockTeam(bvr);
 file = teamFixtureWithWinter("2026-11-23");
 team.season.store = new TeamFileStore(file);
 team.season.startNewSeason();
 test.assertEqual(file.seasons["2026-winter"].startDate, "2026-11-23", "an existing start date is kept");
 
-bvr = mockBVR(teamFixturePath, mockUI(startResponse("2025-fall")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startResponse("2025-fall")));
 team = mockTeam(bvr);
 file = teamFixture();
 file.seasons["2025-fall"].seasonRecordDraftID = "REC-2025-FALL";
@@ -566,7 +485,7 @@ test.assertEqual(noSeasonTags.current_season_label, "", "current_season_label is
 // --- season name validation ---
 test.section("season name validation");
 
-bvr = mockBVR(teamFixturePath, mockUI(startResponse("winter-2027")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startResponse("winter-2027")));
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
@@ -577,7 +496,7 @@ test.assertEqual(prompts[1].menuSettings.menuItems[1].data.initialText, "winter-
 test.assertEqual(file.saves, 0, "never saves an invalid season name");
 test.assert(infoMessages(bvr.ui).some((m) => m.includes("is not a season name")), "explains the expected shape");
 // DraftsUI.settings() returns one shared object, so the mock does too here.
-bvr = mockBVR(teamFixturePath, mockUI(startResponse("winter-2027")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startResponse("winter-2027")));
 const sharedSettings = bvr.ui.settings("startNewSeason");
 bvr.ui.settings = () => sharedSettings;
 team = mockTeam(bvr);
@@ -598,7 +517,7 @@ test.assertEqual(TeamFileStore.isValidSeasonID("2026-fall/x"), false, "no slashe
 // --- legacy flows ---
 test.section("legacy flows");
 
-bvr = mockBVR(missingTeamFilePath, mockUI());
+bvr = mockBVR(missingTeamFilePath, mockBVRUI());
 team = mockTeam(bvr);
 team.season.store = legacy(2026);
 team.season.startNewSeason();
@@ -618,7 +537,7 @@ test.assertEqual(GoogleForm.baseURL("not a link"), undefined, "text that is not 
 
 const urlResponse = (url) => ({ "Score Report Form": { button: "save", fieldValues: { url } } });
 
-bvr = mockBVR(teamFixturePath, mockUI(urlResponse("https://docs.google.com/forms/d/e/NEW/viewform?usp=sf_link")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(urlResponse("https://docs.google.com/forms/d/e/NEW/viewform?usp=sf_link")));
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
@@ -632,14 +551,14 @@ test.assertDeepEqual(urlPrompt?.menuItems.map((item) => item.type), ["button", "
 test.assertEqual(team.season.ensureFormURL("varsity-score-report"), "https://docs.google.com/forms/d/e/NEW", "a saved link is used without asking");
 test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 1, "so the prompt appears once");
 
-bvr = mockBVR(teamFixturePath, mockUI(urlResponse("  ")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(urlResponse("  ")));
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
 test.assertEqual(team.season.ensureFormURL("varsity-score-report"), undefined, "a blank answer gives no link");
 test.assertEqual(file.saves, 0, "and saves nothing");
 
-bvr = mockBVR(teamFixturePath, mockUI(urlResponse("docs dot google")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(urlResponse("docs dot google")));
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
@@ -648,7 +567,7 @@ test.assertEqual(file.saves, 0, "and saves nothing");
 test.assert(infoMessages(bvr.ui).some((m) => m.includes("not a link")), "and says so");
 
 // Submit Game Report: one form has a link, the other is asked for.
-bvr = mockBVR(teamFixturePath, mockUI(urlResponse("https://docs.google.com/forms/d/e/MS")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(urlResponse("https://docs.google.com/forms/d/e/MS")));
 team = mockTeam(bvr);
 file = teamFixture();
 file.seasons["2026-fall"].formURLs = { "varsity-score-report": "https://docs.google.com/forms/d/e/VARSITY" };
@@ -666,7 +585,7 @@ test.assertEqual(team.linksFile.terms["2026-fall"]["ms-score-report"], "https://
 test.assertEqual(team.linksFile.terms["2026-fall"]["varsity-score-report"], "https://docs.google.com/forms/d/e/VARSITY", "the season's old link moved up to the term");
 test.assertDeepEqual(file.seasons["2026-fall"].formURLs, {}, "and left the season");
 
-bvr = mockBVR(teamFixturePath, mockUI());
+bvr = mockBVR(teamFixturePath, mockBVRUI());
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
@@ -683,7 +602,7 @@ test.section("Start New Season form links");
 
 const startAndLink = (seasonID, url) => ({ ...startResponse(seasonID), ...urlResponse(url) });
 
-bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-winter", "https://docs.google.com/forms/d/e/WINTER/viewform")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startAndLink("2026-winter", "https://docs.google.com/forms/d/e/WINTER/viewform")));
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
@@ -697,7 +616,7 @@ test.assertDeepEqual(file.seasons["2026-winter"]?.formURLs, {}, "not on the seas
 const linkPrompt = bvr.ui.getInteractionsByType("buildMenu").find((i) => i.menuSettings.menuTitle == "Score Report Form");
 test.assert(linkPrompt?.menuSettings.menuMessage.endsWith("Varsity score report, 2026 Winter"), "the link prompt names the new season");
 
-bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-winter", "")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startAndLink("2026-winter", "")));
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
@@ -706,7 +625,7 @@ test.assertDeepEqual(file.seasons["2026-winter"]?.formURLs, {}, "a blank link is
 test.assertEqual(team.linksFile.terms["2026-winter"], undefined, "and nothing is shared");
 test.assertEqual(file.currentSeason, "2026-winter", "and the season still starts");
 
-bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-winter", "https://docs.google.com/forms/d/e/W2")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startAndLink("2026-winter", "https://docs.google.com/forms/d/e/W2")));
 team = mockTeam(bvr);
 file = teamFixtureWithWinter();
 team.season.store = new TeamFileStore(file);
@@ -717,7 +636,7 @@ test.assertEqual(
   "completing an existing season asks for its term's missing links",
 );
 
-bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-fall", "https://docs.google.com/forms/d/e/FALL")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startAndLink("2026-fall", "https://docs.google.com/forms/d/e/FALL")));
 team = mockTeam(bvr);
 file = teamFixture();
 team.season.store = new TeamFileStore(file);
@@ -726,7 +645,7 @@ test.assertEqual(team.linksFile.terms["2026-fall"]?.["varsity-score-report"], "h
 test.assertEqual(team.linksFile.saves, 1, "saved once, in the shared file");
 test.assertEqual(file.saves, 0, "with the team file untouched");
 
-bvr = mockBVR(teamFixturePath, mockUI(startAndLink("2026-fall", "https://docs.google.com/forms/d/e/ASKED")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(startAndLink("2026-fall", "https://docs.google.com/forms/d/e/ASKED")));
 team = mockTeam(bvr);
 team.linksFile.terms["2026-fall"] = { "varsity-score-report": "https://docs.google.com/forms/d/e/SHARED" };
 team.season.store = new TeamFileStore(teamFixture());
@@ -764,7 +683,7 @@ const editFixture = () => teamFixture();
 // Runs Edit Season with the varsity link shared for 2026 fall unless
 // sharedTerms says otherwise.
 function runEdit(answers, yesNo = {}, editFile = editFixture(), sharedTerms = { "2026-fall": { "varsity-score-report": savedLink } }) {
-  bvr = mockBVR(teamFixturePath, mockUI(answers, yesNo));
+  bvr = mockBVR(teamFixturePath, mockBVRUI(answers, yesNo));
   team = mockTeam(bvr);
   Object.assign(team.linksFile.terms, JSON.parse(JSON.stringify(sharedTerms)));
   team.season.store = new TeamFileStore(editFile);
@@ -858,7 +777,7 @@ test.assertEqual(file.saves + team.linksFile.saves, 0, "cancelling the prompt ch
 // --- shared form links ---
 test.section("shared form links");
 
-bvr = mockBVR(teamFixturePath, mockUI());
+bvr = mockBVR(teamFixturePath, mockBVRUI());
 team = mockTeam(bvr);
 file = teamFixture();
 file.seasons["2026-fall"].formURLs = { "varsity-score-report": "https://docs.google.com/forms/d/e/PASTED" };
@@ -869,7 +788,7 @@ test.assertDeepEqual(file.seasons["2026-fall"].formURLs, {}, "and off the season
 test.assertEqual(team.linksFile.saves, 1, "one save of the shared file");
 test.assertEqual(file.saves, 1, "one save of the team file");
 
-bvr = mockBVR(teamFixturePath, mockUI());
+bvr = mockBVR(teamFixturePath, mockBVRUI());
 team = mockTeam(bvr);
 team.linksFile.terms["2026-fall"] = { "varsity-score-report": "https://docs.google.com/forms/d/e/SAME" };
 file = teamFixture();
@@ -878,7 +797,7 @@ team.season.store = new TeamFileStore(file);
 team.season.ensureFormURL("varsity-score-report");
 test.assertDeepEqual(file.seasons["2026-fall"].formURLs, {}, "a season link equal to the shared one is dropped");
 
-bvr = mockBVR(teamFixturePath, mockUI());
+bvr = mockBVR(teamFixturePath, mockBVRUI());
 team = mockTeam(bvr);
 team.linksFile.terms["2026-fall"] = { "varsity-score-report": "https://docs.google.com/forms/d/e/SHARED" };
 file = teamFixture();
@@ -887,14 +806,14 @@ team.season.store = new TeamFileStore(file);
 test.assertEqual(team.season.ensureFormURL("varsity-score-report"), "https://docs.google.com/forms/d/e/OWN", "a different season link wins, as an override");
 test.assertEqual(file.saves + team.linksFile.saves, 0, "and nothing moves");
 
-bvr = mockBVR(teamFixturePath, mockUI());
+bvr = mockBVR(teamFixturePath, mockBVRUI());
 team = mockTeam(bvr);
 team.linksFile.terms["2026-fall"] = { "varsity-score-report": "https://docs.google.com/forms/d/e/SHARED" };
 team.season.store = new TeamFileStore(teamFixture());
 test.assertEqual(team.season.ensureFormURL("varsity-score-report"), "https://docs.google.com/forms/d/e/SHARED", "another team's shared link is found without asking");
 test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 0, "so no prompt appears");
 
-bvr = mockBVR(teamFixturePath, mockUI(urlResponse("https://docs.google.com/forms/d/e/OWNTERMLESS")));
+bvr = mockBVR(teamFixturePath, mockBVRUI(urlResponse("https://docs.google.com/forms/d/e/OWNTERMLESS")));
 team = mockTeam(bvr);
 file = teamFixture();
 file.seasons["2026-27"] = TeamFileStore.emptySeason("2026-27");
@@ -905,7 +824,7 @@ team.season.ensureFormURL("varsity-score-report");
 test.assertEqual(file.seasons["2026-27"].formURLs["varsity-score-report"], "https://docs.google.com/forms/d/e/OWNTERMLESS", "so its link is saved on the season");
 test.assertDeepEqual(team.linksFile.terms, {}, "and nothing is shared");
 
-bvr = mockBVR(missingTeamFilePath, mockUI(editAnswers()));
+bvr = mockBVR(missingTeamFilePath, mockBVRUI(editAnswers()));
 team = mockTeam(bvr);
 team.season.store = legacy(2026);
 team.season.editCurrentSeason();
@@ -919,7 +838,7 @@ const recipientsResponse = (attendance, gameReport) => ({
   "Who Gets Messages": { button: "save", fieldValues: { attendance, gameReport } },
 });
 function startWith(responses, editFile = teamFixture()) {
-  bvr = mockBVR(teamFixturePath, mockUI({ ...startResponse("2026-winter"), ...responses }));
+  bvr = mockBVR(teamFixturePath, mockBVRUI({ ...startResponse("2026-winter"), ...responses }));
   team = mockTeam(bvr);
   team.season.store = new TeamFileStore(editFile);
   team.season.startNewSeason();
@@ -955,7 +874,7 @@ test.section("Start New Season roster draft");
 
 const rosterResponse = (button) => ({ "Roster Draft": { button, fieldValues: {} } });
 function startWithRoster(rosterBefore, responses) {
-  bvr = mockBVR(teamFixturePath, mockUI({ ...startResponse("2026-winter"), ...responses }));
+  bvr = mockBVR(teamFixturePath, mockBVRUI({ ...startResponse("2026-winter"), ...responses }));
   team = mockTeam(bvr);
   team.attendanceDraftID = rosterBefore;
   const rosterFile = teamFixture();
@@ -998,8 +917,20 @@ test.assertDeepEqual(
   "the title tags name the team and season",
 );
 
+// The title the real attendance.md gives that draft. Update Roster compares
+// a roster's first line with "# Attendance: <abbr> <current season label>".
+const rosterSettings = rosterRenders()[0];
+const rosterTitle = new CloudFS("/Library/Templates").read(rosterSettings?.templateFile).split("\n")[0]
+  .replace(/\[\[(\w+)\]\]/g, (match, tag) => `${rosterSettings.templateTags[tag]}`);
+test.assertEqual(rosterTitle, "# Attendance: TT 2026 Winter", "the new roster draft is titled for the team and new season");
+test.assertEqual(
+  Team.promoteRoster(`${rosterTitle}\n- [ ] Synthetic Player (7)`, "# Attendance: TT 2026 Winter"),
+  undefined,
+  "so Update Roster treats it as already updated for that season",
+);
+
 file = teamFixtureWithWinter();
-bvr = mockBVR(teamFixturePath, mockUI({ ...startResponse("2026-winter"), ...rosterResponse("keep") }));
+bvr = mockBVR(teamFixturePath, mockBVRUI({ ...startResponse("2026-winter"), ...rosterResponse("keep") }));
 team = mockTeam(bvr);
 team.attendanceDraftID = "OLD-ROSTER";
 team.season.store = new TeamFileStore(file);
@@ -1108,7 +1039,7 @@ TeamFileStore.load = (path) => {
 function chooseTeam(states, { pick, allTeams = false, tag } = {}) {
   teamStates = states;
   /** @type {any} */ (globalThis).draft = { hasTag: (t) => t == tag };
-  const ui = mockUI(pick ? { "Select Team": { button: pick, fieldValues: {} } } : {});
+  const ui = mockBVRUI(pick ? { "Select Team": { button: pick, fieldValues: {} } } : {});
   const pickerBVR = { ...mockBVR(teamFixturePath, ui), teamSettingsFile: "../Tests/fixtures/bvr/teams-picker.json", teamFilePath: (id) => id };
   ServiceContainer.getInstance().register("bvr", () => pickerBVR, true);
   const chosen = new Team("", { allTeams });
@@ -1128,7 +1059,7 @@ test.assertEqual(chosen.id, "team-c", "the picked team is used");
 
 chosen = chooseTeam({ "team-a": "ended", "team-b": "none", "team-c": "broken" }, { pick: "team-b" });
 test.assertDeepEqual(chosen.offered, ["team-a", "team-b", "team-c"], "with no active team, every team is offered");
-test.assertEqual(chosen.message, "No team is in season.", "saying none is in season");
+test.assertEqual(chosen.message, "No team is in season. Which team would you like to use?", "saying none is in season (ui.yaml's noneActiveMessage)");
 
 chosen = chooseTeam({ "team-a": "active", "team-b": "broken", "team-c": "active" }, { pick: "team-a" });
 test.assertDeepEqual(chosen.offered, ["team-a", "team-c"], "an unreadable team file counts as inactive");
@@ -1154,5 +1085,38 @@ test.assertDeepEqual(Object.keys(TeamFileStore.emptySeason("2026-fall")), cases.
 for (const { name, valid, data } of cases.teamFiles) {
   test.assertEqual(TeamFileStore.validate(data) == undefined, valid, `validate: ${name}`);
 }
+
+// --- Start New Season default first day ---
+test.section("Start New Season default first day");
+
+// Opens (and cancels) Start New Season as if today were the given local
+// date. Returns the season name and first day the prompt is prefilled with.
+const RealDate = /** @type {any} */ (Date);
+function startPromptOn(year, monthIndex, day) {
+  /** @type {any} */ (globalThis).Date = class extends RealDate {
+    constructor(...args) {
+      if (args.length == 0) super(year, monthIndex, day, 15, 30);
+      else super(...args);
+    }
+  };
+  try {
+    bvr = mockBVR(teamFixturePath, mockBVRUI());
+    team = mockTeam(bvr);
+    team.season.store = new TeamFileStore(teamFixture());
+    team.season.startNewSeason();
+  } finally {
+    /** @type {any} */ (globalThis).Date = RealDate;
+  }
+  const items = bvr.ui.getInteractionsByType("buildMenu")[0]?.menuSettings.menuItems || [];
+  const initialDate = items[2]?.data?.initialDate;
+  return { seasonID: items[1]?.data?.initialText, firstDay: initialDate && bvr.formatDateYMD(initialDate) };
+}
+
+test.assertDeepEqual(startPromptOn(2026, 9, 21), { seasonID: "2026-fall", firstDay: "2026-10-26" }, "on a Wednesday: the coming Monday");
+test.assertDeepEqual(startPromptOn(2026, 9, 26), { seasonID: "2026-fall", firstDay: "2026-10-26" }, "on a Monday: that day");
+test.assertDeepEqual(startPromptOn(2026, 9, 25), { seasonID: "2026-fall", firstDay: "2026-10-26" }, "on a Sunday: the next day");
+test.assertDeepEqual(startPromptOn(2026, 9, 24), { seasonID: "2026-fall", firstDay: "2026-10-26" }, "on a Saturday: two days later");
+test.assertDeepEqual(startPromptOn(2026, 11, 31), { seasonID: "2026-fall", firstDay: "2027-01-04" }, "on Dec 31: the Monday in the new year, with this year's season name");
+test.assertDeepEqual(startPromptOn(2027, 0, 1), { seasonID: "2027-fall", firstDay: "2027-01-04" }, "on Jan 1: the new year's season name");
 
 test.summary();

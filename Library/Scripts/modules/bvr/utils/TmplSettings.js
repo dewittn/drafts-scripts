@@ -8,8 +8,8 @@ class TmplSettings {
         team_name: gblTmplSettings.teamName,
         team_abbr: gblTmplSettings.teamAbbr,
         // For Mustache sections that only one level gets, e.g. {{#level_us}}.
-        level_ms: gblTmplSettings.teamLevel == "ms",
-        level_us: gblTmplSettings.teamLevel == "us",
+        // Other levels' tags are missing, which Mustache treats as false.
+        ...TmplSettings.#levelTag(gblTmplSettings.teamLevel),
         // Empty, never "null", for a team file with no current season yet.
         current_season: `${gblTmplSettings.currentSeasonID ?? ""}`,
         current_season_label: `${gblTmplSettings.currentSeasonLabel ?? gblTmplSettings.currentSeasonID ?? ""}`,
@@ -33,5 +33,10 @@ class TmplSettings {
         ? gblTmplSettings.defaultDraftTags
         : [...gblTmplSettings.defaultDraftTags, ...templateSettings.draftTags];
     return templateSettings;
+  }
+
+  // { level_<level>: true } for the team's level, or nothing without one.
+  static #levelTag(teamLevel) {
+    return teamLevel == undefined ? {} : { [`level_${teamLevel}`]: true };
   }
 }

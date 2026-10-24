@@ -31,6 +31,14 @@ class MockUI {
   }
 
   /**
+   * A copy of settings(fnName), as DraftsUI.settingsCopy makes it. MockUI has
+   * no settings() of its own; a test that needs settings assigns one.
+   */
+  settingsCopy(fnName) {
+    return JSON.parse(JSON.stringify(/** @type {any} */ (this).settings(fnName)));
+  }
+
+  /**
    * Display a prompt (returns configured response or default)
    */
   displayPrompt(config) {
