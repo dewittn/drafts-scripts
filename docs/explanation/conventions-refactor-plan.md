@@ -1,11 +1,13 @@
 # Conventions refactor plan
 
 Repo: /Users/dewittn/Programing/dewittn/Other/drafts-scripts
-Branch: `feature/conventions-refactor` (off `dev`). Already checked out. Do not switch branches.
+Branch: `feature/conventions-refactor` (off `dev`), merged into `dev` and deleted.
 
 ## Status
 
-One commit per stage on the branch, each reviewed before the next starts. The branch is synced to Drafts after stage 4 and held there for a few days of real use (Record Attendance, Submit Game Report, Edit Game, Edit Season). Bug fixes go on the branch. Then it merges into `dev` with a PR.
+**Merged into `dev` on 2026-10-24 (PR #10).** Three days of real use (2026-10-21 to 10-24) turned up no bugs. Drafts runs `dev`.
+
+One commit per stage on the branch, each reviewed before the next started. The branch was synced to Drafts after stage 4 and held there for a few days of real use (Record Attendance, Submit Game Report, Edit Game, Edit Season), then merged into `dev` with a PR.
 
 | Stage | Items | State |
 |---|---|---|
@@ -15,9 +17,7 @@ One commit per stage on the branch, each reviewed before the next starts. The br
 | 3. Shared helpers | 10–12, 15, 17 | done |
 | 4. Season and Game split | 13, 14, 16, 18, 19, 21, GameEditor | done |
 
-While the branch is synced, the fallback is `dev` (`git switch dev && bun run sync`), not `main`: main predates the season rebuild and can't read team files.
-
-## Testing week (for the session that fixes bugs)
+## Testing week (for the session that fixes bugs; done)
 
 All stages are committed and the branch was synced to Drafts on 2026-10-21. The user is testing it in real use, often from their phone through Remote Control, and may be away from the Mac. Your job is to fix bugs they report in the refactored code, and to merge when they say it works. Don't add features or start new refactoring. Follow `.claude/skills/drafts-change-workflow/SKILL.md` and `docs/reference/drafts-runtime.md`.
 
