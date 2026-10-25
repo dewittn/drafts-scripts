@@ -1,7 +1,6 @@
 ---
 meats:
   actionGroup: "Show me the Meats!"
-  meatsTemplate: "Library/Templates/new-meats.md"
   meatsDraftUUID: "50EE2D13-6950-4F9D-A780-244DE4689182"
   thingsListName: "Sanity"
   defaultTags:
