@@ -34,7 +34,7 @@ class EmailDraft {
     for (; index < lines.length; index++) {
       if (lines[index].trim() == "") continue;
 
-      const match = this.constructor.fieldPattern.exec(lines[index]);
+      const match = EmailDraft.fieldPattern.exec(lines[index]);
       if (match == null) break;
 
       const key = match[1].toLowerCase();
@@ -43,7 +43,7 @@ class EmailDraft {
 
     this.#subject = fields.subject ?? "";
     this.#to = fields.to ?? "";
-    this.#recipients = this.constructor.parseRecipients(fields.to, fields.email);
+    this.#recipients = EmailDraft.parseRecipients(fields.to, fields.email);
     this.#invalidAddresses = EmailDraft.findInvalidAddresses(fields.to, fields.email);
     this.#body = lines.slice(index).join("\n").trim();
   }

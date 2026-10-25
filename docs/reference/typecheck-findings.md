@@ -28,6 +28,9 @@ Updated 2026-10-18: 288 errors in 250 entries. The season storage rewrite on
 `Season.js`. Old array-format seasons are converted by `bun run bvr:migrate`
 instead.
 
+Updated 2026-10-24: 285 errors in 247 entries. `EmailDraft` now reads its own statics as
+`EmailDraft.X` instead of `this.constructor.X`, which clears two errors.
+
 | Group | Errors | Meaning |
 |-------|--------|---------|
 | Real-bug candidates | 36 | Likely wrong at runtime when the line runs. 8 entries are on production paths, 3 of them dead code. 4 errors are legacy/Airtable |
@@ -116,7 +119,7 @@ JSDoc in Phases 4 and 5. Do not "fix" them now.
 
 | Pattern | Errors | Detail |
 |---------|--------|--------|
-| `this.constructor.X` | 31 | Three are in `airtable-v2.js` (legacy/Airtable). TypeScript types `this.constructor` as `Function`, so static fields read through it are unknown (TypeScript issue #3841). One instance hides a real gap. `Settings.basePath` at `Library/Scripts/modules/cp/filesystems/CloudFS.js:127` reads a static that `Settings` does not define, so it is always undefined. Nothing reads it today. |
+| `this.constructor.X` | 29 | Three are in `airtable-v2.js` (legacy/Airtable). TypeScript types `this.constructor` as `Function`, so static fields read through it are unknown (TypeScript issue #3841). One instance hides a real gap. `Settings.basePath` at `Library/Scripts/modules/cp/filesystems/CloudFS.js:127` reads a static that `Settings` does not define, so it is always undefined. Nothing reads it today. |
 | `Settings` fields | 11 | `Settings` copies keys from JSON with `Object.assign(this, ...)`. The fields exist only at runtime. A typed settings interface fixes this in Phase 4. |
 | `airtable-v2.js` responses | 16 | **legacy/Airtable.** JSDoc types the response as `boolean \| {success, data}`, so `.success` is not provable. Ambiguous data shape. No action needed while Airtable is unused. |
 | Setters that return a value | 5 | `BearDocument.js:66`, `DraftsDocument.js:63`, `TestDocument.js:24,40`, `UlyssesDocument.js:67`. The return value is discarded. Harmless. |

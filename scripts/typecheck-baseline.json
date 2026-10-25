@@ -525,20 +525,6 @@
     "count": 1
   },
   {
-    "file": "Library/Scripts/modules/nr/EmailDraft.js",
-    "code": 2339,
-    "message": "Property 'fieldPattern' does not exist on type 'Function'.",
-    "line": "const match = this.constructor.fieldPattern.exec(lines[index]);",
-    "count": 1
-  },
-  {
-    "file": "Library/Scripts/modules/nr/EmailDraft.js",
-    "code": 2339,
-    "message": "Property 'parseRecipients' does not exist on type 'Function'.",
-    "line": "this.#recipients = this.constructor.parseRecipients(fields.to, fields.email);",
-    "count": 1
-  },
-  {
     "file": "Library/Scripts/modules/nr/QueryLetter.js",
     "code": 2554,
     "message": "Expected 5-7 arguments, but got 3.",
