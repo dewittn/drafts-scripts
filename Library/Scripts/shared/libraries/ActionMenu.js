@@ -29,8 +29,13 @@ class ActionMenu {
     return new ActionMenu(actionGroup);
   }
 
+  // A name with no matching action in Drafts is left out of the menu, with a
+  // warning, so one renamed action does not break the whole menu.
   static createFromList(actionList) {
     const actionGroup = new DynamicActionGroup(actionList);
+    if (actionGroup.missing.length > 0) {
+      new DraftsUI().displayWarningMessage(`Actions not found: ${actionGroup.missing.join(", ")}`);
+    }
     return new ActionMenu(actionGroup);
   }
 
@@ -62,12 +67,18 @@ class ActionMenu {
 
 class DynamicActionGroup {
   #actions;
+  #missing;
 
   constructor(actionNames) {
-    this.#actions = actionNames.map((name) => Action.find(name));
+    this.#missing = actionNames.filter((name) => Action.find(name) == undefined);
+    this.#actions = actionNames.map((name) => Action.find(name)).filter(Boolean);
   }
 
   get actions() {
     return this.#actions;
+  }
+
+  get missing() {
+    return this.#missing;
   }
 }

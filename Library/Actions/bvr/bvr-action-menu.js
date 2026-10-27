@@ -1,10 +1,10 @@
 if (typeof ActionMenu == "undefined") require("shared/libraries/ActionMenu.js");
 const actionList = [
   "Record Attendace",
-  "Bus Ride Home",
+  "Bus Home",
   "Record Game Score",
   "Submit Game Report",
-  "Edit Game",
+  "Edit Game Score",
   "Create Practice Plan",
 ];
 
