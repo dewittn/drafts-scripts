@@ -107,12 +107,32 @@ class Bear {
     return this.#openCallback("open-note", params, false);
   }
 
+  // Bear issues a separate API token on each device, so the credential is
+  // stored per device model, the same way ulysses-v2.js does it. Drafts asks
+  // for it the first time it is needed on each device.
+  get token() {
+    const model = device.model;
+    const credential = Credential.create(`Bear (${model})`, `Bear API token for this ${model}`);
+    credential.addPasswordField("token", "API Token");
+    credential.authorize();
+    return credential.getValue("token");
+  }
+
+  // Open a tag in Bear's sidebar. Opens a plain URL, so Bear stays in front.
+  openTag(name) {
+    if (!name) return this.#displayErrorMessage("Tag name is required!");
+
+    const token = this.token;
+    if (!token) return this.#displayErrorMessage("Bear API token is required!");
+
+    return this.#openURL("open-tag", { name: name, token: token });
+  }
+
   // Search for notes
-  search(term, tag, token) {
-    let params = {};
+  search(term, tag) {
+    let params = { token: this.token };
     if (term) params["term"] = term;
     if (tag) params["tag"] = tag;
-    if (token) params["token"] = token;
 
     const response = this.#openCallback("search", params);
 
@@ -169,10 +189,8 @@ class Bear {
   }
 
   // Get all tags
-  tags(token) {
-    let params = {};
-    if (token) params["token"] = token;
-
+  tags() {
+    const params = { token: this.token };
     const response = this.#openCallback("tags", params);
 
     if (response?.tags) {
