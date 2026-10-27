@@ -48,12 +48,21 @@ class Bear {
   // * Bear API Functions
   // ***********
 
-  // Create a new note in Bear
-  create(title, text = "", tags = "") {
+  // Create a new note in Bear. By default Drafts waits for Bear's x-success,
+  // which brings Drafts back to the front. returnToDrafts = false opens a plain
+  // URL instead, so Bear stays in front; it returns whether the URL opened.
+  // openNote and showWindow are Bear's "yes"/"no" flags.
+  /** @param {{ openNote?: string, showWindow?: string, returnToDrafts?: boolean }} [options] */
+  create(title, text = "", tags = "", options = {}) {
+    const { openNote, showWindow, returnToDrafts = true } = options;
     let params = {};
     if (title) params["title"] = title;
     if (text) params["text"] = text;
     if (tags) params["tags"] = tags;
+    if (openNote) params["open_note"] = openNote;
+    if (showWindow) params["show_window"] = showWindow;
+
+    if (!returnToDrafts) return this.#openURL("create", params);
 
     const response = this.#openCallback("create", params);
     return response?.identifier ? new BearNote(response) : response;
