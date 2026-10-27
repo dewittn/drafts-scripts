@@ -175,4 +175,95 @@ ui = makeUI({ fieldValues: { items: "socks, shirts" } });
 new MustachePrompt(ui).render("{{^items}}none{{/items}}{{#items}}- {{.}}{{/items}}");
 test.assertDeepEqual(rendered.data.items, ["socks", "shirts"], "splits the list when any tag opens a {{#section}}");
 
+// --- checklists ---
+test.section("checklists");
+
+const page = [
+  "### To-Dos",
+  "",
+  "- [ ] Buy milk #errands #home",
+  "- [ ] ",
+  "- [x] Already done",
+  "  * [ ] Call Sam @when(today) #phone",
+  "- Primary goal, not a checkbox",
+  "- [ ] #only-a-tag",
+  "Some text [ ] in a sentence",
+  "## Thoughts",
+].join("\n");
+
+const checklist = ThingsParser.fromChecklist(page);
+test.assertEqual(
+  checklist.todos,
+  "- Buy milk @tags(errands, home)\n- Call Sam @tags(phone) @when(today)",
+  "turns open checkboxes into TaskPaper to-dos, in order, with #tags as @tags"
+);
+test.assertEqual(
+  checklist.text,
+  "### To-Dos\n\n- [x] Already done\n- Primary goal, not a checkbox\nSome text [ ] in a sentence\n## Thoughts",
+  "removes every open checkbox line, blank ones too, and keeps the rest"
+);
+test.assertDeepEqual(ThingsParser.fromChecklist("No to-dos here"), { todos: "", text: "No to-dos here" }, "leaves text with no checkboxes alone");
+
+const [milk, sam] = new ThingsParser().parse(checklist.todos);
+test.assertEqual(milk.title, "Buy milk", "parses the converted to-do's title");
+test.assertDeepEqual(milk.tags, ["errands", "home"], "parses the converted tags");
+test.assertEqual(milk.list, undefined, "sets no list, so to-dos land in the Inbox");
+test.assertEqual(sam.when, "today", "keeps @tags written on a checkbox line");
+test.assertDeepEqual(new ThingsParser().parse(""), [], "parses no items from no to-dos");
+
+const tricky = ThingsParser.fromChecklist(
+  [
+    "- [ ] Meet @john re: budget",
+    "- [ ] Call @my-tag now",
+    "- [ ] Ping @café person",
+    "- [ ] Email sam@example.com",
+    "- [ ] Do it @when(today) later #home",
+    "- [ ] Things @tags(a, b) #c",
+    "1. [ ] Numbered @done",
+    "- [ ] Pay rent\r",
+  ].join("\n")
+);
+test.assertEqual(
+  tricky.todos,
+  [
+    "- Meet @john re: budget",
+    "- Call @my-tag now",
+    "- Ping @café person",
+    "- Email sam@example.com",
+    "- Do it later @tags(home) @when(today)",
+    "- Things @tags(a, b, c)",
+    "- Numbered @done",
+    "- Pay rent",
+  ].join("\n"),
+  "moves only the @tags it reads, merges @tags with #tags, and handles numbered and CRLF lines"
+);
+const trickyItems = new ThingsParser().parse(tricky.todos);
+test.assertEqual(trickyItems[0].title, "Meet @john re: budget", "keeps other @words in the title");
+test.assertEqual(trickyItems[6].completed, true, "reads @done on a checkbox line");
+test.assertEqual(tricky.text, "", "removes numbered and CRLF checkbox lines");
+
+// --- sending ---
+test.section("sending");
+
+let callbacks = [];
+let opened = true;
+/** @type {any} */ (globalThis).TJSContainer = { create: (items) => ({ url: `things:///json?count=${items.length}` }) };
+/** @type {any} */ (globalThis).CallbackURL = {
+  create: () => {
+    const callback = { parameters: {}, opened: false };
+    callback.addParameter = (key, value) => (callback.parameters[key] = value);
+    callback.open = () => (callback.opened = true) && opened;
+    callbacks.push(callback);
+    return callback;
+  },
+};
+
+test.assertEqual(new ThingsParser().send([milk, sam]), true, "reports when Things added the items");
+test.assertEqual(callbacks[0].baseURL, "things:///json?count=2", "sends every item in one Things link");
+test.assertEqual(callbacks[0].opened, true, "waits for Things through the callback");
+test.assertDeepEqual(callbacks[0].parameters, {}, "does not ask Things to reveal, so it returns to Drafts");
+
+opened = false;
+test.assertEqual(new ThingsParser().send([milk]), false, "reports when Things did not add the items");
+
 test.summary();

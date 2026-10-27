@@ -27,6 +27,49 @@ class ThingsParser {
   };
   static todoFields = ["when", "deadline", "heading", "list", "listID"];
   static projectFields = ["when", "deadline", "area", "areaID"];
+  static checkboxPattern = /^\s*(?:[-*+]|\d+\.)\s+\[ \]\s?(.*?)\r?$/;
+  // The @tags this class reads. Only these come off a checkbox's title; any
+  // other @word stays in it.
+  static attributeNames = [...Object.values(this.fieldTags), ...Object.values(this.statusTags), ["tag", "tags"]].flat();
+  static attributePattern = new RegExp(String.raw`(^|\s)@(${this.attributeNames.join("|")})(?:\(([^)]*)\))?(?=\s|$)`, "g");
+
+  // Turns the open Markdown checkboxes in text into TaskPaper to-dos, e.g.
+  // "- [ ] Buy milk #errands @when(today)" becomes
+  // "- Buy milk @tags(errands) @when(today)". Returns the to-dos and the text
+  // without the checkbox lines. Blank checkboxes are removed but make no to-do.
+  static fromChecklist(text) {
+    const todos = [];
+    const remaining = [];
+    for (const line of text.split("\n")) {
+      const checkbox = line.match(ThingsParser.checkboxPattern);
+      if (!checkbox) {
+        remaining.push(line);
+        continue;
+      }
+      const todo = ThingsParser.#checkboxTodo(checkbox[1]);
+      if (todo) todos.push(todo);
+    }
+    return { todos: todos.join("\n"), text: remaining.join("\n") };
+  }
+
+  // "#" starts a tag, which runs to the next "#". The @tags this class reads
+  // move to the end of the line, and a written @tag(...) joins the #tags.
+  static #checkboxTodo(body) {
+    const attributes = [];
+    const tags = [];
+    for (const [, , name, value = ""] of body.matchAll(ThingsParser.attributePattern)) {
+      if (name == "tag" || name == "tags") tags.push(...value.split(","));
+      else attributes.push(value ? `@${name}(${value})` : `@${name}`);
+    }
+
+    const [rawTitle, ...hashTags] = body.replace(ThingsParser.attributePattern, "$1").split("#");
+    const title = rawTitle.replace(/\s+/g, " ").trim();
+    if (!title) return null;
+
+    const tagList = [...tags, ...hashTags].map((tag) => tag.trim()).filter(Boolean);
+    if (tagList.length) attributes.unshift(`@tags(${tagList.join(", ")})`);
+    return ["-", title, ...attributes].join(" ");
+  }
 
   // Returns the outline's top-level projects and to-dos, in order.
   parse(text) {
@@ -40,6 +83,14 @@ class ThingsParser {
     callback.baseURL = TJSContainer.create(items).url;
     callback.addParameter("reveal", true);
     return app.openURL(callback.url);
+  }
+
+  // Adds the items in Things and waits for it to return to Drafts, so actions
+  // queued after this one run in Drafts. Returns whether it worked.
+  send(items) {
+    const callback = CallbackURL.create();
+    callback.baseURL = TJSContainer.create(items).url;
+    return callback.open();
   }
 
   #topLevel(item) {
