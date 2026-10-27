@@ -246,4 +246,59 @@ test.assertEqual(new Attendance(team.dependencies).loadDraft(), openRoster, "the
 /** @type {any} */ (globalThis).draft = fakeDraft("OTHER", "# other");
 test.assertEqual(new Attendance(team.dependencies).loadDraft(), foundRoster, "otherwise the roster comes from Draft.find");
 
+// --- Bus Ride Home ---
+test.section("Bus Ride Home");
+
+const attendanceTaken = (date, submitted = "x") =>
+  [
+    "# Attendance: FM 2026 Fall",
+    "[[BVR Coaching]]",
+    `_For: ${date}_`,
+    "- [x] Recorded",
+    `- [${submitted}] Submitted`,
+    "---",
+    "",
+    "- [x] Here Player (7)",
+    "- [ ] Absent Player (8)",
+  ].join("\n");
+
+const busList = Attendance.flipBusList(attendanceTaken("2026-10-21"));
+test.assertEqual(busList.split("\n")[2], "_For: 2026-10-21 · Bus home_", "the date line is marked as the bus list");
+test.assertDeepEqual(busList.split("\n").slice(3, 5), ["- [x] Recorded", "- [x] Submitted"], "Recorded and Submitted are left checked");
+test.assertDeepEqual(
+  busList.split("\n").slice(-2),
+  ["- [ ] Here Player (7)", "- [x] Absent Player (8)"],
+  "players who were here are unchecked, absent players are checked",
+);
+test.assertEqual(Attendance.flipBusList(busList), attendanceTaken("2026-10-21"), "flipping again restores today's attendance");
+
+const editorText = [];
+/** @type {any} */ (globalThis).editor = { load: () => {}, setText: (text) => editorText.push(text) };
+function busRideHomeWith(attendanceDraft) {
+  /** @type {any} */ (globalThis).draft = { uuid: "OPEN-DRAFT", hasTag: () => false };
+  ({ team, ui } = makeTeam("fixture-ms"));
+  /** @type {any} */ (globalThis).draft = attendanceDraft;
+  editorText.length = 0;
+  team.toggleBusList();
+}
+
+let busDraft = fakeDraft("ROSTER", attendanceTaken("2026-10-21"));
+busRideHomeWith(busDraft);
+test.assertEqual(busDraft.lines[8], "- [x] Absent Player (8)", "Bus Ride Home flips today's submitted attendance");
+test.assertEqual(busDraft.updates, 1, "the draft is saved");
+test.assertDeepEqual(editorText, [busDraft.content], "and the editor shows the same text");
+test.assert(infoMessages(ui).includes("Bus list: checked players are not riding the bus."), "and says it is now the bus list");
+busRideHomeWith(busDraft);
+test.assert(infoMessages(ui).includes("Back to today's attendance."), "running it again says it is back to attendance");
+
+for (const [label, content] of [
+  ["attendance not yet submitted", attendanceTaken("2026-10-21", " ")],
+  ["attendance submitted on an earlier day", attendanceTaken("2026-10-20")],
+]) {
+  busDraft = fakeDraft("ROSTER", content);
+  busRideHomeWith(busDraft);
+  test.assertEqual(busDraft.content, content, `${label}: the draft is left alone`);
+  test.assert(infoMessages(ui).includes("Submit today's attendance before making the bus list."), `${label}: and says to submit first`);
+}
+
 test.summary();

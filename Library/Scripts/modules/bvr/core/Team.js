@@ -259,6 +259,10 @@ class Team {
     this.attendace.submit(options);
   }
 
+  toggleBusList() {
+    this.attendace.toggleBusList();
+  }
+
   gameRecordResult() {
     const game = new Game(this.dependencies);
     game.recordResult();

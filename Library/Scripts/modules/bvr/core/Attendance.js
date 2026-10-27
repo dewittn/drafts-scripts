@@ -99,6 +99,17 @@ class Attendance {
     return /\[x\]/.test(this.attendaceDraft.lines[4]);
   }
 
+  // Submitted stays checked until the next Record Attendance resets the
+  // draft, so also check the draft is dated today.
+  get wasSubmittedToday() {
+    const today = this.bvr.formatDateYMD(new Date());
+    return this.hasBeenSubmitted && this.attendaceDraft.lines[2].includes(today);
+  }
+
+  get isBusList() {
+    return this.attendaceDraft.lines[2].includes(Attendance.busListMarker);
+  }
+
   get attendaceDraftIsLoaded() {
     return draft.uuid == this.attendaceDraft.uuid;
   }
@@ -186,6 +197,58 @@ class Attendance {
     this.submitted({ dryRun });
   }
 
+  // Turn today's attendance into the bus list home, or back again. Players
+  // who were absent or are picked up get checked, so the unchecked names are
+  // the ones riding the bus.
+  toggleBusList() {
+    this.#loadAttendaceDraft();
+    if (this.wasSubmittedToday == false) {
+      return this.ui.displayAppMessage("info", this.displayMsgs.busListNotReady);
+    }
+
+    const content = Attendance.flipBusList(this.attendaceDraft.content);
+
+    // Same editor and draft handling as submitted().
+    editor.load(this.attendaceDraft);
+    editor.setText(content);
+    this.attendaceDraft.content = content;
+    this.attendaceDraft.update();
+
+    const message = this.isBusList ? this.displayMsgs.busListOn : this.displayMsgs.busListOff;
+    this.ui.displayAppMessage("info", message);
+  }
+
+  // Added to the date line while the draft is the bus list.
+  static busListMarker = " · Bus home";
+
+  // Attendance content with every player's checkbox flipped and the bus list
+  // marker added to or removed from the date line. Lines follow
+  // bvr/attendance.md: the date is line 2, players start at line 5, so the
+  // Recorded and Submitted checkboxes are never flipped.
+  static flipBusList(content) {
+    return `${content}`
+      .split("\n")
+      .map((line, index) => {
+        if (index == 2) return Attendance.toggleBusListMarker(line);
+        if (index < 5) return line;
+        return Attendance.flipCheckbox(line);
+      })
+      .join("\n");
+  }
+
+  static toggleBusListMarker(dateLine) {
+    if (dateLine.includes(Attendance.busListMarker)) {
+      return dateLine.replace(Attendance.busListMarker, "");
+    }
+    return dateLine.replace(/_$/, `${Attendance.busListMarker}_`);
+  }
+
+  static flipCheckbox(line) {
+    if (line.startsWith("- [x]")) return line.replace("- [x]", "- [ ]");
+    if (line.startsWith("- [ ]")) return line.replace("- [ ]", "- [x]");
+    return line;
+  }
+
   #loadAttendaceDraft() {
     if (this.attendanceDraftID == undefined) {
       return alert(
@@ -222,17 +285,18 @@ class Attendance {
   #resetAttendanceDraft() {
     const dateMatch = /\d{4}-\d{2}-\d{2}/;
     const dateField = this.attendaceDraft.lines[2];
-    const lastTaken = dateMatch.exec(dateField);
+    const lastTaken = dateMatch.exec(dateField)?.[0];
     const today = this.bvr.formatDateYMD(new Date());
 
     if (lastTaken != today) {
       this.attendaceDraft.tasks.forEach((task) =>
         this.attendaceDraft.resetTask(task)
       );
-      this.attendaceDraft.content = this.attendaceDraft.content.replace(
-        lastTaken,
-        today,
-      );
+      // A new day starts as attendance, even if the last one ended as the
+      // bus list.
+      this.attendaceDraft.content = this.attendaceDraft.content
+        .replace(lastTaken, today)
+        .replace(Attendance.busListMarker, "");
 
       this.attendaceDraft.update();
       return true;

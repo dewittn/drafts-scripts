@@ -5,6 +5,9 @@ displayMsgs:
   submitFailure: Attendance could not be submitted!
   alreadySubmitted: Addendace has already been submitted today.
   noOneAbsent: No one is absent today!
+  busListNotReady: Submit today's attendance before making the bus list.
+  busListOn: "Bus list: checked players are not riding the bus."
+  busListOff: Back to today's attendance.
 getTeamIDFromPrompt:
   # Lists only the teams in season unless none are (then every team) or the
   # action is Start New Season. One team in season is used without asking.

@@ -126,13 +126,6 @@
     "count": 1
   },
   {
-    "file": "Library/Scripts/modules/bvr/core/Attendance.js",
-    "code": 2769,
-    "message": "No overload matches this call.   The last overload gave the following error.     Argument of type 'RegExpExecArray' is not assignable to parameter of type 'string | RegExp'.",
-    "line": "lastTaken,",
-    "count": 1
-  },
-  {
     "file": "Library/Scripts/modules/bvr/core/BVR.js",
     "code": 2339,
     "message": "Property 'settingsFile' does not exist on type 'Function'.",

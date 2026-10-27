@@ -31,11 +31,14 @@ instead.
 Updated 2026-10-24: 285 errors in 247 entries. `EmailDraft` now reads its own statics as
 `EmailDraft.X` instead of `this.constructor.X`, which clears two errors.
 
+Updated 2026-10-27: 284 errors in 246 entries. `Attendance.js` now takes the date string
+from its match result before `replace()`, which clears one error.
+
 | Group | Errors | Meaning |
 |-------|--------|---------|
 | Real-bug candidates | 36 | Likely wrong at runtime when the line runs. 8 entries are on production paths, 3 of them dead code. 4 errors are legacy/Airtable |
 | Ambiguous, verify in Drafts | 6 | Depends on runtime behavior the definitions do not capture |
-| Checker limitations in source | 77 | Valid JavaScript TypeScript cannot follow |
+| Checker limitations in source | 76 | Valid JavaScript TypeScript cannot follow |
 | JSDoc does not match the code | 15 | Comments are wrong, runtime is fine |
 | Test-only | 155 | Test patterns TypeScript cannot follow (214 at baseline) |
 
@@ -126,7 +129,6 @@ JSDoc in Phases 4 and 5. Do not "fix" them now.
 | Date arithmetic | 4 | `new Date() - draft.createdAt` in `record-attendance.js:2` and `record-attendance-dry-run.js:5`. Valid JavaScript that TypeScript rejects. Separately, `oneSecond = 10000` is ten seconds. |
 | `const draft` in actions | 4 | `beyond-the-book.js:4` and `author-update.js:3` declare their own `draft`, shadowing the Drafts global. That works at runtime. The checker then types it as the global `Draft`. |
 | `Draft.prototype.isMorningPage` | 2 | `morning-pages.js` extends `Draft` locally. TypeScript ignores prototype assignments on declared classes. |
-| `replace()` with non-string arguments | 1 | `Attendance.js:234` passes a match result. JavaScript coerces it. (`Team.js` passed a number until Update Roster was rewritten on 2026-10-19.) |
 | Other inference | 2 | `DocumentFactory.js:49` compares a document with `false`. `DraftsDocument.js:260` reads `.draft` after an undefined guard TypeScript cannot see. |
 
 ## JSDoc does not match the code
