@@ -57,3 +57,13 @@ declare namespace MustacheTemplate {
   function createWithTemplate(template: string): MustacheTemplate;
   function createWithPath(path: string): MustacheTemplate;
 }
+
+/**
+ * The global Library/Scripts/vendor/birchoutline.js defines. It is a webpack
+ * bundle whose `exports.x = ...` lines make TypeScript read the file as a
+ * CommonJS module, so its top-level `var birchoutline` is not seen as global.
+ * Only the part ThingsParser uses is typed.
+ */
+declare var birchoutline: {
+  Outline: { createTaskPaperOutline(text: string): any };
+};

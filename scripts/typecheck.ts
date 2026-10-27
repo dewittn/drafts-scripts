@@ -143,7 +143,7 @@ for (const file of [...typeFiles, ...libraries]) diagnostics.push(...fileDiagnos
 // file means a class or function that file uses is not loaded by this action.
 const nameNotFound = new Set([2304, 2552]);
 const isAction = (file: string) => file.startsWith(`${actionsDir}/`) && !file.endsWith("-test.js");
-const isLibraryFile = (file: string) => file.startsWith(`${scriptsDir}/`);
+const isLibraryFile = (file: string) => file.startsWith(`${scriptsDir}/`) && !file.startsWith(`${vendorDir}/`);
 
 // One name-not-found error per file and position, however many actions hit it,
 // so it counts once against the baseline. The library program's own errors are

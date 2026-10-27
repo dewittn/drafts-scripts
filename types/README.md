@@ -55,6 +55,8 @@ If upstream fixed one of the problems it works around, delete that block.
 - Methods `Library/Scripts/vendor/nr.js` adds to `Draft.prototype`.
 - `MustacheTemplate.createWithTemplate()` and `createWithPath()` as statics. Upstream
   declares them as instance methods while documenting static use.
+- `birchoutline`, the global `vendor/birchoutline.js` defines. Its webpack bundle reads
+  as a CommonJS module to TypeScript, so the global is not picked up from source.
 
 The file starts with a `/// <reference path="drafts.d.ts" />`. That makes the
 official file load first, so the overloads declared here take priority.
