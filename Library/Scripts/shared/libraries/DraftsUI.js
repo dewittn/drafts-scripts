@@ -122,6 +122,31 @@ class DraftsUI {
     return yesNo.buttonPressed;
   }
 
+  // Shows each { menuTitle, menuMessage } page in turn, with Next and Done
+  // buttons; the last page has only Done. Cancelling or Done stops.
+  showPages(pages) {
+    for (const [index, page] of pages.entries()) {
+      const isLast = index == pages.length - 1;
+      const menuItems = [{ type: "button", data: { name: "Done", value: "done", isDefault: isLast } }];
+      if (!isLast) menuItems.unshift({ type: "button", data: { name: "Next", value: "next", isDefault: true } });
+
+      const prompt = this.buildMenu({ ...page, menuItems });
+      if (!prompt.show() || prompt.buttonPressed == "done") return;
+    }
+  }
+
+  // Inserts text at the cursor, replacing any selection, with a space before
+  // it when the cursor follows other text. Leaves the cursor after it.
+  insertAtCursor(text) {
+    const [start] = editor.getSelectedRange();
+    const before = start > 0 ? editor.getTextInRange(start - 1, 1) : "";
+    const insert = before && !/\s/.test(before) ? ` ${text}` : text;
+
+    editor.setSelectedText(insert);
+    editor.setSelectedRange(start + insert.length, 0);
+    editor.activate();
+  }
+
   displayErrorMessage(errorMessage, stackTrace) {
     if (stackTrace != undefined) this.#updateDraftLog(errorMessage, stackTrace);
 

@@ -110,3 +110,85 @@ fastmail:
           data:
             name: Create Draft
             value: create
+things:
+  # Offered by Insert Things Area, in this order. Spell each one exactly as
+  # the area is named in Things.
+  areas:
+    - Sanity
+    - Personal
+    - Authoring
+    - BVR Coaching
+    - Cabin 23
+    - Coto.Studio
+  areaMenu:
+    menuTitle: Things Area
+    menuMessage: Which area should this go in?
+  # Insert Things When. The time is used only when the reminder switch is on.
+  whenMenu:
+    menuTitle: Things When
+    menuMessage: When should this start?
+    menuItems:
+      - type: datePicker
+        data:
+          name: when
+          label: When
+          options:
+            mode: dateAndTime
+      - type: switch
+        data:
+          name: reminder
+          label: Create reminder
+          initialValue: false
+      - type: button
+        data:
+          name: Insert
+          value: insert
+          isDefault: true
+  # Things Formatting Help, one prompt per page. Next moves on, Done stops.
+  help:
+    - menuTitle: "Things Format: To-dos"
+      menuMessage: |
+        A line starting with "- " is a to-do. Tags go after the title:
+
+        - Call the dentist @when(today) @due(2026-11-01) @tags(home, errands) @area(Sanity)
+
+        Under a to-do, indented "- " lines become checklist items and other indented lines become notes.
+
+        @when: today, tomorrow, evening, anytime, someday, or a date
+        @when(2026-11-01@14:15): a date with a reminder at that time
+        @due: a date
+        @area or @list: an area or project, spelled as in Things
+        @tags: a comma list
+        @done, @canceled: add it already finished
+    - menuTitle: "Things Format: Projects"
+      menuMessage: |
+        A line ending in ":" is a project. Indent its to-dos with a tab:
+
+        Move house: @area(Personal) @due(2026-12-01)
+            Notes about the move
+            - Book movers
+            Packing:
+                - Kitchen
+                - Books
+
+        Inside a project, an indented line ending in ":" is a heading, and the to-dos under it are filed there.
+
+        Projects take @area, @when, @due, and @tags.
+    - menuTitle: "Things Format: Morning Pages"
+      menuMessage: |
+        In Morning Pages, only checkbox lines go to Things, and they are removed from the page:
+
+        - [ ] Buy milk #errands #home @when(today)
+
+        Each #word becomes a tag. Any tag from the To-dos page works.
+
+        Don't end a to-do with another @word, like "Email @sam": Things Parser reads it as a tag and drops it from the title.
+    - menuTitle: "Things Format: Variables"
+      menuMessage: |
+        Things Parser asks for each {{variable}} before it runs:
+
+        {{name}}: a text field
+        {{date:due}}: a date picker
+        {{date:due-1d}}: that date moved by days (d), weeks (w), or months (m)
+        {{bool:#urgent}}...{{/urgent}}: a switch that shows or hides the text
+        {{#items}}- {{.}}{{/items}}: one line per item in a comma list

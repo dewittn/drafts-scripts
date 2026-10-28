@@ -157,6 +157,10 @@ test.assertEqual(hotel.checklist[0].canceled, true, "reads @cancelled as cancele
 test.assertEqual(passport.list, "Errands", "sets the list");
 test.assertEqual(passport.listID, "abc123", "reads @listid as listID");
 test.assertDeepEqual(passport.tags, ["admin"], "reads a single @tag");
+
+const [sanity] = new ThingsParser().parse(ThingsParser.fromChecklist("- [ ] Clean the gutters @area(Sanity)").todos);
+test.assertEqual(sanity.list, "Sanity", "files a to-do with @area in that area, through its list");
+test.assertEqual(new ThingsParser().parse("- Plan @area(Personal) @list(Move)")[0].list, "Move", "prefers @list over @area on a to-do");
 test.assertEqual(passport.notes, undefined, "leaves notes unset when there are none");
 test.assertEqual(project.headings[0].archived, true, "reads @done on a heading as archived");
 

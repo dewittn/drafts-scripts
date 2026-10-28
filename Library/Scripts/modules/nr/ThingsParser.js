@@ -11,12 +11,13 @@ if (typeof birchoutline == "undefined") require("vendor/birchoutline.js");
 // Adapted from Things Parser 3 by pdavisonreiber.
 class ThingsParser {
   // Each Things field and the TaskPaper tags that set it, first match wins.
+  // A to-do has no area in Things; it goes in an area through its list.
   static fieldTags = {
     when: ["when", "defer"],
     deadline: ["due", "deadline"],
     heading: ["heading"],
-    list: ["list", "project"],
-    listID: ["listID", "listid"],
+    list: ["list", "project", "area"],
+    listID: ["listID", "listid", "areaID", "areaid"],
     area: ["area"],
     areaID: ["areaID", "areaid"],
   };
