@@ -123,15 +123,16 @@ class DraftsUI {
   }
 
   // Shows each { menuTitle, menuMessage } page in turn, with Next and Done
-  // buttons; the last page has only Done. Cancelling or Done stops.
+  // buttons; the last page has only Done. No Cancel, since Done does the same.
   showPages(pages) {
     for (const [index, page] of pages.entries()) {
       const isLast = index == pages.length - 1;
       const menuItems = [{ type: "button", data: { name: "Done", value: "done", isDefault: isLast } }];
       if (!isLast) menuItems.unshift({ type: "button", data: { name: "Next", value: "next", isDefault: true } });
 
-      const prompt = this.buildMenu({ ...page, menuItems });
-      if (!prompt.show() || prompt.buttonPressed == "done") return;
+      const prompt = this.buildMenu({ ...page, menuItems, isCancellable: false });
+      prompt.show();
+      if (prompt.buttonPressed == "done") return;
     }
   }
 

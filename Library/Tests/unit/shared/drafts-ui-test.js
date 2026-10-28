@@ -50,10 +50,7 @@ shown = [];
 new DraftsUI().showPages(pages);
 test.assertEqual(shown.length, 1, "stops at Done");
 
-presses = [null];
-shown = [];
-new DraftsUI().showPages(pages);
-test.assertEqual(shown.length, 1, "stops when cancelled");
+test.assert(shown.every((prompt) => prompt.isCancellable === false), "shows no Cancel button");
 
 test.assert(
   things.help.length > 1 && things.help.every((page) => page.menuTitle && page.menuMessage),
