@@ -91,13 +91,6 @@
     "count": 1
   },
   {
-    "file": "Library/Actions/nr/meat-inventory.js",
-    "code": 2551,
-    "message": "Property 'active' does not exist on type 'Draft'. Did you mean 'activate'?",
-    "line": "meatsDraft.active();",
-    "count": 1
-  },
-  {
     "file": "Library/Actions/nr/morning-pages.js",
     "code": 2339,
     "message": "Property 'isMorningPage' does not exist on type 'Draft'.",
