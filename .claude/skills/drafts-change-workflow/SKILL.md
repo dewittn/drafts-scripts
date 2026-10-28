@@ -55,7 +55,13 @@ If a helper almost fits, extend it and say so, rather than working around it. If
 - **Require paths** are always relative to `Library/Scripts/` (see CLAUDE.md).
 - **Know the runtime.** Read `docs/reference/drafts-runtime.md` before touching code that updates the open draft, holds state, or switches workspaces. Every run starts from a fresh context, and Drafts writes the global `draft` back to the editor when a script step ends. Both have caused real bugs.
 - **Airtable is legacy.** NocoDB is production. Don't invest in `airtable-v2.js`, and don't make gratuitous edits to it either, until the user decides whether to delete it.
-- **New actions:** you can't create the action inside Drafts. Tell the user the action name and the Script step to add, copying the step from a sibling action.
+- **New actions:** you can't create the action inside Drafts. Give the user the action name and its whole Script step as one line in a code block, ready to paste. The path is relative to `Library/Scripts/`, so a file in `Library/Actions/<area>/` starts with `../Actions/`:
+
+  ```javascript
+  require('../Actions/nr/things-format-help.js');
+  ```
+
+  Do the same when an existing action is repointed at a new file.
 
 ## 4. Verify, then sync
 
