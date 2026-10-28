@@ -34,9 +34,12 @@ Updated 2026-10-24: 285 errors in 247 entries. `EmailDraft` now reads its own st
 Updated 2026-10-27: 284 errors in 246 entries. `Attendance.js` now takes the date string
 from its match result before `replace()`, which clears one error.
 
+Updated 2026-10-28: 283 errors in 245 entries. Meat Inventory and Meat Reminders were
+removed, taking the `meatsDraft.active()` error with them.
+
 | Group | Errors | Meaning |
 |-------|--------|---------|
-| Real-bug candidates | 36 | Likely wrong at runtime when the line runs. 8 entries are on production paths, 3 of them dead code. 4 errors are legacy/Airtable |
+| Real-bug candidates | 35 | Likely wrong at runtime when the line runs. 8 entries are on production paths, 3 of them dead code. 4 errors are legacy/Airtable |
 | Ambiguous, verify in Drafts | 6 | Depends on runtime behavior the definitions do not capture |
 | Checker limitations in source | 76 | Valid JavaScript TypeScript cannot follow |
 | JSDoc does not match the code | 15 | Comments are wrong, runtime is fine |
@@ -84,7 +87,6 @@ action.
 | Location | Error | Interpretation |
 |----------|-------|----------------|
 | `Library/Actions/cp/update-status-with-ulysses-id-v3.js:3` | `updateStatusOfRecord` does not exist | `ContentPipeline` has `updateStatusOfDoc`. This action throws as written. |
-| `Library/Actions/nr/meat-inventory.js:6` | `active` does not exist on `Draft` | Should be `activate()`. This action throws as written. |
 | `Library/Actions/nr/kutt-test.js:4,17` | Cannot find `KuttItAPI`, `script` | The class and the global it uses are not defined. Looks like an abandoned test action. |
 | `Library/Actions/nr/morning-pages.js:35,41` | Cannot assign to `action` | Assigns to the Drafts global `action` without declaring a local. Works, but overwrites the current action object for the rest of the run. |
 | `Library/Actions/cp/get-url.js:9,10` | Cannot find `nextAction` | Implicit global. Works in sloppy mode. Listed for completeness. |

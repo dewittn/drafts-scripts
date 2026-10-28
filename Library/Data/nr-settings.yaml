@@ -1,19 +1,4 @@
 ---
-meats:
-  actionGroup: "Show me the Meats!"
-  meatsDraftUUID: "50EE2D13-6950-4F9D-A780-244DE4689182"
-  thingsListName: "Sanity"
-  defaultTags:
-    - "chore"
-  taskChoices:
-    - "Remove Only"
-    - "Monday"
-    - "Tuesday"
-    - "Wednesday"
-    - "Thursday"
-    - "Friday"
-    - "Saturday"
-    - "Sunday"
 queryLetter:
   sourceDraftUUID: "315D897D-FE86-465B-8DF0-BD624C21E9B3"
   sourceTag: "authoring/wfid/query"
