@@ -110,6 +110,12 @@ things:
   areaMenu:
     menuTitle: Things Area
     menuMessage: Which area should this go in?
+  # Insert Things Project runs this shortcut, which outputs the open projects
+  # as {"projects": [{"title": "...", "id": "..."}, ...]}.
+  projectsShortcut: Get Things Projects
+  projectMenu:
+    menuTitle: Things Project
+    menuMessage: Which project should this go in?
   # Insert Things When. The time is used only when the reminder switch is on.
   whenMenu:
     menuTitle: Things When
@@ -145,6 +151,7 @@ things:
         @when(2026-11-01@14:15): a date with a reminder at that time
         @due: a date
         @area or @list: an area or project, spelled as in Things
+        @project: a project, picked from Things with Insert Things Project
         @tags: a comma list
         @done, @canceled: add it already finished
 
