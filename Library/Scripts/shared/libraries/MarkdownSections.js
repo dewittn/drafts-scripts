@@ -1,19 +1,20 @@
 // Edits a Markdown draft held as an array of lines: its "# " title line and
-// the bodies of its "## " sections. A section's body is every line after its
-// heading up to the next "## " heading (or the end). Pure: no Drafts objects,
-// and the lines passed in are never changed.
+// the bodies of its sections. A section's body is every line after its
+// heading up to the next heading of the same or a higher level (so a "### "
+// section stops at "### " or "## "), or the end. Pure: no Drafts objects, and
+// the lines passed in are never changed.
 class MarkdownSections {
   // Index of the first "# " title line, or -1.
   static titleIndex(lines) {
     return lines.findIndex((line) => line.startsWith("# "));
   }
 
-  // Index of a "## " heading (trailing spaces ignored), or -1.
+  // Index of a heading line such as "## Score" (trailing spaces ignored), or -1.
   static headingIndex(lines, heading) {
     return lines.findIndex((line) => line.trimEnd() == heading);
   }
 
-  // The lines between a heading and the next "## " heading, or undefined
+  // The lines between a heading and the end of its section, or undefined
   // when the heading is missing.
   static body(lines, heading) {
     const start = MarkdownSections.headingIndex(lines, heading);
@@ -37,6 +38,14 @@ class MarkdownSections {
     if (start == -1) return [...lines];
     const end = MarkdownSections.#bodyEnd(lines, start);
     return [...lines.slice(0, start + 1), ...bodyLines, ...lines.slice(end)];
+  }
+
+  // The lines without a section: its heading and its body. Unchanged (a
+  // copy) when the heading is missing.
+  static removeSection(lines, heading) {
+    const start = MarkdownSections.headingIndex(lines, heading);
+    if (start == -1) return [...lines];
+    return [...lines.slice(0, start), ...lines.slice(MarkdownSections.#bodyEnd(lines, start))];
   }
 
   // Copy the title line and the named sections' bodies from source (for
@@ -65,9 +74,19 @@ class MarkdownSections {
     return { lines, missing };
   }
 
-  // Index just past a section's body: the next "## " heading, or the end.
+  // Index just past a section's body: the next heading of the same or a
+  // higher level, or the end.
   static #bodyEnd(lines, headingIndex) {
-    const next = lines.findIndex((line, i) => i > headingIndex && line.startsWith("## "));
+    const level = MarkdownSections.#level(lines[headingIndex]);
+    const next = lines.findIndex((line, i) => {
+      const lineLevel = MarkdownSections.#level(line);
+      return i > headingIndex && lineLevel > 0 && lineLevel <= level;
+    });
     return next == -1 ? lines.length : next;
+  }
+
+  // 2 for "## Score", 0 for a line that is not a heading.
+  static #level(line) {
+    return line.match(/^(#{1,6}) /)?.[1].length ?? 0;
   }
 }

@@ -32,11 +32,20 @@ test.assertEqual(ThingsTags.when(picked), "@when(2026-11-03)", "uses only the da
 test.assertEqual(ThingsTags.when(picked, false), "@when(2026-11-03)", "ignores the time when the reminder is off");
 test.assertEqual(ThingsTags.when(picked, true), "@when(2026-11-03@09:05)", "adds the 24-hour time for a reminder");
 
+// --- note lines ---
+test.section("note lines");
+
+test.assertEqual(ThingsTags.noteBreak("- Buy milk @when(today)"), "\n\t", "indents a note one tab under a to-do");
+test.assertEqual(ThingsTags.noteBreak("\t- Book movers"), "\n\t\t", "indents under a nested to-do");
+test.assertEqual(ThingsTags.noteBreak("Move house: @area(Personal)"), "\n\t", "indents under a project");
+test.assertEqual(ThingsTags.noteBreak("\tGet the oat milk"), "\n\t", "keeps a second note level with the first");
+test.assertEqual(ThingsTags.noteBreak("* Starred to-do"), "\n\t", "indents under a \"* \" to-do");
+
 // --- read back by ThingsParser ---
 test.section("read back by ThingsParser");
 
-const line = `- [ ] Call the vet ${ThingsTags.when(picked, true)} ${ThingsTags.area("Sanity")}`;
-const [todo] = new ThingsParser().parse(ThingsParser.fromChecklist(line).todos);
+const line = `- Call the vet ${ThingsTags.when(picked, true)} ${ThingsTags.area("Sanity")}`;
+const [todo] = new ThingsParser().parse(line);
 test.assertEqual(todo.title, "Call the vet", "keeps the title clean");
 test.assertEqual(todo.when, "2026-11-03@09:05", "passes the reminder time to Things");
 test.assertEqual(todo.list, "Sanity", "files it in the area");

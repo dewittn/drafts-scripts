@@ -68,6 +68,11 @@ test.section("insertAtCursor");
 function makeEditor(text, start, length = 0) {
   const stub = { text, range: [start, length], activated: false };
   stub.getSelectedRange = () => stub.range;
+  stub.getSelectedLineRange = () => {
+    const lineStart = stub.text.lastIndexOf("\n", stub.range[0] - 1) + 1;
+    const next = stub.text.indexOf("\n", stub.range[0]);
+    return [lineStart, (next == -1 ? stub.text.length : next + 1) - lineStart];
+  };
   stub.getTextInRange = (location, count) => stub.text.slice(location, location + count);
   stub.setSelectedText = (insert) => {
     const [from, size] = stub.range;
@@ -96,5 +101,21 @@ test.assertEqual(stub.text, "@area(Sanity)", "adds no space at the start of the 
 stub = makeEditor("- Task @area(Personal)", 7, 15);
 new DraftsUI().insertAtCursor("@area(Sanity)");
 test.assertEqual(stub.text, "- Task @area(Sanity)", "replaces the selection");
+
+// --- insertAtLineEnd ---
+test.section("insertAtLineEnd");
+
+stub = makeEditor("- Buy milk\n- Call Sam", 4);
+test.assertEqual(new DraftsUI().currentLine(), "- Buy milk", "reads the cursor's line without its line break");
+new DraftsUI().insertAtLineEnd("\n\t");
+test.assertEqual(stub.text, "- Buy milk\n\t\n- Call Sam", "inserts at the end of the line, not at the cursor");
+test.assertDeepEqual(stub.range, [12, 0], "leaves the cursor after the insert");
+
+stub = makeEditor("- Buy milk\n\tnote\n- Call Sam", 2, 14);
+test.assertEqual(new DraftsUI().currentLine(), "- Buy milk", "reads the first line of a selection across lines");
+
+stub = makeEditor("- Call Sam", 10);
+new DraftsUI().insertAtLineEnd("\n\t");
+test.assertEqual(stub.text, "- Call Sam\n\t", "works on the last line");
 
 test.summary();

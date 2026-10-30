@@ -1,6 +1,6 @@
 if (typeof Game == "undefined") require("modules/bvr/core/Game.js");
 if (typeof DraftsRuntime == "undefined") require("shared/libraries/DraftsRuntime.js");
-if (typeof MarkdownSections == "undefined") require("modules/bvr/utils/MarkdownSections.js");
+if (typeof MarkdownSections == "undefined") require("shared/libraries/MarkdownSections.js");
 
 // Edit Game, run on a game report draft from the current season: change the
 // opponent, location, or score. Game.editGame() runs it.

@@ -158,7 +158,7 @@ test.assertEqual(passport.list, "Errands", "sets the list");
 test.assertEqual(passport.listID, "abc123", "reads @listid as listID");
 test.assertDeepEqual(passport.tags, ["admin"], "reads a single @tag");
 
-const [sanity] = new ThingsParser().parse(ThingsParser.fromChecklist("- [ ] Clean the gutters @area(Sanity)").todos);
+const [sanity] = new ThingsParser().parse("- Clean the gutters @area(Sanity)");
 test.assertEqual(sanity.list, "Sanity", "files a to-do with @area in that area, through its list");
 test.assertEqual(new ThingsParser().parse("- Plan @area(Personal) @list(Move)")[0].list, "Move", "prefers @list over @area on a to-do");
 test.assertEqual(passport.notes, undefined, "leaves notes unset when there are none");
@@ -179,72 +179,67 @@ ui = makeUI({ fieldValues: { items: "socks, shirts" } });
 new MustachePrompt(ui).render("{{^items}}none{{/items}}{{#items}}- {{.}}{{/items}}");
 test.assertDeepEqual(rendered.data.items, ["socks", "shirts"], "splits the list when any tag opens a {{#section}}");
 
-// --- checklists ---
-test.section("checklists");
+// --- Morning Pages to-dos ---
+test.section("Morning Pages to-dos");
 
+require("shared/libraries/MarkdownSections.js");
 const page = [
+  "## Today's Agenda",
+  "",
+  "### Bonus Goal",
+  "",
   "### To-Dos",
   "",
-  "- [ ] Buy milk #errands #home",
-  "- [ ] ",
-  "- [x] Already done",
-  "  * [ ] Call Sam @when(today) #phone",
-  "- Primary goal, not a checkbox",
-  "- [ ] #only-a-tag",
-  "Some text [ ] in a sentence",
+  "- Buy milk @tags(errands, home) @when(today)",
+  "\tGet the oat milk",
+  "\tFrom the corner store",
+  "- ",
+  "- Call Sam @area(Sanity)",
+  "\t- Find the number",
+  "",
   "## Thoughts",
-].join("\n");
+  "Slept well.",
+].join("\n").split("\n");
 
-const checklist = ThingsParser.fromChecklist(page);
+const todoHeading = loadRepoYAML("nr-settings.yaml").things.todoHeading;
+const section = MarkdownSections.body(page, todoHeading);
+const [milk, sam, ...extra] = new ThingsParser().parse(section.join("\n"));
+test.assertEqual(todoHeading, "### To-Dos", "reads the To-Dos heading from settings");
+test.assertEqual(extra.length, 0, "skips the blank \"- \" line the template leaves");
+test.assertEqual(milk.title, "Buy milk", "sends each to-do in the section");
+test.assertEqual(milk.notes, "Get the oat milk\nFrom the corner store", "sends the indented lines as the to-do's notes");
+test.assertEqual(milk.list, undefined, "sets no list without @area, so the to-do lands in the Inbox");
+test.assertEqual(sam.list, "Sanity", "files a to-do with @area in that area");
+test.assertEqual(sam.checklist[0].title, "Find the number", "sends indented \"- \" lines as checklist items");
 test.assertEqual(
-  checklist.todos,
-  "- Buy milk @tags(errands, home)\n- Call Sam @tags(phone) @when(today)",
-  "turns open checkboxes into TaskPaper to-dos, in order, with #tags as @tags"
+  MarkdownSections.removeSection(page, todoHeading).join("\n"),
+  "## Today's Agenda\n\n### Bonus Goal\n\n## Thoughts\nSlept well.",
+  "removes the whole section, heading and all, and keeps the rest of the page"
 );
-test.assertEqual(
-  checklist.text,
-  "### To-Dos\n\n- [x] Already done\n- Primary goal, not a checkbox\nSome text [ ] in a sentence\n## Thoughts",
-  "removes every open checkbox line, blank ones too, and keeps the rest"
-);
-test.assertDeepEqual(ThingsParser.fromChecklist("No to-dos here"), { todos: "", text: "No to-dos here" }, "leaves text with no checkboxes alone");
+test.assertDeepEqual(new ThingsParser().parse(""), [], "parses no items from an empty section");
+test.assertDeepEqual(new ThingsParser().unsent(section.join("\n")), [], "finds nothing left over in a normal To-Dos section");
 
-const [milk, sam] = new ThingsParser().parse(checklist.todos);
-test.assertEqual(milk.title, "Buy milk", "parses the converted to-do's title");
-test.assertDeepEqual(milk.tags, ["errands", "home"], "parses the converted tags");
-test.assertEqual(milk.list, undefined, "sets no list, so to-dos land in the Inbox");
-test.assertEqual(sam.when, "today", "keeps @tags written on a checkbox line");
-test.assertDeepEqual(new ThingsParser().parse(""), [], "parses no items from no to-dos");
-
-const tricky = ThingsParser.fromChecklist(
-  [
-    "- [ ] Meet @john re: budget",
-    "- [ ] Call @my-tag now",
-    "- [ ] Ping @café person",
-    "- [ ] Email sam@example.com",
-    "- [ ] Do it @when(today) later #home",
-    "- [ ] Things @tags(a, b) #c",
-    "1. [ ] Numbered @done",
-    "- [ ] Pay rent\r",
-  ].join("\n")
-);
+const blankPage = ["## Today's Agenda", "", "### To-Dos", "", "- ", "", "## Thoughts", "Slept well."];
+const blankSection = MarkdownSections.body(blankPage, todoHeading).join("\n");
+test.assertDeepEqual(new ThingsParser().parse(blankSection), [], "sends nothing from the template's blank To-Dos section");
+test.assertDeepEqual(new ThingsParser().unsent(blankSection), [], "finds nothing left over in a blank section, so it is removed");
+test.assertDeepEqual(new ThingsParser().parse("-").concat(new ThingsParser().unsent("-")), [], "treats a lone \"-\" with its space trimmed the same way");
 test.assertEqual(
-  tricky.todos,
-  [
-    "- Meet @john re: budget",
-    "- Call @my-tag now",
-    "- Ping @café person",
-    "- Email sam@example.com",
-    "- Do it later @tags(home) @when(today)",
-    "- Things @tags(a, b, c)",
-    "- Numbered @done",
-    "- Pay rent",
-  ].join("\n"),
-  "moves only the @tags it reads, merges @tags with #tags, and handles numbered and CRLF lines"
+  MarkdownSections.removeSection(blankPage, todoHeading).join("\n"),
+  "## Today's Agenda\n\n## Thoughts\nSlept well.",
+  "removes a blank section before DayOne"
 );
-const trickyItems = new ThingsParser().parse(tricky.todos);
-test.assertEqual(trickyItems[0].title, "Meet @john re: budget", "keeps other @words in the title");
-test.assertEqual(trickyItems[6].completed, true, "reads @done on a checkbox line");
-test.assertEqual(tricky.text, "", "removes numbered and CRLF checkbox lines");
+
+const messy = ["Buy milk", "- @tags(home)", "- ", "\tNote under a blank line", "- Real to-do", "", "- "].join("\n");
+test.assertDeepEqual(
+  new ThingsParser().unsent(messy),
+  ["Buy milk", "- @tags(home)", "Note under a blank line"],
+  "lists the lines Things has no place for, as typed"
+);
+test.assertDeepEqual(new ThingsParser().parse(messy).map((item) => item.title), ["Real to-do"], "still parses the to-dos among them");
+
+const [remember] = new ThingsParser().parse("- Pack\n\tRemember:\n\t\tthe charger\n\tAnd snacks");
+test.assertEqual(remember.notes, "Remember:\nthe charger\nAnd snacks", "keeps a note line ending in \":\" under a to-do as a note");
 
 // --- sending ---
 test.section("sending");

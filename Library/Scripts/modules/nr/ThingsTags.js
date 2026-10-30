@@ -1,6 +1,16 @@
-// Builds the @tags Things Parser reads, for actions that type them into a
-// draft. See ThingsParser for what each tag does.
+// Builds the @tags and lines Things Parser reads, for actions that type them
+// into a draft. See ThingsParser for what each one does.
 class ThingsTags {
+  // The line break and indent that start a note under line: one tab deeper
+  // under a to-do ("- ...") or project ("...:", tags allowed after the
+  // colon), level with another note.
+  static noteBreak(line) {
+    const indent = line.match(/^\s*/)[0];
+    const withoutTags = line.replace(/(\s+@[^\s(]+(\([^)]*\))?)+\s*$/, "").trimEnd();
+    const isItem = /^\s*[-*+] /.test(line) || withoutTags.endsWith(":");
+    return `\n${indent}${isItem ? "\t" : ""}`;
+  }
+
   static area(name) {
     return `@area(${name})`;
   }

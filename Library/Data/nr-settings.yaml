@@ -96,6 +96,8 @@ fastmail:
             name: Create Draft
             value: create
 things:
+  # The Morning Pages section Send To-do's to things sends and removes.
+  todoHeading: "### To-Dos"
   # Offered by Insert Things Area, in this order. Spell each one exactly as
   # the area is named in Things.
   areas:
@@ -145,6 +147,8 @@ things:
         @area or @list: an area or project, spelled as in Things
         @tags: a comma list
         @done, @canceled: add it already finished
+
+        Don't end a to-do with an @word Things doesn't use, like "Email @sam": it is read as a tag and dropped from the title.
     - menuTitle: "Things Format: Projects"
       menuMessage: |
         A line ending in ":" is a project. Indent its to-dos with a tab:
@@ -161,13 +165,12 @@ things:
         Projects take @area, @when, @due, and @tags.
     - menuTitle: "Things Format: Morning Pages"
       menuMessage: |
-        In Morning Pages, only checkbox lines go to Things, and they are removed from the page:
+        In Morning Pages, everything under ### To-Dos goes to Things, and the section is removed before DayOne:
 
-        - [ ] Buy milk #errands #home @when(today)
+        - Buy milk @tags(errands) @when(today)
+            Get the oat milk
 
-        Each #word becomes a tag. Any tag from the To-dos page works.
-
-        Don't end a to-do with another @word, like "Email @sam": Things Parser reads it as a tag and drops it from the title.
+        Write it like any Things Parser draft: to-dos, notes, checklist items, and projects all work. Add Note starts an indented note line.
     - menuTitle: "Things Format: Variables"
       menuMessage: |
         Things Parser asks for each {{variable}} before it runs:

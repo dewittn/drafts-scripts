@@ -24,7 +24,7 @@
 
 ### To-Dos
 
-- [ ] 
+- 
 
 ## Thoughts
 

@@ -148,6 +148,24 @@ class DraftsUI {
     editor.activate();
   }
 
+  // The line the cursor is on, without its line break. With a selection
+  // across lines, the first of them.
+  currentLine() {
+    const [start, length] = editor.getSelectedLineRange();
+    return editor.getTextInRange(start, length).split(/\r?\n/)[0];
+  }
+
+  // Inserts text at the end of the cursor's line and leaves the cursor after it.
+  insertAtLineEnd(text) {
+    const [start] = editor.getSelectedLineRange();
+    const end = start + this.currentLine().length;
+
+    editor.setSelectedRange(end, 0);
+    editor.setSelectedText(text);
+    editor.setSelectedRange(end + text.length, 0);
+    editor.activate();
+  }
+
   displayErrorMessage(errorMessage, stackTrace) {
     if (stackTrace != undefined) this.#updateDraftLog(errorMessage, stackTrace);
 

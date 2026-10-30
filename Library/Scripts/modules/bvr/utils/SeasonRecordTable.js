@@ -21,7 +21,7 @@ class SeasonRecordTable {
   // The lines with the title (the first "# " line) ending in (tally), in
   // place of the record it had, if any. Unchanged when there is no title.
   static withTally(lines, tally) {
-    if (typeof MarkdownSections == "undefined") require("modules/bvr/utils/MarkdownSections.js");
+    if (typeof MarkdownSections == "undefined") require("shared/libraries/MarkdownSections.js");
     const title = MarkdownSections.titleIndex(lines);
     if (title == -1) return [...lines];
 
