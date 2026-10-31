@@ -11,12 +11,13 @@ if (typeof birchoutline == "undefined") require("vendor/birchoutline.js");
 // Adapted from Things Parser 3 by pdavisonreiber.
 class ThingsParser {
   // Each Things field and the TaskPaper tags that set it, first match wins.
+  // A to-do has no area in Things; it goes in an area through its list.
   static fieldTags = {
     when: ["when", "defer"],
     deadline: ["due", "deadline"],
     heading: ["heading"],
-    list: ["list", "project"],
-    listID: ["listID", "listid"],
+    list: ["list", "project", "area"],
+    listID: ["listID", "listid", "areaID", "areaid"],
     area: ["area"],
     areaID: ["areaID", "areaid"],
   };
@@ -34,6 +35,18 @@ class ThingsParser {
     return outline.root.children.map((item) => this.#topLevel(item)).filter(Boolean);
   }
 
+  // The lines parse() has no place for, as typed: top-level lines that are
+  // neither a project nor a to-do (like "Buy milk" or "- @tags(home)"), and
+  // anything under a blank "- ". Blank lines are left out.
+  unsent(text) {
+    const outline = birchoutline.Outline.createTaskPaperOutline(text);
+    return outline.root.children
+      .filter((item) => !this.#isType(item, "project") && !this.#isTask(item))
+      .flatMap((item) => [item, ...item.descendants])
+      .map((item) => item.bodyString.trim())
+      .filter((line) => !["", "-"].includes(line));
+  }
+
   // Opens Things and adds the items, showing the first one.
   open(items) {
     const callback = CallbackURL.create();
@@ -42,9 +55,17 @@ class ThingsParser {
     return app.openURL(callback.url);
   }
 
+  // Adds the items in Things and waits for it to return to Drafts, so actions
+  // queued after this one run in Drafts. Returns whether it worked.
+  send(items) {
+    const callback = CallbackURL.create();
+    callback.baseURL = TJSContainer.create(items).url;
+    return callback.open();
+  }
+
   #topLevel(item) {
     if (this.#isType(item, "project")) return this.#project(item);
-    if (this.#isType(item, "task")) return this.#todo(item);
+    if (this.#isTask(item)) return this.#todo(item);
     return null;
   }
 
@@ -57,11 +78,11 @@ class ThingsParser {
 
     const notes = [];
     for (const child of item.children) {
-      if (this.#isType(child, "task")) project.addTodo(this.#todo(child));
-      if (this.#isType(child, "note")) notes.push(child);
+      if (this.#isTask(child)) project.addTodo(this.#todo(child));
+      if (this.#isType(child, "note")) notes.push(child.bodyContentString);
       if (this.#isType(child, "project")) {
         this.#addHeading(project, child);
-        notes.push(...child.children);
+        notes.push(...this.#notes(child.children));
       }
     }
     this.#setNotes(project, notes);
@@ -75,7 +96,7 @@ class ThingsParser {
     project.addHeading(heading);
 
     for (const child of item.children) {
-      if (!this.#isType(child, "task")) continue;
+      if (!this.#isTask(child)) continue;
       const todo = this.#todo(child);
       todo.heading = heading.title;
       project.addTodo(todo);
@@ -88,9 +109,17 @@ class ThingsParser {
     this.#setStatus(todo, item, ["canceled", "completed"]);
 
     for (const child of item.children) {
-      if (this.#isType(child, "task")) todo.addChecklistItem(this.#checklistItem(child));
+      if (this.#isTask(child)) todo.addChecklistItem(this.#checklistItem(child));
     }
-    this.#setNotes(todo, item.children);
+
+    // Birch reads a note line ending in ":" as a project. A to-do holds no
+    // projects, so it stays a note, with any lines under it.
+    const notes = item.children.flatMap((child) => {
+      if (this.#isType(child, "note")) return [child.bodyContentString];
+      if (this.#isType(child, "project")) return [child, ...child.descendants].map((line) => line.bodyString.trim());
+      return [];
+    });
+    this.#setNotes(todo, notes);
     return todo;
   }
 
@@ -124,10 +153,13 @@ class ThingsParser {
     return tag && item.getAttribute(`data-${tag}`);
   }
 
-  // Joins the notes among items. Birch reads blank lines as empty notes, so
-  // blank lines before and after the text are dropped.
-  #setNotes(thing, items) {
-    const notes = items.filter((item) => this.#isType(item, "note")).map((item) => item.bodyContentString);
+  #notes(items) {
+    return items.filter((item) => this.#isType(item, "note")).map((item) => item.bodyContentString);
+  }
+
+  // Joins the note lines. Birch reads blank lines as empty notes, so blank
+  // lines before and after the text are dropped.
+  #setNotes(thing, notes) {
     const text = notes.join("\n").trim();
     if (text) thing.notes = text;
   }
@@ -138,5 +170,15 @@ class ThingsParser {
 
   #isType(item, type) {
     return item.getAttribute("data-type") == type;
+  }
+
+  // A blank "- " line, like the one a template leaves for typing, is no task.
+  // Birch keeps the dash as its text, so its title reads "-".
+  #isTask(item) {
+    return this.#isType(item, "task") && !this.#isBlank(item);
+  }
+
+  #isBlank(item) {
+    return ["", "-"].includes(this.#title(item));
   }
 }

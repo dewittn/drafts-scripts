@@ -16,7 +16,7 @@ require("../Tests/fixtures/assertions.js");
 require("../Tests/fixtures/mocks.js");
 require("../Tests/fixtures/bvr-stubs.js");
 require("modules/cp/filesystems/CloudFS.js");
-require("modules/bvr/utils/MarkdownSections.js");
+require("shared/libraries/MarkdownSections.js");
 require("modules/bvr/utils/SeasonRecordTable.js");
 require("modules/bvr/utils/TmplSettings.js");
 require("modules/bvr/services/GoogleForm.js");

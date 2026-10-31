@@ -157,6 +157,10 @@ test.assertEqual(hotel.checklist[0].canceled, true, "reads @cancelled as cancele
 test.assertEqual(passport.list, "Errands", "sets the list");
 test.assertEqual(passport.listID, "abc123", "reads @listid as listID");
 test.assertDeepEqual(passport.tags, ["admin"], "reads a single @tag");
+
+const [sanity] = new ThingsParser().parse("- Clean the gutters @area(Sanity)");
+test.assertEqual(sanity.list, "Sanity", "files a to-do with @area in that area, through its list");
+test.assertEqual(new ThingsParser().parse("- Plan @area(Personal) @list(Move)")[0].list, "Move", "prefers @list over @area on a to-do");
 test.assertEqual(passport.notes, undefined, "leaves notes unset when there are none");
 test.assertEqual(project.headings[0].archived, true, "reads @done on a heading as archived");
 
@@ -174,5 +178,91 @@ test.section("sections after an inverted section");
 ui = makeUI({ fieldValues: { items: "socks, shirts" } });
 new MustachePrompt(ui).render("{{^items}}none{{/items}}{{#items}}- {{.}}{{/items}}");
 test.assertDeepEqual(rendered.data.items, ["socks", "shirts"], "splits the list when any tag opens a {{#section}}");
+
+// --- Morning Pages to-dos ---
+test.section("Morning Pages to-dos");
+
+require("shared/libraries/MarkdownSections.js");
+const page = [
+  "## Today's Agenda",
+  "",
+  "### Bonus Goal",
+  "",
+  "### To-Dos",
+  "",
+  "- Buy milk @tags(errands, home) @when(today)",
+  "\tGet the oat milk",
+  "\tFrom the corner store",
+  "- ",
+  "- Call Sam @area(Sanity)",
+  "\t- Find the number",
+  "",
+  "## Thoughts",
+  "Slept well.",
+].join("\n").split("\n");
+
+const todoHeading = loadRepoYAML("nr-settings.yaml").things.todoHeading;
+const section = MarkdownSections.body(page, todoHeading);
+const [milk, sam, ...extra] = new ThingsParser().parse(section.join("\n"));
+test.assertEqual(todoHeading, "### To-Dos", "reads the To-Dos heading from settings");
+test.assertEqual(extra.length, 0, "skips the blank \"- \" line the template leaves");
+test.assertEqual(milk.title, "Buy milk", "sends each to-do in the section");
+test.assertEqual(milk.notes, "Get the oat milk\nFrom the corner store", "sends the indented lines as the to-do's notes");
+test.assertEqual(milk.list, undefined, "sets no list without @area, so the to-do lands in the Inbox");
+test.assertEqual(sam.list, "Sanity", "files a to-do with @area in that area");
+test.assertEqual(sam.checklist[0].title, "Find the number", "sends indented \"- \" lines as checklist items");
+test.assertEqual(
+  MarkdownSections.removeSection(page, todoHeading).join("\n"),
+  "## Today's Agenda\n\n### Bonus Goal\n\n## Thoughts\nSlept well.",
+  "removes the whole section, heading and all, and keeps the rest of the page"
+);
+test.assertDeepEqual(new ThingsParser().parse(""), [], "parses no items from an empty section");
+test.assertDeepEqual(new ThingsParser().unsent(section.join("\n")), [], "finds nothing left over in a normal To-Dos section");
+
+const blankPage = ["## Today's Agenda", "", "### To-Dos", "", "- ", "", "## Thoughts", "Slept well."];
+const blankSection = MarkdownSections.body(blankPage, todoHeading).join("\n");
+test.assertDeepEqual(new ThingsParser().parse(blankSection), [], "sends nothing from the template's blank To-Dos section");
+test.assertDeepEqual(new ThingsParser().unsent(blankSection), [], "finds nothing left over in a blank section, so it is removed");
+test.assertDeepEqual(new ThingsParser().parse("-").concat(new ThingsParser().unsent("-")), [], "treats a lone \"-\" with its space trimmed the same way");
+test.assertEqual(
+  MarkdownSections.removeSection(blankPage, todoHeading).join("\n"),
+  "## Today's Agenda\n\n## Thoughts\nSlept well.",
+  "removes a blank section before DayOne"
+);
+
+const messy = ["Buy milk", "- @tags(home)", "- ", "\tNote under a blank line", "- Real to-do", "", "- "].join("\n");
+test.assertDeepEqual(
+  new ThingsParser().unsent(messy),
+  ["Buy milk", "- @tags(home)", "Note under a blank line"],
+  "lists the lines Things has no place for, as typed"
+);
+test.assertDeepEqual(new ThingsParser().parse(messy).map((item) => item.title), ["Real to-do"], "still parses the to-dos among them");
+
+const [remember] = new ThingsParser().parse("- Pack\n\tRemember:\n\t\tthe charger\n\tAnd snacks");
+test.assertEqual(remember.notes, "Remember:\nthe charger\nAnd snacks", "keeps a note line ending in \":\" under a to-do as a note");
+
+// --- sending ---
+test.section("sending");
+
+let callbacks = [];
+let opened = true;
+/** @type {any} */ (globalThis).TJSContainer = { create: (items) => ({ url: `things:///json?count=${items.length}` }) };
+/** @type {any} */ (globalThis).CallbackURL = {
+  create: () => {
+    const callback = { parameters: {}, opened: false };
+    callback.addParameter = (key, value) => (callback.parameters[key] = value);
+    callback.open = () => (callback.opened = true) && opened;
+    callbacks.push(callback);
+    return callback;
+  },
+};
+
+test.assertEqual(new ThingsParser().send([milk, sam]), true, "reports when Things added the items");
+test.assertEqual(callbacks[0].baseURL, "things:///json?count=2", "sends every item in one Things link");
+test.assertEqual(callbacks[0].opened, true, "waits for Things through the callback");
+test.assertDeepEqual(callbacks[0].parameters, {}, "does not ask Things to reveal, so it returns to Drafts");
+
+opened = false;
+test.assertEqual(new ThingsParser().send([milk]), false, "reports when Things did not add the items");
 
 test.summary();

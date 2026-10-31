@@ -631,7 +631,7 @@ class Game {
 
   // Highlights and comments as typed into the game report draft.
   readReportComments(gameReportDraft) {
-    if (typeof MarkdownSections == "undefined") require("modules/bvr/utils/MarkdownSections.js");
+    if (typeof MarkdownSections == "undefined") require("shared/libraries/MarkdownSections.js");
     this.comments = this.#typedSectionText(gameReportDraft.lines, "## Other/Comments");
     this.highlights = this.#typedSectionText(gameReportDraft.lines, "## Highlights?");
   }
