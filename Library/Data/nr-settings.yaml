@@ -95,6 +95,31 @@ fastmail:
           data:
             name: Create Draft
             value: create
+newEmail:
+  templateFile: "nr/new-email.mustache"
+  draftTags:
+    - "email"
+  messages:
+    missingName: "Enter the person's name."
+    # Shown when a typed address cannot be read. [[address]] is what was typed.
+    invalidAddress: '"[[address]]" is not a valid email address.'
+  menuSettings:
+    menuTitle: New Email
+    menuMessage: Who is this email to?
+    menuItems:
+      - type: textField
+        data:
+          name: name
+          label: Name
+      - type: textField
+        data:
+          name: email
+          label: Email Address
+          options: *emailAddressOptions
+      - type: button
+        data:
+          name: Create
+          value: create
 things:
   # The Morning Pages section Send To-do's to things sends and removes.
   todoHeading: "### To-Dos"
