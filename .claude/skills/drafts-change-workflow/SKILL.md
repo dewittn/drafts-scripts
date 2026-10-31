@@ -18,9 +18,21 @@ Check the branch. Work normally happens on `dev`. If the user is on `main`, see 
 ## 1. Size the change
 
 - **Small (the default):** work directly on `dev`. This covers fixes, tweaks, and refinements to one script. It also covers a new self-contained action, since a new file can't break the actions the user already relies on. Example: "tag generated query letters with `query` or `query_manager`." Don't ask whether to branch for these.
-- **Large:** create `feature/<name>` off `dev`. Use a branch when the change restructures code in `shared/` or a module's `core/` that several actions depend on, for migrations, or for anything that needs several test rounds before it is safe for daily use. The point of the branch is to keep dev usable while risky work is half done.
+- **Large:** create `feature/<name>` off `dev`. Use a branch when a half-done change could break a production workflow such as attendance: restructuring code in `shared/` or a module's `core/` that several actions depend on, migrations, or anything that needs several test rounds before it is safe for daily use. A feature branch is the experimental layer, and it stays short. It merges at its first working round, not when the feature feels finished. See section 6.
 
 No feature-spec or feature-build pipeline for this repo. Changes are too small and too urgent for it.
+
+### While a feature branch is open
+
+Drafts runs one checkout at a time, so anything left only on a branch disappears from Drafts when the user syncs another branch. That makes the open branch feel like the place for every new idea, but unrelated work belongs on `dev`, so the PR stays about its feature and the new work isn't tied to it.
+
+When the user starts something that doesn't depend on the open branch, say so and handle it this way:
+
+1. Write and test it in the working tree, still on the branch, so `bun run sync` puts it in Drafts next to the branch's code.
+2. When the round works, check that it uses nothing that only exists on the branch, then `git switch dev`. The uncommitted change comes along. If the switch refuses because a file differs between the branches, the work depends on the branch: tell the user before going further.
+3. Commit and push on `dev`, then `git switch <branch>` and `git merge dev`. Drafts already has this code, so no sync is needed.
+
+Work that does depend on the branch stays on the branch.
 
 ## 2. Find what already exists before writing code
 
@@ -83,7 +95,7 @@ Expect a few rounds. The user often doesn't have the full picture until they use
 When the user says a round works in Drafts, commit right away without asking, following the global `commit` skill. Make one commit per working round, in the gitmoji style of `git log` (for example "✨ Ask before attaching the signature in Send to Fastmail"). Never commit a round that failed or hasn't been tried. Changes that never reach Drafts (docs, build tooling, tests) can be committed once their own checks pass.
 
 - **On dev:** commit and push, with no PR. The global commit skill opens a PR for any branch other than main. Skip that here, because main only moves through checkpoints.
-- **On a feature branch:** commit and push each working round. When the feature is done, run a checkpoint on `dev` first, so main holds the newest settled work before the riskiest change lands. Then open a PR into `dev`, merge it with a merge commit, and delete the branch (as with PRs #4 to #8).
+- **On a feature branch:** commit and push each working round. As soon as a round works in Drafts and production workflows still work, run a checkpoint on `dev`, so main holds the newest settled work before the riskiest change lands. Don't hold the merge for commits still settling. Then open a PR into `dev`, merge it with a merge commit, and delete the branch (as with PRs #4 to #8). Later refinements and ideas are ordinary commits on `dev`.
 
 Then run `bun run checkpoint` and promote if anything has settled, as at the start of work. If nothing has settled, give the date the script reports ("these settle on Oct 20"), but don't promise to follow up. A later session won't remember the promise. The start-of-work check in whichever session runs next does the promotion.
 

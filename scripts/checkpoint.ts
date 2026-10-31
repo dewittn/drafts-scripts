@@ -3,11 +3,11 @@
  * Checkpoint helper: decides how far main can safely move toward dev.
  *
  * main is the stable fallback. It only fast-forwards to a dev commit that has
- * settled: the commit is at least --days old (default 3), and every commit that
- * touched the same files within that window after it has settled too. Bugs in
- * this repo tend to surface within a day or two, while a script is still being
- * revised, so a run of quick revisions holds the whole run back until it goes
- * quiet. The rule and the history behind the 3 days are explained in
+ * settled: the commit is at least --days old (default 3), and every fix (a 🐛 or
+ * 🚑 commit) to the same files within that window after it has settled too. Bugs
+ * in this repo tend to surface within a day or two, so a commit waits for its own
+ * fixes, but not for unrelated work that happens to share a file. The rule and
+ * the history behind the 3 days are explained in
  * .claude/skills/drafts-change-workflow/references/checkpoints.md.
  *
  * Usage: bun scripts/checkpoint.ts [promote [<sha>]] [--days N]
@@ -28,6 +28,13 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const docsOnlyPaths = ["docs/", ".claude/", "types/"];
 const isRuntimeFile = (file: string) =>
   !docsOnlyPaths.some((prefix) => file.startsWith(prefix)) && !(file.endsWith(".md") && !file.includes("/"));
+
+// Files a bug fix can repair in Drafts. Build tooling and tests can share a file
+// across unrelated commits, such as the typecheck baseline, so they link nothing.
+const reachesDrafts = (file: string) => file.startsWith("Library/") && !file.startsWith("Library/Tests/");
+
+// A commit that repairs earlier work, by its gitmoji.
+const isFix = (commit: Commit) => /🐛|🚑/u.test(commit.subject);
 
 type Commit = { sha: string; full: string; date: Date; subject: string; files: string[] };
 
@@ -80,10 +87,12 @@ function holdUp(commits: Commit[], settled: boolean[], i: number, now: number) {
   if (files.length == 0) return undefined;
   if (now - commit.date.getTime() < soakMs) return { tooNew: true } as const;
 
+  const fixable = commit.files.filter(reachesDrafts);
   for (let j = i + 1; j < commits.length; j++) {
     const later = commits[j];
     if (later.date.getTime() - commit.date.getTime() >= soakMs) break;
-    const shared = files.find((file) => later.files.includes(file));
+    if (!isFix(later)) continue;
+    const shared = fixable.find((file) => later.files.includes(file));
     if (shared && !settled[j]) return { tooNew: false, by: j, file: shared } as const;
   }
   return undefined;
