@@ -11,4 +11,11 @@ class GmailSender extends EmailSender {
   createClient() {
     return new Gmail();
   }
+
+  // Opens Gmail's Drafts folder once the draft exists, to review and send it.
+  send(content) {
+    const result = super.send(content);
+    if (result) app.openURL(this.settings.draftsURL);
+    return result;
+  }
 }

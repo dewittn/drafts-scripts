@@ -97,6 +97,9 @@ fastmail:
             value: create
 # The same signature and prompts as Fastmail, under Gmail's own title.
 gmail:
+  # Opened after the draft is created. The number is the account's position
+  # among those signed in to the browser, starting at 0.
+  draftsURL: "https://mail.google.com/mail/u/0/#drafts"
   signature: *emailSignature
   signaturePrompt:
     menuTitle: Send to Gmail

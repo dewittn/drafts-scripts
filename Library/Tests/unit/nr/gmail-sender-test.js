@@ -24,6 +24,16 @@ const test = new TestAssertions("GmailSender");
   create: () => ({ render: (markdown) => `<p>${markdown}</p>` }),
 };
 
+let openedURLs = [];
+/** @type {any} */ (globalThis).app = { openURL: (url) => openedURLs.push(url) };
+
+let cancelled = [];
+let failed = [];
+/** @type {any} */ (globalThis).context = {
+  cancel: (message) => cancelled.push(message),
+  fail: (message) => failed.push(message),
+};
+
 function makeUI(fieldValues = {}) {
   const ui = { menus: [], yesNoMenus: [], messages: [] };
   ui.yesNoPrompt = (menu) => {
@@ -61,6 +71,27 @@ ui = makeUI({ subject: "Lunch", to: "", email: "jane@example.com" });
 new GmailSender(settings, ui).send("Hi Jane");
 test.assertEqual(ui.menus[0]?.menuTitle, "Send to Gmail", "asks for missing fields under Gmail's title");
 test.assertEqual(ui.menus[0]?.menuItems.length, 4, "keeps Fastmail's fields and button");
+
+// --- opening Gmail ---
+test.section("opening Gmail");
+
+const complete = "To: Jane\nEmail: jane@example.com\nSubject: Lunch\n\nHi Jane";
+
+openedURLs = [];
+new GmailSender(settings, makeUI()).send(complete);
+test.assertDeepEqual(openedURLs, [settings.draftsURL], "opens the Drafts folder once the draft exists");
+
+openedURLs = [];
+new GmailSender(settings, makeUI()).send("Email: bad@host.\n\nHi Jane");
+test.assertEqual(failed.length, 1, "a bad address fails the action");
+test.assertDeepEqual(openedURLs, [], "a failed draft opens nothing");
+
+openedURLs = [];
+const cancellingUI = makeUI();
+cancellingUI.buildMenu = () => ({ show: () => false, fieldValues: {} });
+new GmailSender(settings, cancellingUI).send("Hi Jane");
+test.assertEqual(cancelled.length, 1, "cancelling the prompt cancels the action");
+test.assertDeepEqual(openedURLs, [], "a cancelled draft opens nothing");
 
 // --- settings ---
 test.section("settings");
