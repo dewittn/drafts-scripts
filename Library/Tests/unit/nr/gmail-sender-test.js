@@ -27,6 +27,15 @@ const test = new TestAssertions("GmailSender");
 let openedURLs = [];
 /** @type {any} */ (globalThis).app = { openURL: (url) => openedURLs.push(url) };
 
+let systemName = "macOS";
+/** @type {any} */ (globalThis).device = {
+  get systemName() {
+    return systemName;
+  },
+};
+
+let openAnswer = "no";
+
 let cancelled = [];
 let failed = [];
 /** @type {any} */ (globalThis).context = {
@@ -38,7 +47,8 @@ function makeUI(fieldValues = {}) {
   const ui = { menus: [], yesNoMenus: [], messages: [] };
   ui.yesNoPrompt = (menu) => {
     ui.yesNoMenus.push(menu);
-    return "no";
+    menu.menuItems = [];
+    return menu.menuMessage == settings.openPrompt.menuMessage ? openAnswer : "no";
   };
   ui.buildMenu = (menu) => {
     ui.menus.push(menu);
@@ -77,13 +87,32 @@ test.section("opening Gmail");
 
 const complete = "To: Jane\nEmail: jane@example.com\nSubject: Lunch\n\nHi Jane";
 
-openedURLs = [];
-new GmailSender(settings, makeUI()).send(complete);
-test.assertDeepEqual(openedURLs, [settings.draftsURL], "opens the Drafts folder once the draft exists");
+const openPromptShown = (ui) => ui.yesNoMenus.some((menu) => menu.menuMessage == settings.openPrompt.menuMessage);
 
 openedURLs = [];
-new GmailSender(settings, makeUI()).send("Email: bad@host.\n\nHi Jane");
+openAnswer = "no";
+ui = makeUI();
+new GmailSender(settings, ui).send(complete);
+test.assert(openPromptShown(ui), "asks whether to open Gmail");
+test.assertDeepEqual(openedURLs, [], "no opens nothing");
+test.assertEqual(settings.openPrompt.menuItems, undefined, "the open prompt settings are not changed");
+
+openedURLs = [];
+openAnswer = "yes";
+new GmailSender(settings, makeUI()).send(complete);
+test.assertDeepEqual(openedURLs, [settings.draftsURL], "yes on a Mac opens the web Drafts folder");
+
+openedURLs = [];
+systemName = "iOS";
+new GmailSender(settings, makeUI()).send(complete);
+test.assertDeepEqual(openedURLs, [settings.draftsAppURL], "yes on iPhone or iPad opens the Gmail app");
+systemName = "macOS";
+
+openedURLs = [];
+ui = makeUI();
+new GmailSender(settings, ui).send("Email: bad@host.\n\nHi Jane");
 test.assertEqual(failed.length, 1, "a bad address fails the action");
+test.assert(!openPromptShown(ui), "a failed draft does not ask");
 test.assertDeepEqual(openedURLs, [], "a failed draft opens nothing");
 
 openedURLs = [];
@@ -91,7 +120,9 @@ const cancellingUI = makeUI();
 cancellingUI.buildMenu = () => ({ show: () => false, fieldValues: {} });
 new GmailSender(settings, cancellingUI).send("Hi Jane");
 test.assertEqual(cancelled.length, 1, "cancelling the prompt cancels the action");
+test.assert(!openPromptShown(cancellingUI), "a cancelled draft does not ask");
 test.assertDeepEqual(openedURLs, [], "a cancelled draft opens nothing");
+openAnswer = "no";
 
 // --- settings ---
 test.section("settings");

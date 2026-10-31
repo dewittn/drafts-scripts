@@ -24,6 +24,10 @@ class EmailSender {
     return this.#settings;
   }
 
+  get ui() {
+    return this.#ui;
+  }
+
   // The name in messages. Subclasses supply it.
   get serviceName() {
     return "Email";

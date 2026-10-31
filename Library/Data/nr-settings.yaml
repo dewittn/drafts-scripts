@@ -97,9 +97,14 @@ fastmail:
             value: create
 # The same signature and prompts as Fastmail, under Gmail's own title.
 gmail:
-  # Opened after the draft is created. The number is the account's position
-  # among those signed in to the browser, starting at 0.
+  # Asked after the draft is created. On a Mac, Yes opens draftsURL. The number
+  # is the account's position among those signed in to the browser, from 0.
+  # On iPhone and iPad it opens the Gmail app with draftsAppURL.
+  openPrompt:
+    menuTitle: Send to Gmail
+    menuMessage: Open Gmail now?
   draftsURL: "https://mail.google.com/mail/u/0/#drafts"
+  draftsAppURL: "googlegmail://"
   signature: *emailSignature
   signaturePrompt:
     menuTitle: Send to Gmail

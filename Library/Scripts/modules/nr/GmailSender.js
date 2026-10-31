@@ -12,10 +12,17 @@ class GmailSender extends EmailSender {
     return new Gmail();
   }
 
-  // Opens Gmail's Drafts folder once the draft exists, to review and send it.
+  // Offers to open Gmail once the draft exists, to review and send it.
+  // yesNoPrompt adds its buttons to the settings it is given, so it gets a copy.
   send(content) {
     const result = super.send(content);
-    if (result) app.openURL(this.settings.draftsURL);
+    if (result && this.ui.yesNoPrompt({ ...this.settings.openPrompt }) == "yes") app.openURL(this.#gmailURL);
     return result;
+  }
+
+  // The Gmail app on iPhone and iPad, and the web Drafts folder on a Mac.
+  get #gmailURL() {
+    const { draftsURL, draftsAppURL } = this.settings;
+    return device.systemName == "iOS" ? draftsAppURL : draftsURL;
   }
 }
