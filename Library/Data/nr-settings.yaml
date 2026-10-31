@@ -57,7 +57,7 @@ queryLetter:
 fastmail:
   # Markdown, appended to every email body before the HTML conversion.
   # Single line breaks are kept. Leave empty for no signature.
-  signature: |
+  signature: &emailSignature |
     \---
     Nelson/Roberto
     Author/Filmmaker/Developer
@@ -69,13 +69,13 @@ fastmail:
   # Asks for the Subject: and Email: lines a draft is missing. Only the missing
   # fields are shown, and a field left blank creates the draft without it.
   missingFields:
-    messages:
+    messages: &missingFieldMessages
       subject: "No Subject: line found."
       recipient: "No Email: line found."
       both: "No Subject: or Email: line found."
     # Shown when a typed address cannot be read. [[address]] is what was typed.
-    invalidAddress: '"[[address]]" is not a valid email address.'
-    menuSettings:
+    invalidAddress: &invalidAddressMessage '"[[address]]" is not a valid email address.'
+    menuSettings: &missingFieldsMenu
       menuTitle: Send to Fastmail
       menuItems:
         - type: textField
@@ -95,6 +95,18 @@ fastmail:
           data:
             name: Create Draft
             value: create
+# The same signature and prompts as Fastmail, under Gmail's own title.
+gmail:
+  signature: *emailSignature
+  signaturePrompt:
+    menuTitle: Send to Gmail
+    menuMessage: Attach your signature?
+  missingFields:
+    messages: *missingFieldMessages
+    invalidAddress: *invalidAddressMessage
+    menuSettings:
+      <<: *missingFieldsMenu
+      menuTitle: Send to Gmail
 newEmail:
   templateFile: "nr/new-email.mustache"
   draftTags:
