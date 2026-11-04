@@ -301,4 +301,16 @@ for (const [label, content] of [
   test.assert(infoMessages(ui).includes("Submit today's attendance before making the bus list."), `${label}: and says to submit first`);
 }
 
+// --- Copy Player Names ---
+test.section("Copy Player Names");
+
+const rosterWithBlank = `${attendanceTaken("2026-10-21")}\n- [ ] `;
+test.assertDeepEqual(
+  Attendance.playerLines(rosterWithBlank),
+  ["- [x] Here Player (7)", "- [ ] Absent Player (8)"],
+  "every player line is listed, checked or not, without Recorded, Submitted, or a blank checkbox",
+);
+test.assertEqual(Attendance.nameList(["Here Player", "Absent Player"]), "- Here Player\n- Absent Player", "names become a Markdown list");
+test.assertEqual(Attendance.nameList([]), "", "no names make an empty list");
+
 test.summary();

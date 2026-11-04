@@ -8,6 +8,7 @@ displayMsgs:
   busListNotReady: Submit today's attendance before making the bus list.
   busListOn: "Bus list: checked players are not riding the bus."
   busListOff: Back to today's attendance.
+  noPlayersPicked: No players were picked, so nothing was copied.
 getTeamIDFromPrompt:
   # Lists only the teams in season unless none are (then every team) or the
   # action is Start New Season. One team in season is used without asking.
@@ -309,6 +310,23 @@ insertPlayerName:
         data:
           name: ok
           value: ok
+copyPlayerNames:
+  playerSelect:
+    type: select
+    data:
+      name: players
+      label: Players
+      allowMultiple: true
+  menuSettings:
+    menuTitle: Copy Player Names
+    menuMessage: Pick the players whose names you want to copy.
+    isCancellable: true
+    menuItems:
+      - type: button
+        data:
+          name: Copy
+          value: copy
+          isDefault: true
 submitGoogleForm:
   menuSettings:
     menuTitle: Google Form Submitted

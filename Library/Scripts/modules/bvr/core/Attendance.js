@@ -249,6 +249,46 @@ class Attendance {
     return line;
   }
 
+  // Copy Player Names: pick players from the attendance draft and copy them
+  // as a "- Name" list to paste elsewhere. The draft is left as it is, since
+  // its checkboxes are today's attendance or the bus list.
+  copyPlayerNames() {
+    this.#loadAttendaceDraft();
+    const names = Attendance.playerLines(this.attendaceDraft.content).map((line) => this.bvr.cleanUpName(line));
+
+    const picked = this.#pickPlayers(names);
+    if (picked == undefined) return;
+    if (picked.length == 0) return this.ui.displayAppMessage("info", this.displayMsgs.noPlayersPicked);
+
+    app.setClipboard(Attendance.nameList(picked));
+    this.ui.displayAppMessage("success", `Copied ${picked.length} ${picked.length == 1 ? "name" : "names"}.`);
+  }
+
+  // A checklist of the players, in roster order. Undefined when cancelled.
+  #pickPlayers(names) {
+    const { menuSettings, playerSelect } = this.ui.settingsCopy("copyPlayerNames");
+    playerSelect.data.values = names;
+    menuSettings.menuItems.push(playerSelect);
+
+    const prompt = this.ui.buildMenu(menuSettings);
+    if (prompt.show() == false) return undefined;
+    return prompt.fieldValues[playerSelect.data.name] || [];
+  }
+
+  // The player lines of attendance content: checkboxes from line 5 on (see
+  // bvr/attendance.md) that have a name, checked or not.
+  static playerLines(content) {
+    return `${content}`
+      .split("\n")
+      .slice(5)
+      .filter((line) => /^- \[[ x]\]\s*\S/.test(line));
+  }
+
+  // Names as a Markdown list, one "- Name" per line.
+  static nameList(names) {
+    return names.map((name) => `- ${name}`).join("\n");
+  }
+
   #loadAttendaceDraft() {
     if (this.attendanceDraftID == undefined) {
       return alert(

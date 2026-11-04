@@ -263,6 +263,10 @@ class Team {
     this.attendace.toggleBusList();
   }
 
+  copyPlayerNames() {
+    this.attendace.copyPlayerNames();
+  }
+
   gameRecordResult() {
     const game = new Game(this.dependencies);
     game.recordResult();
