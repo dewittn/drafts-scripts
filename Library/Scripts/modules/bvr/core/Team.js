@@ -201,6 +201,17 @@ class Team {
     return this.tmplSettings.welcomeLetter;
   }
 
+  // The head coach, then the team's assistants, as players know them
+  // ("Coach Nelson"), for sign-offs.
+  get coachNames() {
+    const initials = [this.bvr.settings.headCoach, ...this.config.assistantCoaches];
+    return initials.filter((person) => person != undefined).map((person) => this.bvr.staff.coachName(person));
+  }
+
+  get weeklyScheduleSettings() {
+    return this.config.weeklySchedule;
+  }
+
   get defaultDraftTags() {
     return [this.defaultTag];
   }
@@ -239,6 +250,13 @@ class Team {
     );
     const welcomeLetter = new Template(welcomeLetterSettings);
     welcomeLetter.archive().save().activate();
+  }
+
+  // date: any day in the week, to skip the week prompt.
+  createWeeklySchedule(date) {
+    if (typeof WeeklySchedule == "undefined") require("modules/bvr/core/WeeklySchedule.js");
+    const weeklySchedule = new WeeklySchedule(this.dependencies);
+    weeklySchedule.create(date);
   }
 
   createPracticePlan() {

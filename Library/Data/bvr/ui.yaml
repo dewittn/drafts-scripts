@@ -353,3 +353,41 @@ updateRoster:
         data:
           name: "No"
           value: "no"
+# Create Weekly Schedule. In wording, {name} is filled in per event: {time}
+# is the practice time (levels or teams.yaml weeklySchedule.practiceTime, else
+# the calendar's), and a game's {details} and a No Practice {reason} are the
+# event's notes.
+weeklySchedule:
+  weekMenu:
+    menuTitle: Weekly Email
+    menuMessage: Which week is the email for?
+    menuItems:
+      - type: button
+        data:
+          name: This Coming Week
+          value: coming
+      - type: button
+        data:
+          name: Pick a Week
+          value: pick
+  datePrompt:
+    menuTitle: Weekly Email
+    menuMessage: Pick any day in the week.
+    menuItems:
+      - type: datePicker
+        data:
+          name: date
+          label: Week of
+          options:
+            mode: date
+      - type: button
+        data:
+          name: Ok
+          value: ok
+  wording:
+    practice: "practice, {time}"
+    game: "game, {location} vs. {opponent} {details}"
+    missingGameDetails: "{--add the field and time to the event notes--}"
+    noPractice: "**No Practice**"
+    noPracticeWithReason: "**No Practice** ({reason})"
+    emptyDay: "{--nothing on the calendar--}"

@@ -41,6 +41,19 @@ class Game {
     return [columValues, columValues];
   }
 
+  // Reads a team calendar's game title, "Game: Home vs Milton (B)", into
+  // { location: "Home", opponent: "Milton (B)" }. Undefined for any other
+  // event, such as "Practice". Also used by WeeklySchedule.
+  static parseCalendarTitle(title) {
+    if (title == undefined || title.includes("Game") == false) return undefined;
+
+    const description = title.split(":")[1];
+    if (description == undefined) return undefined;
+
+    const [location, ...opponent] = description.split("vs");
+    return { location: location.trim(), opponent: opponent.join("vs").trim() || undefined };
+  }
+
   static winLoseOrDraw(gameScore) {
     const bvrScore = Number(gameScore[0]);
     const theirScore = Number(gameScore[1]);
@@ -488,9 +501,9 @@ class Game {
     const endDate = adjustDate(this.date, "+12 hours");
 
     const events = cal.events(startDate, endDate);
-    const matchEvent = events[0]?.title;
+    const match = Game.parseCalendarTitle(events[0]?.title);
 
-    if (matchEvent == undefined || matchEvent.includes("Game") == false) {
+    if (match == undefined) {
       this.bvr.ui.displayAppMessage(
         "info",
         "There does not appear to be a game today.",
@@ -498,11 +511,8 @@ class Game {
       return false;
     }
 
-    const matchDescription = matchEvent.split(":")[1].split("vs");
-    const location = matchDescription[0].trim();
-
-    if (this.#validLocation(location)) this.#gameData.calLocation = location;
-    this.#gameData.calOpponent = matchDescription[1]?.trim();
+    if (this.#validLocation(match.location)) this.#gameData.calLocation = match.location;
+    this.#gameData.calOpponent = match.opponent;
   }
 
   #validLocation(location) {

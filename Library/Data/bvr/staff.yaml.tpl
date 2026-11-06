@@ -25,6 +25,7 @@ people:
     cell: op://BVR/HM/cell
   ME:
     name: "{{op://BVR/ME/first name}} {{op://BVR/ME/last name}}"
+    coachName: Coach Nelson
     email: op://BVR/ME/email
   WK:
     cell: op://BVR/WK/cell

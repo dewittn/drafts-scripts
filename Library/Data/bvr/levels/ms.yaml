@@ -17,3 +17,5 @@ gameReport:
       recipients: [AG, WK, HM]
       bodyText: "[[game_summary]]"
   forms: [varsity-score-report]
+weeklySchedule:
+  practiceTime: "2:35 - 3:35"

@@ -15,7 +15,7 @@ const test = new TestAssertions("TeamConfig and Staff");
 
 const staff = new Staff({
   AA: { name: "Alex Able", cell: "555-0101", email: "alex@example.com" },
-  BB: { cell: "555-0102", email: "bea@example.com" },
+  BB: { cell: "555-0102", email: "bea@example.com", coachName: "Coach Bea" },
   CC: { cell: "555-0103" },
   ATT: { email: "attendance@example.com" },
 });
@@ -208,6 +208,32 @@ test.assertFalsy(levelTags("us").level_ms, "and not level_ms");
 test.assertEqual(levelTags("ms").level_ms, true, "a middle school team gets level_ms");
 test.assertFalsy(levelTags("ms").level_us, "and not level_us");
 
+// --- weekly schedule ---
+test.section("weekly schedule");
+
+const weeklyLevel = { ...level, weeklySchedule: { practiceTime: "2:35 - 3:35" } };
+const weeklyConfig = (team) =>
+  new TeamConfig({ team: { ...baseTeam, ...team }, level: weeklyLevel, forms, staff, attendanceOffice: "ATT" });
+test.assertEqual(weeklyConfig({}).weeklySchedule.practiceTime, "2:35 - 3:35", "the practice time comes from the level");
+test.assertEqual(
+  weeklyConfig({ weeklySchedule: { practiceTime: "3:00 - 4:30" } }).weeklySchedule.practiceTime,
+  "3:00 - 4:30",
+  "a team overrides the practice time",
+);
+test.assertDeepEqual(config({}).weeklySchedule, {}, "no weeklySchedule settings is an empty object");
+test.assertDeepEqual(
+  config({}).templateSettings.weeklySchedule,
+  { templateFile: "bvr/weekly-schedule.mustache", draftTags: ["bvr/hoops/ms/weekly-email"] },
+  "the weekly email template and tag follow from defaultTag",
+);
+test.assertEqual(
+  config({ templates: { weeklySchedule: "bvr/custom-week.mustache" } }).templateSettings.weeklySchedule.templateFile,
+  "bvr/custom-week.mustache",
+  "teams.yaml overrides the weekly email template",
+);
+test.assertDeepEqual(config({ assistantCoaches: ["BB", "AA"] }).assistantCoaches, ["BB", "AA"], "assistantCoaches lists initials in order");
+test.assertDeepEqual(config({}).assistantCoaches, [], "no assistants is an empty list");
+
 // --- Staff ---
 test.section("Staff");
 
@@ -218,5 +244,8 @@ test.assertEqual(new Staff(undefined).has("AA"), false, "an empty directory has 
 test.assertDeepEqual(Staff.parseInitials(" ag, HM;wk  ag "), ["AG", "HM", "WK"], "parseInitials splits, uppercases, and drops repeats");
 test.assertDeepEqual(Staff.parseInitials(""), [], "a blank field parses to no initials");
 test.assertDeepEqual(staff.unknown(["AA", "XX", "BB", "YY"]), ["XX", "YY"], "unknown lists the initials no one has");
+test.assertEqual(staff.coachName("BB"), "Coach Bea", "coachName is the coachName field when set");
+test.assertEqual(staff.coachName("AA"), "Alex Able", "coachName falls back to the full name");
+test.assertThrows(() => staff.coachName("CC"), "coachName throws for someone with neither");
 
 test.summary();

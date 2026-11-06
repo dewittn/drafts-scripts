@@ -12,6 +12,7 @@ class TeamConfig {
     seasonRecord: "bvr/game-season-record.md",
     attendance: "bvr/attendance.md",
     endOfSeasonProject: "bvr/end-of-season-project.mustache",
+    weeklySchedule: "bvr/weekly-schedule.mustache",
   };
 
   #team;
@@ -123,6 +124,16 @@ class TeamConfig {
     return TeamConfig.merge(this.#level.gameReport || {}, this.#team.gameReport || {});
   }
 
+  // Weekly schedule email settings, such as practiceTime ("2:35 - 3:35").
+  get weeklySchedule() {
+    return TeamConfig.merge(this.#level.weeklySchedule || {}, this.#team.weeklySchedule || {});
+  }
+
+  // The team's assistant coaches, as initials.
+  get assistantCoaches() {
+    return [...(this.#team.assistantCoaches || [])];
+  }
+
   // What Attendance reads: the two message configs with contacts filled in.
   get attendanceSettings() {
     const { absences, noAbsences } = this.attendance;
@@ -170,6 +181,10 @@ class TeamConfig {
       practicePlan: { draftTags: [...(team.practicePlan?.draftTags || [])] },
       attendance: { templateFile: templates.attendance || defaults.attendance },
       endOfSeasonProject: { templateFile: templates.endOfSeasonProject || defaults.endOfSeasonProject },
+      weeklySchedule: {
+        templateFile: templates.weeklySchedule || defaults.weeklySchedule,
+        draftTags: [`${team.defaultTag}/weekly-email`],
+      },
     };
 
     const thingsProject = templates.thingsProject || this.#derivedThingsProject();

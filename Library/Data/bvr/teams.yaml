@@ -10,6 +10,11 @@
 #   end of season     bvr/end-of-season-project.mustache
 #                                                     (override: templates.endOfSeasonProject)
 #   practice plan     bvr/<id>-practice-plan.md
+#   weekly email      bvr/weekly-schedule.mustache, tagged <defaultTag>/weekly-email
+#                                                     (override: templates.weeklySchedule)
+# The weekly email signs off from headCoach and assistantCoaches, by each
+# person's coachName in staff.yaml.tpl, and prints weeklySchedule.practiceTime
+# (level default) for practices.
 # Per-season values (start date, form URLs, record draft) live in the team
 # file, teams/<id>.json, and are set by Start New Season.
 teamsData:

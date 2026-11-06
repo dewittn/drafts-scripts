@@ -1,0 +1,138 @@
+/**
+ * WeeklySchedule Unit Tests
+ *
+ * Covers picking the week, wording each calendar event, filling in days with
+ * no events, the sign-off, and the game title parser shared with Game.
+ * Events are plain objects shaped like Drafts CalendarEvents.
+ */
+
+require("../Tests/fixtures/assertions.js");
+require("modules/bvr/core/WeeklySchedule.js");
+
+const test = new TestAssertions("WeeklySchedule");
+
+const wording = {
+  practice: "practice, {time}",
+  game: "game, {location} vs. {opponent} {details}",
+  missingGameDetails: "{--add the field and time to the event notes--}",
+  noPractice: "**No Practice**",
+  noPracticeWithReason: "**No Practice** ({reason})",
+  emptyDay: "{--nothing on the calendar--}",
+  practiceTime: "2:35 - 3:35",
+};
+
+const ymd = (date) => `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+
+// An event on the given day (month is 1-12), at the given 24-hour times.
+const event = (title, [year, month, day], { start = "14:20", end = "15:35", notes = "", isAllDay = false } = {}) => {
+  const at = (time) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    return new Date(year, month - 1, day, hours, minutes);
+  };
+  return { title, notes, isAllDay, startDate: at(start), endDate: at(end) };
+};
+
+// --- scheduleMonday ---
+test.section("scheduleMonday");
+
+test.assertEqual(ymd(WeeklySchedule.scheduleMonday(new Date(2026, 10, 15, 9))), "2026-11-16", "Sunday gives the next day");
+test.assertEqual(ymd(WeeklySchedule.scheduleMonday(new Date(2026, 10, 14, 9))), "2026-11-16", "Saturday gives the coming Monday");
+test.assertEqual(ymd(WeeklySchedule.scheduleMonday(new Date(2026, 10, 30, 9))), "2026-11-30", "Monday gives itself");
+test.assertEqual(ymd(WeeklySchedule.scheduleMonday(new Date(2026, 11, 3, 9))), "2026-11-30", "a weekday gives its own week");
+test.assertEqual(WeeklySchedule.scheduleMonday(new Date(2026, 10, 15, 9)).getHours(), 0, "the Monday is at midnight");
+test.assertEqual(ymd(WeeklySchedule.addDays(new Date(2026, 10, 30), 7)), "2026-12-7", "addDays crosses months");
+test.assertEqual(WeeklySchedule.shortDate(new Date(2026, 10, 30)), "Nov 30", "shortDate");
+
+// --- describeEvent ---
+test.section("describeEvent");
+
+const describe = (calendarEvent, words = wording) => WeeklySchedule.describeEvent(calendarEvent, words);
+
+test.assertEqual(describe(event("Practice", [2026, 11, 16])), "practice, 2:35 - 3:35", "practice prints the set time");
+test.assertEqual(
+  describe(event("Practice", [2026, 11, 16]), { ...wording, practiceTime: undefined }),
+  "practice, 2:20 - 3:35",
+  "without a set time, practice prints the calendar's",
+);
+test.assertEqual(
+  describe(event("Game: Home vs Milton (B)", [2026, 11, 18], { notes: "@ Soule, 3:30 pm" })),
+  "game, Home vs. Milton (B) @ Soule, 3:30 pm",
+  "a game reads its field and time from the notes",
+);
+test.assertEqual(
+  describe(event("Game: Away vs Winsor (B)", [2026, 11, 18])),
+  "game, Away vs. Winsor (B) {--add the field and time to the event notes--}",
+  "a game without notes is flagged",
+);
+test.assertEqual(
+  describe(event("No Practice", [2026, 11, 20], { notes: "conferences" })),
+  "**No Practice** (conferences)",
+  "No Practice reads its reason from the notes",
+);
+test.assertEqual(describe(event("no practice", [2026, 11, 20])), "**No Practice**", "No Practice without notes");
+test.assertEqual(
+  describe(event("Team Dinner", [2026, 11, 20], { start: "18:00", end: "19:30" })),
+  "Team Dinner, 6:00 - 7:30",
+  "other events print their title and time",
+);
+test.assertEqual(describe(event("Tournament", [2026, 11, 21], { isAllDay: true })), "Tournament", "all-day events print just the title");
+
+// --- buildDays ---
+test.section("buildDays");
+
+const monday = new Date(2026, 10, 30);
+const week = [
+  event("Practice", [2026, 11, 30]),
+  event("Game: Home vs Milton (B)", [2026, 12, 2], { notes: "@ Soule, 3:30 pm" }),
+  event("Practice", [2026, 12, 3]),
+  event("No Practice", [2026, 12, 4], { notes: "conferences", isAllDay: true }),
+];
+const days = WeeklySchedule.buildDays(week, monday, wording);
+
+test.assertDeepEqual(
+  days,
+  [
+    { day: "Monday", description: "practice, 2:35 - 3:35" },
+    { day: "Tuesday", description: "{--nothing on the calendar--}" },
+    { day: "Wednesday", description: "game, Home vs. Milton (B) @ Soule, 3:30 pm" },
+    { day: "Thursday", description: "practice, 2:35 - 3:35" },
+    { day: "Friday", description: "**No Practice** (conferences)" },
+  ],
+  "one line per school day, a flag for a day with nothing, no empty weekend days",
+);
+
+const weekend = WeeklySchedule.buildDays([event("Tournament", [2026, 12, 5], { isAllDay: true })], monday, wording);
+test.assertDeepEqual(weekend[5], { day: "Saturday", description: "Tournament" }, "a weekend day with an event is listed");
+
+const doubleDay = WeeklySchedule.buildDays(
+  [event("Game: Away vs Thayer (B)", [2026, 11, 30], { start: "16:00", notes: "@ Thayer, 4 pm" }), event("Practice", [2026, 11, 30])],
+  monday,
+  wording,
+);
+test.assertEqual(
+  doubleDay[0].description,
+  "practice, 2:35 - 3:35; game, Away vs. Thayer (B) @ Thayer, 4 pm",
+  "two events on a day are joined in time order",
+);
+
+// --- signOff ---
+test.section("signOff");
+
+test.assertEqual(WeeklySchedule.signOff(["Coach Nelson"]), "Coach Nelson", "one coach");
+test.assertEqual(WeeklySchedule.signOff(["Coach Koch", "Coach Nelson"]), "Coach Koch and Coach Nelson", "two coaches");
+test.assertEqual(WeeklySchedule.signOff(["A", "B", "C"]), "A, B and C", "three coaches");
+test.assertEqual(WeeklySchedule.signOff([]), "", "no coaches");
+
+// --- Game.parseCalendarTitle ---
+test.section("Game.parseCalendarTitle");
+
+test.assertDeepEqual(
+  Game.parseCalendarTitle("Game: Away vs Winsor (B)"),
+  { location: "Away", opponent: "Winsor (B)" },
+  "reads location and opponent",
+);
+test.assertEqual(Game.parseCalendarTitle("Practice"), undefined, "not a game");
+test.assertEqual(Game.parseCalendarTitle("Game"), undefined, "a game title with no details");
+test.assertEqual(Game.parseCalendarTitle(undefined), undefined, "no title");
+
+test.summary();

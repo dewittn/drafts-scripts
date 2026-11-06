@@ -4,7 +4,7 @@
 class Staff {
   #people;
 
-  // people: { AG: { name, cell, email }, ... }
+  // people: { AG: { name, coachName, cell, email }, ... }
   constructor(people = {}) {
     this.#people = people;
   }
@@ -35,6 +35,14 @@ class Staff {
   // initials when the person or the field is missing.
   contact(initials, field) {
     return this.contacts([initials], field)[0];
+  }
+
+  // What players call this person, such as "Coach Nelson": the coachName
+  // field, or the full name when there is none. For email sign-offs.
+  coachName(initials) {
+    const person = this.#people[initials];
+    if (person?.coachName) return person.coachName;
+    return this.contact(initials, "name");
   }
 
   // The same field for a list of people, in order. Throws once, naming every
