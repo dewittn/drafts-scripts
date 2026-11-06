@@ -166,8 +166,10 @@ class DraftsUI {
     editor.activate();
   }
 
+  // Errors and warnings are always logged (the action log, or the log draft
+  // when one is set): the banner is gone before it can be read.
   displayErrorMessage(errorMessage, stackTrace) {
-    if (stackTrace != undefined) this.#updateDraftLog(errorMessage, stackTrace);
+    this.#updateDraftLog(errorMessage, stackTrace);
 
     // Display Error Message
     app.displayErrorMessage(errorMessage);
@@ -176,8 +178,7 @@ class DraftsUI {
   }
 
   displayWarningMessage(warningMessage, stackTrace) {
-    if (stackTrace != undefined)
-      this.#updateDraftLog(warningMessage, stackTrace);
+    this.#updateDraftLog(warningMessage, stackTrace);
 
     app.displayWarningMessage(warningMessage);
   }
@@ -204,8 +205,9 @@ class DraftsUI {
   }
 
   displayAppMessage(type, message, stackTrace) {
-    // Update Error Log if UUID is found in settings
-    if (stackTrace != undefined) this.#updateDraftLog(message, stackTrace);
+    // Log every warning and error, and any message given details.
+    const alwaysLogged = type == "warning" || type == "error";
+    if (alwaysLogged || stackTrace != undefined) this.#updateDraftLog(message, stackTrace);
 
     switch (type) {
       case "info":
