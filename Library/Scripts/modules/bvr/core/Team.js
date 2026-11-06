@@ -13,8 +13,9 @@ class Team {
   #config;
 
   // allTeams: pick from every team, not just the active ones (Start New
-  // Season, whose team is usually between seasons).
-  constructor(teamID = "", { allTeams = false } = {}) {
+  // Season, whose team is usually between seasons). alwaysAsk: show the
+  // picker even when only one team is active.
+  constructor(teamID = "", { allTeams = false, alwaysAsk = false } = {}) {
     this.#services = ServiceContainer.getInstance();
 
     // Register BVR service if not already registered
@@ -25,7 +26,7 @@ class Team {
       }, true);
     }
 
-    this.#teamData = this.#getTeamData(teamID, allTeams);
+    this.#teamData = this.#getTeamData(teamID, { allTeams, alwaysAsk });
   }
 
   // Lazy getters for dependencies
@@ -468,11 +469,11 @@ class Team {
   }
 
   // The draft's team tag wins, then a team ID passed in, then a choice.
-  #getTeamData(teamID, allTeams) {
+  #getTeamData(teamID, pickerOptions) {
     const teamData = this.#getTeamDataFromTag();
     if (teamData != undefined) return teamData;
 
-    const id = teamID == "" ? this.#chooseTeamID(allTeams) : teamID;
+    const id = teamID == "" ? this.#chooseTeamID(pickerOptions) : teamID;
     return this.teamsData.filter((team) => team.id == id)[0];
   }
 
@@ -483,12 +484,12 @@ class Team {
   // Choose from the active teams, using the only one without asking. With no
   // active team (or allTeams), every team is offered. A team between seasons
   // is still reachable by running the action from one of its tagged drafts.
-  #chooseTeamID(allTeams) {
+  #chooseTeamID({ allTeams, alwaysAsk }) {
     if (allTeams) return this.#getTeamIDFromPrompt(this.teamsData);
 
     const activeTeams = this.#activeTeams();
     if (activeTeams.length == 0) return this.#getTeamIDFromPrompt(this.teamsData, { noneActive: true });
-    if (activeTeams.length > 1) return this.#getTeamIDFromPrompt(activeTeams);
+    if (activeTeams.length > 1 || alwaysAsk) return this.#getTeamIDFromPrompt(activeTeams);
 
     const [onlyTeam] = activeTeams;
     this.bvr.ui.displayAppMessage("info", `Using ${onlyTeam.name}.`);

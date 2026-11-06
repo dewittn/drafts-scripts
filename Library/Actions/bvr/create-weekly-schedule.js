@@ -1,4 +1,5 @@
 require("modules/bvr/core/BVR.js");
 
-const team = new Team();
+// Always show the picker of teams in season, even when there is only one.
+const team = new Team("", { alwaysAsk: true });
 team.createWeeklySchedule();
