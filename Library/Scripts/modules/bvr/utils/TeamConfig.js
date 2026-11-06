@@ -13,6 +13,7 @@ class TeamConfig {
     attendance: "bvr/attendance.md",
     endOfSeasonProject: "bvr/end-of-season-project.mustache",
     weeklySchedule: "bvr/weekly-schedule.mustache",
+    weeklySummaryPrompt: "bvr/weekly-summary-prompt.mustache",
   };
 
   #team;
@@ -184,6 +185,7 @@ class TeamConfig {
       weeklySchedule: {
         templateFile: templates.weeklySchedule || defaults.weeklySchedule,
         draftTags: [`${team.defaultTag}/weekly-email`],
+        summaryPrompt: templates.weeklySummaryPrompt || defaults.weeklySummaryPrompt,
       },
     };
 

@@ -44,6 +44,8 @@ test.assertEqual(ymd(WeeklySchedule.scheduleMonday(new Date(2026, 11, 3, 9))), "
 test.assertEqual(WeeklySchedule.scheduleMonday(new Date(2026, 10, 15, 9)).getHours(), 0, "the Monday is at midnight");
 test.assertEqual(ymd(WeeklySchedule.addDays(new Date(2026, 10, 30), 7)), "2026-12-7", "addDays crosses months");
 test.assertEqual(WeeklySchedule.shortDate(new Date(2026, 10, 30)), "Nov 30", "shortDate");
+test.assertEqual(WeeklySchedule.dayName(new Date(2026, 10, 6, 9)), "Friday", "dayName for a weekday");
+test.assertEqual(WeeklySchedule.dayName(new Date(2026, 10, 8, 23)), "Sunday", "dayName for a Sunday");
 
 // --- describeEvent ---
 test.section("describeEvent");
@@ -145,12 +147,13 @@ test.assertDeepEqual(
   {
     games: [{ line: "Monday, Win vs Newton, 5 - 2" }, { line: "Wednesday, Loss vs Belmont, 1 - 2" }],
     record: "2-1",
+    record_words: "2 wins, 1 loss",
   },
   "last week's recorded games in date order, and the record before monday",
 );
 test.assertDeepEqual(
   WeeklySchedule.lastWeek([played([2026, 11, 2], "Winsor", ["1", "0"])], nov30, wording),
-  { games: [{ line: "No games" }], record: "1-0" },
+  { games: [{ line: "No games" }], record: "1-0", record_words: "1 win, 0 losses" },
   "a week with no games still shows the record",
 );
 test.assertEqual(WeeklySchedule.lastWeek([], nov30, wording), undefined, "no recorded games leaves the list out");
@@ -169,6 +172,12 @@ test.assertEqual(
   "3-1-1",
   "draws show once there is one",
 );
+test.assertEqual(
+  WeeklySchedule.recordWords([...season, played([2026, 11, 9], "Thayer", ["2", "2"])]),
+  "3 wins, 1 loss, 1 draw",
+  "recordWords spells out the record, singular for one",
+);
+test.assertEqual(WeeklySchedule.recordWords(season), "3 wins, 1 loss", "recordWords leaves out draws while there are none");
 
 // --- signOff ---
 test.section("signOff");

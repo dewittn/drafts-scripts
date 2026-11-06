@@ -223,7 +223,11 @@ test.assertEqual(
 test.assertDeepEqual(config({}).weeklySchedule, {}, "no weeklySchedule settings is an empty object");
 test.assertDeepEqual(
   config({}).templateSettings.weeklySchedule,
-  { templateFile: "bvr/weekly-schedule.mustache", draftTags: ["bvr/hoops/ms/weekly-email"] },
+  {
+    templateFile: "bvr/weekly-schedule.mustache",
+    draftTags: ["bvr/hoops/ms/weekly-email"],
+    summaryPrompt: "bvr/weekly-summary-prompt.mustache",
+  },
   "the weekly email template and tag follow from defaultTag",
 );
 test.assertEqual(

@@ -19,5 +19,13 @@ msgTeamNameTag: team_name
 # the attendance_email template tag from attendanceOffice.
 headCoach: ME
 attendanceOffice: ATT
+# The model that writes generated text, such as the weekly email's opening
+# (see shared/libraries/LanguageModel.js). apple: mode onDevice or pcc
+# (Private Cloud Compute). anthropic: model, maxTokens, and thinking (false
+# turns it off), with the API key in Drafts' credentials. Remove it to skip generated text.
+languageModel:
+  provider: anthropic
+  model: claude-haiku-5-5
+  thinking: false
 globalTemplateTags:
   hc_years_coaching: 9th

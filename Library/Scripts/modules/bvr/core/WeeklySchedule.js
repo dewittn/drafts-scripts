@@ -147,12 +147,18 @@ class WeeklySchedule {
     return {
       games: lines.length > 0 ? lines : [{ line: wording.noGamesLastWeek }],
       record: WeeklySchedule.record(played),
+      record_words: WeeklySchedule.recordWords(played),
     };
+  }
+
+  // "Friday"
+  static dayName(date) {
+    return WeeklySchedule.dayNames[(date.getDay() + 6) % 7];
   }
 
   // "Monday, Win vs Newton, 5 - 2"
   static describeGame(game, wording) {
-    const day = WeeklySchedule.dayNames[(game.date.getDay() + 6) % 7];
+    const day = WeeklySchedule.dayName(game.date);
     const { result, opponent, fullScore: score } = game;
     return WeeklySchedule.fill(wording.lastWeekGame, { day, result, opponent, score });
   }
@@ -161,6 +167,16 @@ class WeeklySchedule {
   static record(games) {
     const tally = SeasonRecordTable.tally(games);
     return tally.endsWith("-0") ? tally.slice(0, -2) : tally;
+  }
+
+  // "7 wins, 2 losses, 1 draw": the record spelled out, for the summary
+  // prompt, so the model does not have to guess what "7-2-1" means.
+  static recordWords(games) {
+    const [wins, losses, draws] = SeasonRecordTable.tally(games).split("-").map(Number);
+    const count = (number, word) => `${number} ${word}${number == 1 ? "" : word.endsWith("s") ? "es" : "s"}`;
+    const words = [count(wins, "win"), count(losses, "loss")];
+    if (draws > 0) words.push(count(draws, "draw"));
+    return words.join(", ");
   }
 
   // "Coach Koch", "Coach Koch and Coach Nelson", "A, B and C".
@@ -198,18 +214,55 @@ class WeeklySchedule {
     return WeeklySchedule.scheduleMonday(picker.fieldValues[fieldName]);
   }
 
-  // The template settings, with the week's days and the sign-off added to
-  // the team tags every BVR template gets.
+  // The template settings, with the week's days, last week's games, the
+  // generated opening, and the sign-off added to the team tags every BVR
+  // template gets.
   #templateSettings(monday, events) {
     const gblTmplSettings = this.#team.gblTmplSettings;
-    const teamTemplateTags = {
-      ...gblTmplSettings.teamTemplateTags,
-      week_of: WeeklySchedule.shortDate(monday),
+    const weekTags = {
+      team_name: this.#team.name,
       schedule_days: WeeklySchedule.buildDays(events, monday, this.wording),
       last_week: WeeklySchedule.lastWeek(this.#seasonGames, monday, this.wording),
+    };
+    const teamTemplateTags = {
+      ...gblTmplSettings.teamTemplateTags,
+      ...weekTags,
+      week_of: WeeklySchedule.shortDate(monday),
+      // The day the email is written, for "Happy Friday!"
+      today: WeeklySchedule.dayName(new Date()),
+      summary: this.#summarize(weekTags),
       coach_sign_off: WeeklySchedule.signOff(this.#team.coachNames),
     };
     return new TmplSettings({ ...gblTmplSettings, teamTemplateTags }, this.#tmplSettings.weeklySchedule);
+  }
+
+  // A sentence or two on last week and this one, from the model in
+  // settings.yaml.tpl's languageModel. Undefined, leaving the template's
+  // placeholder, when there is no model set, no game recorded yet, or the
+  // model fails (which is reported but does not stop the email).
+  #summarize(weekTags) {
+    const modelSettings = this.#bvr.settings.languageModel;
+    if (modelSettings == undefined || weekTags.last_week == undefined) return undefined;
+
+    if (typeof LanguageModel == "undefined") require("shared/libraries/LanguageModel.js");
+    const prompt = WeeklySchedule.renderPrompt(this.#tmplSettings.weeklySchedule.summaryPrompt, weekTags);
+    const model = LanguageModel.create(modelSettings);
+    const summary = model.respond(prompt);
+    if (summary == undefined) {
+      this.ui.displayAppMessage("warning", `No summary written: ${model.lastError}`, {
+        function: "WeeklySchedule.summarize",
+        provider: modelSettings.provider,
+        lastError: model.lastError,
+      });
+    }
+    return summary;
+  }
+
+  // The summary prompt template, filled in with the week's tags.
+  static renderPrompt(templateFile, tags) {
+    const mustache = MustacheTemplate.createWithTemplate(Template.load(templateFile));
+    mustache.contentType = "text";
+    return mustache.render(tags);
   }
 
   // This season's games from the team file, as Games. None for a team

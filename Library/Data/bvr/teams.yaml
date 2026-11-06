@@ -12,6 +12,8 @@
 #   practice plan     bvr/<id>-practice-plan.md
 #   weekly email      bvr/weekly-schedule.mustache, tagged <defaultTag>/weekly-email
 #                                                     (override: templates.weeklySchedule)
+#   weekly summary    bvr/weekly-summary-prompt.mustache, the prompt for its opening
+#                                                     (override: templates.weeklySummaryPrompt)
 # The weekly email signs off from headCoach and assistantCoaches, by each
 # person's coachName in staff.yaml.tpl, and prints weeklySchedule.practiceTime
 # (level default) for practices.
