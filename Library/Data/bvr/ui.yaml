@@ -356,7 +356,7 @@ updateRoster:
 # Create Weekly Schedule. In wording, {name} is filled in per event: {time}
 # is the practice time (levels or teams.yaml weeklySchedule.practiceTime, else
 # the calendar's), and a game's {details} and a No Practice {reason} are the
-# event's notes.
+# event's notes. lastWeekGame words each of last week's recorded games.
 weeklySchedule:
   weekMenu:
     menuTitle: Weekly Email
@@ -391,3 +391,5 @@ weeklySchedule:
     noPractice: "**No Practice**"
     noPracticeWithReason: "**No Practice** ({reason})"
     emptyDay: "{--nothing on the calendar--}"
+    lastWeekGame: "{day}, {result} vs {opponent}, {score}"
+    noGamesLastWeek: No games

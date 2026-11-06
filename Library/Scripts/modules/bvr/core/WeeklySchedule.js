@@ -1,5 +1,6 @@
 if (typeof Game == "undefined") require("modules/bvr/core/Game.js");
 if (typeof TmplSettings == "undefined") require("modules/bvr/utils/TmplSettings.js");
+if (typeof SeasonRecordTable == "undefined") require("modules/bvr/utils/SeasonRecordTable.js");
 if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
 
 // Builds a team's weekly schedule email from one week of its calendar, one
@@ -14,8 +15,11 @@ class WeeklySchedule {
   #bvr;
   #team;
   #tmplSettings;
+  #dependencies;
 
-  constructor({ bvr, team, tmplSettings }) {
+  constructor(dependencies) {
+    const { bvr, team, tmplSettings } = dependencies;
+    this.#dependencies = dependencies;
     this.#bvr = bvr;
     this.#team = team;
     this.#tmplSettings = tmplSettings;
@@ -126,6 +130,39 @@ class WeeklySchedule {
     return `${clock(event.startDate)} - ${clock(event.endDate)}`;
   }
 
+  // The week before monday's recorded games, one { line } each, and the
+  // season record from every game before monday, so an email for a past
+  // week shows the record as it stood then. Undefined before the first
+  // recorded game, which leaves the template's Last Week list out.
+  static lastWeek(games, monday, wording) {
+    const played = games.filter((game) => game.recorded && game.date < monday);
+    if (played.length == 0) return undefined;
+
+    const weekBefore = WeeklySchedule.addDays(monday, -7);
+    const lines = played
+      .filter((game) => game.date >= weekBefore)
+      .sort((a, b) => a.date - b.date)
+      .map((game) => ({ line: WeeklySchedule.describeGame(game, wording) }));
+
+    return {
+      games: lines.length > 0 ? lines : [{ line: wording.noGamesLastWeek }],
+      record: WeeklySchedule.record(played),
+    };
+  }
+
+  // "Monday, Win vs Newton, 5 - 2"
+  static describeGame(game, wording) {
+    const day = WeeklySchedule.dayNames[(game.date.getDay() + 6) % 7];
+    const { result, opponent, fullScore: score } = game;
+    return WeeklySchedule.fill(wording.lastWeekGame, { day, result, opponent, score });
+  }
+
+  // "5-4", or "5-4-1" once the season has a draw.
+  static record(games) {
+    const tally = SeasonRecordTable.tally(games);
+    return tally.endsWith("-0") ? tally.slice(0, -2) : tally;
+  }
+
   // "Coach Koch", "Coach Koch and Coach Nelson", "A, B and C".
   static signOff(names) {
     if (names.length <= 1) return names.join("");
@@ -169,8 +206,16 @@ class WeeklySchedule {
       ...gblTmplSettings.teamTemplateTags,
       week_of: WeeklySchedule.shortDate(monday),
       schedule_days: WeeklySchedule.buildDays(events, monday, this.wording),
+      last_week: WeeklySchedule.lastWeek(this.#seasonGames, monday, this.wording),
       coach_sign_off: WeeklySchedule.signOff(this.#team.coachNames),
     };
     return new TmplSettings({ ...gblTmplSettings, teamTemplateTags }, this.#tmplSettings.weeklySchedule);
+  }
+
+  // This season's games from the team file, as Games. None for a team
+  // without a current season.
+  get #seasonGames() {
+    const entries = this.#team.season.currentSeasonRecord || [];
+    return entries.map((entry) => Game.fromJSON(this.#dependencies, entry));
   }
 }

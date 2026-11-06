@@ -18,6 +18,8 @@ const wording = {
   noPractice: "**No Practice**",
   noPracticeWithReason: "**No Practice** ({reason})",
   emptyDay: "{--nothing on the calendar--}",
+  lastWeekGame: "{day}, {result} vs {opponent}, {score}",
+  noGamesLastWeek: "No games",
   practiceTime: "2:35 - 3:35",
 };
 
@@ -113,6 +115,59 @@ test.assertEqual(
   doubleDay[0].description,
   "practice, 2:35 - 3:35; game, Away vs. Thayer (B) @ Thayer, 4 pm",
   "two events on a day are joined in time order",
+);
+
+// --- lastWeek ---
+test.section("lastWeek");
+
+// A recorded game as the team file stores it, read back through Game.
+const played = ([year, month, day], opponent, score, extra = {}) =>
+  Game.fromJSON(undefined, {
+    date: new Date(year, month - 1, day, 17).toISOString(),
+    opponent,
+    score,
+    result: Game.winLoseOrDraw(score),
+    recorded: true,
+    ...extra,
+  });
+
+const nov30 = new Date(2026, 10, 30);
+const season = [
+  played([2026, 11, 2], "Winsor", ["1", "0"]),
+  played([2026, 11, 25], "Belmont", ["1", "2"]),
+  played([2026, 11, 23], "Newton", ["5", "2"]),
+  played([2026, 11, 24], "Not Recorded", ["0", "0"], { recorded: false }),
+  played([2026, 12, 2], "Next Week", ["3", "0"]),
+];
+
+test.assertDeepEqual(
+  WeeklySchedule.lastWeek(season, nov30, wording),
+  {
+    games: [{ line: "Monday, Win vs Newton, 5 - 2" }, { line: "Wednesday, Loss vs Belmont, 1 - 2" }],
+    record: "2-1",
+  },
+  "last week's recorded games in date order, and the record before monday",
+);
+test.assertDeepEqual(
+  WeeklySchedule.lastWeek([played([2026, 11, 2], "Winsor", ["1", "0"])], nov30, wording),
+  { games: [{ line: "No games" }], record: "1-0" },
+  "a week with no games still shows the record",
+);
+test.assertEqual(WeeklySchedule.lastWeek([], nov30, wording), undefined, "no recorded games leaves the list out");
+test.assertEqual(
+  WeeklySchedule.lastWeek([played([2026, 12, 2], "Next Week", ["3", "0"])], nov30, wording),
+  undefined,
+  "games after monday do not count",
+);
+
+// --- record ---
+test.section("record");
+
+test.assertEqual(WeeklySchedule.record(season), "3-1", "draws are left off while there are none");
+test.assertEqual(
+  WeeklySchedule.record([...season, played([2026, 11, 9], "Thayer", ["2", "2"])]),
+  "3-1-1",
+  "draws show once there is one",
 );
 
 // --- signOff ---
