@@ -5,11 +5,11 @@ Subject: {{{team_name}}} This Week's Schedule
 Happy {{{today}}}!
 {{#summary}}{{{summary}}}{{/summary}}{{^summary}}{--How the team is doing: last week's results, the record, what's ahead.--}{{/summary}}
 
-{{#last_week}}Last Week:
+{{^summary}}{{#last_week}}Last Week:
 {{#games}}- {{{line}}}
 {{/games}}- Season Record: {{{record}}}
 
-{{/last_week}}Here is the schedule ahead.
+{{/last_week}}{{/summary}}Here is the schedule ahead.
 
 {{#schedule_days}}{{{day}}} - {{{description}}}
 {{/schedule_days}}

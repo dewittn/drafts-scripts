@@ -179,6 +179,15 @@ class WeeklySchedule {
     return words.join(", ");
   }
 
+  // The Last Week list as plain text, for the action log:
+  //   Last Week:
+  //   - Tuesday, Win vs Derby (B), 2 - 1
+  //   - Season Record: 7-2-2
+  static lastWeekText(lastWeek) {
+    const lines = lastWeek.games.map((game) => `- ${game.line}`);
+    return ["Last Week:", ...lines, `- Season Record: ${lastWeek.record}`].join("\n");
+  }
+
   // "Coach Koch", "Coach Koch and Coach Nelson", "A, B and C".
   static signOff(names) {
     if (names.length <= 1) return names.join("");
@@ -216,7 +225,8 @@ class WeeklySchedule {
 
   // The template settings, with the week's days, last week's games, the
   // generated opening, and the sign-off added to the team tags every BVR
-  // template gets.
+  // template gets. Last week's games always go to the action log; the
+  // template shows them only when no summary was written.
   #templateSettings(monday, events) {
     const gblTmplSettings = this.#team.gblTmplSettings;
     const weekTags = {
@@ -224,6 +234,8 @@ class WeeklySchedule {
       schedule_days: WeeklySchedule.buildDays(events, monday, this.wording),
       last_week: WeeklySchedule.lastWeek(this.#seasonGames, monday, this.wording),
     };
+    if (weekTags.last_week != undefined) console.log(WeeklySchedule.lastWeekText(weekTags.last_week));
+
     const teamTemplateTags = {
       ...gblTmplSettings.teamTemplateTags,
       ...weekTags,

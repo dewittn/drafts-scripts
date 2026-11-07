@@ -163,6 +163,12 @@ test.assertEqual(
   "games after monday do not count",
 );
 
+test.assertEqual(
+  WeeklySchedule.lastWeekText(WeeklySchedule.lastWeek(season, nov30, wording)),
+  "Last Week:\n- Monday, Win vs Newton, 5 - 2\n- Wednesday, Loss vs Belmont, 1 - 2\n- Season Record: 2-1",
+  "lastWeekText lists the games and the record, as the email does",
+);
+
 // --- record ---
 test.section("record");
 
