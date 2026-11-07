@@ -1,6 +1,8 @@
 if (typeof Game == "undefined") require("modules/bvr/core/Game.js");
 if (typeof TmplSettings == "undefined") require("modules/bvr/utils/TmplSettings.js");
 if (typeof SeasonRecordTable == "undefined") require("modules/bvr/utils/SeasonRecordTable.js");
+if (typeof PracticePlan == "undefined") require("modules/bvr/core/PracticePlan.js");
+if (typeof BVRUtilities == "undefined") require("modules/bvr/utils/BVRUtilities.js");
 if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
 
 // Builds a team's weekly schedule email from one week of its calendar, one
@@ -36,7 +38,8 @@ class WeeklySchedule {
   }
 
   // Asks which week (unless given any day in it), reads it from the team's
-  // calendar, and opens the email draft.
+  // calendar, and opens the email draft. With a written summary, then shows
+  // last week's games, which the email leaves out.
   create(date) {
     const monday = date == undefined ? this.#pickWeek() : WeeklySchedule.scheduleMonday(date);
     if (monday == undefined) return;
@@ -47,8 +50,12 @@ class WeeklySchedule {
     }
 
     const events = calendar.events(monday, WeeklySchedule.addDays(monday, 7));
-    const emailDraft = new Template(this.#templateSettings(monday, events));
+    const weekTags = this.#weekTags(monday, events);
+    const summary = this.#summarize(weekTags);
+    const emailDraft = new Template(this.#templateSettings(monday, weekTags, summary));
     emailDraft.archive().save().activate();
+
+    if (summary != undefined) this.#showLastWeek(weekTags.last_week);
   }
 
   // **********************
@@ -179,7 +186,23 @@ class WeeklySchedule {
     return words.join(", ");
   }
 
-  // The Last Week list as plain text, for the action log:
+  // Where monday's week falls in a season running from startDate to endDate
+  // ("YYYY-MM-DD"), for the summary prompt. Weeks count Monday to Sunday,
+  // as practice plans number them. Undefined without an end date, or for a
+  // week outside the season.
+  static seasonProgress(startDate, endDate, monday) {
+    if (startDate == undefined || endDate == undefined) return undefined;
+
+    const week = PracticePlan.weekNumber(startDate, monday);
+    const totalWeeks = PracticePlan.weekNumber(startDate, BVRUtilities.parseDateYMD(endDate));
+    if (week < 1 || week > totalWeeks) return undefined;
+
+    if (week == totalWeeks) return `This is the final week of the season (week ${week} of ${totalWeeks}).`;
+    const left = totalWeeks - week;
+    return `This is week ${week} of ${totalWeeks}, with ${left} more week${left == 1 ? "" : "s"} after this one.`;
+  }
+
+  // The Last Week list as plain text, for the pop-up:
   //   Last Week:
   //   - Tuesday, Win vs Derby (B), 2 - 1
   //   - Season Record: 7-2-2
@@ -223,29 +246,40 @@ class WeeklySchedule {
     return WeeklySchedule.scheduleMonday(picker.fieldValues[fieldName]);
   }
 
-  // The template settings, with the week's days, last week's games, the
-  // generated opening, and the sign-off added to the team tags every BVR
-  // template gets. Last week's games always go to the action log; the
-  // template shows them only when no summary was written.
-  #templateSettings(monday, events) {
-    const gblTmplSettings = this.#team.gblTmplSettings;
-    const weekTags = {
+  // What both the email and the summary prompt read: the week's days, last
+  // week's games, and where the week falls in the season.
+  #weekTags(monday, events) {
+    const { startDate } = this.#team.season;
+    const endDate = this.#team.season.currentSeasonData?.endDate;
+    return {
       team_name: this.#team.name,
       schedule_days: WeeklySchedule.buildDays(events, monday, this.wording),
       last_week: WeeklySchedule.lastWeek(this.#seasonGames, monday, this.wording),
+      season_progress: WeeklySchedule.seasonProgress(startDate, endDate, monday),
     };
-    if (weekTags.last_week != undefined) console.log(WeeklySchedule.lastWeekText(weekTags.last_week));
+  }
 
+  // The template settings: the week's tags, the summary, and the sign-off
+  // added to the team tags every BVR template gets. The template shows last
+  // week's games only when there is no summary.
+  #templateSettings(monday, weekTags, summary) {
+    const gblTmplSettings = this.#team.gblTmplSettings;
     const teamTemplateTags = {
       ...gblTmplSettings.teamTemplateTags,
       ...weekTags,
       week_of: WeeklySchedule.shortDate(monday),
       // The day the email is written, for "Happy Friday!"
       today: WeeklySchedule.dayName(new Date()),
-      summary: this.#summarize(weekTags),
+      summary,
       coach_sign_off: WeeklySchedule.signOff(this.#team.coachNames),
     };
     return new TmplSettings({ ...gblTmplSettings, teamTemplateTags }, this.#tmplSettings.weeklySchedule);
+  }
+
+  // Last week's games in a pop-up, for checking the summary against them.
+  #showLastWeek(lastWeek) {
+    const { lastWeekPage } = this.ui.settings("weeklySchedule");
+    this.ui.showPages([{ ...lastWeekPage, menuMessage: WeeklySchedule.lastWeekText(lastWeek) }]);
   }
 
   // A sentence or two on last week and this one, from the model in

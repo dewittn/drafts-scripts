@@ -384,6 +384,9 @@ weeklySchedule:
         data:
           name: Ok
           value: ok
+  # The pop-up of last week's games, shown after a summary is written.
+  lastWeekPage:
+    menuTitle: Last Week
   wording:
     practice: "practice, {time}"
     game: "game, {location} vs. {opponent} {details}"

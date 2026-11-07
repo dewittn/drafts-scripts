@@ -169,6 +169,18 @@ test.assertEqual(
   "lastWeekText lists the games and the record, as the email does",
 );
 
+// --- seasonProgress ---
+test.section("seasonProgress");
+
+// A season of Mondays Sep 7 to Nov 2, ending Friday Nov 6: 9 weeks.
+const progress = (monday) => WeeklySchedule.seasonProgress("2026-09-07", "2026-11-06", monday);
+test.assertEqual(progress(new Date(2026, 8, 7)), "This is week 1 of 9, with 8 more weeks after this one.", "the first week");
+test.assertEqual(progress(new Date(2026, 9, 26)), "This is week 8 of 9, with 1 more week after this one.", "one week left, singular");
+test.assertEqual(progress(new Date(2026, 10, 2)), "This is the final week of the season (week 9 of 9).", "the final week");
+test.assertEqual(progress(new Date(2026, 10, 9)), undefined, "a week after the season");
+test.assertEqual(progress(new Date(2026, 7, 31)), undefined, "a week before the season");
+test.assertEqual(WeeklySchedule.seasonProgress("2026-09-07", undefined, nov30), undefined, "no end date, no progress");
+
 // --- record ---
 test.section("record");
 
