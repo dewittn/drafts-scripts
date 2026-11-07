@@ -10,9 +10,10 @@ class DraftsRuntime {
 
   // Show a workspace unless it is already showing (each applyWorkspace call
   // keeps about 1 MB of native memory). False when skipped. shownAs: the name
-  // app.currentWorkspace reports, when it is not the one Workspace.find takes.
+  // the current workspace reports, when it is not the one Workspace.find
+  // takes. app.currentWorkspace is deprecated (it logs a warning every run).
   static loadWorkspace(name, shownAs = name) {
-    if (app.currentWorkspace.name == shownAs) return false;
+    if (app.currentWindow.currentWorkspace.name == shownAs) return false;
     app.currentWindow.applyWorkspace(Workspace.find(name));
     return true;
   }

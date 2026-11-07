@@ -24,7 +24,7 @@ Found on the Record Attendance action (PR #5, 2026-10-10).
 
 ## Workspaces
 
-- `app.currentWindow.applyWorkspace()` keeps about 1 MB of native memory per call. `DraftsRuntime.loadWorkspace()` skips the call when `app.currentWorkspace.name` already matches; every call site goes through it.
+- `app.currentWindow.applyWorkspace()` keeps about 1 MB of native memory per call. `DraftsRuntime.loadWorkspace()` skips the call when `app.currentWindow.currentWorkspace.name` already matches; every call site goes through it. (`app.currentWorkspace` is deprecated and logs a warning on every read.)
 - `applyWorkspace(undefined)` resets the window to the built-in "Default" workspace. No saved workspace is named "default". It shows as "Default", so `loadWorkspace("default")` always resets; `loadWorkspace("default", "Default")` skips while it is showing (DraftsDocument does this).
 - Native methods such as `applyWorkspace` cannot be monkeypatched from JS, so a wrapper never sees the calls.
 

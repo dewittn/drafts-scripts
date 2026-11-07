@@ -101,11 +101,12 @@ class Template {
     this.draft = Draft.create();
     // draftsTags should be formatted as an array like this: ["tag1", "tag2", "tag3"]
     this.draftTags.forEach((tag) => this.draft.addTag(tag));
-    // Lists and objects (Mustache sections) only make sense to Mustache, so
-    // Drafts' own [[tags]] get just the plain values.
+    // setTemplateTag takes only strings (anything else logs "Invalid tag name
+    // and value strings"). Unset tags are skipped, numbers and booleans become
+    // text, and lists and objects are left to Mustache.
     this.templateTags
-      .filter(([_key, value]) => typeof value != "object" || value == null)
-      .forEach(([key, value]) => this.draft.setTemplateTag(key, value));
+      .filter(([_key, value]) => ["string", "number", "boolean"].includes(typeof value))
+      .forEach(([key, value]) => this.draft.setTemplateTag(key, `${value}`));
 
     this.#processTemplate();
   }

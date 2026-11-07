@@ -27,8 +27,10 @@ const applied = [];
 function showing(name) {
   applied.length = 0;
   /** @type {any} */ (globalThis).app = {
-    currentWorkspace: { name },
-    currentWindow: { applyWorkspace: (workspace) => applied.push(workspace?.name) },
+    currentWindow: {
+      currentWorkspace: { name },
+      applyWorkspace: (workspace) => applied.push(workspace?.name),
+    },
   };
 }
 const calls = () => [...applied];
