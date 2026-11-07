@@ -53,7 +53,7 @@ Each season entry:
 | `startDate` | `YYYY-MM-DD` or null | Week 1 of the practice-plan counter. Null falls back to `startDate` in `teams.yaml` |
 | `endDate` | `YYYY-MM-DD` or null | The season's last day. The team picker lists a team only while its current season has not passed this date; null keeps it listed (see "Choosing a team") |
 | `formURLs` | object | Form name (from `forms.yaml`) to a link for this team's season only, overriding the term's shared link (see "Form links"). Usually empty. Files written before this key carry `formURL: null`, which reads as `{}` and is dropped on the first save |
-| `recipients` | object or null | `{ attendance: [initials], gameReport: [initials] }`, either key optional: who gets this season's attendance and score messages, replacing the team's lists (`teams.yaml`, else the level). Only the lists change; message type, text, cc, and subject stay with the level or team, so for an email level (`us`) `attendance` replaces `recipients` and leaves `ccRecipients` alone. Null (the usual case) keeps the defaults, so a change to the level still reaches the team |
+| `recipients` | object or null | `{ attendance: [initials], gameReport: [initials] }`, either key optional: who gets this season's attendance and score messages, replacing the team's lists (`teams.yaml`, else the level). Only the lists change; message type, text, cc, and subject stay with the level or team, so for an email level `attendance` replaces `recipients` and leaves `ccRecipients` alone. Upper school sends no attendance message now (it uses the attendance form), so its `attendance` list is empty and unused. Null (the usual case) keeps the defaults, so a change to the level still reaches the team |
 | `attendanceDraftID` | string or null | The season's roster draft. Record Attendance and Update Roster use it first, then `attendanceDraftID` in `teams.yaml` |
 | `seasonRecordDraftID` | string or null | The season record draft. Copied verbatim from `records.json`, so an old `""` stays `""` |
 | `games` | Game[] | Exactly what `Game.toJSON()` writes, unchanged from `records.json`. Matched by `draftID`; a game without one is matched by its whole content, and repeats keep their count |
@@ -166,6 +166,14 @@ one runtime file beside the team files:
   entry (an override), then the term's shared link, then a prompt. A link
   given at the prompt is saved for the term when the season has one, else on
   the season.
+- **The attendance form** (`us-attendance`, named by `attendance.form` in
+  `levels/us.yaml`) uses the same links. It is not one of the team's score
+  forms, so Start New Season and Edit Season do not list it; Record
+  Attendance asks for it the first time it runs in a term. A team with no
+  current season stops there, with the Start New Season message, and its
+  draft is not marked submitted. The form is only ever opened prefilled
+  (`viewform`), and the draft is marked submitted once the coach says it
+  was sent.
 - **Overrides** exist only if one is already in a team file; nothing in
   Drafts creates one. Edit Season changes an override in place.
 - **Moving older links up.** A link saved on a season before sharing existed

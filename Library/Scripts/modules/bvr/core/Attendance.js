@@ -79,6 +79,19 @@ class Attendance {
     };
   }
 
+  // The attendance form (forms.yaml) when the level or team names one, as
+  // upper school does. Undefined for a team that only sends messages.
+  get formSettings() {
+    return this.settings.formSettings;
+  }
+
+  // The one option of the form's "all athletes are present" checkbox, as
+  // forms.yaml lists it, since the form only accepts that exact text.
+  get allPresentAnswer() {
+    const field = this.formSettings.fields.find((formField) => formField.key == "allPresent");
+    return field?.options?.[0];
+  }
+
   get msgTeamNameTag() {
     return this.bvr.msgTeamNameTag;
   }
@@ -178,23 +191,123 @@ class Attendance {
     return true;
   }
 
+  // The attendance form first when the level has one, then the attendance
+  // message when it has one, then the draft is marked submitted. Stops,
+  // leaving the draft as it was, when either one does not go through.
   // dryRun skips the attendance message and the completion shortcut so the
-  // draft update can be tested without side effects.
+  // draft update can be tested without side effects. It still opens the
+  // form, since an opened form sends nothing until submitted by hand.
   submit({ dryRun = false } = {}) {
+    if (this.formSettings != undefined && this.#submitAttendanceForm() == false) return;
+    if (this.#sendAttendanceMessage({ dryRun }) == false) return;
+
+    this.submitted({ dryRun });
+  }
+
+  // The level's absences or no-absences message. True when it was sent or
+  // there is none to send (or on a dry run).
+  #sendAttendanceMessage({ dryRun }) {
     const msgConfig = this.noOneAbsent
       ? this.noAbsencesMsgConfig
       : this.absencesMsgConfig;
+    if (msgConfig == undefined || dryRun) return true;
 
-    if (msgConfig != undefined && dryRun == false) {
-      const message = meesageFactory(msgConfig);
-      message.compose(this.names);
+    const message = meesageFactory(msgConfig);
+    message.compose(this.names);
 
-      if (message.send() == false) {
-        return this.bvr.ui.displayAppMessage("error", this.submitFailure);
-      }
+    if (message.send() == false) {
+      this.bvr.ui.displayAppMessage("error", this.submitFailure);
+      return false;
+    }
+    return true;
+  }
+
+  // **********************
+  // Attendance form
+  // **********************
+
+  // Fill in the attendance form and open it to review and submit by hand. It
+  // is never posted from here: it is a school form, so nothing may reach it
+  // without the coach pressing Submit. True once the coach says it was
+  // submitted; false when there is no link, the unexcused prompt is
+  // cancelled, or the coach says it was not.
+  #submitAttendanceForm() {
+    const url = this.#attendanceFormURL();
+    if (url == undefined) return false;
+
+    const unexcused = this.#pickUnexcused();
+    if (unexcused == undefined) return false;
+
+    this.#openAttendanceForm(url, unexcused);
+    return this.#confirmFormSubmitted();
+  }
+
+  // This term's link to the form, asked for once per term and shared by the
+  // term's teams (Season.ensureFormURL). Undefined, with a message, for a
+  // team with no current season or when no link is given.
+  #attendanceFormURL() {
+    const season = this.team.season;
+    if (!season.ensureCurrentSeason()) return undefined;
+
+    const url = season.ensureFormURL(this.formSettings.name);
+    if (url == undefined) {
+      const title = this.formSettings.title || this.formSettings.name;
+      this.ui.displayAppMessage("info", `No ${title} link for this season, so attendance was not submitted.`);
+    }
+    return url;
+  }
+
+  // The absent players whose absence is unexcused, checked in a prompt that
+  // lists only the absent ones. Absences are excused unless checked. Empty
+  // when no one is absent (no prompt); undefined when cancelled.
+  #pickUnexcused() {
+    if (this.noOneAbsent) return [];
+    return this.#pickPlayers(this.names, "attendanceForm");
+  }
+
+  // The prefilled form in the browser. postData is forced off so a forms.yaml
+  // edit can never make this submit the form directly.
+  #openAttendanceForm(url, unexcused) {
+    const formData = {
+      hcName: this.globalTemplateTags.hc_name,
+      teamName: this.settings.formTeam,
+      ...Attendance.absenceFormData(this.names, unexcused, this.allPresentAnswer),
+    };
+
+    if (typeof GoogleForm == "undefined") require("modules/bvr/services/GoogleForm.js");
+    const googleForm = new GoogleForm({
+      settings: { ...this.formSettings, url, postData: false },
+      formData,
+    });
+    googleForm.submit();
+  }
+
+  // Asked after the form opens, so the draft is marked submitted (and the
+  // completion shortcut queued) only once the coach has sent the form.
+  #confirmFormSubmitted() {
+    const { submittedPrompt } = this.ui.settingsCopy("attendanceForm");
+    if (this.ui.yesNoPrompt(submittedPrompt) == "yes") return true;
+
+    this.ui.displayAppMessage("info", this.displayMsgs.formNotSubmitted);
+    return false;
+  }
+
+  // The form's absence answers: the all-present box when no one is absent,
+  // else the absent players split into excused and unexcused, each a
+  // comma-separated list. Unused answers are undefined, so GoogleForm leaves
+  // those fields blank.
+  static absenceFormData(absentNames, unexcusedNames, allPresentAnswer) {
+    if (absentNames.length == 0) {
+      return { allPresent: allPresentAnswer, excused: undefined, unexcused: undefined };
     }
 
-    this.submitted({ dryRun });
+    const isUnexcused = (name) => unexcusedNames.includes(name);
+    const listed = (names) => (names.length > 0 ? names.join(", ") : undefined);
+    return {
+      allPresent: undefined,
+      excused: listed(absentNames.filter((name) => !isUnexcused(name))),
+      unexcused: listed(absentNames.filter(isUnexcused)),
+    };
   }
 
   // Turn today's attendance into the bus list home, or back again. Players
@@ -256,7 +369,7 @@ class Attendance {
     this.#loadAttendaceDraft();
     const names = Attendance.playerLines(this.attendaceDraft.content).map((line) => this.bvr.cleanUpName(line));
 
-    const picked = this.#pickPlayers(names);
+    const picked = this.#pickPlayers(names, "copyPlayerNames");
     if (picked == undefined) return;
     if (picked.length == 0) return this.ui.displayAppMessage("info", this.displayMsgs.noPlayersPicked);
 
@@ -264,9 +377,10 @@ class Attendance {
     this.ui.displayAppMessage("success", `Copied ${picked.length} ${picked.length == 1 ? "name" : "names"}.`);
   }
 
-  // A checklist of the players, in roster order. Undefined when cancelled.
-  #pickPlayers(names) {
-    const { menuSettings, playerSelect } = this.ui.settingsCopy("copyPlayerNames");
+  // A checklist of the players, in roster order, worded by a ui.yaml section
+  // with menuSettings and playerSelect. Undefined when cancelled.
+  #pickPlayers(names, uiSection) {
+    const { menuSettings, playerSelect } = this.ui.settingsCopy(uiSection);
     playerSelect.data.values = names;
     menuSettings.menuItems.push(playerSelect);
 

@@ -137,6 +137,32 @@ test.assertDeepEqual(
 test.assertEqual(team.attendanceSettings.noAbsencesMsgConfig, undefined, "a level without noAbsences sends none");
 test.assertDeepEqual(team.formNames, [], "no forms when neither level nor team lists any");
 
+// --- attendance form ---
+test.section("attendance form");
+
+test.assertEqual(config({}).attendanceSettings.formSettings, undefined, "no attendance form unless the level or team names one");
+team = new TeamConfig({
+  team: { ...baseTeam, attendance: { formTeam: "Varsity Hoops" } },
+  level: { attendance: { form: "long-form" } },
+  forms,
+  staff,
+});
+test.assertDeepEqual(
+  team.attendanceSettings,
+  {
+    absencesMsgConfig: undefined,
+    noAbsencesMsgConfig: undefined,
+    formSettings: { name: "long-form", title: "Long form", postData: false, fields: [{ key: "opponent", entryID: 2 }] },
+    formTeam: "Varsity Hoops",
+  },
+  "the level's form and the team's dropdown value, with no messages",
+);
+test.assertThrows(
+  () => config({ attendance: { form: "nope" } }).attendanceSettings,
+  "an unknown attendance form names itself",
+  "no form named nope",
+);
+
 // --- errors ---
 test.section("errors");
 

@@ -1,6 +1,8 @@
 // TEMPORARY test action: runs the real attendance flow but skips sending the
-// message and the completion shortcut. Reports which Attendance.js is loaded
-// so the version running on this device is unambiguous.
+// message and the completion shortcut. An attendance form (upper school) is
+// still opened prefilled, which sends nothing until submitted by hand.
+// Reports which Attendance.js is loaded so the version running on this
+// device is unambiguous.
 const oneSecond = 10000;
 const recentlyCreated = new Date() - draft.createdAt < oneSecond;
 const teamID = recentlyCreated ? draft.content : "";
@@ -28,6 +30,7 @@ alert(
     `Attendance draft uuid: ${team.attendanceDraftID}\n` +
     `Open draft is attendance draft: ${draft.uuid == team.attendanceDraftID}\n` +
     `Attendance object holds global draft: ${attendaceDraft === draft}\n` +
+    `Attendance form: ${team.attendace.formSettings?.name || "none (messages only)"}\n` +
     `Proceed to submit (dry run): ${submitAttendace}`,
 );
 

@@ -1,5 +1,5 @@
 ---
-# School-wide score report forms. The athletic department copies each form
+# School-wide score report and attendance forms. The athletic department copies each form
 # every year, so the entry IDs stay put and only the URL changes. The URL is
 # per season, in the team file (teams/<id>.json, formURLs), asked for the
 # first time a report is submitted. postData true submits directly; false
@@ -9,7 +9,7 @@ ms-score-report:
   postData: true
   fields:
     - key: teamName
-      title: Team
+      title: "Select your team:"
       entryID: 2066576502
     - key: googleFormDate
       title: Date of Contest
@@ -78,3 +78,34 @@ varsity-score-report:
       title: Other/Comments
       message: (Any notes about refs, buses, etc)
       entryID: 544469491
+# Upper school attendance, filled in by Record Attendance and opened to
+# review and submit by hand (postData false; Attendance never posts it). The
+# link is per term, like the score forms, and asked for the first time
+# attendance is recorded in a term. Three pages, no branching. Entry IDs were
+# scraped from the winter form on 2026-11-07; check them again on the spring
+# form. Page 2 ("Which Fall Team(s)" entry 1059059554 and "Spring Teams"
+# entry 818161226, checkboxes, not required) is left blank.
+us-attendance:
+  title: US attendance
+  postData: false
+  fields:
+    # Page 1
+    - key: hcName
+      title: "Name:"
+      entryID: 59639440
+    - key: teamName
+      title: "Select your team:"
+      message: A dropdown of the term's teams; the value is attendance.formTeam in teams.yaml
+      entryID: 151743401
+    # Page 3
+    - key: allPresent
+      title: "All athletes are present :)"
+      entryID: 307654852
+      options:
+        - Yes, all the athletes are present
+    - key: excused
+      title: Please list any excused absences
+      entryID: 1275473467
+    - key: unexcused
+      title: Please list any unexcused absences
+      entryID: 1652526151

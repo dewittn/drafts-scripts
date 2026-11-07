@@ -135,14 +135,18 @@ class TeamConfig {
     return [...(this.#team.assistantCoaches || [])];
   }
 
-  // What Attendance reads: the two message configs with contacts filled in.
+  // What Attendance reads: the two message configs with contacts filled in,
+  // plus the attendance form and the team's Team dropdown value when the
+  // level or team names one (attendance.form, attendance.formTeam).
   get attendanceSettings() {
-    const { absences, noAbsences } = this.attendance;
+    const { absences, noAbsences, form, formTeam } = this.attendance;
     const seasonList = this.#seasonRecipients.attendance;
-    return {
+    const settings = {
       absencesMsgConfig: this.#resolveMessage(absences, seasonList),
       noAbsencesMsgConfig: this.#resolveMessage(noAbsences, seasonList),
     };
+    if (form == undefined) return settings;
+    return { ...settings, formSettings: this.form(form), formTeam };
   }
 
   // What Game reads: the after-game messages and the forms to submit. Form
