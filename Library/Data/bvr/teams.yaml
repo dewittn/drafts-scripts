@@ -36,6 +36,10 @@ teamsData:
       ac_years_coaching: 4th
     templates:
       welcomeLetter: bvr/welcome-letter.md
+    attendance:
+      # The Team dropdown value on the US attendance form. The winter form
+      # lists winter teams only, so confirm this against the spring form.
+      formTeam: Varsity Ultimate
     practicePlan:
       draftTags:
         - bvr/ultimate/practice/plan

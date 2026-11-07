@@ -1,14 +1,22 @@
 ---
-# Upper school defaults: absences go to the attendance office by email with
-# coaches on copy. A team overrides any part in teams.yaml (objects merge,
-# lists replace). People are initials from staff.yaml.tpl.
+# Upper school defaults. Attendance goes on the school's attendance form
+# (us-attendance in forms.yaml): Record Attendance fills it in and opens it
+# to submit by hand. Each team sets the form's Team dropdown value as
+# attendance.formTeam in teams.yaml. A team overrides any part in teams.yaml
+# (objects merge, lists replace). People are initials from staff.yaml.tpl.
 attendance:
-  absences:
-    type: email
-    recipients: [ATT]
-    ccRecipients: [AG, AH]
-    subjectLine: Attendance for [[team_name]] ([[date|%m-%d-%Y]])
-    bodyText: "Hello,\n\nThese students are absent from [[team_name]] today:\n\n"
+  form: us-attendance
+  # The email to the attendance office, off since the form replaced it. To
+  # turn it back on, uncomment the absences block. It is sent after the form
+  # when both are set; remove form above to send only the email. With the
+  # block commented out, Start New Season shows the attendance recipients
+  # field blank, and nothing typed there is used.
+  # absences:
+  #   type: email
+  #   recipients: [ATT]
+  #   ccRecipients: [AG, AH]
+  #   subjectLine: Attendance for [[team_name]] ([[date|%m-%d-%Y]])
+  #   bodyText: "Hello,\n\nThese students are absent from [[team_name]] today:\n\n"
 gameReport:
   messages:
     - type: text

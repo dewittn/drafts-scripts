@@ -144,7 +144,11 @@ function printChecklist(team: NewTeamOptions) {
   console.log(`
 Left to do by hand:
   1. Review the new templates in Library/Templates/bvr/ and the teams.yaml entry
-     (add assistantCoaches, templateTags, or overrides of the ${team.level} level if needed).
+     (add assistantCoaches, templateTags, or overrides of the ${team.level} level if needed).${
+    team.level == "us"
+      ? `\n     Upper school: add attendance.formTeam, the team's choice in the Team dropdown of\n     the attendance form (see us-ultimate).`
+      : ""
+  }
   2. Create a calendar named "${calendar}" for the team's games.
   3. Add a Things project template for game days if the team uses one.
   4. Make sure the Shortcuts "Mark Attendace As Complete" and "Complete Game Day Tasks"

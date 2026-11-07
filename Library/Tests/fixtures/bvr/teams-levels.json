@@ -9,6 +9,13 @@
       "calendar": "Fixture Calendar",
       "templates": { "thingsProject": "bvr/fixture-ms-game-day-project.mustache" }
     },
-    { "id": "fixture-us", "level": "us", "name": "Fixture US", "abbr": "FU", "defaultTag": "bvr/fixture/us" }
+    {
+      "id": "fixture-us",
+      "level": "us",
+      "name": "Fixture US",
+      "abbr": "FU",
+      "defaultTag": "bvr/fixture/us",
+      "attendance": { "formTeam": "Fixture Varsity" }
+    }
   ]
 }

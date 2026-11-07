@@ -9,6 +9,7 @@ displayMsgs:
   busListOn: "Bus list: checked players are not riding the bus."
   busListOff: Back to today's attendance.
   noPlayersPicked: No players were picked, so nothing was copied.
+  formNotSubmitted: Attendance is not marked submitted. Run Record Attendance again to reopen the form.
 getTeamIDFromPrompt:
   # Lists only the teams in season unless none are (then every team) or the
   # action is Start New Season. One team in season is used without asking.
@@ -327,6 +328,28 @@ copyPlayerNames:
           name: Copy
           value: copy
           isDefault: true
+# Record Attendance for a level with an attendance form (levels/us.yaml):
+# check the unexcused absences, then confirm the opened form was submitted.
+attendanceForm:
+  playerSelect:
+    type: select
+    data:
+      name: unexcused
+      label: Unexcused
+      allowMultiple: true
+  menuSettings:
+    menuTitle: Unexcused Absences
+    menuMessage: Check the players whose absence is unexcused. The rest are listed as excused.
+    isCancellable: true
+    menuItems:
+      - type: button
+        data:
+          name: Fill In Form
+          value: fill
+          isDefault: true
+  submittedPrompt:
+    menuTitle: Attendance Form Submitted?
+    menuMessage: Did you submit the attendance form? Yes marks attendance submitted.
 submitGoogleForm:
   menuSettings:
     menuTitle: Google Form Submitted
