@@ -21,6 +21,7 @@ people:
   DG:
     name: "{{ op://BVR/DG/first name }} {{ op://BVR/DG/last name }}"
     email: op://BVR/DG/email
+    cell: op://BVR/DG/cell
   HM:
     cell: op://BVR/HM/cell
   ME:
