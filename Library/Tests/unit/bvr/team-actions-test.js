@@ -313,4 +313,8 @@ test.assertDeepEqual(
 test.assertEqual(Attendance.nameList(["Here Player", "Absent Player"]), "- Here Player\n- Absent Player", "names become a Markdown list");
 test.assertEqual(Attendance.nameList([]), "", "no names make an empty list");
 
+const cleared = Attendance.uncheckPlayers(attendanceTaken("2026-10-21")).split("\n");
+test.assertDeepEqual(cleared.slice(2, 5), attendanceTaken("2026-10-21").split("\n").slice(2, 5), "Clear Attendance leaves the date, Recorded, and Submitted lines");
+test.assertDeepEqual(cleared.slice(-2), ["- [ ] Here Player (7)", "- [ ] Absent Player (8)"], "Clear Attendance unchecks every player");
+
 test.summary();

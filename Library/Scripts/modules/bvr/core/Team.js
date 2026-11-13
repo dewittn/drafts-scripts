@@ -286,6 +286,10 @@ class Team {
     this.attendace.copyPlayerNames();
   }
 
+  clearAttendance() {
+    this.attendace.clear();
+  }
+
   gameRecordResult() {
     const game = new Game(this.dependencies);
     game.recordResult();

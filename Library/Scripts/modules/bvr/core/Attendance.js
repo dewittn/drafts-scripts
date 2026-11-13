@@ -362,6 +362,30 @@ class Attendance {
     return line;
   }
 
+  // Clear Attendance: uncheck every player on the attendance draft. The date,
+  // Recorded, and Submitted lines are left as they are.
+  clear() {
+    this.#loadAttendaceDraft();
+    const content = Attendance.uncheckPlayers(this.attendaceDraft.content);
+
+    // Same editor and draft handling as toggleBusList().
+    editor.load(this.attendaceDraft);
+    editor.setText(content);
+    this.attendaceDraft.content = content;
+    this.attendaceDraft.update();
+
+    this.ui.displayAppMessage("info", this.displayMsgs.attendanceCleared);
+  }
+
+  // Attendance content with every player's checkbox unchecked. Players start
+  // at line 5 (see bvr/attendance.md).
+  static uncheckPlayers(content) {
+    return `${content}`
+      .split("\n")
+      .map((line, index) => (index < 5 ? line : line.replace(/^- \[x\]/, "- [ ]")))
+      .join("\n");
+  }
+
   // Copy Player Names: pick players from the attendance draft and copy them
   // as a "- Name" list to paste elsewhere. The draft is left as it is, since
   // its checkboxes are today's attendance or the bus list.

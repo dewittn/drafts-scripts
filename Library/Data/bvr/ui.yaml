@@ -9,6 +9,7 @@ displayMsgs:
   busListOn: "Bus list: checked players are not riding the bus."
   busListOff: Back to today's attendance.
   noPlayersPicked: No players were picked, so nothing was copied.
+  attendanceCleared: Every player has been unchecked.
   formNotSubmitted: Attendance is not marked submitted. Run Record Attendance again to reopen the form.
 getTeamIDFromPrompt:
   # Lists only the teams in season unless none are (then every team) or the
