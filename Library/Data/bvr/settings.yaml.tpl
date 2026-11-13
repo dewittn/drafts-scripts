@@ -27,5 +27,9 @@ languageModel:
   provider: anthropic
   model: claude-haiku-5-5
   thinking: false
-globalTemplateTags:
-  hc_years_coaching: 9th
+# "Nth year" template tags, worked out from the date each count began. The
+# school year holding the date is year 1, and school years start July 1, so
+# "2016-03-07" (spring of 2015-16) makes hc_years_coaching "12th" for all of
+# 2026-27. Quote the dates, or YAML turns them into timestamps.
+yearCountTags:
+  hc_years_coaching: "2016-03-07"
