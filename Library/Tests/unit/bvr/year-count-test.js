@@ -1,8 +1,9 @@
 /**
  * Year Count Unit Test
  *
- * Tests the "Nth year" template tags (yearCountTags in bvr/settings.yaml.tpl):
- * counting school years from a start date, and the ordinal suffixes.
+ * Tests the "Nth year" counts behind hc_year and hc_years_coaching
+ * (coachingSince and headCoachSince in bvr/staff.yaml.tpl): counting years
+ * from a start date's anniversaries, and the ordinal suffixes.
  */
 
 // Load test infrastructure (path is relative to Library/Scripts/)
@@ -19,28 +20,19 @@ for (const [number, expected] of Object.entries(ordinals)) {
   test.assertEqual(BVRUtilities.ordinal(Number(number)), expected, `${number} → ${expected}`);
 }
 
-// --- schoolYearCount ---
-test.section("schoolYearCount");
+// --- yearCount ---
+test.section("yearCount");
 
-const start = "2018-08-20";
+const start = "2016-02-29";
 
-test.assertEqual(BVRUtilities.schoolYearCount(start, new Date(2018, 8, 1)), 1, "The first fall is year 1");
-test.assertEqual(BVRUtilities.schoolYearCount(start, new Date(2019, 2, 1)), 1, "The spring after it is still year 1");
-test.assertEqual(BVRUtilities.schoolYearCount(start, new Date(2019, 6, 1)), 2, "July 1 starts year 2");
-test.assertEqual(BVRUtilities.schoolYearCount(start, new Date(2026, 10, 13)), 9, "Fall 2026 is year 9");
-test.assertEqual(BVRUtilities.schoolYearCount(start, new Date(2027, 1, 15)), 9, "Spring 2027 is still year 9");
-test.assertEqual(BVRUtilities.schoolYearCount("2019-03-01", new Date(2019, 8, 1)), 2, "A spring start counts its school year as year 1");
-test.assertEqual(BVRUtilities.schoolYearCount(undefined), undefined, "No start date → undefined");
-
-// --- yearCountTags ---
-test.section("yearCountTags");
-
-test.assertEqual(
-  BVRUtilities.yearCountTags({ hc_years_coaching: start }, new Date(2026, 10, 13)).hc_years_coaching,
-  "9th",
-  "hc_years_coaching from 2018-08-20 → 9th in fall 2026",
-);
-test.assertEqual(Object.keys(BVRUtilities.yearCountTags(undefined)).length, 0, "No settings → no tags");
-test.assertEqual(Object.keys(BVRUtilities.yearCountTags({ empty: "" })).length, 0, "A blank date is skipped");
+test.assertEqual(BVRUtilities.yearCount(start, new Date(2016, 1, 29)), 1, "The start date is year 1");
+test.assertEqual(BVRUtilities.yearCount(start, new Date(2016, 10, 1)), 1, "The fall after it is still year 1");
+test.assertEqual(BVRUtilities.yearCount(start, new Date(2026, 10, 13)), 11, "Fall 2026 is year 11");
+test.assertEqual(BVRUtilities.yearCount(start, new Date(2027, 1, 28)), 11, "The day before the anniversary is still year 11");
+test.assertEqual(BVRUtilities.yearCount(start, new Date(2027, 2, 1)), 12, "A leap-day start rolls over on Mar 1 in other years");
+test.assertEqual(BVRUtilities.yearCount("2023-03-06", new Date(2027, 2, 5)), 4, "Day before the anniversary → year 4");
+test.assertEqual(BVRUtilities.yearCount("2023-03-06", new Date(2027, 2, 6)), 5, "The anniversary starts year 5");
+test.assertEqual(BVRUtilities.yearCount(undefined), undefined, "No start date → undefined");
+test.assertEqual(BVRUtilities.yearCount("2027-02-22", new Date(2026, 10, 13)), undefined, "A date still to come → undefined");
 
 test.summary();

@@ -37,6 +37,12 @@ class Staff {
     return this.contacts([initials], field)[0];
   }
 
+  // One field for one person, or undefined when either is missing. For
+  // details a template can do without, such as coachingSince.
+  detail(initials, field) {
+    return this.#people[initials]?.[field];
+  }
+
   // What players call this person, such as "Coach Nelson": the coachName
   // field, or the full name when there is none. For email sign-offs.
   coachName(initials) {

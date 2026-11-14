@@ -1,4 +1,5 @@
 if (typeof DataFile == "undefined") require("modules/cp/filesystems/CloudFS.js");
+if (typeof BVRUtilities == "undefined") require("modules/bvr/utils/BVRUtilities.js");
 
 // A team's settings, assembled from layers: the level defaults
 // (bvr/levels/<level>.json), the team's own overrides in teams.yaml, the
@@ -23,6 +24,8 @@ class TeamConfig {
   #attendanceOffice;
   #templateExists;
   #seasonRecipients;
+  #seasonCoaches;
+  #headCoach;
   #options;
 
   // team: the teams.yaml entry. level, forms: parsed settings. staff: a Staff.
@@ -30,10 +33,18 @@ class TeamConfig {
   // templateExists(file) tells whether a Library/Templates file exists.
   // seasonRecipients: the current season's { attendance, gameReport }
   // initials, which replace the recipient lists (nothing else) when set.
+  // headCoach: the usual head coach's initials (settings.yaml.tpl), for a
+  // team without its own. seasonCoaches: the current season's { head,
+  // assistants }, which replace the team's when set.
   constructor(options) {
-    const { team, level, forms, staff, attendanceOffice, templateExists = (_file) => false, seasonRecipients } = options;
+    const {
+      team, level, forms, staff, attendanceOffice, templateExists = (_file) => false,
+      seasonRecipients, seasonCoaches, headCoach,
+    } = options;
     this.#options = options;
     this.#seasonRecipients = seasonRecipients == undefined ? {} : seasonRecipients;
+    this.#seasonCoaches = seasonCoaches == undefined ? {} : seasonCoaches;
+    this.#headCoach = headCoach;
     this.#team = team;
     this.#level = level == undefined ? {} : level;
     this.#forms = forms == undefined ? {} : forms;
@@ -58,6 +69,35 @@ class TeamConfig {
   // The same config with a season's recipient lists laid on top.
   withSeasonRecipients(seasonRecipients) {
     return new TeamConfig({ ...this.#options, seasonRecipients });
+  }
+
+  // The same config with a season entry's recipients and coaches laid on top.
+  withSeason(seasonData) {
+    return new TeamConfig({ ...this.#options, seasonRecipients: seasonData?.recipients, seasonCoaches: seasonData?.coaches });
+  }
+
+  // The head coach and assistants typed into a coaches prompt. A blank field
+  // means the default (defaults: defaultCoaches); only the first initials
+  // typed for head coach count.
+  static typedCoaches(fieldValues, defaults) {
+    if (typeof Staff == "undefined") require("modules/bvr/utils/Staff.js");
+    const head = Staff.parseInitials(fieldValues.headCoach)[0];
+    const assistants = Staff.parseInitials(fieldValues.assistantCoaches);
+    return {
+      head: head || defaults.head,
+      assistants: assistants.length > 0 ? assistants : defaults.assistants,
+    };
+  }
+
+  // The season override to save: only what differs from the defaults, or
+  // null when nothing does, so a teams.yaml change still reaches the team.
+  // Assistants compare in order, since the first one gives ac_name.
+  static coachOverrides(coaches, defaults) {
+    const sameList = (a, b) => a.join(",") == b.join(",");
+    const overrides = {};
+    if (coaches.head != defaults.head) overrides.head = coaches.head;
+    if (!sameList(coaches.assistants, defaults.assistants)) overrides.assistants = coaches.assistants;
+    return Object.keys(overrides).length > 0 ? overrides : null;
   }
 
   // The two lists of initials typed into a recipients prompt. A blank field
@@ -130,9 +170,27 @@ class TeamConfig {
     return TeamConfig.merge(this.#level.weeklySchedule || {}, this.#team.weeklySchedule || {});
   }
 
-  // The team's assistant coaches, as initials.
+  // The team's coaches without a season override, as initials: its own
+  // headCoach (else the usual head coach) and assistantCoaches.
+  get defaultCoaches() {
+    return {
+      head: this.#team.headCoach || this.#headCoach,
+      assistants: [...(this.#team.assistantCoaches || [])],
+    };
+  }
+
+  // The coaches in effect: the season's override where set, else the default.
+  get coaches() {
+    const defaults = this.defaultCoaches;
+    return {
+      head: this.#seasonCoaches.head || defaults.head,
+      assistants: this.#seasonCoaches.assistants || defaults.assistants,
+    };
+  }
+
+  // The assistant coaches in effect, as initials.
   get assistantCoaches() {
-    return [...(this.#team.assistantCoaches || [])];
+    return [...this.coaches.assistants];
   }
 
   // What Attendance reads: the two message configs with contacts filled in,
@@ -199,19 +257,53 @@ class TeamConfig {
     return settings;
   }
 
-  // The team's plain tags (hc_year, ...) plus the ones that name people:
-  // the first assistant coach, and the attendance office's email.
+  // The team's plain tags, plus the ones that name people: the coaches
+  // (coachTags), and the attendance office's email.
   get teamTemplateTags() {
-    const tags = { ...(this.#team.templateTags || {}) };
-    const assistant = (this.#team.assistantCoaches || [])[0];
-    if (assistant != undefined) {
-      tags.ac_name = this.#staff.contact(assistant, "name");
-      tags.ac_email = this.#staff.contact(assistant, "email");
-    }
+    const tags = { ...(this.#team.templateTags || {}), ...this.coachTags };
     if (this.#staff.has(this.#attendanceOffice)) {
       tags.attendance_email = this.#staff.contact(this.#attendanceOffice, "email");
     }
     return tags;
+  }
+
+  // Tags for the coaches in effect. The head coach gives hc_name, hc_email,
+  // hc_years_coaching (from coachingSince in staff.yaml.tpl) and hc_year
+  // (from headCoachSince for this team's sport). The assistants give ac_name
+  // and ac_email (the first one) and ac_names (all of them). A missing name
+  // or email is blank rather than left out, so the usual head coach's never
+  // shows through; a year tag without a date is left out.
+  get coachTags() {
+    const { head, assistants } = this.coaches;
+    const detail = (initials, field) => this.#staff.detail(initials, field) || "";
+    const tags = {};
+    if (head != undefined) {
+      tags.hc_name = detail(head, "name");
+      tags.hc_email = detail(head, "email");
+      const coaching = this.#yearTag(this.#staff.detail(head, "coachingSince"));
+      const headCoaching = this.#yearTag(this.#staff.detail(head, "headCoachSince")?.[this.#team.sport]);
+      if (coaching != undefined) tags.hc_years_coaching = coaching;
+      if (headCoaching != undefined) tags.hc_year = headCoaching;
+    }
+    if (assistants.length > 0) {
+      tags.ac_name = detail(assistants[0], "name");
+      tags.ac_email = detail(assistants[0], "email");
+      tags.ac_names = TeamConfig.joinNames(assistants.map((initials) => detail(initials, "name")).filter((name) => name != ""));
+    }
+    return tags;
+  }
+
+  // ["A"] → "A", ["A", "B"] → "A and B", ["A", "B", "C"] → "A, B, and C".
+  static joinNames(names) {
+    if (names.length <= 2) return names.join(" and ");
+    return `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`;
+  }
+
+  // "11th" for a start date ("YYYY-MM-DD") 10 years and some back, or
+  // undefined with no date.
+  #yearTag(startDate) {
+    const count = BVRUtilities.yearCount(startDate);
+    return count == undefined ? undefined : BVRUtilities.ordinal(count);
   }
 
   // Swap initials for contacts: cell numbers for texts, emails for email

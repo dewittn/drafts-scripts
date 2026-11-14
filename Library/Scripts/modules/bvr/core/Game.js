@@ -306,8 +306,9 @@ class Game {
   // Templating Getter/Setter
   // **********************
 
+  // The season's head coach, else the usual one.
   get headCoachName() {
-    return this.bvr.globalTags.hc_name;
+    return this.team.coachTags.hc_name || this.bvr.globalTags.hc_name;
   }
 
   get gblTmplSettings() {

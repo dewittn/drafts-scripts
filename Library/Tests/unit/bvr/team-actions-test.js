@@ -63,6 +63,7 @@ function makeTeam(teamID, promptResponses = {}) {
     ui,
     teamSettingsFile: "../Tests/fixtures/bvr/teams-levels.json",
     globalTags: { hc_name: "Coach Test" },
+    settings: {},
     staff: new Staff({ ATT: { email: "attendance@example.com" } }),
     attendanceOffice: "ATT",
     forms: {},

@@ -2,7 +2,7 @@
 
 I would like to introduce myself as the head coach of the [[team_name]]. This is my [[hc_year]] year as head coach, and my [[hc_years_coaching]] year coaching at Beaver. {--say something brief about your background. Coaching/playing--}
 
-Our assistant coach(es) is [[ac_name]]. {--say something brief about assistant coach(es)--}
+Our assistant coach(es) is [[ac_names]]. {--say something brief about assistant coach(es)--}
 
 We are so excited for this season. {--Mention some goals, etc...--}
 

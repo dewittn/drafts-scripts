@@ -15,8 +15,9 @@ weekIDTemplateTag: week_id
 workspace: BVR
 coachingDraftID: 4BDFFB76-6271-4B64-A9BD-A01D0D4583E8
 msgTeamNameTag: team_name
-# Initials in staff.yaml.tpl. hc_name and hc_email come from headCoach, and
-# the attendance_email template tag from attendanceOffice.
+# Initials in staff.yaml.tpl. headCoach is the usual head coach, for a team
+# without its own (teams.yaml) or season's (Edit Season); the hc_ template
+# tags come from whoever that is. attendance_email comes from attendanceOffice.
 headCoach: ME
 attendanceOffice: ATT
 # The model that writes generated text, such as the weekly email's opening
@@ -27,9 +28,3 @@ languageModel:
   provider: anthropic
   model: claude-haiku-5-5
   thinking: false
-# "Nth year" template tags, worked out from the date each count began. The
-# school year holding the date is year 1, and school years start July 1, so
-# "2016-03-07" (spring of 2015-16) makes hc_years_coaching "12th" for all of
-# 2026-27. Quote the dates, or YAML turns them into timestamps.
-yearCountTags:
-  hc_years_coaching: "2016-03-07"

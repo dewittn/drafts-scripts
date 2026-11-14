@@ -151,6 +151,7 @@ function recordAttendance(teamID, { names, promptResponses = {}, yesNo = {}, sea
     ui,
     teamSettingsFile: "../Tests/fixtures/bvr/teams-levels.json",
     globalTags: { hc_name: "Head Coach" },
+    settings: {},
     staff,
     attendanceOffice: "ATT",
     forms,

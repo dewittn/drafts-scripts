@@ -29,6 +29,7 @@ reads the same key from the template.
       "endDate": null,
       "formURLs": {},
       "recipients": null,
+      "coaches": null,
       "attendanceDraftID": null,
       "seasonRecordDraftID": "0A1B2C3D-...",
       "games": [],
@@ -54,6 +55,7 @@ Each season entry:
 | `endDate` | `YYYY-MM-DD` or null | The season's last day. The team picker lists a team only while its current season has not passed this date; null keeps it listed (see "Choosing a team") |
 | `formURLs` | object | Form name (from `forms.yaml`) to a link for this team's season only, overriding the term's shared link (see "Form links"). Usually empty. Files written before this key carry `formURL: null`, which reads as `{}` and is dropped on the first save |
 | `recipients` | object or null | `{ attendance: [initials], gameReport: [initials] }`, either key optional: who gets this season's attendance and score messages, replacing the team's lists (`teams.yaml`, else the level). Only the lists change; message type, text, cc, and subject stay with the level or team, so for an email level `attendance` replaces `recipients` and leaves `ccRecipients` alone. Upper school sends no attendance message now (it uses the attendance form), so its `attendance` list is empty and unused. Null (the usual case) keeps the defaults, so a change to the level still reaches the team |
+| `coaches` | object or null | `{ head: initials, assistants: [initials] }`, either key optional: this season's coaches, replacing the team's `headCoach` and `assistantCoaches` (`teams.yaml`, else `headCoach` in `settings.yaml.tpl`) key by key. They give the `hc_` and `ac_` template tags and the weekly email sign-off. Set by Edit Season; missing in older files, which reads as null (the team's coaches) |
 | `attendanceDraftID` | string or null | The season's roster draft. Record Attendance and Update Roster use it first, then `attendanceDraftID` in `teams.yaml` |
 | `seasonRecordDraftID` | string or null | The season record draft. Copied verbatim from `records.json`, so an old `""` stays `""` |
 | `games` | Game[] | Exactly what `Game.toJSON()` writes, unchanged from `records.json`. Matched by `draftID`; a game without one is matched by its whole content, and repeats keep their count |
@@ -286,6 +288,9 @@ current season of a team-file team in one prompt, prefilled from the file:
   initials. A list with no season override is labeled "(team default)".
   Unknown initials are named and the prompt asked again with what was typed,
   up to three times. A list that matches the default clears the override.
+- **Head coach / Assistant coaches**, as initials, labeled "(team default)"
+  without a season override. Blank keeps the team's; unknown initials ask
+  again as for recipients. Coaches that match the team's clear the override.
 - **Roster draft**, shown by title, with a "Start a new roster draft" switch
   that makes one as Start New Season does and opens it.
 

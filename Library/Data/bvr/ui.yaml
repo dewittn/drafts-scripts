@@ -188,6 +188,23 @@ editSeason:
       options:
         autocorrect: false
         autocapitalization: allCharacters
+  # The season's coaches, as initials. Blank keeps the team's (teams.yaml).
+  headCoachField:
+    type: textField
+    data:
+      name: headCoach
+      label: Head coach
+      options:
+        autocorrect: false
+        autocapitalization: allCharacters
+  assistantCoachesField:
+    type: textField
+    data:
+      name: assistantCoaches
+      label: Assistant coaches
+      options:
+        autocorrect: false
+        autocapitalization: allCharacters
   rosterLabel:
     type: label
     data:

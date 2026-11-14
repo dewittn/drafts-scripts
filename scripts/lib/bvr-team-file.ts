@@ -46,6 +46,9 @@ export interface SeasonEntry {
   // Initials that replace the team's attendance or score-message lists for
   // this season only; null keeps the team and level defaults.
   recipients: { attendance?: string[]; gameReport?: string[] } | null;
+  // Initials of this season's coaches, replacing the team's (teams.yaml) key
+  // by key; null or missing keeps the team's. Set by Edit Season in Drafts.
+  coaches?: { head?: string; assistants?: string[] } | null;
   attendanceDraftID: string | null;
   seasonRecordDraftID: string | null;
   games: Game[];
@@ -100,6 +103,7 @@ export function emptySeason(seasonID: string, startDate: string | null = null): 
     endDate: null,
     formURLs: {},
     recipients: null,
+    coaches: null,
     attendanceDraftID: null,
     seasonRecordDraftID: null,
     games: [],

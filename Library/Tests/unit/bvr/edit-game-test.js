@@ -217,6 +217,7 @@ function setUp({ games, edits, yesNo = {}, openDraftID = "GAME-1", recordDraftID
 
   const team = /** @type {any} */ ({ id: "test-team", name: "Test Team", abbr: "TT", defaultTag: "bvr/test", season: null });
   team.form = (name) => ({ name, title: "MS score report" });
+  team.coachTags = {};
   team.gameReportSettings = {
     messageSettings: [{ to: "AG" }],
     googleFormSettings: [{ name: "ms-score-report", title: "MS score report", postData: true, fields: [{ key: "fullScore", entryID: 1 }] }],
