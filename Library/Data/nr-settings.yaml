@@ -249,6 +249,12 @@ kutt:
             autocapitalization: none
             autocorrect: false
             wantsFocus: true
+      # Filled with Kutt's default domain and the custom domains from the last
+      # Sync Kutt Links. Left out when there is only one.
+      - type: select
+        data:
+          name: domain
+          label: Domain
       - type: button
         data:
           name: Shorten

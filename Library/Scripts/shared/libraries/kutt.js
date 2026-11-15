@@ -29,6 +29,11 @@ class Kutt {
     return this.#domain;
   }
 
+  // The default short link domain without its scheme, e.g. "lnk.example".
+  get host() {
+    return LinkShortener.hostOf(this.#domain);
+  }
+
   // Setup & Store Credentials
   #authorize() {
     let credential = Credential.create("Kutt", "Kutt.it API");
@@ -234,17 +239,21 @@ class Kutt {
 // ***************
 // * LinkShortener Class
 // ***************
+// Short links kept in links.json so a lookup needs no request. Links are
+// matched by target URL and short link domain, so one page can have a short
+// link on each domain. The file also keeps the custom domains from the last
+// sync, for the domain menu.
 class LinkShortener {
   #kutt;
-  #cache;
-  #cacheFile = "/Library/Data/links.json";
   #fmCloud;
+  #cacheFile = "/Library/Data/links.json";
+  #links = new Map();
+  #customDomains = [];
 
   // kutt and fileManager can be swapped for stubs in tests.
   constructor(kutt = new Kutt(), fileManager = FileManager.createCloud()) {
     this.#kutt = kutt;
     this.#fmCloud = fileManager;
-    this.#cache = new Map();
     this.loadCache();
   }
 
@@ -253,133 +262,132 @@ class LinkShortener {
     return /^https?:\/\/\S+$/i.test(String(text ?? "").trim());
   }
 
-  // Load cached links from JSON file
+  // The host of a URL, lowercased: "https://Lnk.example/abc" → "lnk.example".
+  static hostOf(url) {
+    return String(url ?? "").trim().replace(/^https?:\/\//i, "").split("/")[0].toLowerCase();
+  }
+
+  // A target URL in the form links are matched by: trimmed, scheme and host
+  // lowercased, trailing slashes dropped. So ".../post/" finds ".../post".
+  static normalizeURL(url) {
+    const trimmed = String(url ?? "").trim().replace(/\/+$/, "");
+    return trimmed.replace(/^(https?:\/\/[^/?#]+)/i, (origin) => origin.toLowerCase());
+  }
+
+  // Map key for a target on a domain.
+  static #key(target, domain) {
+    return `${domain} ${LinkShortener.normalizeURL(target)}`;
+  }
+
+  // Kutt's default domain first, then the custom domains from the last sync.
+  get domains() {
+    return [...new Set([this.#kutt.host, ...this.#customDomains])];
+  }
+
+  // Every cached link.
+  get links() {
+    return Array.from(this.#links.values());
+  }
+
+  // The cached link for a target on a domain (the default when omitted).
+  lookup(target, domain = this.#kutt.host) {
+    return this.#links.get(LinkShortener.#key(target, domain));
+  }
+
+  // Reads links.json. Older files are a plain { target: link } object.
   loadCache() {
     try {
-      if (this.#fmCloud.exists(this.#cacheFile)) {
-        const data = this.#fmCloud.readJSON(this.#cacheFile);
-        if (data && typeof data === "object") {
-          // Convert object to Map
-          for (const [key, value] of Object.entries(data)) {
-            this.#cache.set(key, value);
-          }
-          console.log(`Loaded ${this.#cache.size} links from cache`);
-        }
-      } else {
-        console.log("Cache file does not exist. Starting with empty cache.");
-      }
+      if (!this.#fmCloud.exists(this.#cacheFile)) return;
+
+      const data = this.#fmCloud.readJSON(this.#cacheFile);
+      if (!data || typeof data !== "object") return;
+
+      const links = Array.isArray(data.links) ? data.links : Object.values(data);
+      this.#customDomains = Array.isArray(data.domains) ? data.domains : [];
+      this.#links.clear();
+      links.forEach((link) => this.#remember(link));
+      console.log(`Loaded ${this.#links.size} links from cache`);
     } catch (error) {
       console.log(`Error loading cache: ${error}`);
-      // Initialize with empty cache if file doesn't exist or is invalid
-      this.#cache = new Map();
     }
   }
 
-  // Save cache to JSON file
+  // Writes links.json.
   #saveCache() {
     try {
-      // Convert Map to plain object for JSON
-      const cacheObject = Object.fromEntries(this.#cache);
-      this.#fmCloud.writeJSON(this.#cacheFile, cacheObject);
-      console.log(`Saved ${this.#cache.size} links to cache`);
+      this.#fmCloud.writeJSON(this.#cacheFile, { domains: this.#customDomains, links: this.links });
+      console.log(`Saved ${this.#links.size} links to cache`);
     } catch (error) {
       console.log(`Error saving cache: ${error}`);
     }
   }
 
-  // Shorten a URL (check cache first)
-  shorten(target, options = {}) {
+  // Adds a Kutt link to the map. When two links share a target and domain,
+  // the older one is kept, so repeat syncs always give the same short link.
+  #remember(link) {
+    if (!link?.target || !link?.link) return;
+
+    const key = LinkShortener.#key(link.target, LinkShortener.hostOf(link.link));
+    const existing = this.#links.get(key);
+    if (existing && String(existing.created_at) <= String(link.created_at)) return;
+    this.#links.set(key, link);
+  }
+
+  // The short link for target on domain (Kutt's default when omitted): from
+  // the cache when there, otherwise created on Kutt and cached.
+  shorten(target, domain = this.#kutt.host) {
     target = target.trim();
 
-    // Check cache first
-    if (this.#cache.has(target)) {
-      console.log(`Cache hit for: ${target}`);
-      return this.#cache.get(target);
+    const cached = this.lookup(target, domain);
+    if (cached) {
+      console.log(`Cache hit for: ${target} on ${domain}`);
+      return cached;
     }
 
-    // Not in cache, call API
-    console.log(`Cache miss for: ${target}, calling API`);
+    console.log(`Cache miss for: ${target} on ${domain}, calling API`);
+    const options = domain == this.#kutt.host ? {} : { domain };
     const result = this.#kutt.createLink(target, options);
 
-    if (result && !result.error && result.link) {
-      // Add to cache using target URL as key
-      this.#cache.set(target, result);
+    if (result?.link) {
+      this.#remember(result);
       this.#saveCache();
     }
-
     return result;
   }
 
-  // Sync all links from API and update cache
+  // Replaces the cache with every link and custom domain on Kutt.
   sync() {
     console.log("Syncing links from API...");
 
     const result = this.#kutt.getAllLinks();
+    if (!Array.isArray(result?.data)) return { success: false, error: result?.error ?? "Failed to sync links" };
 
-    if (result && result.data && Array.isArray(result.data)) {
-      // Clear existing cache
-      this.#cache.clear();
+    const user = this.#kutt.getUserInfo();
+    if (!Array.isArray(user?.domains)) return { success: false, error: user?.error ?? "Failed to get domains" };
 
-      // Add all links to cache, using target URL as key
-      for (const link of result.data) {
-        if (link.target) {
-          this.#cache.set(link.target, link);
-        }
-      }
-
-      // Save updated cache
-      this.#saveCache();
-      console.log(`Synced ${result.data.length} links to cache`);
-      return { success: true, count: result.data.length };
-    }
-
-    return { success: false, error: result?.error ?? "Failed to sync links" };
-  }
-
-  // Get a link from cache by target URL
-  getFromCache(target) {
-    return this.#cache.get(target);
-  }
-
-  // Check if a URL is in cache
-  isCached(target) {
-    return this.#cache.has(target);
-  }
-
-  // Get all cached links
-  getAllCached() {
-    return Array.from(this.#cache.values());
-  }
-
-  // Get cache size
-  getCacheSize() {
-    return this.#cache.size;
-  }
-
-  // Clear cache
-  clearCache() {
-    this.#cache.clear();
+    this.#customDomains = user.domains.filter((domain) => !domain.banned).map((domain) => domain.address.toLowerCase());
+    this.#links.clear();
+    result.data.forEach((link) => this.#remember(link));
     this.#saveCache();
-    console.log("Cache cleared");
+
+    console.log(`Synced ${result.data.length} links to cache`);
+    return { success: true, count: result.data.length };
   }
 
-  // Delete a link (from API and cache)
-  deleteLink(id, target) {
-    const result = this.#kutt.deleteLink(id);
+  // Empties the cache, keeping the domains.
+  clearCache() {
+    this.#links.clear();
+    this.#saveCache();
+  }
 
-    if (result && result.success) {
-      // Remove from cache if target URL is provided
-      if (target && this.#cache.has(target)) {
-        this.#cache.delete(target);
-        this.#saveCache();
-      }
-    }
+  // Deletes a link on Kutt and drops it from the cache.
+  deleteLink(link) {
+    const result = this.#kutt.deleteLink(link.id);
+    if (!result?.success) return result;
 
+    const key = LinkShortener.#key(link.target, LinkShortener.hostOf(link.link));
+    if (this.#links.get(key)?.id == link.id) this.#links.delete(key);
+    this.#saveCache();
     return result;
-  }
-
-  // Get direct access to Kutt instance for advanced operations
-  getKuttInstance() {
-    return this.#kutt;
   }
 }

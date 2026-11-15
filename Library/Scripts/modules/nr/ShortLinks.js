@@ -23,12 +23,13 @@ class ShortLinks {
   // Asks for a link, shortens it, then inserts the short link at the cursor
   // and copies it. Returns the short link, or false when nothing was made.
   shortenPrompted() {
-    const target = this.#askForLink();
-    if (target == undefined) return false;
+    const answer = this.#askForLink();
+    if (answer == undefined) return false;
 
+    const { target, domain } = answer;
     if (!LinkShortener.isURL(target)) return this.#fail(this.#message("invalidURL", { url: target }));
 
-    const result = this.shortener.shorten(target);
+    const result = this.shortener.shorten(target, domain);
     if (!result?.link) return this.#fail(result?.error ?? "Kutt did not return a short link.");
 
     this.#ui.insertAtCursor(result.link);
@@ -47,19 +48,42 @@ class ShortLinks {
   }
 
   // Shows the Shorten Link prompt, starting with the clipboard when it is a
-  // link. Returns the trimmed text, or undefined when cancelled.
+  // link. Returns { target, domain }, or undefined when cancelled.
   #askForLink() {
     const menuSettings = this.#ui.settingsCopy("shortenPrompt");
-    const clipboard = app.getClipboard();
     const field = menuSettings.menuItems.find((item) => item.type == "textField");
+    const clipboard = app.getClipboard();
     if (LinkShortener.isURL(clipboard)) field.data.initialText = clipboard.trim();
+
+    const domains = this.shortener.domains;
+    const domainMenu = this.#fillDomainMenu(menuSettings, domains);
 
     const menu = this.#ui.buildMenu(menuSettings);
     if (!menu.show()) {
       context.cancel();
       return undefined;
     }
-    return String(menu.fieldValues[field.data.name] ?? "").trim();
+
+    const target = String(menu.fieldValues[field.data.name] ?? "").trim();
+    const picked = domainMenu ? menu.fieldValues[domainMenu.data.name]?.[0] : undefined;
+    return { target, domain: picked ?? domains[0] };
+  }
+
+  // Lists the domains in the select item, with Kutt's default chosen. Drops
+  // the item when there is only one domain. Returns the item, if kept.
+  #fillDomainMenu(menuSettings, domains) {
+    const index = menuSettings.menuItems.findIndex((item) => item.type == "select");
+    if (index == -1) return undefined;
+
+    if (domains.length < 2) {
+      menuSettings.menuItems.splice(index, 1);
+      return undefined;
+    }
+
+    const item = menuSettings.menuItems[index];
+    item.data.values = domains;
+    item.data.selectedValues = [domains[0]];
+    return item;
   }
 
   // Fills [[name]] placeholders in a message from settings.messages.
