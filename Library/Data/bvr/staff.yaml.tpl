@@ -26,6 +26,7 @@ people:
     name: "{{ op://BVR/DG/first name }} {{ op://BVR/DG/last name }}"
     email: op://BVR/DG/email
     cell: op://BVR/DG/cell
+    coachName: "op://BVR/DG/Identification/coach name"
     coachingSince: "2022-02-28"
   HM:
     cell: op://BVR/HM/cell

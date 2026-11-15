@@ -106,7 +106,7 @@ test.assertFalsy(tags.level_us, "and not level_us");
 test.assertDeepEqual(
   Object.keys(tags.rest).sort(),
   [
-    "attendance_email", "current_season", "current_season_label", "game_comments", "game_date", "game_description",
+    "attendance_email", "current_season", "current_season_label", "current_year", "game_comments", "game_date", "game_description",
     "game_highlights", "game_isHome", "game_location", "game_opponent", "game_report_due_date", "game_result",
     "game_score", "game_score_them", "game_score_us", "game_summary", "hc_name", "team_abbr", "team_name",
   ],
@@ -121,6 +121,7 @@ test.assertDeepEqual(
     team_abbr: "FM",
     current_season: "2026-fall",
     current_season_label: "2026 Fall",
+    current_year: `${new Date().getFullYear()}`,
   }),
   "with these values (the game tags are undefined without a game)",
 );
@@ -166,6 +167,7 @@ test.assertDeepEqual(
     team_abbr: "FM",
     current_season: "2026-fall",
     current_season_label: "2026 Fall",
+    current_year: `${new Date().getFullYear()}`,
     game_date: "10-21-2026",
     game_report_due_date: "10-21-2026",
     game_location: "Away",

@@ -117,7 +117,14 @@ test.assertDeepEqual(tmpl.welcomeLetter, { templateFile: "bvr/welcome-letter.md"
 test.assertDeepEqual(tmpl.thingsProject, { templateFile: "bvr/custom.mustache" }, "game-day project override");
 test.assertDeepEqual(
   tmpl.teamTemplateTags,
-  { hc_year: "2nd", ac_name: "Alex Able", ac_email: "alex@example.com", ac_names: "Alex Able", attendance_email: "attendance@example.com" },
+  {
+    hc_year: "2nd",
+    ac_name: "Alex Able",
+    ac_email: "alex@example.com",
+    ac_names: "Alex Able",
+    assistants: [{ name: "Alex Able", email: "alex@example.com" }],
+    attendance_email: "attendance@example.com",
+  },
   "plain tags plus the assistant coach and attendance office",
 );
 
@@ -163,6 +170,13 @@ test.assertEqual(tags.hc_year, yearTag("2021-02-22"), "hc_year from headCoachSin
 test.assertEqual(tags.ac_name, "Alex Able", "ac_name is the first assistant");
 test.assertEqual(tags.ac_names, "Alex Able and Bea Bell", "ac_names lists every assistant");
 test.assertEqual("ac_years_coaching" in tags, false, "no ac_years_coaching tag");
+test.assertDeepEqual(
+  tags.assistants,
+  [{ name: "Alex Able", email: "alex@example.com" }, { name: "Bea Bell", email: "bea@example.com" }],
+  "assistants lists each one for Mustache",
+);
+test.assertEqual(tags.ac_many, true, "ac_many with two or more assistants");
+test.assertEqual("ac_many" in coachConfig({ assistantCoaches: ["AA"] }).coachTags, false, "no ac_many with one");
 
 const soccerTags = coachConfig({ sport: "soccer" }).coachTags;
 test.assertEqual("hc_year" in soccerTags, false, "no headCoachSince for the sport → no hc_year");

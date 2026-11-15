@@ -270,7 +270,9 @@ class TeamConfig {
   // Tags for the coaches in effect. The head coach gives hc_name, hc_email,
   // hc_years_coaching (from coachingSince in staff.yaml.tpl) and hc_year
   // (from headCoachSince for this team's sport). The assistants give ac_name
-  // and ac_email (the first one) and ac_names (all of them). A missing name
+  // and ac_email (the first one), ac_names (all of them, "A and B"), and for
+  // Mustache templates assistants ([{ name, email }]) and ac_many (true for
+  // two or more, to choose "coach is" or "coaches are"). A missing name
   // or email is blank rather than left out, so the usual head coach's never
   // shows through; a year tag without a date is left out.
   get coachTags() {
@@ -289,6 +291,8 @@ class TeamConfig {
       tags.ac_name = detail(assistants[0], "name");
       tags.ac_email = detail(assistants[0], "email");
       tags.ac_names = TeamConfig.joinNames(assistants.map((initials) => detail(initials, "name")).filter((name) => name != ""));
+      tags.assistants = assistants.map((initials) => ({ name: detail(initials, "name"), email: detail(initials, "email") }));
+      if (assistants.length > 1) tags.ac_many = true;
     }
     return tags;
   }
