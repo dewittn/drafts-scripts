@@ -144,7 +144,7 @@ function printChecklist(team: NewTeamOptions) {
   console.log(`
 Left to do by hand:
   1. Review the new templates in Library/Templates/bvr/ and the teams.yaml entry
-     (add assistantCoaches, templateTags, or overrides of the ${team.level} level if needed).${
+     (add headCoach, assistantCoaches, templateTags, or overrides of the ${team.level} level if needed).${
     team.level == "us"
       ? `\n     Upper school: add attendance.formTeam, the team's choice in the Team dropdown of\n     the attendance form (see us-ultimate).`
       : ""

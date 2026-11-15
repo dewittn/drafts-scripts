@@ -62,7 +62,8 @@ class TeamFileStore {
   }
 
   // Every key a season entry has. Later Start New Season steps fill the
-  // null ones (recipients, attendanceDraftID).
+  // null ones (recipients, attendanceDraftID). coaches stays null until Edit
+  // Season sets this season's own.
   static emptySeason(seasonID) {
     return {
       label: this.seasonLabel(seasonID),
@@ -70,6 +71,7 @@ class TeamFileStore {
       endDate: null,
       formURLs: {},
       recipients: null,
+      coaches: null,
       attendanceDraftID: null,
       seasonRecordDraftID: null,
       games: [],

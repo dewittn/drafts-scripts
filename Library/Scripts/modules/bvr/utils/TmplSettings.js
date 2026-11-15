@@ -6,6 +6,8 @@ class TmplSettings {
         ...gblTmplSettings.globalTemplateTags,
         ...gblTmplSettings.teamTemplateTags,
         team_name: gblTmplSettings.teamName,
+        // For Mustache templates, which cannot use Drafts' [[date|%Y]].
+        current_year: `${new Date().getFullYear()}`,
         team_abbr: gblTmplSettings.teamAbbr,
         // For Mustache sections that only one level gets, e.g. {{#level_us}}.
         // Other levels' tags are missing, which Mustache treats as false.

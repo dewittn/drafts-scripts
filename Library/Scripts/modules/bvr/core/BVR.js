@@ -2,7 +2,7 @@ if (typeof Team == "undefined") require("modules/bvr/core/Team.js");
 if (typeof Game == "undefined") require("modules/bvr/core/Game.js");
 if (typeof Sport == "undefined") require("modules/bvr/core/Sport.js");
 if (typeof Season == "undefined") require("modules/bvr/core/Season.js");
-if (typeof BVRUtilities == "undefined") require("modules/bvr/utils/BVRUtilities.js");
+// if (typeof BVRUtilities == "undefined") require("modules/bvr/utils/BVRUtilities.js");
 if (typeof GoogleForm == "undefined") require("modules/bvr/services/GoogleForm.js");
 if (typeof Attendance == "undefined") require("modules/bvr/core/Attendance.js");
 if (typeof PracticePlan == "undefined") require("modules/bvr/core/PracticePlan.js");
@@ -171,14 +171,11 @@ class BVR {
 
   // Template tags every BVR template gets. hc_name and hc_email come from
   // the head coach's staff entry, so the staff file is the only one with
-  // contact details. yearCountTags turn start dates into "9th" and the like.
+  // contact details. A team's own coaches replace these (TeamConfig.coachTags).
   get globalTags() {
     if (!this.#globalTags) {
       const headCoach = this.settings.headCoach;
-      this.#globalTags = {
-        ...this.settings.globalTemplateTags,
-        ...BVRUtilities.yearCountTags(this.settings.yearCountTags),
-      };
+      this.#globalTags = { ...this.settings.globalTemplateTags };
       if (headCoach != undefined) {
         this.#globalTags.hc_name = this.staff.contact(headCoach, "name");
         this.#globalTags.hc_email = this.staff.contact(headCoach, "email");

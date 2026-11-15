@@ -143,8 +143,9 @@ class Attendance {
     return this.displayMsgs.alreadySubmitted;
   }
 
+  // The BVR-wide tags, with this team's season coaches (hc_name, ...) on top.
   get globalTemplateTags() {
-    return this.bvr.globalTags;
+    return { ...this.bvr.globalTags, ...this.team.coachTags };
   }
 
   get noOneAbsent() {

@@ -80,9 +80,11 @@ class SeasonSetup {
     return found?.displayTitle || "the current roster draft";
   }
 
-  // Names the initials staff.yaml.tpl does not know. True if there were any.
-  reportUnknownInitials(lists) {
-    const unknown = this.#bvr.staff.unknown([...new Set([...lists.attendance, ...lists.gameReport])]);
+  // Names the initials staff.yaml.tpl does not know, from any number of
+  // lists or single initials. True if there were any.
+  reportUnknownInitials(...lists) {
+    const initials = lists.flatMap((list) => Object.values(list)).flat().filter((value) => value != undefined);
+    const unknown = this.#bvr.staff.unknown([...new Set(initials)]);
     if (unknown.length == 0) return false;
     this.#ui.displayAppMessage("info", `No one in staff.yaml.tpl has the initials ${unknown.join(", ")}. Check them and try again.`);
     return true;

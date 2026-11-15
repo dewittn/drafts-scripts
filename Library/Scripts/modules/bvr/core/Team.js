@@ -65,6 +65,7 @@ class Team {
         forms: this.bvr.forms,
         staff: this.bvr.staff,
         attendanceOffice: this.bvr.attendanceOffice,
+        headCoach: this.bvr.settings.headCoach,
         templateExists: (file) => new CloudFS(Template.basePath).exists(file),
       });
     }
@@ -159,9 +160,24 @@ class Team {
     return this.#teamData.gameReport;
   }
 
+  // The team's tags, with the current season's coaches.
   get teamTemplateTags() {
-    const teamTags = this.tmplSettings.teamTemplateTags;
-    return teamTags != undefined ? teamTags : {};
+    return this.#seasonConfig.teamTemplateTags;
+  }
+
+  // hc_name, hc_year, ac_names, ... for the current season's coaches.
+  get coachTags() {
+    return this.#seasonConfig.coachTags;
+  }
+
+  // The current season's { head, assistants }, as initials.
+  get coaches() {
+    return this.#seasonConfig.coaches;
+  }
+
+  // The coaches without a season override.
+  get defaultCoaches() {
+    return this.config.defaultCoaches;
   }
 
   // Message settings use the current season's recipient lists when it has
@@ -176,7 +192,7 @@ class Team {
   }
 
   get #seasonConfig() {
-    return this.config.withSeasonRecipients(this.season.currentSeasonData?.recipients);
+    return this.config.withSeason(this.season.currentSeasonData);
   }
 
   // Who gets attendance and score messages without a season override.
@@ -202,10 +218,11 @@ class Team {
     return this.tmplSettings.welcomeLetter;
   }
 
-  // The head coach, then the team's assistants, as players know them
+  // The season's head coach, then its assistants, as players know them
   // ("Coach Nelson"), for sign-offs.
   get coachNames() {
-    const initials = [this.bvr.settings.headCoach, ...this.config.assistantCoaches];
+    const { head, assistants } = this.coaches;
+    const initials = [head, ...assistants];
     return initials.filter((person) => person != undefined).map((person) => this.bvr.staff.coachName(person));
   }
 

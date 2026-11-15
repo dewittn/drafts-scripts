@@ -81,13 +81,17 @@ class SeasonEditor {
   // Prompt
   // **********************
 
-  // Asked again, with what was typed, while the recipient lists name
-  // unknown initials.
+  // Asked again, with what was typed, while the recipient or coach lists
+  // name unknown initials.
   #askSeasonEdits(entry) {
     const defaults = this.#team.defaultRecipients;
+    const coachDefaults = this.#team.defaultCoaches;
     return SeasonSetup.askUpToThreeTimes(
       (previous) => this.#showEditSeasonPrompt(entry, previous),
-      (answers) => !this.#setup.reportUnknownInitials(TeamConfig.typedRecipients(answers, defaults)),
+      (answers) => !this.#setup.reportUnknownInitials(
+        TeamConfig.typedRecipients(answers, defaults),
+        TeamConfig.typedCoaches(answers, coachDefaults),
+      ),
     );
   }
 
@@ -97,7 +101,7 @@ class SeasonEditor {
     const section = this.#ui.settingsCopy("editSeason");
     const {
       menuSettings, labelField, startDateField, hasEndDateField, endDateField, formField,
-      attendanceField, gameReportField, rosterLabel, newRosterField,
+      attendanceField, gameReportField, headCoachField, assistantCoachesField, rosterLabel, newRosterField,
     } = section;
     const startDate = BVRUtilities.parseDateYMD(entry.startDate) || new Date();
     const overrides = entry.recipients || {};
@@ -123,6 +127,15 @@ class SeasonEditor {
       field.data.initialText = previous ? previous[key] : (overrides[key] || defaults[key]).join(", ");
       return field;
     };
+    // The season's coaches, labeled "(team default)" without an override.
+    const coachOverrides = entry.coaches || {};
+    const coachDefaults = this.#team.defaultCoaches;
+    const coachField = (field, key, name) => {
+      if (!coachOverrides[key]) field.data.label = `${field.data.label} (team default)`;
+      const initials = [coachOverrides[key] || coachDefaults[key] || []].flat();
+      field.data.initialText = previous ? previous[name] : initials.join(", ");
+      return field;
+    };
     rosterLabel.data.label = entry.attendanceDraftID
       ? `Roster draft: ${this.#setup.draftTitle(entry.attendanceDraftID)}`
       : "This season has no roster draft yet.";
@@ -130,6 +143,7 @@ class SeasonEditor {
     menuSettings.menuItems.push(
       labelField, startDateField, hasEndDateField, endDateField, ...formFields,
       recipientField(attendanceField, "attendance"), recipientField(gameReportField, "gameReport"),
+      coachField(headCoachField, "head", "headCoach"), coachField(assistantCoachesField, "assistants", "assistantCoaches"),
       rosterLabel, newRosterField,
     );
 
@@ -157,7 +171,7 @@ class SeasonEditor {
   // Changes
   // **********************
 
-  // What the answers would change: new label, dates, and recipients, links
+  // What the answers would change: new label, dates, recipients, and coaches, links
   // to set, and forms whose link was blanked (cleared only on a yes).
   #seasonEdits(entry, answers) {
     const edits = { links: {}, clearedForms: [] };
@@ -175,6 +189,11 @@ class SeasonEditor {
     const recipients = TeamConfig.recipientOverrides(TeamConfig.typedRecipients(answers, defaults), defaults);
     const savedRecipients = entry.recipients == undefined ? null : entry.recipients;
     if (JSON.stringify(recipients) != JSON.stringify(savedRecipients)) edits.recipients = recipients;
+
+    const coachDefaults = this.#team.defaultCoaches;
+    const coaches = TeamConfig.coachOverrides(TeamConfig.typedCoaches(answers, coachDefaults), coachDefaults);
+    const savedCoaches = entry.coaches == undefined ? null : entry.coaches;
+    if (JSON.stringify(coaches) != JSON.stringify(savedCoaches)) edits.coaches = coaches;
 
     const term = this.#season.term;
     for (const formName of this.#team.formNames) {
@@ -214,6 +233,10 @@ class SeasonEditor {
     if (edits.recipients !== undefined) {
       fields.recipients = edits.recipients;
       changed.push("recipients");
+    }
+    if (edits.coaches !== undefined) {
+      fields.coaches = edits.coaches;
+      changed.push("coaches");
     }
     let seasonChanged = changed.length > 0;
 

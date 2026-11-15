@@ -96,6 +96,7 @@ function mockTeam(bvr, overrides = {}) {
     linksFile: null,
     formNames: ["varsity-score-report"],
     defaultRecipients: { attendance: ["AG", "HM"], gameReport: ["AG", "WK"] },
+    defaultCoaches: { head: "AG", assistants: ["HM"] },
     attendanceDraftID: undefined,
     form: (name) => ({ name, title: name == "varsity-score-report" ? "Varsity score report" : "MS score report" }),
     gameReportSettings: {
@@ -191,7 +192,7 @@ store.addSeason("2026-winter", { startDate: "2026-11-16" });
 test.assertEqual(store.hasSeason("2026-winter"), true, "addSeason creates the entry");
 test.assertDeepEqual(
   Object.keys(file.seasons["2026-winter"]),
-  ["label", "startDate", "endDate", "formURLs", "recipients", "attendanceDraftID", "seasonRecordDraftID", "games", "practicePlans"],
+  ["label", "startDate", "endDate", "formURLs", "recipients", "coaches", "attendanceDraftID", "seasonRecordDraftID", "games", "practicePlans"],
   "a new entry has every schema key",
 );
 test.assertEqual(file.seasons["2026-winter"].label, "2026 Winter", "a new entry is labeled from its ID");
@@ -674,6 +675,8 @@ const editAnswers = (overrides = {}) => ({
       "form:varsity-score-report": savedLink,
       attendance: "AG, HM",
       gameReport: "AG, WK",
+      headCoach: "AG",
+      assistantCoaches: "HM",
       newRoster: false,
       ...overrides,
     },
@@ -963,6 +966,23 @@ file = editFixture();
 file.seasons["2026-fall"].recipients = { gameReport: ["AG", "HM", "WK"] };
 file = runEdit(editAnswers({ gameReport: "AG, WK" }), {}, file);
 test.assertEqual(file.seasons["2026-fall"].recipients, null, "setting a list back to the default removes the override");
+
+file = runEdit(editAnswers());
+fields = editFields();
+test.assertEqual(fields.headCoach?.label, "Head coach (team default)", "coaches without an override are marked as the team default");
+test.assertEqual(fields.assistantCoaches?.initialText, "HM", "and show the team's");
+
+file = runEdit(editAnswers({ headCoach: "wk", assistantCoaches: "AG, HM" }));
+test.assertDeepEqual(file.seasons["2026-fall"].coaches, { head: "WK", assistants: ["AG", "HM"] }, "changed coaches are saved for the season");
+test.assertDeepEqual(successMessages(), ["Updated 2026 Fall: coaches."], "and listed");
+
+file = editFixture();
+file.seasons["2026-fall"].coaches = { head: "WK" };
+file = runEdit(editAnswers({ headCoach: "AG" }), {}, file);
+test.assertEqual(file.seasons["2026-fall"].coaches, null, "setting the coaches back to the team's removes the override");
+
+file = runEdit(editAnswers({ assistantCoaches: "HM, NOPE" }));
+test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 3, "unknown coach initials ask again");
 
 file = runEdit(editAnswers({ attendance: "AG, NOPE" }));
 test.assertEqual(bvr.ui.getInteractionsByType("buildMenu").length, 3, "unknown initials ask again, up to three times");

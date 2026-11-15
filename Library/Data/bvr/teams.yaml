@@ -14,9 +14,12 @@
 #                                                     (override: templates.weeklySchedule)
 #   weekly summary    bvr/weekly-summary-prompt.mustache, the prompt for its opening
 #                                                     (override: templates.weeklySummaryPrompt)
-# The weekly email signs off from headCoach and assistantCoaches, by each
-# person's coachName in staff.yaml.tpl, and prints weeklySchedule.practiceTime
-# (level default) for practices.
+# Coaches: headCoach (default: headCoach in settings.yaml.tpl) and
+# assistantCoaches, as initials. A season can replace either in Edit Season.
+# They give the hc_ and ac_ template tags (hc_year and hc_years_coaching come
+# from dates in staff.yaml.tpl), and the weekly email signs off from them by
+# each person's coachName, printing weeklySchedule.practiceTime (level
+# default) for practices.
 # Per-season values (start date, form URLs, record draft) live in the team
 # file, teams/<id>.json, and are set by Start New Season.
 teamsData:
@@ -31,11 +34,8 @@ teamsData:
     attendanceDraftID: 5E1337A5-F964-4DEC-95A8-091AE789F0B1
     defaultTag: bvr/ultimate/us
     assistantCoaches: [DG]
-    templateTags:
-      hc_year: 4th
-      ac_years_coaching: 4th
     templates:
-      welcomeLetter: bvr/welcome-letter.md
+      welcomeLetter: bvr/welcome-letter.mustache
     attendance:
       # The Team dropdown value on the US attendance form. The winter form
       # lists winter teams only, so confirm this against the spring form.
@@ -55,9 +55,6 @@ teamsData:
     recordDraft: 359AC178-208F-42D9-84F3-935ABA6BB38E
     defaultTag: bvr/ultimate/ms
     assistantCoaches: [DG]
-    templateTags:
-      hc_year: 4th
-      ac_years_coaching: 4th
     forms: [ms-score-report, varsity-score-report]
     attendance:
       absences:
@@ -82,8 +79,8 @@ teamsData:
     attendanceDraftID: BE66E397-6DDE-44E4-AAF0-31A80DD64B4F
     defaultTag: bvr/soccer/ms
     recapTag: bvr/soccer/msg/game/recap
-    templateTags:
-      hc_year: 4th
+    headCoach: WK
+    assistantCoaches: [ME]
     practicePlan:
       draftTags:
         - bvr/soccer/msg/practice/plan

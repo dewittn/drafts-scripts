@@ -1,10 +1,10 @@
-# Welcome to the [[date|%Y]] [[team_name]] Season!
+# Welcome to the {{current_year}} {{team_name}} Season!
 
-I would like to introduce myself as the head coach of the [[team_name]]. This is my [[hc_year]] year as head coach, and my [[hc_years_coaching]] year coaching at Beaver. {--say something brief about your background. Coaching/playing--}
+I would like to introduce myself as the head coach of the {{team_name}}. This is my {{hc_year}} year as head coach, and my {{hc_years_coaching}} year coaching at Beaver. {--say something brief about your background. Coaching/playing--}
 
-Our assistant coach(es) is [[ac_name]]. {--say something brief about assistant coach(es)--}
+{{#ac_names}}{{#ac_many}}Our assistant coaches are {{ac_names}}.{{/ac_many}}{{^ac_many}}Our assistant coach is {{ac_names}}.{{/ac_many}}{{#assistants}} {--say something brief about {{name}}--}{{/assistants}}
 
-We are so excited for this season. {--Mention some goals, etc...--}
+{{/ac_names}}We are so excited for this season. {--Mention some goals, etc...--}
 
 I want to highlight some important items about the season below.
 
@@ -16,7 +16,7 @@ It is important to check the athletic schedule daily. Weather and other issues c
 
 Attendance at every practice and game is mandatory. There are acceptable reasons for missing a practice or game, such as medical and family emergencies and illness or injury.
 
-Please schedule outside appointments on weekends or vacations so we can benefit from a full team at practice. Parents/caregivers must give advance notice if a conflict arises by emailing me ([[hc_email]]) and attendance ([[attendance_email]]).
+Please schedule outside appointments on weekends or vacations so we can benefit from a full team at practice. Parents/caregivers must give advance notice if a conflict arises by emailing me ({{hc_email}}) and attendance ({{attendance_email}}).
 
 ## Playing Time
 
@@ -30,13 +30,13 @@ As part of our policy, we do not discuss playing time with parents before, durin
 
 ## Contact Information
 
-My email is: [[hc_email]]. If you have any questions, please feel free to contact me.
+My email is: {{hc_email}}. If you have any questions, please feel free to contact me.
 
 Thank you all for your support in making this season a successful one!
 
 See you all soon. Go Beaver!
 
 Sincerely,
-[[hc_name]]
+{{hc_name}}
 
 Follow our socials, @BVRathletics on [Instagram](https://www.instagram.com/BVRathletics/) and [Twitter](https://twitter.com/BVRathletics)

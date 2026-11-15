@@ -10,6 +10,7 @@ require("../Tests/fixtures/assertions.js");
 require("modules/bvr/utils/Staff.js");
 require("modules/bvr/utils/TeamConfig.js");
 require("modules/bvr/utils/TmplSettings.js");
+require("modules/bvr/utils/BVRUtilities.js");
 
 const test = new TestAssertions("TeamConfig and Staff");
 
@@ -116,8 +117,105 @@ test.assertDeepEqual(tmpl.welcomeLetter, { templateFile: "bvr/welcome-letter.md"
 test.assertDeepEqual(tmpl.thingsProject, { templateFile: "bvr/custom.mustache" }, "game-day project override");
 test.assertDeepEqual(
   tmpl.teamTemplateTags,
-  { hc_year: "2nd", ac_name: "Alex Able", ac_email: "alex@example.com", attendance_email: "attendance@example.com" },
+  {
+    hc_year: "2nd",
+    ac_name: "Alex Able",
+    ac_email: "alex@example.com",
+    ac_names: "Alex Able",
+    assistants: [{ name: "Alex Able", email: "alex@example.com" }],
+    attendance_email: "attendance@example.com",
+  },
   "plain tags plus the assistant coach and attendance office",
+);
+
+// --- coaches ---
+test.section("coaches");
+
+const coachStaff = new Staff({
+  HC: { name: "Hana Cole", email: "hana@example.com", coachingSince: "2016-02-29", headCoachSince: { ultimate: "2021-02-22" } },
+  AA: { name: "Alex Able", email: "alex@example.com", coachingSince: "2022-02-28" },
+  BB: { name: "Bea Bell", email: "bea@example.com" },
+  CC: { name: "Cy Cole", email: "cy@example.com" },
+  OT: { name: "Oli Tan", email: "oli@example.com" },
+});
+const coachConfig = (team, seasonCoaches) =>
+  new TeamConfig({
+    team: { ...baseTeam, sport: "ultimate", ...team },
+    level, forms, staff: coachStaff, attendanceOffice: "ATT", headCoach: "HC",
+  }).withSeason({ coaches: seasonCoaches });
+const yearTag = (date) => BVRUtilities.ordinal(BVRUtilities.yearCount(date));
+
+test.assertDeepEqual(coachConfig({}).coaches, { head: "HC", assistants: [] }, "no headCoach in teams.yaml → the usual head coach");
+test.assertDeepEqual(
+  coachConfig({ headCoach: "OT", assistantCoaches: ["HC"] }).coaches,
+  { head: "OT", assistants: ["HC"] },
+  "teams.yaml headCoach and assistants",
+);
+test.assertDeepEqual(
+  coachConfig({ assistantCoaches: ["AA"] }, { assistants: ["BB", "CC"] }).coaches,
+  { head: "HC", assistants: ["BB", "CC"] },
+  "a season override replaces only the keys it sets",
+);
+test.assertDeepEqual(
+  coachConfig({ assistantCoaches: ["AA"] }, null).coaches,
+  { head: "HC", assistants: ["AA"] },
+  "a null season override keeps the team's",
+);
+
+const tags = coachConfig({ assistantCoaches: ["AA", "BB"] }).coachTags;
+test.assertEqual(tags.hc_name, "Hana Cole", "hc_name from the head coach");
+test.assertEqual(tags.hc_email, "hana@example.com", "hc_email from the head coach");
+test.assertEqual(tags.hc_years_coaching, yearTag("2016-02-29"), "hc_years_coaching from coachingSince");
+test.assertEqual(tags.hc_year, yearTag("2021-02-22"), "hc_year from headCoachSince for the team's sport");
+test.assertEqual(tags.ac_name, "Alex Able", "ac_name is the first assistant");
+test.assertEqual(tags.ac_names, "Alex Able and Bea Bell", "ac_names lists every assistant");
+test.assertEqual("ac_years_coaching" in tags, false, "no ac_years_coaching tag");
+test.assertDeepEqual(
+  tags.assistants,
+  [{ name: "Alex Able", email: "alex@example.com" }, { name: "Bea Bell", email: "bea@example.com" }],
+  "assistants lists each one for Mustache",
+);
+test.assertEqual(tags.ac_many, true, "ac_many with two or more assistants");
+test.assertEqual("ac_many" in coachConfig({ assistantCoaches: ["AA"] }).coachTags, false, "no ac_many with one");
+
+const soccerTags = coachConfig({ sport: "soccer" }).coachTags;
+test.assertEqual("hc_year" in soccerTags, false, "no headCoachSince for the sport → no hc_year");
+test.assertEqual("ac_names" in soccerTags, false, "no assistants → no ac tags");
+test.assertEqual(coachConfig({ headCoach: "OT" }).coachTags.hc_name, "Oli Tan", "the team's head coach replaces the usual one");
+test.assertEqual("hc_years_coaching" in coachConfig({ headCoach: "OT" }).coachTags, false, "no coachingSince → no hc_years_coaching");
+test.assertEqual(
+  coachConfig({}, { head: "OT" }).templateSettings.teamTemplateTags.hc_name,
+  "Oli Tan",
+  "teamTemplateTags carry the season's coaches",
+);
+
+const noEmail = new TeamConfig({
+  team: { ...baseTeam, sport: "ultimate", assistantCoaches: ["NE"] },
+  level, forms, staff: new Staff({ HC: { name: "Hana Cole" }, NE: { name: "No Email" } }), attendanceOffice: "ATT", headCoach: "HC",
+}).coachTags;
+test.assertEqual(noEmail.hc_email, "", "a head coach without an email gives a blank hc_email, not the usual one's");
+test.assertEqual(noEmail.ac_email, "", "an assistant without an email does not stop the templates");
+test.assertDeepEqual(
+  TeamConfig.coachOverrides({ head: "HC", assistants: ["BB", "AA"] }, { head: "HC", assistants: ["AA", "BB"] }),
+  { assistants: ["BB", "AA"] },
+  "a new assistant order is saved, since the first gives ac_name",
+);
+
+test.assertEqual(TeamConfig.joinNames(["A"]), "A", "one name");
+test.assertEqual(TeamConfig.joinNames(["A", "B", "C"]), "A, B, and C", "three names");
+
+const coachDefaults = { head: "HC", assistants: ["AA"] };
+test.assertDeepEqual(TeamConfig.typedCoaches({ headCoach: "", assistantCoaches: " " }, coachDefaults), coachDefaults, "blank fields keep the defaults");
+test.assertDeepEqual(
+  TeamConfig.typedCoaches({ headCoach: "ot, hc", assistantCoaches: "bb; cc" }, coachDefaults),
+  { head: "OT", assistants: ["BB", "CC"] },
+  "only the first head coach initials count",
+);
+test.assertEqual(TeamConfig.coachOverrides({ head: "HC", assistants: ["AA"] }, coachDefaults), null, "matching the defaults → null");
+test.assertDeepEqual(
+  TeamConfig.coachOverrides({ head: "HC", assistants: ["BB"] }, coachDefaults),
+  { assistants: ["BB"] },
+  "only what differs is saved",
 );
 
 // --- email ---
@@ -177,7 +275,7 @@ test.assertThrows(
   "no email for CC",
 );
 test.assertThrows(() => config({ forms: ["nope"] }).gameReportSettings, "an unknown form names itself and the team", "no form named nope (listed for test-hoops)");
-test.assertThrows(() => config({ assistantCoaches: ["BB"] }).teamTemplateTags, "an assistant coach needs a name", "no name for BB");
+test.assertEqual(config({ assistantCoaches: ["BB"] }).teamTemplateTags.ac_name, "", "an assistant coach without a name gives a blank ac_name");
 
 // --- season recipients ---
 test.section("season recipients");

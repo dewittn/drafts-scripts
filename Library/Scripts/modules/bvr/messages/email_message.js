@@ -73,9 +73,10 @@ class EmailMessage {
 
   #processTemplateText() {
     const tempDraft = Draft.create();
-    this.templateTags.forEach(([key, value]) =>
-      tempDraft.setTemplateTag(key, value)
-    );
+    // setTemplateTag takes strings only, so lists such as assistants are skipped.
+    this.templateTags
+      .filter(([_key, value]) => typeof value == "string")
+      .forEach(([key, value]) => tempDraft.setTemplateTag(key, value));
     return {
       bodyText: tempDraft.processTemplate(this.bodyText),
       subjectLine: tempDraft.processTemplate(this.subjectLineTemplate),
