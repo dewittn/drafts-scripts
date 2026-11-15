@@ -152,6 +152,12 @@ class TeamFileStore {
     this.save();
   }
 
+  deletePracticePlan(key) {
+    if (this.practicePlans?.[key] == undefined) return;
+    delete this.season.practicePlans[key];
+    this.save();
+  }
+
   hasSeason(seasonID) {
     return this.#file.seasons?.[seasonID] != undefined;
   }

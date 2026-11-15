@@ -101,6 +101,12 @@ class LegacySeasonStore {
     this.ppData.save();
   }
 
+  deletePracticePlan(key) {
+    if (this.practicePlans?.[key] == undefined) return;
+    delete this.practicePlans[key];
+    this.ppData.save();
+  }
+
   // Whether either old file holds anything for this team. Reads without
   // creating the team's entry.
   get hasTeamData() {

@@ -287,6 +287,11 @@ class Team {
     practicePlan.load();
   }
 
+  deletePracticePlan() {
+    const practicePlan = new PracticePlan(this.dependencies);
+    practicePlan.delete();
+  }
+
   takeAttendace() {
     return this.attendace.take();
   }

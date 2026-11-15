@@ -86,10 +86,7 @@ class WeeklySchedule {
   static buildDays(events, monday, wording) {
     return WeeklySchedule.dayNames
       .map((day, index) => {
-        const date = WeeklySchedule.addDays(monday, index);
-        const dayEvents = events
-          .filter((event) => WeeklySchedule.sameDay(event.startDate, date))
-          .sort((a, b) => a.startDate - b.startDate);
+        const dayEvents = WeeklySchedule.eventsOn(events, WeeklySchedule.addDays(monday, index));
 
         if (dayEvents.length == 0) {
           return index < WeeklySchedule.schoolDays ? { day, description: wording.emptyDay } : undefined;
@@ -99,6 +96,13 @@ class WeeklySchedule {
         return { day, description };
       })
       .filter((line) => line != undefined);
+  }
+
+  // The events starting on date's day, earliest first.
+  static eventsOn(events, date) {
+    return events
+      .filter((event) => WeeklySchedule.sameDay(event.startDate, date))
+      .sort((a, b) => a.startDate - b.startDate);
   }
 
   // One event as the email words it. Games read their field and time from

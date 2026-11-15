@@ -181,6 +181,11 @@ test.assertEqual(store.practicePlanKey("W4"), "W4", "practice plans are keyed by
 store.savePracticePlan("W4", "PLAN-4");
 test.assertDeepEqual(file.seasons["2026-fall"].practicePlans, { W1: "PLAN-1", W4: "PLAN-4" }, "plan saved in the current season");
 test.assertEqual(file.saves, 1, "saving a plan writes the team file");
+store.deletePracticePlan("W4");
+test.assertDeepEqual(file.seasons["2026-fall"].practicePlans, { W1: "PLAN-1" }, "deleting a plan drops its week");
+test.assertEqual(file.saves, 2, "deleting a plan writes the team file");
+store.deletePracticePlan("W9");
+test.assertEqual(file.saves, 2, "deleting an unknown week writes nothing");
 
 store.setCurrentSeason("2025-fall");
 test.assertEqual(store.seasonRecordDraftID, undefined, "an empty season record draft ID reads as none");
@@ -255,6 +260,10 @@ test.assertEqual(legacyStore.practicePlans["2026W2"], "LP-2", "reads plans from 
 legacyStore.savePracticePlan("2026W3", "LP-3");
 test.assertEqual(legacyPlans["test-team"]["2026W3"], "LP-3", "saves plans into practicePlans.json");
 test.assertEqual(legacyPlans.saves, 1, "saving a plan writes practicePlans.json");
+legacyStore.deletePracticePlan("2026W3");
+test.assertEqual(legacyPlans["test-team"]["2026W3"], undefined, "deletes plans from practicePlans.json");
+test.assertEqual(legacyPlans["test-team"]["2026W2"], "LP-2", "and leaves the other weeks");
+test.assertEqual(legacyPlans.saves, 2, "deleting a plan writes practicePlans.json");
 test.assertDeepEqual(legacy(2024).games, [], "a bare-array season shows no games, as before");
 test.assertEqual(legacyStore.hasTeamData, true, "hasTeamData sees the team's records");
 test.assertEqual(legacy(2026, savable({}), savable({})).hasTeamData, false, "hasTeamData is false for a new team");
@@ -310,7 +319,9 @@ test.assertEqual(PracticePlan.weekNumber("2026-11-16", new Date(2026, 10, 9)), 0
 bvr = mockBVR(teamFixturePath);
 team = mockTeam(bvr);
 let plan = new PracticePlan(team.dependencies);
-const week = PracticePlan.weekNumber("2026-09-07");
+// Plans count from the plan's Monday (the coming week on a weekend).
+const planMonday = PracticePlan.planMonday(new Date());
+const week = PracticePlan.weekNumber("2026-09-07", planMonday);
 test.assertEqual(plan.teamStartDate, "2026-09-07", "week counts from the season's start date");
 test.assertEqual(plan.planID, `W${week}`, "team file plan IDs are W<week>");
 test.assertDeepEqual(plan.practicePlans, { W1: "PLAN-1" }, "plans come from the current season");
@@ -323,7 +334,7 @@ test.assertEqual(new PracticePlan(team.dependencies).teamStartDate, "2026-08-31"
 bvr = mockBVR(missingTeamFilePath);
 team = mockTeam(bvr);
 plan = new PracticePlan(team.dependencies);
-test.assertEqual(plan.planID, `${thisYear}W${PracticePlan.weekNumber("2026-08-31")}`, "old files keep <year>W<week>");
+test.assertEqual(plan.planID, `${thisYear}W${PracticePlan.weekNumber("2026-08-31", planMonday)}`, "old files keep <year>W<week>");
 
 // --- Start New Season ---
 test.section("Start New Season");

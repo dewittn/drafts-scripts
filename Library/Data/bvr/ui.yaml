@@ -394,6 +394,15 @@ updateRoster:
         data:
           name: "No"
           value: "no"
+# Delete Practice Plan: the plan picker (one button per plan is added) and
+# the confirmation, which gets the plan's title added below the message.
+deletePracticePlan:
+  pickPlan:
+    menuTitle: Delete Practice Plan
+    menuMessage: Which plan should be deleted?
+  confirmPrompt:
+    menuTitle: Delete Practice Plan
+    menuMessage: Move this plan to the trash and remove it from the team file and the coaching draft?
 # Create Weekly Schedule. In wording, {name} is filled in per event: {time}
 # is the practice time (levels or teams.yaml weeklySchedule.practiceTime, else
 # the calendar's), and a game's {details} and a No Practice {reason} are the

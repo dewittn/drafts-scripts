@@ -19,20 +19,20 @@ Announcements:
 
 ## Monday
 
--
+[[monday_schedule]]
 
 ## Tuesday
 
--
+[[tuesday_schedule]]
 
 ## Wednesday
 
--
+[[wednesday_schedule]]
 
 ## Thursday
 
--
+[[thursday_schedule]]
 
 ## Friday
 
--
+[[friday_schedule]]
