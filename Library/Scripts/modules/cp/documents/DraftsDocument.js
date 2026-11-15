@@ -136,7 +136,7 @@ class DraftsDoc {
 
     // Check if workingDraft exists before trying to modify it
     if (this.workingDraft == undefined) {
-      console.log('[DraftsDoc] Cannot set status: workingDraft is undefined');
+      this.#logMissingDraft("set status");
       return;
     }
 
@@ -163,7 +163,7 @@ class DraftsDoc {
 
     // Check if workingDraft exists before trying to modify it
     if (this.workingDraft == undefined) {
-      console.log('[DraftsDoc] Cannot set destination: workingDraft is undefined');
+      this.#logMissingDraft("set destination");
       return;
     }
 
@@ -194,7 +194,7 @@ class DraftsDoc {
 
     // Check if workingDraft exists before trying to modify it
     if (this.workingDraft == undefined) {
-      console.log('[DraftsDoc] Cannot set inPipeline: workingDraft is undefined');
+      this.#logMissingDraft("set inPipeline");
       return;
     }
 
@@ -210,8 +210,7 @@ class DraftsDoc {
 
   open() {
     if (this.workingDraft == undefined) {
-      console.log('[DraftsDoc] Cannot open: workingDraft is undefined');
-      return;
+      return this.#logMissingDraft("open");
     }
     // Drafts' built-in workspace, shown as "Default". No workspace is named
     // "default", so find() returns undefined and applyWorkspace resets to it
@@ -222,19 +221,26 @@ class DraftsDoc {
 
   save() {
     if (this.workingDraft == undefined) {
-      console.log('[DraftsDoc] Cannot save: workingDraft is undefined');
-      return;
+      return this.#logMissingDraft("save");
     }
     this.workingDraft.update();
   }
 
   delete() {
     if (this.workingDraft == undefined) {
-      console.log('[DraftsDoc] Cannot delete: workingDraft is undefined');
-      return;
+      return this.#logMissingDraft("delete");
     }
     this.workingDraft.isTrashed = true;
     this.workingDraft.update();
+  }
+
+  // Records a change that was dropped because there is no draft to apply it to.
+  #logMissingDraft(action) {
+    this.#ui.logError(`[DraftsDoc] Cannot ${action}: workingDraft is undefined`, {
+      class: "DraftsDoc",
+      action: action,
+      docID: this.#record?.docID,
+    });
   }
 
   #findOrCreateWorkingDraft() {
@@ -251,7 +257,7 @@ class DraftsDoc {
 
     // Check if template creation was successful
     if (templateDraft == undefined) {
-      console.log('[DraftsDoc] Template creation cancelled or failed');
+      this.#ui.debugLog("[DraftsDoc] Template creation cancelled or failed");
       return undefined;
     }
 

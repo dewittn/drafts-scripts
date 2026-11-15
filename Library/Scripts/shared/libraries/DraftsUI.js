@@ -197,6 +197,17 @@ class DraftsUI {
     app.displaySuccessMessage(successMessage);
   }
 
+  // Writes to the console only when debug is on, so normal runs stay quiet.
+  debugLog(message) {
+    if (this.#debug) console.log(message);
+  }
+
+  // Records an error in the draft log without showing a message, for
+  // failures the user does not need to see right away.
+  logError(message, details) {
+    this.#updateDraftLog(message, details);
+  }
+
   debugVariable(variable, text = "", debug = true) {
     this.debug = debug;
     const message = `${text}${JSON.stringify(variable)}`;

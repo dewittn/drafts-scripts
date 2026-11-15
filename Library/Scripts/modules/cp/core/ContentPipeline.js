@@ -36,6 +36,7 @@ class ContentPipeline {
   #document_factory;
   #services;
   #dependencyProvider;
+  #debug = false;
 
   // Manager instances
   #documentManager;
@@ -283,12 +284,17 @@ class ContentPipeline {
   // **************
   // * Getter and Setter functions
   // **************
-  // Turns on and off debug logging for Ulysses and the database
-  set debug(value) {
-    if (value == false) return;
+  // Debug logging is off by default. A test action sets cp.debug = true
+  // to see database requests, Ulysses callbacks, and routing in the console.
+  get debug() {
+    return this.#debug;
+  }
 
-    this.db.debug = true;
-    this.ui.debug = true;
+  set debug(value) {
+    this.#debug = value;
+    this.db.debug = value;
+    this.ui.debug = value;
+    this.ulysses.debug = value;
   }
 
   get tableName() {

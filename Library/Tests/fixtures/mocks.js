@@ -93,6 +93,22 @@ class MockUI {
   }
 
   /**
+   * Console message shown only when debug is on (DraftsUI.debugLog)
+   */
+  debugLog(message) {
+    this.interactions.push({ type: 'debugLog', message });
+    if (this.debug) console.log('[MockUI] Debug:', message);
+  }
+
+  /**
+   * Error recorded in the draft log with no message shown (DraftsUI.logError)
+   */
+  logError(message, details = {}) {
+    this.interactions.push({ type: 'logError', message, details });
+    if (this.debug) console.log('[MockUI] Logged error:', message);
+  }
+
+  /**
    * Display app message (used by CP components for error/info/success)
    * @param {string} messageType - Type of message ('error', 'info', 'success')
    * @param {string} message - Message to display

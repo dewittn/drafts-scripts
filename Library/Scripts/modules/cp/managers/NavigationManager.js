@@ -78,7 +78,7 @@ class NavigationManager extends BaseManager {
       args = [args];
     }
 
-    console.log(`\n\n#######\nRouting to function: ${name}`);
+    this.ui.debugLog(`\n\n#######\nRouting to function: ${name}`);
     return { action: name, args: args };
   }
 

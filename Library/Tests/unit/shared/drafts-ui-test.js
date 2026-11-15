@@ -118,4 +118,34 @@ stub = makeEditor("- Call Sam", 10);
 new DraftsUI().insertAtLineEnd("\n\t");
 test.assertEqual(stub.text, "- Call Sam\n\t", "works on the last line");
 
+// --- debugLog and logError ---
+
+test.section("debugLog and logError");
+
+// Returns what fn writes to the console.
+const captureConsole = (fn) => {
+  const consoleLog = console.log;
+  const lines = [];
+  console.log = (...args) => lines.push(args.join(" "));
+  try {
+    fn();
+  } finally {
+    console.log = consoleLog;
+  }
+  return lines;
+};
+
+const debugUI = new DraftsUI();
+test.assertEqual(captureConsole(() => debugUI.debugLog("routing")).length, 0, "debugLog is silent while debug is off");
+
+debugUI.debug = true;
+test.assertDeepEqual(captureConsole(() => debugUI.debugLog("routing")), ["routing"], "debugLog writes to the console once debug is on");
+
+// With no draft log configured, logError falls back to the console.
+test.assertDeepEqual(
+  captureConsole(() => new DraftsUI().logError("Cannot save", { action: "save" })),
+  ['Cannot save {"action":"save"}'],
+  "logError records the error even with debug off"
+);
+
 test.summary();
