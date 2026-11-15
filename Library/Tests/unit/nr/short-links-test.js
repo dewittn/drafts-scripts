@@ -59,6 +59,12 @@ let calls = { fail: [], cancel: 0, clipboard: "", set: [] };
 function makeKutt(serverLinks = [], { domains = [], failCreate = false, failList = false, failUser = false, failUpdate = false } = {}) {
   /** @type {any} */
   const kutt = { host: "lnk.test", created: [], pages: [], userCalls: 0, updates: [] };
+  kutt.deleted = [];
+  kutt.deleteLink = (id) => {
+    kutt.deleted.push(id);
+    if (failUpdate) return { success: false, error: "Kutt Error: 400 - Delete Link Failed: Could not delete the link." };
+    return { message: "Link has been deleted successfully." };
+  };
   kutt.updateLink = (id, changes) => {
     kutt.updates.push({ id, changes });
     if (failUpdate) return { success: false, error: "Kutt Error: 400 - Update Link Failed: Custom URL is already in use." };
@@ -102,14 +108,18 @@ function makeFiles(files = {}, { failWrite = false } = {}) {
 const settings = loadRepoYAML("nr-settings.yaml").kutt;
 
 // UI answering the prompt with { shown, url, description, domainRow }, or
-// with fields given as-is.
-/** @param {{ shown: boolean, url?: string, description?: string, domainRow?: number, fields?: object }} [reply] */
+// with fields given as-is, the button pressed, and the yes/no answer.
+/** @param {{ shown: boolean, url?: string, description?: string, domainRow?: number, fields?: object, button?: string, yesNo?: string }} [reply] */
 function makeUI(reply = { shown: true, url: "" }) {
-  const ui = { menus: [], inserted: [], messages: [] };
+  const ui = { menus: [], inserted: [], messages: [], yesNoMenus: [] };
+  ui.yesNoPrompt = (menu) => {
+    ui.yesNoMenus.push(menu);
+    return reply.yesNo ?? "no";
+  };
   ui.buildMenu = (menu) => {
     ui.menus.push(menu);
     const fieldValues = reply.fields ?? { url: reply.url, description: reply.description, domain: reply.domainRow == undefined ? undefined : [reply.domainRow] };
-    return { show: () => reply.shown, fieldValues };
+    return { show: () => reply.shown, fieldValues, buttonPressed: reply.button ?? "save" };
   };
   ui.insertAtCursor = (text) => ui.inserted.push(text);
   ui.displayAppMessage = (type, message) => ui.messages.push({ type, message });
@@ -264,9 +274,19 @@ test.assertEqual(result.link, "https://lnk.test/s1", "keeps the short link when 
 test.assertEqual(shortener.lookup("https://example.com/1"), undefined, "drops the old page from the cache");
 test.assertEqual(shortener.lookup("https://example.com/moved").id, "id1", "and finds the link by its new page");
 
+kutt = makeKutt();
+files = makeFiles(savedFile([link(1), link(2)]));
+shortener = new LinkShortener(kutt, files);
+test.assertDeepEqual(shortener.delete(shortener.lookup("https://example.com/1")), { success: true }, "deletes a link");
+test.assertDeepEqual(kutt.deleted, ["id1"], "by its id");
+test.assertEqual(shortener.lookup("https://example.com/1"), undefined, "and drops it from the cache");
+test.assertEqual(files.files[cacheFile].links.length, 1, "saving links.json");
+
 kutt = makeKutt([], { failUpdate: true });
 files = makeFiles(savedFile([link(1)]));
 shortener = new LinkShortener(kutt, files);
+test.assertEqual(shortener.delete(shortener.lookup("https://example.com/1")).success, false, "passes a failed delete back");
+test.assertTruthy(shortener.lookup("https://example.com/1"), "keeping the link cached");
 result = shortener.update(shortener.lookup("https://example.com/1"), { address: "taken" });
 test.assertEqual(result.error, "Kutt Error: 400 - Update Link Failed: Custom URL is already in use.", "passes a Kutt failure back");
 test.assertEqual(shortener.lookup("https://example.com/1").link, "https://lnk.test/s1", "leaving the cache alone");
@@ -567,6 +587,33 @@ ui = makeUI({ shown: false });
 test.assertEqual(new ShortLinks(settings, ui, new LinkShortener(kutt, editFiles())).editPrompted(), false, "returns false when the edit prompt is cancelled");
 test.assertEqual(calls.cancel, 1, "cancels the action");
 test.assertEqual(kutt.updates.length, 0, "without asking Kutt");
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s2" };
+kutt = makeKutt();
+files = editFiles();
+ui = makeUI({ shown: true, fields: { description: "Edited but deleted" }, button: "delete", yesNo: "yes" });
+test.assertEqual(new ShortLinks(settings, ui, new LinkShortener(kutt, files)).editPrompted(), false, "Delete returns false");
+test.assertEqual(ui.yesNoMenus[0].menuMessage, "https://lnk.test/s2 will stop working. This cannot be undone.", "after asking, naming the link");
+test.assertDeepEqual(kutt.deleted, ["id2"], "deletes the link on Kutt");
+test.assertEqual(kutt.updates.length, 0, "without saving other changes");
+test.assertFalsy(files.files[cacheFile].links.some((saved) => saved.id == "id2"), "and drops it from links.json");
+test.assertDeepEqual(ui.messages, [{ type: "success", message: "Deleted https://lnk.test/s2" }], "says it was deleted");
+test.assertEqual(settings.deleteConfirm.menuMessage, "[[link]] will stop working. This cannot be undone.", "without changing the settings");
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s2" };
+kutt = makeKutt();
+ui = makeUI({ shown: true, fields: {}, button: "delete", yesNo: "no" });
+new ShortLinks(settings, ui, new LinkShortener(kutt, editFiles())).editPrompted();
+test.assertEqual(kutt.deleted.length, 0, "keeps the link when No is pressed");
+test.assertEqual(calls.cancel, 1, "and cancels the action");
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s2" };
+ui = makeUI({ shown: true, fields: {}, button: "delete", yesNo: "yes" });
+new ShortLinks(settings, ui, new LinkShortener(makeKutt([], { failUpdate: true }), editFiles())).editPrompted();
+test.assertDeepEqual(calls.fail, ["Kutt Error: 400 - Delete Link Failed: Could not delete the link."], "fails with Kutt's error when the delete fails");
 
 // --- Sync Kutt Links ---
 test.section("Sync Kutt Links");

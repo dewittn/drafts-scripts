@@ -60,6 +60,11 @@ class Kutt {
     return this.#request("PATCH", `/links/${id}`, "Update Link Failed", changes);
   }
 
+  // Deletes a link. The short link stops working; this cannot be undone.
+  deleteLink(id) {
+    return this.#request("DELETE", `/links/${id}`, "Delete Link Failed");
+  }
+
   // One page of links, newest first: { total, limit, skip, data }.
   getLinks({ limit = Kutt.pageSize, skip = 0 } = {}) {
     return this.#request("GET", `/links?limit=${limit}&skip=${skip}`, "Get Links Failed");
@@ -233,6 +238,18 @@ class LinkShortener {
     this.#links.set(LinkShortener.normalizeURL(updated.target), updated);
     this.#saveCache();
     return updated;
+  }
+
+  // Deletes a link on Kutt and drops it from the cache. Returns
+  // { success: true }, or Kutt's failure.
+  delete(link) {
+    const result = this.#kutt.deleteLink(link.id);
+    if (result.success === false) return result;
+
+    const key = LinkShortener.normalizeURL(link.target);
+    if (this.#links.get(key)?.id == link.id) this.#links.delete(key);
+    this.#saveCache();
+    return { success: true };
   }
 
   // Replaces the cache with every link and custom domain on Kutt, and records

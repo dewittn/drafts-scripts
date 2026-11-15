@@ -48,14 +48,17 @@ class ShortLinks {
   }
 
   // Lets you pick a saved link from the search page, then change its page
-  // URL, short address or description. Returns the updated short link, or
-  // false when nothing was changed.
+  // URL, short address or description, or delete it. Returns the updated
+  // short link, or false when nothing was changed.
   editPrompted() {
     const link = this.#pickLink();
     if (!link) return false;
 
-    const changes = this.#askForChanges(link);
-    if (changes == undefined) return false;
+    const answer = this.#askForChanges(link);
+    if (answer == undefined) return false;
+    if (answer.button == "delete") return this.#deleteLink(link);
+
+    const { changes } = answer;
     if (Object.keys(changes).length == 0) {
       this.#ui.displayAppMessage("info", this.#message("noChanges", {}));
       return false;
@@ -98,9 +101,26 @@ class ShortLinks {
     return link;
   }
 
-  // Shows the edit prompt filled in from the link. Returns the fields that
-  // were changed, trimmed (blank ones are left out, since Kutt ignores them),
-  // or undefined when cancelled.
+  // Asks first, then deletes the link on Kutt and from the cache. Returns
+  // false, since there is no short link left to return.
+  #deleteLink(link) {
+    const confirm = JSON.parse(JSON.stringify(this.#settings.deleteConfirm));
+    confirm.menuMessage = confirm.menuMessage.replaceAll("[[link]]", () => link.link);
+    if (this.#ui.yesNoPrompt(confirm) != "yes") {
+      context.cancel();
+      return false;
+    }
+
+    const result = this.shortener.delete(link);
+    if (result.success === false) return this.#fail(result.error);
+
+    this.#ui.displayAppMessage("success", this.#message("deleted", { link: link.link }));
+    return false;
+  }
+
+  // Shows the edit prompt filled in from the link. Returns the button pressed
+  // and the fields that were changed, trimmed (blank ones are left out, since
+  // Kutt ignores them): { button, changes }. Undefined when cancelled.
   #askForChanges(link) {
     const menuSettings = JSON.parse(JSON.stringify(this.#settings.editPrompt));
     menuSettings.menuMessage = menuSettings.menuMessage.replaceAll("[[link]]", () => link.link);
@@ -118,7 +138,7 @@ class ShortLinks {
       const value = String(menu.fieldValues[data.name] ?? "").trim();
       if (value && value != (link[data.name] ?? "")) changes[data.name] = value;
     }
-    return changes;
+    return { button: menu.buttonPressed, changes };
   }
 
   // Inserts a short link at the cursor, copies it, and says so.

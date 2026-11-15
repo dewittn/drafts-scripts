@@ -308,6 +308,14 @@ kutt:
           name: Save
           value: save
           isDefault: true
+      - type: button
+        data:
+          name: Delete
+          value: delete
+  # Asked before Delete. [[link]] is the short link.
+  deleteConfirm:
+    menuTitle: Delete Short Link?
+    menuMessage: "[[link]] will stop working. This cannot be undone."
   # [[url]], [[link]] and [[count]] are filled in when shown.
   messages:
     invalidURL: '"[[url]]" is not a link.'
@@ -317,3 +325,4 @@ kutt:
     noLinks: "No saved links yet. Run Sync Kutt Links first."
     updated: "Updated [[link]]"
     noChanges: "Nothing changed."
+    deleted: "Deleted [[link]]"
