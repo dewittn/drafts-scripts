@@ -1,9 +1,9 @@
 if (typeof LinkShortener == "undefined") require("shared/libraries/kutt.js");
 
-// The Shorten Link, Find Short Link and Sync Kutt Links actions. Links are
-// looked up in the local cache (links.json) first and only sent to Kutt when
-// missing. Shorten Link and Find Short Link also run a full sync once the
-// last one is `syncAfterDays` old.
+// The Shorten Link, Find Short Link, Edit Short Link and Sync Kutt Links
+// actions. Links are looked up in the local cache (links.json) first and only
+// sent to Kutt when missing. All but Sync also run a full sync once the last
+// one is `syncAfterDays` old.
 // Prompt wording and settings live under `kutt` in nr-settings.yaml.
 class ShortLinks {
   #settings;
@@ -39,21 +39,37 @@ class ShortLinks {
     return this.#deliver(result.link);
   }
 
-  // Shows the saved links in an HTML preview that filters as you type, then
-  // inserts the chosen short link at the cursor and copies it. Returns the
-  // short link, or false when nothing was chosen.
+  // Lets you pick a saved link from the search page, then inserts its short
+  // link at the cursor and copies it. Returns the short link, or false when
+  // nothing was chosen.
   findPrompted() {
-    this.#syncIfStale();
-    const links = this.shortener.links;
-    if (links.length == 0) return this.#fail(this.#message("noLinks", {}));
+    const link = this.#pickLink();
+    return link ? this.#deliver(link.link) : false;
+  }
 
-    const preview = HTMLPreview.create();
-    const chosen = preview.show(this.#findLinkHTML(links)) ? context.previewValues?.["link"] : undefined;
-    if (!chosen) {
-      context.cancel();
+  // Lets you pick a saved link from the search page, then change its page
+  // URL, short address or description. Returns the updated short link, or
+  // false when nothing was changed.
+  editPrompted() {
+    const link = this.#pickLink();
+    if (!link) return false;
+
+    const changes = this.#askForChanges(link);
+    if (changes == undefined) return false;
+    if (Object.keys(changes).length == 0) {
+      this.#ui.displayAppMessage("info", this.#message("noChanges", {}));
       return false;
     }
-    return this.#deliver(chosen);
+
+    const { target } = changes;
+    if (target && !LinkShortener.isURL(target)) return this.#fail(this.#message("invalidURL", { url: target }));
+    if (target && this.shortener.isShortLink(target)) return this.#fail(this.#message("alreadyShort", { url: target }));
+
+    const result = this.shortener.update(link, changes);
+    if (result.success === false) return this.#fail(result.error);
+
+    this.#ui.displayAppMessage("success", this.#message("updated", { link: result.link }));
+    return result.link;
   }
 
   // Replaces the local cache with every link on Kutt.
@@ -63,6 +79,46 @@ class ShortLinks {
 
     this.#ui.displayAppMessage("success", this.#message("synced", { count: result.count }));
     return result.count;
+  }
+
+  // Shows the saved links in the search page and returns the one picked.
+  // Cancels the action and returns undefined when nothing is picked.
+  #pickLink() {
+    this.#syncIfStale();
+    const links = this.shortener.links;
+    if (links.length == 0) {
+      this.#fail(this.#message("noLinks", {}));
+      return undefined;
+    }
+
+    const preview = HTMLPreview.create();
+    const chosen = preview.show(this.#findLinkHTML(links)) ? context.previewValues?.["link"] : undefined;
+    const link = chosen ? this.shortener.byShortLink(chosen) : undefined;
+    if (!link) context.cancel();
+    return link;
+  }
+
+  // Shows the edit prompt filled in from the link. Returns the fields that
+  // were changed, trimmed (blank ones are left out, since Kutt ignores them),
+  // or undefined when cancelled.
+  #askForChanges(link) {
+    const menuSettings = JSON.parse(JSON.stringify(this.#settings.editPrompt));
+    menuSettings.menuMessage = menuSettings.menuMessage.replaceAll("[[link]]", () => link.link);
+    const fields = menuSettings.menuItems.filter((item) => item.type == "textField");
+    fields.forEach((item) => (item.data.initialText = link[item.data.name] ?? ""));
+
+    const menu = this.#ui.buildMenu(menuSettings);
+    if (!menu.show()) {
+      context.cancel();
+      return undefined;
+    }
+
+    const changes = {};
+    for (const { data } of fields) {
+      const value = String(menu.fieldValues[data.name] ?? "").trim();
+      if (value && value != (link[data.name] ?? "")) changes[data.name] = value;
+    }
+    return changes;
   }
 
   // Inserts a short link at the cursor, copies it, and says so.

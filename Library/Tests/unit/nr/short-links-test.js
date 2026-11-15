@@ -56,9 +56,14 @@ let calls = { fail: [], cancel: 0, clipboard: "", set: [] };
 
 // Kutt on lnk.test with a fixed list of links (newest first) and custom
 // domains, served in pages.
-function makeKutt(serverLinks = [], { domains = [], failCreate = false, failList = false, failUser = false } = {}) {
+function makeKutt(serverLinks = [], { domains = [], failCreate = false, failList = false, failUser = false, failUpdate = false } = {}) {
   /** @type {any} */
-  const kutt = { host: "lnk.test", created: [], pages: [], userCalls: 0 };
+  const kutt = { host: "lnk.test", created: [], pages: [], userCalls: 0, updates: [] };
+  kutt.updateLink = (id, changes) => {
+    kutt.updates.push({ id, changes });
+    if (failUpdate) return { success: false, error: "Kutt Error: 400 - Update Link Failed: Custom URL is already in use." };
+    return { id, ...changes, link: "https://wrong.default/x", updated_at: "2026-11-15T13:00:00Z" };
+  };
   kutt.createLink = (target, options = {}) => {
     kutt.created.push({ target, ...options });
     if (failCreate) return { success: false, error: "Kutt Error: 400 - Create Link Failed: URL is not valid." };
@@ -96,13 +101,14 @@ function makeFiles(files = {}, { failWrite = false } = {}) {
 
 const settings = loadRepoYAML("nr-settings.yaml").kutt;
 
-// UI answering the prompt with { shown, url, description, domainRow }.
-/** @param {{ shown: boolean, url?: string, description?: string, domainRow?: number }} [reply] */
+// UI answering the prompt with { shown, url, description, domainRow }, or
+// with fields given as-is.
+/** @param {{ shown: boolean, url?: string, description?: string, domainRow?: number, fields?: object }} [reply] */
 function makeUI(reply = { shown: true, url: "" }) {
   const ui = { menus: [], inserted: [], messages: [] };
   ui.buildMenu = (menu) => {
     ui.menus.push(menu);
-    const fieldValues = { url: reply.url, description: reply.description, domain: reply.domainRow == undefined ? undefined : [reply.domainRow] };
+    const fieldValues = reply.fields ?? { url: reply.url, description: reply.description, domain: reply.domainRow == undefined ? undefined : [reply.domainRow] };
     return { show: () => reply.shown, fieldValues };
   };
   ui.insertAtCursor = (text) => ui.inserted.push(text);
@@ -141,6 +147,12 @@ test.assertDeepEqual(request.data, { target: "https://example.com/post", reuse: 
 http = { requests: [], replies: [] };
 kuttClient.createLink("https://example.com/post", { domain: "go.test" });
 test.assertEqual(http.requests[0].data.domain, "go.test", "sends a custom domain when given");
+
+http = { requests: [], replies: [] };
+kuttClient.updateLink("uuid-1", { description: "New title" });
+test.assertEqual(http.requests[0].url, "https://lnk.test/api/v2/links/uuid-1", "updates a link by its id");
+test.assertEqual(http.requests[0].method, "PATCH", "with PATCH");
+test.assertDeepEqual(http.requests[0].data, { description: "New title" }, "sending only the changes");
 
 http = { requests: [], replies: [reply(200, { total: 0, data: [] })] };
 kuttClient.getLinks();
@@ -233,6 +245,31 @@ test.assertFalsy(cacheFile in files.files, "caches nothing on failure");
 
 shortener = new LinkShortener(makeKutt(), makeFiles({ [cacheFile]: { "https://example.com/1": link(1) } }));
 test.assertEqual(shortener.links.length, 0, "ignores a links.json in an unknown shape");
+
+// --- update ---
+test.section("update");
+
+kutt = makeKutt();
+files = makeFiles(savedFile([link(1), link(2, "go.test")]));
+shortener = new LinkShortener(kutt, files);
+result = shortener.update(shortener.lookup("https://example.com/2"), { address: "launch", description: "Launch post" });
+test.assertDeepEqual(kutt.updates, [{ id: "id2", changes: { address: "launch", description: "Launch post" } }], "sends the changes for the link's id");
+test.assertEqual(result.link, "https://go.test/launch", "works out the new short link on the link's own domain");
+test.assertEqual(result.description, "Launch post", "with the new description");
+test.assertEqual(shortener.lookup("https://example.com/2").link, "https://go.test/launch", "and caches it");
+test.assertEqual(files.files[cacheFile].links.find((saved) => saved.id == "id2").address, "launch", "saving links.json");
+
+result = shortener.update(shortener.lookup("https://example.com/1"), { target: "https://example.com/moved/" });
+test.assertEqual(result.link, "https://lnk.test/s1", "keeps the short link when only the page changes");
+test.assertEqual(shortener.lookup("https://example.com/1"), undefined, "drops the old page from the cache");
+test.assertEqual(shortener.lookup("https://example.com/moved").id, "id1", "and finds the link by its new page");
+
+kutt = makeKutt([], { failUpdate: true });
+files = makeFiles(savedFile([link(1)]));
+shortener = new LinkShortener(kutt, files);
+result = shortener.update(shortener.lookup("https://example.com/1"), { address: "taken" });
+test.assertEqual(result.error, "Kutt Error: 400 - Update Link Failed: Custom URL is already in use.", "passes a Kutt failure back");
+test.assertEqual(shortener.lookup("https://example.com/1").link, "https://lnk.test/s1", "leaving the cache alone");
 
 // --- domains ---
 test.section("domains");
@@ -468,6 +505,68 @@ files = makeFiles(savedFile([], [], "2026-01-01T00:00:00Z"));
 links = new ShortLinks(settings, makeUI(), new LinkShortener(kutt, files));
 test.assertEqual(links.findPrompted(), "https://lnk.test/s1", "syncs first when the last sync is old");
 test.assertEqual(kutt.userCalls, 1, "with one full sync");
+
+// --- Edit Short Link ---
+test.section("Edit Short Link");
+
+const describedLink = { ...link(2), address: "s2", description: "Old title" };
+const editFiles = () => makeFiles(savedFile([link(1), describedLink]));
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s2" };
+kutt = makeKutt();
+ui = makeUI({ shown: true, fields: { target: "https://example.com/2", address: "s2", description: " New title " } });
+links = new ShortLinks(settings, ui, new LinkShortener(kutt, editFiles()));
+test.assertEqual(links.editPrompted(), "https://lnk.test/s2", "returns the short link");
+const editMenu = ui.menus[0];
+test.assertEqual(editMenu.menuMessage, "https://lnk.test/s2", "names the link being edited");
+test.assertDeepEqual(editMenu.menuItems.filter((item) => item.type == "textField").map((item) => item.data.initialText), ["https://example.com/2", "s2", "Old title"], "fills the page URL, short address and description");
+test.assertDeepEqual(kutt.updates, [{ id: "id2", changes: { description: "New title" } }], "sends only what changed, trimmed");
+test.assertDeepEqual(ui.messages, [{ type: "success", message: "Updated https://lnk.test/s2" }], "says it was updated");
+test.assertDeepEqual(ui.inserted, [], "inserts nothing");
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s2" };
+kutt = makeKutt();
+ui = makeUI({ shown: true, fields: { target: "https://example.com/2", address: "launch", description: "Old title" } });
+test.assertEqual(new ShortLinks(settings, ui, new LinkShortener(kutt, editFiles())).editPrompted(), "https://lnk.test/launch", "returns the new short link when the address changes");
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s2" };
+kutt = makeKutt();
+ui = makeUI({ shown: true, fields: { target: "https://example.com/2", address: "s2", description: "" } });
+test.assertEqual(new ShortLinks(settings, ui, new LinkShortener(kutt, editFiles())).editPrompted(), false, "returns false when nothing changed");
+test.assertEqual(kutt.updates.length, 0, "without asking Kutt (a blank field is no change)");
+test.assertDeepEqual(ui.messages, [{ type: "info", message: "Nothing changed." }], "and says so");
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s2" };
+kutt = makeKutt();
+ui = makeUI({ shown: true, fields: { target: "not a url", address: "s2", description: "Old title" } });
+new ShortLinks(settings, ui, new LinkShortener(kutt, editFiles())).editPrompted();
+test.assertDeepEqual(calls.fail, ['"not a url" is not a link.'], "fails on a page URL that is not a link");
+test.assertEqual(kutt.updates.length, 0, "without asking Kutt");
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s2" };
+ui = makeUI({ shown: true, fields: { target: "https://example.com/2", address: "taken", description: "Old title" } });
+new ShortLinks(settings, ui, new LinkShortener(makeKutt([], { failUpdate: true }), editFiles())).editPrompted();
+test.assertDeepEqual(calls.fail, ["Kutt Error: 400 - Update Link Failed: Custom URL is already in use."], "fails with Kutt's error");
+
+reset();
+preview = { pages: [], continued: false, link: undefined };
+ui = makeUI({ shown: true, fields: {} });
+test.assertEqual(new ShortLinks(settings, ui, new LinkShortener(makeKutt(), editFiles())).editPrompted(), false, "returns false when the search page is cancelled");
+test.assertEqual(calls.cancel, 1, "cancels the action");
+test.assertEqual(ui.menus.length, 0, "without showing the edit prompt");
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s2" };
+kutt = makeKutt();
+ui = makeUI({ shown: false });
+test.assertEqual(new ShortLinks(settings, ui, new LinkShortener(kutt, editFiles())).editPrompted(), false, "returns false when the edit prompt is cancelled");
+test.assertEqual(calls.cancel, 1, "cancels the action");
+test.assertEqual(kutt.updates.length, 0, "without asking Kutt");
 
 // --- Sync Kutt Links ---
 test.section("Sync Kutt Links");

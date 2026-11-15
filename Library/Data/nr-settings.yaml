@@ -276,6 +276,38 @@ kutt:
   # The template is under Library/Templates/.
   findLink:
     template: nr/kutt-find-link.html
+  # Edit Short Link: pick a link on the Find Short Link page, then change it.
+  # Field names match Kutt's (target, address, description). Only changed
+  # fields are sent; Kutt ignores a blank one, so a description can be
+  # changed but not removed. [[link]] is the short link being edited.
+  editPrompt:
+    menuTitle: Edit Short Link
+    menuMessage: "[[link]]"
+    menuItems:
+      - type: textField
+        data:
+          name: target
+          label: Page URL
+          options:
+            keyboard: url
+            autocapitalization: none
+            autocorrect: false
+      - type: textField
+        data:
+          name: address
+          label: Short address
+          options:
+            autocapitalization: none
+            autocorrect: false
+      - type: textField
+        data:
+          name: description
+          label: Description
+      - type: button
+        data:
+          name: Save
+          value: save
+          isDefault: true
   # [[url]], [[link]] and [[count]] are filled in when shown.
   messages:
     invalidURL: '"[[url]]" is not a link.'
@@ -283,3 +315,5 @@ kutt:
     shortened: "Copied [[link]]"
     synced: "Synced [[count]] links from Kutt."
     noLinks: "No saved links yet. Run Sync Kutt Links first."
+    updated: "Updated [[link]]"
+    noChanges: "Nothing changed."

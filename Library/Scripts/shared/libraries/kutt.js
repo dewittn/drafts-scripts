@@ -54,6 +54,12 @@ class Kutt {
     return this.#request("POST", "/links", "Create Link Failed", { target, reuse: true, ...options });
   }
 
+  // Changes a link's target, address or description. Kutt ignores blank
+  // values, so a field can be changed but not cleared.
+  updateLink(id, changes) {
+    return this.#request("PATCH", `/links/${id}`, "Update Link Failed", changes);
+  }
+
   // One page of links, newest first: { total, limit, skip, data }.
   getLinks({ limit = Kutt.pageSize, skip = 0 } = {}) {
     return this.#request("GET", `/links?limit=${limit}&skip=${skip}`, "Get Links Failed");
@@ -174,6 +180,11 @@ class LinkShortener {
     return now.getTime() - Date.parse(this.#syncedAt) > days * 24 * 60 * 60 * 1000;
   }
 
+  // The cached link whose short link is url.
+  byShortLink(url) {
+    return this.links.find((link) => link.link == url);
+  }
+
   // The cached link for a target, on whichever domain it was made.
   lookup(target) {
     return this.#links.get(LinkShortener.normalizeURL(target));
@@ -204,6 +215,24 @@ class LinkShortener {
     if (domain != this.#kutt.host) options.domain = domain;
     if (description.trim()) options.description = description.trim();
     return options;
+  }
+
+  // Saves changes ({ target, address, description }) to a link on Kutt and in
+  // the cache. Returns the updated link, or Kutt's failure. The short link is
+  // worked out here, since Kutt's reply can give a custom-domain link the
+  // default domain.
+  update(link, changes) {
+    const result = this.#kutt.updateLink(link.id, changes);
+    if (result.success === false) return result;
+
+    const shortLink = changes.address ? link.link.replace(/[^/]+$/, changes.address) : link.link;
+    const updated = { ...link, ...changes, link: shortLink, updated_at: result.updated_at ?? link.updated_at };
+
+    const oldKey = LinkShortener.normalizeURL(link.target);
+    if (this.#links.get(oldKey)?.id == link.id) this.#links.delete(oldKey);
+    this.#links.set(LinkShortener.normalizeURL(updated.target), updated);
+    this.#saveCache();
+    return updated;
   }
 
   // Replaces the cache with every link and custom domain on Kutt, and records
