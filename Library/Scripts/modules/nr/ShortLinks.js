@@ -1,8 +1,9 @@
 if (typeof LinkShortener == "undefined") require("shared/libraries/kutt.js");
 
-// The Shorten Link and Sync Kutt Links actions. Links are looked up in the
-// local cache (links.json) first and only sent to Kutt when missing. Shorten
-// Link also runs a full sync once the last one is `syncAfterDays` old.
+// The Shorten Link, Find Short Link and Sync Kutt Links actions. Links are
+// looked up in the local cache (links.json) first and only sent to Kutt when
+// missing. Shorten Link and Find Short Link also run a full sync once the
+// last one is `syncAfterDays` old.
 // Prompt wording and settings live under `kutt` in nr-settings.yaml.
 class ShortLinks {
   #settings;
@@ -35,10 +36,24 @@ class ShortLinks {
     const result = this.shortener.shorten(target, domain);
     if (!result.link) return this.#fail(result.error ?? "Kutt did not return a short link.");
 
-    this.#ui.insertAtCursor(result.link);
-    app.setClipboard(result.link);
-    this.#ui.displayAppMessage("success", this.#message("shortened", { link: result.link }));
-    return result.link;
+    return this.#deliver(result.link);
+  }
+
+  // Shows the saved links in an HTML preview that filters as you type, then
+  // inserts the chosen short link at the cursor and copies it. Returns the
+  // short link, or false when nothing was chosen.
+  findPrompted() {
+    this.#syncIfStale();
+    const links = this.shortener.links;
+    if (links.length == 0) return this.#fail(this.#message("noLinks", {}));
+
+    const preview = HTMLPreview.create();
+    const chosen = preview.show(this.#findLinkHTML(links)) ? context.previewValues?.["link"] : undefined;
+    if (!chosen) {
+      context.cancel();
+      return false;
+    }
+    return this.#deliver(chosen);
   }
 
   // Replaces the local cache with every link on Kutt.
@@ -48,6 +63,23 @@ class ShortLinks {
 
     this.#ui.displayAppMessage("success", this.#message("synced", { count: result.count }));
     return result.count;
+  }
+
+  // Inserts a short link at the cursor, copies it, and says so.
+  #deliver(link) {
+    this.#ui.insertAtCursor(link);
+    app.setClipboard(link);
+    this.#ui.displayAppMessage("success", this.#message("shortened", { link }));
+    return link;
+  }
+
+  // The Find Short Link page with the links filled in, newest first. "<" is
+  // escaped so a link cannot close the page's <script> tag.
+  #findLinkHTML(links) {
+    const newestFirst = [...links].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+    const data = newestFirst.map(({ link, target, description }) => ({ link, target, description }));
+    const json = JSON.stringify(data).replaceAll("<", "\\u003c");
+    return fetchTemplate(this.#settings.findLink.template).replace("[[links]]", () => json);
   }
 
   // Runs a full sync when the last one is older than syncAfterDays. A failed

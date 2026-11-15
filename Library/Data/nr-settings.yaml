@@ -264,9 +264,14 @@ kutt:
           name: Shorten
           value: shorten
           isDefault: true
+  # Find Short Link: the saved links in a page that filters as you type.
+  # The template is under Library/Templates/.
+  findLink:
+    template: nr/kutt-find-link.html
   # [[url]], [[link]] and [[count]] are filled in when shown.
   messages:
     invalidURL: '"[[url]]" is not a link.'
     alreadyShort: "[[url]] is already a short link."
     shortened: "Copied [[link]]"
     synced: "Synced [[count]] links from Kutt."
+    noLinks: "No saved links yet. Run Sync Kutt Links first."

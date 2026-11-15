@@ -1,0 +1,181 @@
+<!doctype html>
+<!--
+  Find Short Link (modules/nr/ShortLinks.js). Filters the saved Kutt links as
+  you type and sends the chosen short link back with Drafts.send("link", ...).
+  The script tag with id "links" is filled with the links as JSON:
+  [{ link, target, description }]. Keep its placeholder the only one in this
+  file, since only the first is replaced.
+  Keys: type to filter, Up/Down to move, Enter to choose, Escape to cancel.
+  The highlighted row is sent on every change, so Continue picks it too.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --text: #1d1d1f;
+        --muted: #6e6e73;
+        --line: #e5e5ea;
+        --pick: #e8f0fe;
+        --accent: #0a64d8;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1c1e;
+          --text: #f2f2f7;
+          --muted: #98989d;
+          --line: #38383a;
+          --pick: #1f3352;
+          --accent: #6aa8ff;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px -apple-system, system-ui, sans-serif;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        padding: 12px 16px;
+        background: var(--bg);
+        border-bottom: 1px solid var(--line);
+      }
+      input {
+        width: 100%;
+        padding: 8px 10px;
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        outline: none;
+      }
+      input:focus { border-color: var(--accent); }
+      #count { margin-top: 6px; font-size: 12px; color: var(--muted); }
+      ul { list-style: none; margin: 0; padding: 0; }
+      li {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--line);
+        cursor: pointer;
+      }
+      li.picked { background: var(--pick); }
+      .title { font-weight: 600; }
+      .target, .short { font-size: 13px; overflow-wrap: anywhere; }
+      .target { color: var(--muted); }
+      .short { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <input id="search" type="search" placeholder="Search links" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" autofocus />
+      <div id="count"></div>
+    </header>
+    <ul id="results"></ul>
+
+    <script id="links" type="application/json">[[links]]</script>
+    <script>
+      const maxShown = 100;
+      const links = readLinks();
+      const search = document.getElementById("search");
+      const results = document.getElementById("results");
+      const count = document.getElementById("count");
+      let shown = [];
+      let picked = 0;
+      let loadError = "";
+
+      // The links filled in by the action. When they cannot be read, none,
+      // with the reason shown in place of the count.
+      function readLinks() {
+        try {
+          return JSON.parse(document.getElementById("links").textContent);
+        } catch (error) {
+          loadError = `Could not read the saved links: ${error.message}`;
+          return [];
+        }
+      }
+
+      // Text each link is searched in, lowercased once.
+      links.forEach((link) => {
+        link.haystack = [link.description, link.target, link.link].join(" ").toLowerCase();
+      });
+
+      // Links containing every word typed, in the order given (newest first).
+      function matches(query) {
+        const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+        return links.filter((link) => words.every((word) => link.haystack.includes(word)));
+      }
+
+      // One result row. textContent keeps link text from being read as HTML.
+      function row(link, index) {
+        const item = document.createElement("li");
+        if (index == picked) item.className = "picked";
+        for (const [className, text] of [["title", link.description], ["target", link.target], ["short", link.link]]) {
+          if (!text) continue;
+          const line = document.createElement("div");
+          line.className = className;
+          line.textContent = text;
+          item.appendChild(line);
+        }
+        item.addEventListener("click", () => choose(index));
+        return item;
+      }
+
+      function render() {
+        const found = matches(search.value);
+        shown = found.slice(0, maxShown);
+        picked = Math.min(picked, Math.max(shown.length - 1, 0));
+        results.replaceChildren(...shown.map(row));
+        count.textContent = loadError || countText(found.length);
+        results.querySelector(".picked")?.scrollIntoView({ block: "nearest" });
+        sendPicked();
+      }
+
+      // "1 link", "12 links", or "100 of 240 links" when the list is cut short.
+      function countText(total) {
+        const noun = total == 1 ? "link" : "links";
+        return total > maxShown ? `${maxShown} of ${total} ${noun}` : `${total} ${noun}`;
+      }
+
+      // Keeps the action's value in step with the highlighted row, so the
+      // Continue button picks it too. Empty when nothing matches.
+      function sendPicked() {
+        Drafts.send("link", shown[picked]?.link ?? "");
+      }
+
+      // Sends the chosen short link to the action and closes the preview.
+      function choose(index) {
+        const link = shown[index];
+        if (!link) return;
+        Drafts.send("link", link.link);
+        Drafts.continue();
+      }
+
+      function move(step) {
+        if (shown.length == 0) return;
+        picked = (picked + step + shown.length) % shown.length;
+        render();
+      }
+
+      search.addEventListener("input", () => {
+        picked = 0;
+        render();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key == "ArrowDown") move(1);
+        else if (event.key == "ArrowUp") move(-1);
+        else if (event.key == "Enter") choose(picked);
+        else if (event.key == "Escape") Drafts.cancel();
+        else return;
+        event.preventDefault();
+      });
+
+      render();
+      search.focus();
+    </script>
+  </body>
+</html>

@@ -384,6 +384,79 @@ ui = makeUI({ shown: true, url: "https://example.com/1" });
 test.assertEqual(new ShortLinks(settings, ui, new LinkShortener(kutt, files)).shortenPrompted(), "https://lnk.test/s1", "still uses the cache when the sync fails");
 test.assertDeepEqual(calls.fail, [], "without failing the action");
 
+// --- Find Short Link ---
+test.section("Find Short Link");
+
+// The preview shows the page and answers with { continued, link }; the page's
+// Drafts.send("link", ...) arrives in context.previewValues.
+let preview = { pages: [], continued: true, link: undefined };
+/** @type {any} */ (globalThis).HTMLPreview = {
+  create: () => ({
+    show: (html) => {
+      preview.pages.push(html);
+      /** @type {any} */ (globalThis).context.previewValues = preview.link ? { link: preview.link } : {};
+      return preview.continued;
+    },
+  }),
+};
+// The real template, read from Library/Templates/ by the test runner's FileManager.
+let templates = [];
+/** @type {any} */ (globalThis).fetchTemplate = (name) => {
+  templates.push(name);
+  return FileManager.createCloud().readString(`/Library/Templates/${name}`);
+};
+const linksTag = '<script id="links" type="application/json">';
+const pageData = (page) => page.slice(page.indexOf(linksTag) + linksTag.length, page.indexOf("</script>", page.indexOf(linksTag)));
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s2" };
+ui = makeUI();
+const sneaky = { ...link(3), description: "</script><b>$&</b>" };
+links = new ShortLinks(settings, ui, new LinkShortener(makeKutt(), makeFiles(savedFile([link(1), link(2), sneaky]))));
+test.assertEqual(links.findPrompted(), "https://lnk.test/s2", "returns the short link chosen in the page");
+test.assertDeepEqual(templates, ["nr/kutt-find-link.html"], "uses the template from settings");
+const page = preview.pages[0];
+test.assertFalsy(page.includes("[[links]]"), "fills in the template's placeholder");
+const sent = JSON.parse(pageData(page));
+test.assertDeepEqual(sent.map((item) => item.link), ["https://lnk.test/s3", "https://lnk.test/s2", "https://lnk.test/s1"], "lists the links newest first");
+test.assertDeepEqual(Object.keys(sent[0]), ["link", "target", "description"], "with only what the page shows");
+test.assertEqual(sent[0].description, "</script><b>$&</b>", "keeps link text as written");
+test.assertFalsy(pageData(page).includes("<"), "without a raw < that could close the script tag");
+test.assertDeepEqual(ui.inserted, ["https://lnk.test/s2"], "inserts the chosen link at the cursor");
+test.assertDeepEqual(calls.set, ["https://lnk.test/s2"], "copies it");
+test.assertDeepEqual(ui.messages, [{ type: "success", message: "Copied https://lnk.test/s2" }], "says it was copied");
+
+reset();
+preview = { pages: [], continued: false, link: undefined };
+ui = makeUI();
+links = new ShortLinks(settings, ui, new LinkShortener(makeKutt(), makeFiles(savedFile([link(1)]))));
+test.assertEqual(links.findPrompted(), false, "returns false when the page is cancelled");
+test.assertEqual(calls.cancel, 1, "cancels the action");
+test.assertDeepEqual(ui.inserted, [], "inserts nothing");
+
+reset();
+preview = { pages: [], continued: true, link: undefined };
+ui = makeUI();
+links = new ShortLinks(settings, ui, new LinkShortener(makeKutt(), makeFiles(savedFile([link(1)]))));
+test.assertEqual(links.findPrompted(), false, "returns false when Continue is pressed with nothing chosen");
+test.assertEqual(calls.cancel, 1, "and cancels the action");
+
+reset();
+preview = { pages: [], continued: true, link: undefined };
+kutt = makeKutt();
+links = new ShortLinks(settings, makeUI(), new LinkShortener(kutt, makeFiles(savedFile([]))));
+links.findPrompted();
+test.assertDeepEqual(calls.fail, ["No saved links yet. Run Sync Kutt Links first."], "fails when there are no saved links");
+test.assertEqual(preview.pages.length, 0, "without showing the page");
+
+reset();
+preview = { pages: [], continued: true, link: "https://lnk.test/s1" };
+kutt = makeKutt([link(1)]);
+files = makeFiles(savedFile([], [], "2026-01-01T00:00:00Z"));
+links = new ShortLinks(settings, makeUI(), new LinkShortener(kutt, files));
+test.assertEqual(links.findPrompted(), "https://lnk.test/s1", "syncs first when the last sync is old");
+test.assertEqual(kutt.userCalls, 1, "with one full sync");
+
 // --- Sync Kutt Links ---
 test.section("Sync Kutt Links");
 
