@@ -301,17 +301,25 @@ class PracticePlan {
     return `${event.title || ""}`.trim().toLowerCase() == "practice";
   }
 
-  // The calendar title with its notes after it: "Game: Home vs Newton
-  // (Main Gym, 4:00)", "No Practice (Thanksgiving)". Note lines join with
-  // commas so each event stays on one line.
+  // The calendar title with its notes after it: "**Game: Home vs Newton**
+  // (Main Gym, 4:00)", "**No Practice** (Thanksgiving)". Games and No
+  // Practice are bold so they stand out. Note lines join with commas so each
+  // event stays on one line.
   static describeEvent(event) {
-    const title = `${event.title || ""}`.trim();
+    const calendarTitle = `${event.title || ""}`.trim();
+    const title = PracticePlan.isHighlighted(calendarTitle) ? `**${calendarTitle}**` : calendarTitle;
     const notes = `${event.notes || ""}`
       .split("\n")
       .map((line) => line.trim())
       .filter((line) => line != "")
       .join(", ");
     return notes == "" ? title : `${title} (${notes})`;
+  }
+
+  // Games and No Practice, read the way the weekly email reads them.
+  static isHighlighted(title) {
+    if (typeof Game == "undefined") require("modules/bvr/core/Game.js");
+    return title.toLowerCase() == "no practice" || Game.parseCalendarTitle(title) != undefined;
   }
 
   // Plan IDs ("W3", or "2026W3" in practicePlans.json), latest week first.

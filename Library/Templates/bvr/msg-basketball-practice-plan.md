@@ -33,6 +33,6 @@ Announcements:
 
 [[thursday_schedule]]
 
-## Friday
+## Funday Friday
 
 [[friday_schedule]]

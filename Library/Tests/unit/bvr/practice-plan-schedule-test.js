@@ -40,13 +40,13 @@ test.section("describeEvent");
 
 test.assertEqual(
   PracticePlan.describeEvent(event("Game: Home vs Newton", [2026, 11, 16], { notes: "Main Gym, 4:00" })),
-  "Game: Home vs Newton (Main Gym, 4:00)",
-  "a game shows its title and notes",
+  "**Game: Home vs Newton** (Main Gym, 4:00)",
+  "a game shows its title in bold and its notes",
 );
-test.assertEqual(PracticePlan.describeEvent(event("No Practice", [2026, 11, 20])), "No Practice", "no notes, no parentheses");
+test.assertEqual(PracticePlan.describeEvent(event("No Practice", [2026, 11, 20])), "**No Practice**", "no notes, no parentheses");
 test.assertEqual(
   PracticePlan.describeEvent(event(" No Practice ", [2026, 11, 20], { notes: "Thanksgiving\n\n break \n" })),
-  "No Practice (Thanksgiving, break)",
+  "**No Practice** (Thanksgiving, break)",
   "note lines join with commas and are trimmed",
 );
 
@@ -70,11 +70,11 @@ test.assertDeepEqual(
   ["monday_schedule", "tuesday_schedule", "wednesday_schedule", "thursday_schedule", "friday_schedule", "saturday_schedule", "sunday_schedule"],
   "one tag per day of the week",
 );
-test.assertEqual(tags.monday_schedule, "- Game: Away vs Derby (Derby MS)", "practice is left out of a game day");
+test.assertEqual(tags.monday_schedule, "- **Game: Away vs Derby** (Derby MS)", "practice is left out of a game day");
 test.assertEqual(tags.tuesday_schedule, "-", "a practice day keeps the empty bullet");
-test.assertEqual(tags.wednesday_schedule, "- No Practice (Early release)\n- Team Photos", "several events, earliest first");
+test.assertEqual(tags.wednesday_schedule, "- **No Practice** (Early release)\n- Team Photos", "several events, earliest first; others are not bold");
 test.assertEqual(tags.thursday_schedule, "-", "a day with nothing on the calendar keeps the empty bullet");
-test.assertEqual(tags.friday_schedule, "- No Practice (Thanksgiving)", "No Practice with its reason");
+test.assertEqual(tags.friday_schedule, "- **No Practice** (Thanksgiving)", "No Practice with its reason");
 test.assertEqual(tags.sunday_schedule, "-", "events from the next week are left out");
 test.assertEqual(PracticePlan.scheduleTags([], monday).monday_schedule, "-", "no calendar events, every day is a practice day");
 
