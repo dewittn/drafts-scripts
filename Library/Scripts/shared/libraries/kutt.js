@@ -240,9 +240,9 @@ class Kutt {
 // * LinkShortener Class
 // ***************
 // Short links kept in links.json so a lookup needs no request. Links are
-// matched by target URL and short link domain, so one page can have a short
-// link on each domain. The file also keeps the custom domains from the last
-// sync, for the domain menu.
+// matched by target URL only: a page already shortened on any domain gets
+// that link back, and the domain only matters when a new link is made. The
+// file also keeps the custom domains from the last sync, for the domain menu.
 class LinkShortener {
   #kutt;
   #fmCloud;
@@ -274,10 +274,6 @@ class LinkShortener {
     return trimmed.replace(/^(https?:\/\/[^/?#]+)/i, (origin) => origin.toLowerCase());
   }
 
-  // Map key for a target on a domain.
-  static #key(target, domain) {
-    return `${domain} ${LinkShortener.normalizeURL(target)}`;
-  }
 
   // Kutt's default domain first, then the custom domains from the last sync.
   get domains() {
@@ -289,9 +285,9 @@ class LinkShortener {
     return Array.from(this.#links.values());
   }
 
-  // The cached link for a target on a domain (the default when omitted).
-  lookup(target, domain = this.#kutt.host) {
-    return this.#links.get(LinkShortener.#key(target, domain));
+  // The cached link for a target, on whichever domain it was made.
+  lookup(target) {
+    return this.#links.get(LinkShortener.normalizeURL(target));
   }
 
   // Reads links.json. Older files are a plain { target: link } object.
@@ -322,25 +318,25 @@ class LinkShortener {
     }
   }
 
-  // Adds a Kutt link to the map. When two links share a target and domain,
-  // the older one is kept, so repeat syncs always give the same short link.
+  // Adds a Kutt link to the map. When two links share a target, the older
+  // one is kept, so repeat syncs always give the same short link.
   #remember(link) {
     if (!link?.target || !link?.link) return;
 
-    const key = LinkShortener.#key(link.target, LinkShortener.hostOf(link.link));
+    const key = LinkShortener.normalizeURL(link.target);
     const existing = this.#links.get(key);
     if (existing && String(existing.created_at) <= String(link.created_at)) return;
     this.#links.set(key, link);
   }
 
-  // The short link for target on domain (Kutt's default when omitted): from
-  // the cache when there, otherwise created on Kutt and cached.
+  // The short link for target: from the cache when there, otherwise made on
+  // domain (Kutt's default when omitted) and cached.
   shorten(target, domain = this.#kutt.host) {
     target = target.trim();
 
-    const cached = this.lookup(target, domain);
+    const cached = this.lookup(target);
     if (cached) {
-      console.log(`Cache hit for: ${target} on ${domain}`);
+      console.log(`Cache hit for: ${target}`);
       return cached;
     }
 
@@ -385,7 +381,7 @@ class LinkShortener {
     const result = this.#kutt.deleteLink(link.id);
     if (!result?.success) return result;
 
-    const key = LinkShortener.#key(link.target, LinkShortener.hostOf(link.link));
+    const key = LinkShortener.normalizeURL(link.target);
     if (this.#links.get(key)?.id == link.id) this.#links.delete(key);
     this.#saveCache();
     return result;

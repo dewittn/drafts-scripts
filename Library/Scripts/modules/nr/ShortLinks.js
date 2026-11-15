@@ -65,14 +65,14 @@ class ShortLinks {
     }
 
     const target = String(menu.fieldValues[field.data.name] ?? "").trim();
-    const picked = domainMenu ? menu.fieldValues[domainMenu.data.name]?.[0] : undefined;
-    return { target, domain: picked ?? domains[0] };
+    const pickedRow = domainMenu ? menu.fieldValues[domainMenu.data.name]?.[0] : undefined;
+    return { target, domain: domains[pickedRow ?? 0] };
   }
 
-  // Lists the domains in the select item, with Kutt's default chosen. Drops
-  // the item when there is only one domain. Returns the item, if kept.
+  // Lists the domains in the picker, with Kutt's default chosen. Drops the
+  // picker when there is only one domain. Returns the picker, if kept.
   #fillDomainMenu(menuSettings, domains) {
-    const index = menuSettings.menuItems.findIndex((item) => item.type == "select");
+    const index = menuSettings.menuItems.findIndex((item) => item.data.name == "domain");
     if (index == -1) return undefined;
 
     if (domains.length < 2) {
@@ -81,8 +81,8 @@ class ShortLinks {
     }
 
     const item = menuSettings.menuItems[index];
-    item.data.values = domains;
-    item.data.selectedValues = [domains[0]];
+    item.data.columns = [domains];
+    item.data.selectedRows = [0];
     return item;
   }
 

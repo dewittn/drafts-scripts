@@ -63,14 +63,14 @@ let calls = { fail: [], cancel: 0, clipboard: "", set: [] };
 
 const settings = loadRepoYAML("nr-settings.yaml").kutt;
 
-// UI answering the prompt with { shown, url, domain }.
-/** @param {{ shown: boolean, url?: string, domain?: string }} [reply] */
+// UI answering the prompt with { shown, url, domainRow }.
+/** @param {{ shown: boolean, url?: string, domainRow?: number }} [reply] */
 function makeUI(reply = { shown: true, url: "" }) {
   const ui = { menus: [], inserted: [], messages: [] };
   ui.settingsCopy = (name) => JSON.parse(JSON.stringify(settings[name]));
   ui.buildMenu = (menu) => {
     ui.menus.push(menu);
-    const fieldValues = { url: reply.url, domain: reply.domain ? [reply.domain] : undefined };
+    const fieldValues = { url: reply.url, domain: reply.domainRow == undefined ? undefined : [reply.domainRow] };
     return { show: () => reply.shown, fieldValues };
   };
   ui.insertAtCursor = (text) => ui.inserted.push(text);
@@ -145,13 +145,13 @@ kutt = makeKutt();
 files = makeFiles(savedFile([link(1), link(2, "go.test")], ["go.test"]));
 shortener = new LinkShortener(kutt, files);
 test.assertDeepEqual(shortener.domains, ["lnk.test", "go.test"], "lists the default domain first, then custom ones");
-test.assertEqual(shortener.shorten("https://example.com/2", "go.test").link, "https://go.test/s2", "finds a link on a custom domain");
-test.assertEqual(shortener.lookup("https://example.com/2"), undefined, "a custom-domain link is not the default domain's");
+test.assertEqual(shortener.shorten("https://example.com/2").link, "https://go.test/s2", "finds a custom-domain link with the default domain chosen");
+test.assertEqual(shortener.shorten("https://example.com/1", "go.test").link, "https://lnk.test/s1", "finds a default-domain link with a custom domain chosen");
+test.assertEqual(kutt.created.length, 0, "without asking Kutt");
 
-result = shortener.shorten("https://example.com/1", "go.test");
-test.assertEqual(result.link, "https://go.test/1", "makes a new link when the target has none on that domain");
-test.assertDeepEqual(kutt.created, [{ target: "https://example.com/1", domain: "go.test" }], "asks Kutt for that domain");
-test.assertEqual(shortener.lookup("https://example.com/1").link, "https://lnk.test/s1", "keeps the default domain's link");
+result = shortener.shorten("https://example.com/new", "go.test");
+test.assertEqual(result.link, "https://go.test/1", "makes a new link on the chosen domain");
+test.assertDeepEqual(kutt.created, [{ target: "https://example.com/new", domain: "go.test" }], "asks Kutt for that domain");
 
 // --- sync ---
 test.section("sync");
@@ -201,12 +201,20 @@ test.assertDeepEqual(calls.set, ["https://lnk.test/s1"], "copies the short link"
 test.assertDeepEqual(ui.messages, [{ type: "success", message: "Copied https://lnk.test/s1" }], "says it was copied");
 
 reset();
-ui = makeUI({ shown: true, url: "https://example.com/2", domain: "go.test" });
+kutt = makeKutt();
+ui = makeUI({ shown: true, url: "https://example.com/new", domainRow: 1 });
+links = new ShortLinks(settings, ui, new LinkShortener(kutt, makeFiles(savedFile([], ["go.test"]))));
+test.assertEqual(links.shortenPrompted(), "https://go.test/1", "makes a new link on the domain picked");
+test.assertDeepEqual(kutt.created, [{ target: "https://example.com/new", domain: "go.test" }], "asks Kutt for the picked domain");
+const domainMenu = ui.menus[0].menuItems.find((item) => item.data.name == "domain");
+test.assertEqual(domainMenu.type, "picker", "shows the domains in a picker");
+test.assertDeepEqual(domainMenu.data.columns, [["lnk.test", "go.test"]], "offers every domain");
+test.assertDeepEqual(domainMenu.data.selectedRows, [0], "with the default domain chosen");
+
+reset();
+ui = makeUI({ shown: true, url: "https://example.com/2" });
 links = new ShortLinks(settings, ui, new LinkShortener(makeKutt(), makeFiles(savedFile([link(2, "go.test")], ["go.test"]))));
-test.assertEqual(links.shortenPrompted(), "https://go.test/s2", "uses the domain picked in the menu");
-const domainMenu = ui.menus[0].menuItems.find((item) => item.type == "select");
-test.assertDeepEqual(domainMenu.data.values, ["lnk.test", "go.test"], "offers every domain");
-test.assertDeepEqual(domainMenu.data.selectedValues, ["lnk.test"], "with the default domain chosen");
+test.assertEqual(links.shortenPrompted(), "https://go.test/s2", "returns an existing link whatever domain is picked");
 
 reset("not a link");
 ui = makeUI({ shown: true, url: "https://example.com/1" });

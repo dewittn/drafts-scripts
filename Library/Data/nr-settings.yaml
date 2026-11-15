@@ -249,9 +249,11 @@ kutt:
             autocapitalization: none
             autocorrect: false
             wantsFocus: true
-      # Filled with Kutt's default domain and the custom domains from the last
-      # Sync Kutt Links. Left out when there is only one.
-      - type: select
+      # The domain a new short link is made on; a page already shortened gets
+      # its existing link. A picker (pop-up menu on Mac), filled with Kutt's
+      # default domain and the custom domains from the last Sync Kutt Links.
+      # Left out when there is only one.
+      - type: picker
         data:
           name: domain
           label: Domain
