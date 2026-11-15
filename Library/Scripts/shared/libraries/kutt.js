@@ -1,11 +1,14 @@
-// Kutt.it URL Shortener by Nelson/Roberto (@dewittn)
-// A Kutt.it API wrapper for Drafts
+// Kutt URL Shortener by Nelson/Roberto (@dewittn)
+// A Kutt API wrapper for Drafts, and a local cache of its short links.
 
 // ***************
 // * Kutt Class
 // ***************
+// The Kutt address and API key are asked for once and kept in Drafts'
+// Credentials. The address should be Kutt's default domain (its
+// DEFAULT_DOMAIN), since its host is treated as the default short link domain.
 class Kutt {
-  // Links asked for per list request. getAllLinks keeps asking until it has them all.
+  // Kutt returns at most 50 links per list request.
   static pageSize = 50;
 
   #apiKey;
@@ -17,222 +20,101 @@ class Kutt {
     this.#endPointURL = `${this.#domain}/api/v2`;
   }
 
-  get endPointURL() {
-    return this.#endPointURL;
-  }
-
-  get apiKey() {
-    return this.#apiKey;
-  }
-
-  get domain() {
-    return this.#domain;
+  // The host of a URL, lowercased: "https://Lnk.example/abc" → "lnk.example".
+  static hostOf(url) {
+    return String(url ?? "").trim().replace(/^https?:\/\//i, "").split("/")[0].toLowerCase();
   }
 
   // The default short link domain without its scheme, e.g. "lnk.example".
   get host() {
-    return LinkShortener.hostOf(this.#domain);
+    return Kutt.hostOf(this.#domain);
   }
 
-  // Setup & Store Credentials
+  // Reads the Kutt address and API key, asking for them the first time.
   #authorize() {
-    let credential = Credential.create("Kutt", "Kutt.it API");
-    credential.addTextField("domain", "Domain (e.g., https://kutt.it)");
+    const credential = Credential.create("Kutt", "Kutt.it API");
+    credential.addTextField("domain", "Kutt address (e.g., https://lnk.example.com)");
     credential.addPasswordField("api_key", "API Key");
     credential.authorize();
-    // Trailing slashes dropped so "https://lnk.example/" still builds ".../api/v2".
-    const domain = credential.getValue("domain") || "https://kutt.it";
-    this.#domain = domain.trim().replace(/\/+$/, "");
+    this.#domain = Kutt.#baseURL(credential.getValue("domain"));
     this.#apiKey = credential.getValue("api_key");
   }
 
-  // Create a short link. reuse: true makes Kutt hand back an existing short
-  // link for the same target instead of making a duplicate.
-  createLink(target, options = {}) {
-    const url = `${this.#endPointURL}/links`;
-    // any: HTTP sends data as JSON, but its type only allows string values.
-    /** @type {any} */
-    const body = {
-      target: target,
-      reuse: true,
-      ...options
-    };
-
-    let http = HTTP.create();
-    let response = http.request({
-      url: url,
-      method: "POST",
-      headers: {
-        "X-API-Key": this.#apiKey,
-        "Content-Type": "application/json"
-      },
-      data: body
-    });
-
-    if (!response.success) {
-      return this.#requestError(response, "Create Link Failed");
-    }
-
-    return JSON.parse(response.responseText);
+  // The Kutt address as "https://host", whatever form it was typed in. Throws
+  // when it is blank, so the API key is never sent to a guessed server.
+  static #baseURL(domain) {
+    const trimmed = String(domain ?? "").trim().replace(/\/+$/, "");
+    if (trimmed == "") throw new Error("No Kutt address saved. Reset the Kutt credential in Drafts settings.");
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
   }
 
-  // Get all links
-  getLinks(params = {}) {
-    // Set defaults for pagination
-    const queryParams = {
-      limit: params.limit || 50,
-      skip: params.skip || 0,
-      all: params.all || false
-    };
+  // Creates a short link. reuse: true makes Kutt hand back an existing short
+  // link for the same target instead of making a duplicate.
+  createLink(target, options = {}) {
+    return this.#request("POST", "/links", "Create Link Failed", { target, reuse: true, ...options });
+  }
 
-    let queryString = "?" + Object.entries(queryParams)
-      .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
-      .join("&");
-
-    const url = `${this.#endPointURL}/links${queryString}`;
-
-    let http = HTTP.create();
-    let response = http.request({
-      url: url,
-      method: "GET",
-      headers: {
-        "X-API-Key": this.#apiKey
-      }
-    });
-
-    if (!response.success) {
-      return this.#requestError(response, "Get Links Failed");
-    }
-
-    return JSON.parse(response.responseText);
+  // One page of links, newest first: { total, limit, skip, data }.
+  getLinks({ limit = Kutt.pageSize, skip = 0 } = {}) {
+    return this.#request("GET", `/links?limit=${limit}&skip=${skip}`, "Get Links Failed");
   }
 
   // Every link on the account, one page at a time until Kutt's total is
   // reached. Returns { data } like getLinks, or the error from a failed page.
   getAllLinks() {
-    const pageSize = Kutt.pageSize;
     const links = [];
 
     while (true) {
-      const page = this.getLinks({ limit: pageSize, skip: links.length });
-      if (!page || page.success === false) return page;
+      const page = this.getLinks({ skip: links.length });
+      if (page.success === false) return page;
 
       const data = Array.isArray(page.data) ? page.data : [];
       links.push(...data);
-      if (data.length < pageSize || links.length >= page.total) break;
+      if (data.length == 0 || links.length >= page.total) break;
     }
 
     return { data: links, total: links.length };
   }
 
-  // Get link by ID
-  getLink(id) {
-    const url = `${this.#endPointURL}/links/${id}`;
-
-    let http = HTTP.create();
-    let response = http.request({
-      url: url,
-      method: "GET",
-      headers: {
-        "X-API-Key": this.#apiKey
-      }
-    });
-
-    if (!response.success) {
-      return this.#requestError(response, "Get Link Failed");
-    }
-
-    return JSON.parse(response.responseText);
-  }
-
-  // Update link by ID
-  updateLink(id, target, address) {
-    const url = `${this.#endPointURL}/links/${id}`;
-
-    let http = HTTP.create();
-    let response = http.request({
-      url: url,
-      method: "PATCH",
-      headers: {
-        "X-API-Key": this.#apiKey,
-        "Content-Type": "application/json"
-      },
-      data: { target, address }
-    });
-
-    if (!response.success) {
-      return this.#requestError(response, "Update Link Failed");
-    }
-
-    return JSON.parse(response.responseText);
-  }
-
-  // Delete link by ID
-  deleteLink(id) {
-    const url = `${this.#endPointURL}/links/${id}`;
-
-    let http = HTTP.create();
-    let response = http.request({
-      url: url,
-      method: "DELETE",
-      headers: {
-        "X-API-Key": this.#apiKey
-      }
-    });
-
-    if (!response.success) {
-      return this.#requestError(response, "Delete Link Failed");
-    }
-
-    return { success: true };
-  }
-
-  // Get link statistics
-  getLinkStats(id) {
-    const url = `${this.#endPointURL}/links/${id}/stats`;
-
-    let http = HTTP.create();
-    let response = http.request({
-      url: url,
-      method: "GET",
-      headers: {
-        "X-API-Key": this.#apiKey
-      }
-    });
-
-    if (!response.success) {
-      return this.#requestError(response, "Get Stats Failed");
-    }
-
-    return JSON.parse(response.responseText);
-  }
-
-  // Get user info
+  // The account's email and custom domains: { email, domains }.
   getUserInfo() {
-    const url = `${this.#endPointURL}/users`;
-
-    let http = HTTP.create();
-    let response = http.request({
-      url: url,
-      method: "GET",
-      headers: {
-        "X-API-Key": this.#apiKey
-      }
-    });
-
-    if (!response.success) {
-      return this.#requestError(response, "Get User Info Failed");
-    }
-
-    return JSON.parse(response.responseText);
+    return this.#request("GET", "/users", "Get User Info Failed");
   }
 
-  // Logs the failure and returns it. Callers decide how to show it, so the
-  // user sees one message rather than a banner plus the action's own.
+  // Sends one API request and returns the parsed reply, or
+  // { success: false, error } when it fails.
+  #request(method, path, failMessage, data) {
+    /** @type {any} */
+    const request = { url: `${this.#endPointURL}${path}`, method, headers: { "X-API-Key": this.#apiKey } };
+    if (data) Object.assign(request, { encoding: "json", data });
+
+    const response = HTTP.create().request(request);
+    if (!response.success) return this.#requestError(response, failMessage);
+
+    try {
+      return JSON.parse(response.responseText);
+    } catch (error) {
+      return this.#requestError(response, `${failMessage}: reply is not JSON`);
+    }
+  }
+
+  // Logs the failure and returns it with Kutt's reason, such as "URL is not
+  // valid.". Callers decide how to show it.
   #requestError(response, message) {
-    const errorMessage = `Kutt Error: ${response.statusCode} - ${message}`;
+    const reason = Kutt.#errorReason(response);
+    const errorMessage = `Kutt Error: ${response.statusCode} - ${message}${reason ? `: ${reason}` : ""}`;
     console.log(`${errorMessage}\n${response.responseText}`);
     return { success: false, error: errorMessage, statusCode: response.statusCode };
+  }
+
+  // Kutt replies to a rejected request with { error: "..." }. A request that
+  // never reached Kutt has the reason in response.error instead.
+  static #errorReason(response) {
+    try {
+      return JSON.parse(response.responseText).error ?? response.error;
+    } catch (error) {
+      return response.error;
+    }
   }
 }
 
@@ -242,29 +124,26 @@ class Kutt {
 // Short links kept in links.json so a lookup needs no request. Links are
 // matched by target URL only: a page already shortened on any domain gets
 // that link back, and the domain only matters when a new link is made. The
-// file also keeps the custom domains from the last sync, for the domain menu.
+// file also keeps the custom domains for the domain menu and the last sync time.
 class LinkShortener {
+  static cacheFile = "/Library/Data/links.json";
+
   #kutt;
-  #fmCloud;
-  #cacheFile = "/Library/Data/links.json";
+  #files;
   #links = new Map();
   #customDomains = [];
+  #syncedAt;
 
   // kutt and fileManager can be swapped for stubs in tests.
   constructor(kutt = new Kutt(), fileManager = FileManager.createCloud()) {
     this.#kutt = kutt;
-    this.#fmCloud = fileManager;
-    this.loadCache();
+    this.#files = fileManager;
+    this.#loadCache();
   }
 
   // True when text is a single http(s) link and nothing else.
   static isURL(text) {
     return /^https?:\/\/\S+$/i.test(String(text ?? "").trim());
-  }
-
-  // The host of a URL, lowercased: "https://Lnk.example/abc" → "lnk.example".
-  static hostOf(url) {
-    return String(url ?? "").trim().replace(/^https?:\/\//i, "").split("/")[0].toLowerCase();
   }
 
   // A target URL in the form links are matched by: trimmed, scheme and host
@@ -273,7 +152,6 @@ class LinkShortener {
     const trimmed = String(url ?? "").trim().replace(/\/+$/, "");
     return trimmed.replace(/^(https?:\/\/[^/?#]+)/i, (origin) => origin.toLowerCase());
   }
-
 
   // Kutt's default domain first, then the custom domains from the last sync.
   get domains() {
@@ -285,37 +163,71 @@ class LinkShortener {
     return Array.from(this.#links.values());
   }
 
+  // True when url is a short link on one of the account's domains.
+  isShortLink(url) {
+    return this.domains.includes(Kutt.hostOf(url));
+  }
+
+  // True when the last sync is more than days old, or there has not been one.
+  needsSync(days, now = new Date()) {
+    if (this.#syncedAt == undefined) return true;
+    return now.getTime() - Date.parse(this.#syncedAt) > days * 24 * 60 * 60 * 1000;
+  }
+
   // The cached link for a target, on whichever domain it was made.
   lookup(target) {
     return this.#links.get(LinkShortener.normalizeURL(target));
   }
 
-  // Reads links.json. Older files are a plain { target: link } object.
-  loadCache() {
-    try {
-      if (!this.#fmCloud.exists(this.#cacheFile)) return;
+  // The short link for target: from the cache, then from Kutt's newest links,
+  // otherwise made on domain (Kutt's default when omitted) and cached.
+  shorten(target, domain = this.#kutt.host) {
+    target = target.trim();
 
-      const data = this.#fmCloud.readJSON(this.#cacheFile);
-      if (!data || typeof data !== "object") return;
+    const found = this.lookup(target) ?? this.#lookupNewest(target);
+    if (found) return found;
 
-      const links = Array.isArray(data.links) ? data.links : Object.values(data);
-      this.#customDomains = Array.isArray(data.domains) ? data.domains : [];
-      this.#links.clear();
-      links.forEach((link) => this.#remember(link));
-      console.log(`Loaded ${this.#links.size} links from cache`);
-    } catch (error) {
-      console.log(`Error loading cache: ${error}`);
+    console.log(`No short link for ${target}, creating one on ${domain}`);
+    const options = domain == this.#kutt.host ? {} : { domain };
+    const result = this.#kutt.createLink(target, options);
+
+    if (result.link) {
+      this.#remember(result);
+      this.#saveCache();
     }
+    return result;
   }
 
-  // Writes links.json.
-  #saveCache() {
-    try {
-      this.#fmCloud.writeJSON(this.#cacheFile, { domains: this.#customDomains, links: this.links });
-      console.log(`Saved ${this.#links.size} links to cache`);
-    } catch (error) {
-      console.log(`Error saving cache: ${error}`);
-    }
+  // Replaces the cache with every link and custom domain on Kutt, and records
+  // when. Returns { success, count } with the number of pages cached, which
+  // can be fewer than Kutt's links when a page has more than one.
+  sync(now = new Date()) {
+    const result = this.#kutt.getAllLinks();
+    if (result.success === false) return result;
+
+    const user = this.#kutt.getUserInfo();
+    if (user.success === false) return user;
+
+    this.#customDomains = (user.domains ?? []).filter((domain) => !domain.banned).map((domain) => domain.address.toLowerCase());
+    this.#links.clear();
+    (result.data ?? []).forEach((link) => this.#remember(link));
+    this.#syncedAt = now.toISOString();
+
+    if (!this.#saveCache()) return { success: false, error: `Could not save ${LinkShortener.cacheFile}.` };
+    return { success: true, count: this.#links.size };
+  }
+
+  // Adds Kutt's newest page of links to the cache and looks again, so a link
+  // made outside Drafts since the last sync (by the website) is found even
+  // when its URL differs by a trailing slash.
+  #lookupNewest(target) {
+    const page = this.#kutt.getLinks();
+    if (!Array.isArray(page.data)) return undefined;
+
+    page.data.forEach((link) => this.#remember(link));
+    const found = this.lookup(target);
+    if (found) this.#saveCache();
+    return found;
   }
 
   // Adds a Kutt link to the map. When two links share a target, the older
@@ -329,61 +241,22 @@ class LinkShortener {
     this.#links.set(key, link);
   }
 
-  // The short link for target: from the cache when there, otherwise made on
-  // domain (Kutt's default when omitted) and cached.
-  shorten(target, domain = this.#kutt.host) {
-    target = target.trim();
+  // Reads links.json: { syncedAt, domains, links }.
+  #loadCache() {
+    const file = LinkShortener.cacheFile;
+    const data = this.#files.exists(file) ? this.#files.readJSON(file) : undefined;
+    if (!Array.isArray(data?.links)) return;
 
-    const cached = this.lookup(target);
-    if (cached) {
-      console.log(`Cache hit for: ${target}`);
-      return cached;
-    }
-
-    console.log(`Cache miss for: ${target} on ${domain}, calling API`);
-    const options = domain == this.#kutt.host ? {} : { domain };
-    const result = this.#kutt.createLink(target, options);
-
-    if (result?.link) {
-      this.#remember(result);
-      this.#saveCache();
-    }
-    return result;
+    this.#syncedAt = data.syncedAt;
+    this.#customDomains = Array.isArray(data.domains) ? data.domains : [];
+    data.links.forEach((link) => this.#remember(link));
   }
 
-  // Replaces the cache with every link and custom domain on Kutt.
-  sync() {
-    console.log("Syncing links from API...");
-
-    const result = this.#kutt.getAllLinks();
-    if (!Array.isArray(result?.data)) return { success: false, error: result?.error ?? "Failed to sync links" };
-
-    const user = this.#kutt.getUserInfo();
-    if (!Array.isArray(user?.domains)) return { success: false, error: user?.error ?? "Failed to get domains" };
-
-    this.#customDomains = user.domains.filter((domain) => !domain.banned).map((domain) => domain.address.toLowerCase());
-    this.#links.clear();
-    result.data.forEach((link) => this.#remember(link));
-    this.#saveCache();
-
-    console.log(`Synced ${result.data.length} links to cache`);
-    return { success: true, count: result.data.length };
-  }
-
-  // Empties the cache, keeping the domains.
-  clearCache() {
-    this.#links.clear();
-    this.#saveCache();
-  }
-
-  // Deletes a link on Kutt and drops it from the cache.
-  deleteLink(link) {
-    const result = this.#kutt.deleteLink(link.id);
-    if (!result?.success) return result;
-
-    const key = LinkShortener.normalizeURL(link.target);
-    if (this.#links.get(key)?.id == link.id) this.#links.delete(key);
-    this.#saveCache();
-    return result;
+  // Writes links.json. Returns false when the write fails.
+  #saveCache() {
+    const data = { syncedAt: this.#syncedAt, domains: this.#customDomains, links: this.links };
+    const saved = this.#files.writeJSON(LinkShortener.cacheFile, data);
+    if (!saved) console.log(`Could not save ${LinkShortener.cacheFile}`);
+    return saved;
   }
 }

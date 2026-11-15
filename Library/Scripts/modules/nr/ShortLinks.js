@@ -1,8 +1,9 @@
 if (typeof LinkShortener == "undefined") require("shared/libraries/kutt.js");
 
 // The Shorten Link and Sync Kutt Links actions. Links are looked up in the
-// local cache (links.json) first and only sent to Kutt when missing.
-// Prompt wording lives under `kutt` in nr-settings.yaml.
+// local cache (links.json) first and only sent to Kutt when missing. Shorten
+// Link also runs a full sync once the last one is `syncAfterDays` old.
+// Prompt wording and settings live under `kutt` in nr-settings.yaml.
 class ShortLinks {
   #settings;
   #ui;
@@ -28,9 +29,11 @@ class ShortLinks {
 
     const { target, domain } = answer;
     if (!LinkShortener.isURL(target)) return this.#fail(this.#message("invalidURL", { url: target }));
+    if (this.shortener.isShortLink(target)) return this.#fail(this.#message("alreadyShort", { url: target }));
 
+    this.#syncIfStale();
     const result = this.shortener.shorten(target, domain);
-    if (!result?.link) return this.#fail(result?.error ?? "Kutt did not return a short link.");
+    if (!result.link) return this.#fail(result.error ?? "Kutt did not return a short link.");
 
     this.#ui.insertAtCursor(result.link);
     app.setClipboard(result.link);
@@ -47,13 +50,24 @@ class ShortLinks {
     return result.count;
   }
 
+  // Runs a full sync when the last one is older than syncAfterDays. A failed
+  // sync is only logged: the cache still works, and shorten() reports Kutt
+  // errors itself.
+  #syncIfStale() {
+    if (!this.shortener.needsSync(this.#settings.syncAfterDays)) return;
+
+    const result = this.shortener.sync();
+    if (!result.success) console.log(`Automatic Kutt sync failed: ${result.error}`);
+  }
+
   // Shows the Shorten Link prompt, starting with the clipboard when it is a
-  // link. Returns { target, domain }, or undefined when cancelled.
+  // link to shorten (not one of our own short links, which the action just
+  // copied). Returns { target, domain }, or undefined when cancelled.
   #askForLink() {
-    const menuSettings = this.#ui.settingsCopy("shortenPrompt");
+    const menuSettings = JSON.parse(JSON.stringify(this.#settings.shortenPrompt));
     const field = menuSettings.menuItems.find((item) => item.type == "textField");
     const clipboard = app.getClipboard();
-    if (LinkShortener.isURL(clipboard)) field.data.initialText = clipboard.trim();
+    if (LinkShortener.isURL(clipboard) && !this.shortener.isShortLink(clipboard)) field.data.initialText = clipboard.trim();
 
     const domains = this.shortener.domains;
     const domainMenu = this.#fillDomainMenu(menuSettings, domains);
@@ -86,10 +100,11 @@ class ShortLinks {
     return item;
   }
 
-  // Fills [[name]] placeholders in a message from settings.messages.
+  // Fills [[name]] placeholders in a message from settings.messages. The
+  // function replacement keeps "$" in the values from being read as a pattern.
   #message(name, values) {
     return Object.entries(values).reduce(
-      (text, [key, value]) => text.replaceAll(`[[${key}]]`, value),
+      (text, [key, value]) => text.replaceAll(`[[${key}]]`, () => String(value)),
       this.#settings.messages[name],
     );
   }

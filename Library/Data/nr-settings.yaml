@@ -235,6 +235,8 @@ things:
 # Kutt link shortener (shared/libraries/kutt.js). The Kutt domain and API key
 # are asked for once and kept in Drafts' Credentials, not here.
 kutt:
+  # Shorten Link runs a full sync first when the last one is older than this.
+  syncAfterDays: 7
   # Shorten Link: the field starts with the clipboard when it holds a link.
   shortenPrompt:
     menuTitle: Shorten Link
@@ -265,5 +267,6 @@ kutt:
   # [[url]], [[link]] and [[count]] are filled in when shown.
   messages:
     invalidURL: '"[[url]]" is not a link.'
+    alreadyShort: "[[url]] is already a short link."
     shortened: "Copied [[link]]"
     synced: "Synced [[count]] links from Kutt."
