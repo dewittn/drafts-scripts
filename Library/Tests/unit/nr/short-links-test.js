@@ -96,13 +96,13 @@ function makeFiles(files = {}, { failWrite = false } = {}) {
 
 const settings = loadRepoYAML("nr-settings.yaml").kutt;
 
-// UI answering the prompt with { shown, url, domainRow }.
-/** @param {{ shown: boolean, url?: string, domainRow?: number }} [reply] */
+// UI answering the prompt with { shown, url, description, domainRow }.
+/** @param {{ shown: boolean, url?: string, description?: string, domainRow?: number }} [reply] */
 function makeUI(reply = { shown: true, url: "" }) {
   const ui = { menus: [], inserted: [], messages: [] };
   ui.buildMenu = (menu) => {
     ui.menus.push(menu);
-    const fieldValues = { url: reply.url, domain: reply.domainRow == undefined ? undefined : [reply.domainRow] };
+    const fieldValues = { url: reply.url, description: reply.description, domain: reply.domainRow == undefined ? undefined : [reply.domainRow] };
     return { show: () => reply.shown, fieldValues };
   };
   ui.insertAtCursor = (text) => ui.inserted.push(text);
@@ -242,10 +242,10 @@ files = makeFiles(savedFile([link(1), link(2, "go.test")], ["go.test"]));
 shortener = new LinkShortener(kutt, files);
 test.assertDeepEqual(shortener.domains, ["lnk.test", "go.test"], "lists the default domain first, then custom ones");
 test.assertEqual(shortener.shorten("https://example.com/2").link, "https://go.test/s2", "finds a custom-domain link with the default domain chosen");
-test.assertEqual(shortener.shorten("https://example.com/1", "go.test").link, "https://lnk.test/s1", "finds a default-domain link with a custom domain chosen");
+test.assertEqual(shortener.shorten("https://example.com/1", { domain: "go.test" }).link, "https://lnk.test/s1", "finds a default-domain link with a custom domain chosen");
 test.assertEqual(kutt.created.length, 0, "without asking Kutt");
 
-result = shortener.shorten("https://example.com/new", "go.test");
+result = shortener.shorten("https://example.com/new", { domain: "go.test" });
 test.assertEqual(result.link, "https://go.test/1", "makes a new link on the chosen domain");
 test.assertDeepEqual(kutt.created, [{ target: "https://example.com/new", domain: "go.test" }], "asks Kutt for that domain");
 
@@ -305,7 +305,7 @@ let ui = makeUI({ shown: true, url: "https://example.com/1" });
 let links = new ShortLinks(settings, ui, new LinkShortener(makeKutt(), makeFiles(savedFile([link(1)]))));
 test.assertEqual(links.shortenPrompted(), "https://lnk.test/s1", "returns the short link");
 test.assertEqual(ui.menus[0].menuItems[0].data.initialText, "https://example.com/1", "starts with the clipboard link");
-test.assertDeepEqual(menuTypes(ui.menus[0]), ["textField", "button"], "leaves out the domain menu with one domain");
+test.assertDeepEqual(menuTypes(ui.menus[0]), ["textField", "textField", "button"], "leaves out the domain menu with one domain");
 test.assertDeepEqual(ui.inserted, ["https://lnk.test/s1"], "inserts the short link at the cursor");
 test.assertDeepEqual(calls.set, ["https://lnk.test/s1"], "copies the short link");
 test.assertDeepEqual(ui.messages, [{ type: "success", message: "Copied https://lnk.test/s1" }], "says it was copied");
@@ -358,6 +358,18 @@ ui = makeUI({ shown: true, url: "https://example.com/x" });
 new ShortLinks(settings, ui, new LinkShortener(makeKutt([], { failCreate: true }), makeFiles(savedFile([])))).shortenPrompted();
 test.assertDeepEqual(calls.fail, ["Kutt Error: 400 - Create Link Failed: URL is not valid."], "fails with Kutt's error");
 test.assertDeepEqual(ui.inserted, [], "inserts nothing on failure");
+
+reset();
+kutt = makeKutt();
+ui = makeUI({ shown: true, url: "https://example.com/post", description: "  My Post Title " });
+new ShortLinks(settings, ui, new LinkShortener(kutt, makeFiles(savedFile([])))).shortenPrompted();
+test.assertDeepEqual(kutt.created, [{ target: "https://example.com/post", description: "My Post Title" }], "sends a typed description with a new link");
+
+reset();
+kutt = makeKutt();
+ui = makeUI({ shown: true, url: "https://example.com/1", description: "Ignored" });
+new ShortLinks(settings, ui, new LinkShortener(kutt, makeFiles(savedFile([link(1)])))).shortenPrompted();
+test.assertEqual(kutt.created.length, 0, "returns an existing link without changing its description");
 
 // --- automatic sync ---
 test.section("automatic sync");

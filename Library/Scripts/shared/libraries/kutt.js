@@ -180,22 +180,30 @@ class LinkShortener {
   }
 
   // The short link for target: from the cache, then from Kutt's newest links,
-  // otherwise made on domain (Kutt's default when omitted) and cached.
-  shorten(target, domain = this.#kutt.host) {
+  // otherwise made on domain (Kutt's default when omitted) with description,
+  // and cached. An existing link keeps its own domain and description.
+  shorten(target, { domain = this.#kutt.host, description = "" } = {}) {
     target = target.trim();
 
     const found = this.lookup(target) ?? this.#lookupNewest(target);
     if (found) return found;
 
     console.log(`No short link for ${target}, creating one on ${domain}`);
-    const options = domain == this.#kutt.host ? {} : { domain };
-    const result = this.#kutt.createLink(target, options);
+    const result = this.#kutt.createLink(target, this.#createOptions(domain, description));
 
     if (result.link) {
       this.#remember(result);
       this.#saveCache();
     }
     return result;
+  }
+
+  // Only what differs from Kutt's defaults: a custom domain, a description.
+  #createOptions(domain, description) {
+    const options = {};
+    if (domain != this.#kutt.host) options.domain = domain;
+    if (description.trim()) options.description = description.trim();
+    return options;
   }
 
   // Replaces the cache with every link and custom domain on Kutt, and records

@@ -28,12 +28,12 @@ class ShortLinks {
     const answer = this.#askForLink();
     if (answer == undefined) return false;
 
-    const { target, domain } = answer;
+    const { target, domain, description } = answer;
     if (!LinkShortener.isURL(target)) return this.#fail(this.#message("invalidURL", { url: target }));
     if (this.shortener.isShortLink(target)) return this.#fail(this.#message("alreadyShort", { url: target }));
 
     this.#syncIfStale();
-    const result = this.shortener.shorten(target, domain);
+    const result = this.shortener.shorten(target, { domain, description });
     if (!result.link) return this.#fail(result.error ?? "Kutt did not return a short link.");
 
     return this.#deliver(result.link);
@@ -94,7 +94,8 @@ class ShortLinks {
 
   // Shows the Shorten Link prompt, starting with the clipboard when it is a
   // link to shorten (not one of our own short links, which the action just
-  // copied). Returns { target, domain }, or undefined when cancelled.
+  // copied). Returns { target, domain, description }, or undefined when
+  // cancelled.
   #askForLink() {
     const menuSettings = JSON.parse(JSON.stringify(this.#settings.shortenPrompt));
     const field = menuSettings.menuItems.find((item) => item.type == "textField");
@@ -111,8 +112,9 @@ class ShortLinks {
     }
 
     const target = String(menu.fieldValues[field.data.name] ?? "").trim();
+    const description = String(menu.fieldValues["description"] ?? "").trim();
     const pickedRow = domainMenu ? menu.fieldValues[domainMenu.data.name]?.[0] : undefined;
-    return { target, domain: domains[pickedRow ?? 0] };
+    return { target, domain: domains[pickedRow ?? 0], description };
   }
 
   // Lists the domains in the picker, with Kutt's default chosen. Drops the

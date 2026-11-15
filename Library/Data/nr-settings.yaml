@@ -251,6 +251,14 @@ kutt:
             autocapitalization: none
             autocorrect: false
             wantsFocus: true
+      # Sent to Kutt only when a new link is made; an existing link keeps its
+      # own. Shown as the title in Find Short Link.
+      - type: textField
+        data:
+          name: description
+          label: Description
+          options:
+            placeholder: Optional, e.g. the post title
       # The domain a new short link is made on; a page already shortened gets
       # its existing link. A picker (pop-up menu on Mac), filled with Kutt's
       # default domain and the custom domains from the last Sync Kutt Links.
