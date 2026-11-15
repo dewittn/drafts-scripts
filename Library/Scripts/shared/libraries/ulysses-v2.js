@@ -247,7 +247,8 @@ class Ulysses {
       "access-token": this.accessToken,
     };
 
-    return this.#openCallback("trash", params);
+    // Ulysses never calls back after trash, so waiting would hang Drafts
+    return this.#openCallback("trash", params, false);
   }
 
   // Retrieves information about an item (sheet or group).
@@ -451,8 +452,12 @@ class Ulysses {
     const errorMessage = `${callbackAction}, failed.\nError ${response["errorCode"]}: ${response["errorMessage"]}`;
     message = success ? message + successMessage : message + errorMessage;
 
+    // Hide the access token so debug output can be shared
+    const shownParams = { ...params };
+    if (shownParams["access-token"] != undefined) shownParams["access-token"] = "(hidden)";
+
     console.log(message);
-    console.log(`Params: ${JSON.stringify(params)}\n`);
+    console.log(`Params: ${JSON.stringify(shownParams)}\n`);
     if (response) console.log(`Repsonse: ${JSON.stringify(response)}`);
   }
 
