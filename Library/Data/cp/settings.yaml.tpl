@@ -135,6 +135,10 @@ welcome:
           value: modifyActiveDoc
       - type: button
         data:
+          name: Delete Selected Content
+          value: deleteContent
+      - type: button
+        data:
           name: Use Current Draft
           value: useCurrentDraft
       - type: button
@@ -246,10 +250,6 @@ modifyActiveDoc:
           value: openDoc
       - type: button
         data:
-          name: Delete...
-          value: deleteContent
-      - type: button
-        data:
           name: << Back
           value: selectDocByStatus
           isDefault: true
@@ -290,6 +290,10 @@ selectDocByStatus:
         data:
           name: Update Status of Content
           value: updateStatusOfDoc
+      - type: button
+        data:
+          name: Delete...
+          value: deleteContent
       - type: button
         data:
           name: << Back

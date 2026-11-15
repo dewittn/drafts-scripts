@@ -37,10 +37,8 @@ class PipelineManager extends BaseManager {
       });
     }
 
-    // Check if doc is already in pipeline
-    if (this.#docIsInPipeline()) {
-      return this.displayAppMessage("info", docExistsMessage);
-    }
+    // Already in the database: make sure the tags agree, then report success
+    if (this.#docIsInPipeline()) return this.#restorePipelineTags(docExistsMessage);
 
     if (this.db.databaseError) {
       return this.throwDBError("PipelineManager.addDocument()");
@@ -165,6 +163,23 @@ class PipelineManager extends BaseManager {
   }
 
   // Private methods
+  // The document has a database record. When its tags or keywords do not show
+  // that, they are restored from the record, so callers such as Update Status
+  // see it in the pipeline. Only a document that already looked right gets
+  // the "already exists" message.
+  #restorePipelineTags(docExistsMessage) {
+    if (this.activeDoc.inPipeline) {
+      this.displayAppMessage("info", docExistsMessage);
+      return true;
+    }
+
+    const record = this.db.currentRecord;
+    this.activeDoc.record = record;
+    if (this.activeDoc.statusIsNotSet) this.activeDoc.status = record.Status;
+    this.activeDoc.inPipeline = true;
+    return true;
+  }
+
   #docIsInPipeline() {
     return this.db.docIsInPipeline(this.activeDoc);
   }

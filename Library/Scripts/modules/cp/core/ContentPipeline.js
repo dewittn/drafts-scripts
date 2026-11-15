@@ -435,8 +435,10 @@ class ContentPipeline {
     if (result && typeof result === "object" && result.action) {
       switch (result.action) {
         case "addToPipeline":
-          if (this.addDocToPipeline() == false) return;
-          // Retry status update
+          // Retry only once the doc is in the pipeline, so a failed or
+          // declined add cannot loop back here
+          if (this.addDocToPipeline() !== true) return;
+          if (this.#activeDoc?.inPipeline !== true) return;
           return this.updateStatusOfDoc(docID, docIDType);
 
         case "convertDoc":

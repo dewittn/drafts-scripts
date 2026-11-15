@@ -57,8 +57,9 @@ class RecentRecords {
       },
     };
 
-    this.records = this.records.filter((r) =>
-      r != null && r.id !== currentRecord.id
+    // Replace any earlier entry for the same document
+    this.records = this.records.filter((record) =>
+      record != null && this.#docIDOf(record) != activeDoc.docID
     );
     this.records.unshift(currentRecord);
     this.records = this.records.slice(0, 15);
@@ -77,12 +78,22 @@ class RecentRecords {
       return false;
     }
 
-    // Match on docID: a document opened from a menu has no database record ID
+    // Match on the document ID: a document opened from a menu has no database
+    // record ID, and older entries keep it in DraftsID or UlyssesID
+    const before = this.records.length;
     this.records = this.records.filter((record) =>
-      record?.fields?.docID != activeDoc.docID
+      this.#docIDOf(record) != activeDoc.docID
+    );
+    this.#ui.debugLog(
+      `[RecentRecords] Removed ${before - this.records.length} of ${before} entries for ${activeDoc.docID}`
     );
 
     return this.#fs.write(this.#recentDocsFile, this.allRecords);
+  }
+
+  // The document ID of a stored entry, in any of its formats.
+  #docIDOf(record) {
+    return new RecentRecord(record).docID;
   }
 
   loadRecent() {

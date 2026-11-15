@@ -80,10 +80,8 @@ class MenuOrchestrator extends BaseManager {
     // Get status selection
     const status = this.statuses.select();
 
-    // Get records with that status
-    if (menuSettings.menuItems.length > 3) {
-      menuSettings.menuItems.pop();
-    }
+    // Drop the picker left by an earlier pass (<< Back returns here)
+    menuSettings.menuItems = menuSettings.menuItems.filter((item) => item.type != "picker");
 
     const records = this.db.retrieveRecordsByField("Status", status);
     if (this.db.databaseError) {
