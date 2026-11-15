@@ -202,6 +202,13 @@ class MockUI {
   }
 
   /**
+   * Yes/No prompt (DraftsUI.yesNoPrompt): the configured button, or null
+   */
+  yesNoPrompt(menuSettings) {
+    return this.buildMenu(menuSettings).buttonPressed;
+  }
+
+  /**
    * Get all interactions for assertions
    */
   getInteractions() {
@@ -245,6 +252,22 @@ class MockDatabase {
     this.debug = options.debug || false;
     this.shouldFail = options.shouldFail || false;
     this.databaseError = false;
+    this.stackTrace = {};
+  }
+
+  /**
+   * Delete the record for a doc (NocoController.deleteUsingDoc)
+   */
+  deleteUsingDoc(doc) {
+    this.queries.push({ type: 'delete', doc });
+    if (this.shouldFail) {
+      this.databaseError = true;
+      this.stackTrace = { errorMessage: 'Mock delete failed' };
+      return false;
+    }
+
+    this.records.delete(doc.docID);
+    return true;
   }
 
   /**

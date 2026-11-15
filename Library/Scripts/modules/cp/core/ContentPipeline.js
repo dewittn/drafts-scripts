@@ -366,7 +366,7 @@ class ContentPipeline {
 
   // **************
   // * deleteContent()
-  // * Removes documents from Recent Records, the database, from an app, or everywhere
+  // * Removes the active doc from Recent, the Pipeline, or deletes it (each level includes the ones below)
   // **************
   deleteContent() {
     return this.#documents.delete();

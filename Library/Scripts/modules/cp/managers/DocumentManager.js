@@ -60,51 +60,33 @@ class DocumentManager extends BaseManager {
   }
 
   /**
-   * Delete content from various locations
+   * Remove the active document at one of three levels. Each level includes
+   * the ones below it:
+   * - recent: remove it from Recent Records
+   * - pipeline: also delete its database record and pipeline tags
+   * - document: also move the document to its app's trash
+   * The database goes first since it is the step that can fail and cannot be
+   * undone; nothing else changes when it fails.
    * @returns {boolean} Success status
    */
   delete() {
-    const { menuSettings } = this.settings.delContent;
+    const { menuSettings, confirmSettings, successMessages } = this.settings.delContent;
+    if (this.activeDoc == undefined) return false;
 
-    if (this.activeDoc == undefined) {
-      return false;
-    }
-
-    // Build and display delete options menu
-    const menu = this.ui.buildMenu(menuSettings);
+    const menu = this.ui.buildMenu({
+      ...menuSettings,
+      menuMessage: menuSettings.menuMessage.concat(this.activeDoc.title),
+    });
     if (menu.show() == false) return context.cancel();
 
-    let delRecentRecord = false;
-    let delDBEntry = false;
-    let delDoc = false;
+    const level = menu.buttonPressed;
+    if (level != "recent" && this.#confirmDelete(confirmSettings, level) == false) return false;
 
-    // Determine what to delete based on user selection
-    switch (menu.buttonPressed) {
-      case "everywhere":
-        delDoc = true;
-      case "database":
-        delDBEntry = true;
-      case "recentRecords":
-        delRecentRecord = true;
-    }
+    if (level != "recent" && this.#removeFromPipeline() == false) return false;
+    if (level == "document") this.activeDoc.delete();
+    this.recent.delete(this.activeDoc);
 
-    // Execute deletions
-    if (delRecentRecord) {
-      this.recent.delete(this.activeDoc);
-      this.displayAppMessage("success", "Doc deleted from Recent Records.");
-    }
-
-    if (delDBEntry) {
-      this.db.delete(this.activeDoc);
-      this.activeDoc.inPipeline = false;
-      this.displayAppMessage("success", "Doc deleted from the database.");
-    }
-
-    if (delDoc) {
-      this.activeDoc.delete();
-      this.displayAppMessage("success", "Doc has been deleted.");
-    }
-
+    this.displayAppMessage("success", successMessages[level]);
     return true;
   }
 
@@ -158,6 +140,27 @@ class DocumentManager extends BaseManager {
   }
 
   // Private methods
+
+  // Asks before a level that deletes the database record. True on Yes.
+  #confirmDelete(confirmSettings, level) {
+    const answer = this.ui.yesNoPrompt({
+      menuTitle: confirmSettings.menuTitle,
+      menuMessage: confirmSettings.messages[level],
+    });
+    return answer == "yes";
+  }
+
+  // Deletes the database record, then the document's pipeline tags.
+  #removeFromPipeline() {
+    if (this.db.deleteUsingDoc(this.activeDoc) == false) {
+      this.throwDBError("DocumentManager.delete()");
+      return false;
+    }
+
+    this.activeDoc.inPipeline = false;
+    return true;
+  }
+
   #updateRecentRecords() {
     return this.recent.save(this.activeDoc);
   }

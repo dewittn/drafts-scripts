@@ -204,6 +204,8 @@ class DraftsDoc {
       this.workingDraft.addTag(`${this.#defaultTag}::${this.status}`);
       this.workingDraft.isArchived = true;
       this.workingDraft.update();
+    } else {
+      this.#leavePipeline();
     }
     this.#inPipeline = value;
   }
@@ -234,6 +236,20 @@ class DraftsDoc {
     this.workingDraft.update();
   }
 
+  // Removes the pipeline and status tags and moves the draft back to the
+  // inbox. A draft outside the pipeline has no status.
+  #leavePipeline() {
+    const defaultTag = this.#defaultTag;
+    const statusList = this.#statuses.statusList;
+    const isPipelineTag = (tag) =>
+      tag == defaultTag || tag.startsWith(`${defaultTag}::`) || statusList.includes(tag);
+
+    this.workingDraft.tags.filter(isPipelineTag).forEach((tag) => this.workingDraft.removeTag(tag));
+    this.workingDraft.isArchived = false;
+    this.workingDraft.update();
+    this.#currentStatus = "";
+  }
+
   // Records a change that was dropped because there is no draft to apply it to.
   #logMissingDraft(action) {
     this.#ui.logError(`[DraftsDoc] Cannot ${action}: workingDraft is undefined`, {
@@ -244,7 +260,9 @@ class DraftsDoc {
   }
 
   #findOrCreateWorkingDraft() {
-    if (this?.record?.docID != undefined) return Draft.find(this.record.docID);
+    // findDraft returns the global draft when it is the target, so changes
+    // are not reverted when the script step ends
+    if (this?.record?.docID != undefined) return DraftsRuntime.findDraft(this.record.docID);
 
     this.#currentDest = this.#destinations.select();
     if (this.destination == "") return;

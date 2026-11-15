@@ -167,9 +167,39 @@ useCurrentDraft:
           value: convertDraft
       - type: button
         data:
+          name: Delete...
+          value: deleteContent
+      - type: button
+        data:
           name: << Back
           value: welcome
           isDefault: true
+delContent:
+  menuSettings:
+    menuTitle: Delete
+    menuMessage: "What would you like to remove for: "
+    menuItems:
+      - type: button
+        data:
+          name: Remove from Recent
+          value: recent
+      - type: button
+        data:
+          name: Remove from Pipeline (and Recent)
+          value: pipeline
+      - type: button
+        data:
+          name: Delete Document (and Pipeline and Recent)
+          value: document
+  confirmSettings:
+    menuTitle: Are you sure?
+    messages:
+      pipeline: The database record will be deleted and cannot be recovered.
+      document: The document goes to the trash and its database record is deleted. The record cannot be recovered.
+  successMessages:
+    recent: Removed from Recent.
+    pipeline: Removed from the Pipeline and Recent.
+    document: Deleted, and removed from the Pipeline and Recent.
 addContent:
   infoMessage: ""
   errorMessage: "Error: "
@@ -214,6 +244,10 @@ modifyActiveDoc:
         data:
           name: Open Document
           value: openDoc
+      - type: button
+        data:
+          name: Delete...
+          value: deleteContent
       - type: button
         data:
           name: << Back

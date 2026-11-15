@@ -344,16 +344,17 @@ class NocoTable {
   // DELETE Functions
   // *********
 
-  // Delete records by ID
+  // Delete one record or many, one request each. The v3 API also takes a list
+  // of { id } objects, but Drafts' HTTP sends an array body that NocoDB
+  // rejects with a 400, so each request sends a single { id } object.
+  // False as soon as a request fails.
   delete(records) {
     if (!Array.isArray(records)) records = [records];
-    // For bulk delete, use the bulk delete endpoint
-    if (records.length > 1) {
-      const ids = records.map((r) => r.id);
-      const payload = { method: "DELETE", data: ids };
-      const response = this.#makeHTTPRequest(payload);
-      return response.success;
-    }
+
+    return records.every((record) => {
+      const payload = { method: "DELETE", data: { id: record.id } };
+      return this.#makeHTTPRequest(payload).success;
+    });
   }
 
   // *********

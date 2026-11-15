@@ -193,6 +193,7 @@ class UlyssesDoc {
     if (typeof value !== "boolean") return;
 
     if (value) this.#ulysses.attachKeywords(this.docID, this.#defaultTag);
+    if (value == false) this.#leavePipeline();
     this.#inPipeline = value;
   }
 
@@ -337,6 +338,13 @@ class UlyssesDoc {
     while (dtCurrent < dtEnd) {
       dtCurrent = new Date().getTime();
     }
+  }
+
+  // Removes the pipeline and status keywords in one callback.
+  #leavePipeline() {
+    const keywords = [this.#defaultTag, this.status].filter((keyword) => keyword);
+    this.#ulysses.removeKeywords(this.docID, keywords.join(","));
+    this.#currentStatus = "";
   }
 
   #sheetIsInPipeline() {

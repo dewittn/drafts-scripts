@@ -77,8 +77,9 @@ class RecentRecords {
       return false;
     }
 
+    // Match on docID: a document opened from a menu has no database record ID
     this.records = this.records.filter((record) =>
-      record.id != activeDoc?.recordID
+      record?.fields?.docID != activeDoc.docID
     );
 
     return this.#fs.write(this.#recentDocsFile, this.allRecords);

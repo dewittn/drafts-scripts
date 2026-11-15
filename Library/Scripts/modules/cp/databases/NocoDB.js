@@ -99,6 +99,30 @@ class NocoController {
     return savedRecord;
   }
 
+  // Deletes the record for a document. True when the record is gone, including
+  // when there was none to delete; false on a database error.
+  deleteUsingDoc(doc) {
+    const record = this.retrieveRecordByDocID(doc);
+    if (this.databaseError) return false;
+    if (record == undefined) return true;
+
+    const success = this.#database.delete(record);
+    if (success == false || this.databaseError) {
+      return this.#throwError({
+        errorMessage: "Record could not be deleted!",
+        errorType: "connection",
+        NocoDBError: this.#database.error,
+        NocoDBMessage: this.#database.errorMessage,
+        class: "NocoDBClass",
+        function: "deleteUsingDoc()",
+        doc: doc,
+        record: record,
+      });
+    }
+
+    return true;
+  }
+
   retrieveRecordById(recordId) {
     const success = this.#database.findById(recordId);
     if (this.databaseError) {
