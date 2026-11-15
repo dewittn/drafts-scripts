@@ -90,9 +90,11 @@ If `bun run watch` is running, it already syncs every save. Mention it before sw
 
 Expect a few rounds. The user often doesn't have the full picture until they use the script, so treat each round's feedback as normal refinement, not failure.
 
+Testing shows the code runs as expected. It does not have to cover every case. When the same code serves several teams, seasons, or templates, one working run is enough. Don't ask the user to try the others, and don't hold a commit for them, including teams that are out of season. They run the same code, so a failure elsewhere almost always means that team is set up wrong, and the user would rather fix that when it comes up. The same goes for rolling a confirmed change out to the other teams' templates or settings: commit it once its checks pass.
+
 ## 6. Commit when the user confirms a round works
 
-When the user says a round works in Drafts, commit right away without asking, following the global `commit` skill. Make one commit per working round, in the gitmoji style of `git log` (for example "✨ Ask before attaching the signature in Send to Fastmail"). Never commit a round that failed or hasn't been tried. Changes that never reach Drafts (docs, build tooling, tests) can be committed once their own checks pass.
+When the user says a round works in Drafts, commit right away without asking, following the global `commit` skill. Make one commit per working round, in the gitmoji style of `git log` (for example "✨ Ask before attaching the signature in Send to Fastmail"). Never commit a round that failed or hasn't been tried at all. One team working counts as tried (see the end of section 5). Changes that never reach Drafts (docs, build tooling, tests) can be committed once their own checks pass.
 
 - **On dev:** commit and push, with no PR. The global commit skill opens a PR for any branch other than main. Skip that here, because main only moves through checkpoints.
 - **On a feature branch:** commit and push each working round. As soon as a round works in Drafts and production workflows still work, run a checkpoint on `dev`, so main holds the newest settled work before the riskiest change lands. Don't hold the merge for commits still settling. Then open a PR into `dev`, merge it with a merge commit, and delete the branch (as with PRs #4 to #8). Later refinements and ideas are ordinary commits on `dev`.
