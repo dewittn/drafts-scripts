@@ -28,7 +28,10 @@ const picked = new Date(2026, 10, 3, 9, 5);
 test.section("tags");
 
 test.assertEqual(ThingsTags.area("BVR Coaching"), "@area(BVR Coaching)", "builds an area tag");
-test.assertEqual(ThingsTags.when(picked), "@when(2026-11-03)", "uses only the day without a reminder");
+test.assertEqual(ThingsTags.tags(["Chore", "Easy"]), "@tags(Chore, Easy)", "builds a tags tag from the picked tags");
+test.assertEqual(ThingsTags.tags(["Text/Message"]), "@tags(Text/Message)", "keeps a single tag as typed");
+test.assertEqual(ThingsTags.tags([]), null, "returns null when nothing was picked");
+test.assertEqual(ThingsTags.when(picked),"@when(2026-11-03)", "uses only the day without a reminder");
 test.assertEqual(ThingsTags.when(picked, false), "@when(2026-11-03)", "ignores the time when the reminder is off");
 test.assertEqual(ThingsTags.when(picked, true), "@when(2026-11-03@09:05)", "adds the 24-hour time for a reminder");
 
@@ -49,6 +52,9 @@ const [todo] = new ThingsParser().parse(line);
 test.assertEqual(todo.title, "Call the vet", "keeps the title clean");
 test.assertEqual(todo.when, "2026-11-03@09:05", "passes the reminder time to Things");
 test.assertEqual(todo.list, "Sanity", "files it in the area");
+const [tagged] = new ThingsParser().parse(`- Take out the trash ${ThingsTags.tags(["Chore", "Easy"])}`);
+test.assertEqual(tagged.title, "Take out the trash", "keeps the title clean after @tags");
+test.assertDeepEqual(tagged.tags, ["Chore", "Easy"], "sends each picked tag to Things");
 
 // --- prompt settings ---
 test.section("prompt settings");
@@ -118,5 +124,6 @@ test.assertEqual(ThingsProjects.fetch("Get Things Projects"), null, "returns nul
 
 const settings = loadRepoYAML("nr-settings.yaml").things;
 test.assertEqual(settings.projectsShortcut, "Get Things Projects", "names the shortcut in settings");
+test.assertEqual(new Set(settings.tags).size, settings.tags.length, "lists each common tag once");
 
 test.summary();

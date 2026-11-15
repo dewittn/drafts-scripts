@@ -155,6 +155,24 @@ things:
   areaMenu:
     menuTitle: Things Area
     menuMessage: Which area should this go in?
+  # Offered by Insert Things Tags, in this order. Spell each one exactly as
+  # the tag is named in Things. Seeded 2026-11-15 from the ten tags used most
+  # in the past year, plus Writing.
+  tags:
+    - Chore
+    - Moderate
+    - Easy
+    - Programming
+    - Writing
+    - Stone
+    - Challenge
+    - Online
+    - Errand
+    - Email
+    - Adulting
+  tagMenu:
+    menuTitle: Things Tags
+    menuMessage: Which tags should this have?
   # Insert Things Project runs this shortcut, which outputs the open projects
   # as {"projects": [{"title": "...", "id": "..."}, ...]}.
   projectsShortcut: Get Things Projects
@@ -197,7 +215,7 @@ things:
         @due: a date
         @area or @list: an area or project, spelled as in Things
         @project: a project, picked from Things with Insert Things Project
-        @tags: a comma list
+        @tags: a comma list, or picked with Insert Things Tags
         @done, @canceled: add it already finished
 
         Don't end a to-do with an @word Things doesn't use, like "Email @sam": it is read as a tag and dropped from the title.

@@ -15,6 +15,11 @@ class ThingsTags {
     return `@area(${name})`;
   }
 
+  // "@tags(Chore, Easy)", or null when no tags were picked.
+  static tags(names = []) {
+    return names.length ? `@tags(${names.join(", ")})` : null;
+  }
+
   // "@project(title)", or "@listID(id)" when another open project has the
   // same title, so the to-do still lands in the one picked.
   static project({ title, id }, projects = []) {
