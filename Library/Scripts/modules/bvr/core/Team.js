@@ -354,8 +354,10 @@ class Team {
   }
 
   archiveNotes() {
+    // Archived drafts with the team tag. Draft.query returns an empty list,
+    // not undefined, when nothing matches
     const teamNotes = Draft.query("", "archive", this.defaultDraftTags);
-    if (teamNotes == undefined) {
+    if (teamNotes == undefined || teamNotes.length == 0) {
       return this.ui.displayAppMessage("info", "No team drafts were found!");
     }
     teamNotes.every((note) => this.#processNote(note));
@@ -471,27 +473,10 @@ class Team {
     if (notePrompt.show() == false) return false;
     if (notePrompt.buttonPressed == "leave") return true;
 
-    bearTags(workingDraft);
-    updateWikiLinks(workingDraft);
-    if (typeof Template == "undefined") require("modules/cp/templates/Template.js");
-    const bearTemplate = Template.load("bear-note.md");
-    const bearNote = workingDraft.processTemplate(bearTemplate);
-
-    if (this.#sendNoteToBear(bearNote) == false) return false;
-    workingDraft.isTrashed = true;
-    workingDraft.update();
-    return true;
-  }
-
-  #sendNoteToBear(note) {
-    const bearURL = `bear://x-callback-url/create`;
-
-    const cb = CallbackURL.create();
-    cb.baseURL = bearURL;
-    cb.waitForResponse = false;
-    cb.addParameter("text", note);
-
-    return cb.open();
+    // Renders bear-note.md, opens it in Bear, and trashes the draft, the same
+    // as the Bear: New & File action. False keeps the draft and stops the loop.
+    if (typeof BearSender == "undefined") require("modules/nr/BearSender.js");
+    return new BearSender().sendAndStay("bear-note.md", workingDraft);
   }
 
   // The draft's team tag wins, then a team ID passed in, then a choice.

@@ -5,8 +5,8 @@ if (typeof fetchTemplate == "undefined") require("vendor/nr.js");
 // Library/Templates/, then trashes the draft.
 //
 // Before rendering it sets the [[bearTags]] template tag from the draft's tags
-// and turns [[bear:Note]] wiki links into Bear's [[Note]]. If Bear reports an
-// error the draft is kept.
+// and turns [[bear:Note]] wiki links into Bear's [[Note]]. If the Bear URL does
+// not open or Bear reports an error, the draft is kept.
 class BearSender {
   #bear;
 
@@ -30,8 +30,9 @@ class BearSender {
     updateWikiLinks(d);
     const text = d.processTemplate(fetchTemplate(templateName));
 
-    this.#bear.create(null, text, "", options);
-    if (this.#bear.error) return false;
+    // false: the Bear URL did not open (sendAndStay); error: Bear reported one
+    const created = this.#bear.create(null, text, "", options);
+    if (created === false || this.#bear.error) return false;
 
     d.isTrashed = true;
     d.update();

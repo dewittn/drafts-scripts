@@ -1,5 +1,21 @@
 require("shared/libraries/bear.js");
 
+// Bear notes in the Content Pipeline: built, but not switched on yet.
+//
+// Nothing reaches this class today. DocumentFactory loads it for a BearID
+// record or creates it for convertTo: note, and the only destination with
+// convertTo: note ("book review" in destinations.yaml) has no
+// statusWhenToConvert, so it never converts.
+//
+// Before switching it on:
+// - Give book review a statusWhenToConvert, and add a bearDoc section under
+//   documentFactory in settings.yaml.tpl (this class does not read one yet)
+// - #updateTags only appends the new tag. Bear's API cannot remove a tag, so
+//   an old status stays on the note until the text is rewritten
+// - set inPipeline(false) does not remove the pipeline tag, for the same reason
+// - Run it on the Test Table: readNote() (open-note) has unit tests with
+//   Bear's documented reply but has not been run against Bear
+
 class BearDoc {
   static docIDType = "BearID";
   #dependencyProvider;
@@ -237,7 +253,7 @@ class BearDoc {
   // **************
   #loadNote() {
     if (this.note == undefined) {
-      this.note = this.#bear.grabUrl(this.docID);
+      this.note = this.#bear.readNote(this.docID);
     }
 
     if (this.#bear.error) {

@@ -9,7 +9,6 @@ if (typeof PracticePlan == "undefined") require("modules/bvr/core/PracticePlan.j
 if (typeof TmplSettings == "undefined") require("modules/bvr/utils/TmplSettings.js");
 if (typeof Staff == "undefined") require("modules/bvr/utils/Staff.js");
 if (typeof TeamConfig == "undefined") require("modules/bvr/utils/TeamConfig.js");
-if (typeof Bear == "undefined") require("shared/libraries/bear.js");
 if (typeof DraftsUI == "undefined") require("shared/libraries/DraftsUI.js");
 if (typeof CloudFS == "undefined") require("modules/cp/filesystems/CloudFS.js");
 if (typeof Template == "undefined") require("modules/cp/templates/Template.js");

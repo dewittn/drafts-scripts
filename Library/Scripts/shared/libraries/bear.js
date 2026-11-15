@@ -107,6 +107,17 @@ class Bear {
     return this.#openCallback("open-note", params, false);
   }
 
+  // Read an existing note without showing it. Bear answers open-note with the
+  // note's text, title, tags, and trash state; returns a BearNote. (grab-url
+  // is not a read: it makes a new note from a web page.)
+  readNote(id) {
+    if (!id) return this.#displayErrorMessage("A note id is required!");
+
+    const params = { id: id, show_window: "no", open_note: "no", exclude_trashed: "yes" };
+    const response = this.#openCallback("open-note", params);
+    return response?.identifier ? new BearNote(response) : response;
+  }
+
   // Bear issues a separate API token on each device, so the credential is
   // stored per device model, the same way ulysses-v2.js does it. Drafts asks
   // for it the first time it is needed on each device.
@@ -363,8 +374,18 @@ class BearNote {
     return this.#data?.title;
   }
 
+  // open-note sends tags as a JSON array in a string; search sends an array
   get tags() {
-    return this.#data?.tags || [];
+    const tags = this.#data?.tags;
+    if (Array.isArray(tags)) return tags;
+    if (typeof tags != "string" || tags == "") return [];
+
+    try {
+      const parsed = JSON.parse(tags);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return tags.split(",").map((tag) => tag.trim());
+    }
   }
 
   get modificationDate() {
@@ -383,12 +404,15 @@ class BearNote {
     return this.#data?.isArchived;
   }
 
+  // open-note sends is_trashed as "yes" or "no"
   get isTrashed() {
+    if (this.#data?.is_trashed != undefined) return this.#data.is_trashed === "yes";
     return this.#data?.isTrashed;
   }
 
+  // open-note sends the note's text as "note"
   get text() {
-    return this.#data?.text;
+    return this.#data?.text ?? this.#data?.note;
   }
 
   hasTag(tag) {

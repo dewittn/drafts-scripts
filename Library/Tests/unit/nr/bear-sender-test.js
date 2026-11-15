@@ -91,4 +91,14 @@ result = new BearSender(bear).sendAndReturn("bear-note.md", d);
 test.assertEqual(result, false, "returns false when Bear reports an error");
 test.assertEqual(d.isTrashed, false, "keeps the draft");
 
+test.section("URL does not open");
+
+bear = makeBear();
+bear.create = () => false;
+d = makeDraft();
+result = new BearSender(bear).sendAndStay("bear-note.md", d);
+
+test.assertEqual(result, false, "returns false when the Bear URL does not open");
+test.assertEqual(d.isTrashed, false, "keeps the draft");
+
 test.summary();
