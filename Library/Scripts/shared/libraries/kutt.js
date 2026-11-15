@@ -5,7 +5,8 @@
 // * Kutt Class
 // ***************
 class Kutt {
-  static filesPath = "/Library/Data";
+  // Links asked for per list request. getAllLinks keeps asking until it has them all.
+  static pageSize = 50;
 
   #apiKey;
   #domain;
@@ -18,10 +19,6 @@ class Kutt {
 
   get endPointURL() {
     return this.#endPointURL;
-  }
-
-  get filesPath() {
-    return this.constructor.filesPath;
   }
 
   get apiKey() {
@@ -38,15 +35,21 @@ class Kutt {
     credential.addTextField("domain", "Domain (e.g., https://kutt.it)");
     credential.addPasswordField("api_key", "API Key");
     credential.authorize();
-    this.#domain = credential.getValue("domain") || "https://kutt.it";
+    // Trailing slashes dropped so "https://lnk.example/" still builds ".../api/v2".
+    const domain = credential.getValue("domain") || "https://kutt.it";
+    this.#domain = domain.trim().replace(/\/+$/, "");
     this.#apiKey = credential.getValue("api_key");
   }
 
-  // Create a short link
+  // Create a short link. reuse: true makes Kutt hand back an existing short
+  // link for the same target instead of making a duplicate.
   createLink(target, options = {}) {
     const url = `${this.#endPointURL}/links`;
+    // any: HTTP sends data as JSON, but its type only allows string values.
+    /** @type {any} */
     const body = {
       target: target,
+      reuse: true,
       ...options
     };
 
@@ -97,6 +100,24 @@ class Kutt {
     }
 
     return JSON.parse(response.responseText);
+  }
+
+  // Every link on the account, one page at a time until Kutt's total is
+  // reached. Returns { data } like getLinks, or the error from a failed page.
+  getAllLinks() {
+    const pageSize = Kutt.pageSize;
+    const links = [];
+
+    while (true) {
+      const page = this.getLinks({ limit: pageSize, skip: links.length });
+      if (!page || page.success === false) return page;
+
+      const data = Array.isArray(page.data) ? page.data : [];
+      links.push(...data);
+      if (data.length < pageSize || links.length >= page.total) break;
+    }
+
+    return { data: links, total: links.length };
   }
 
   // Get link by ID
@@ -201,10 +222,10 @@ class Kutt {
     return JSON.parse(response.responseText);
   }
 
-  // Error handling
+  // Logs the failure and returns it. Callers decide how to show it, so the
+  // user sees one message rather than a banner plus the action's own.
   #requestError(response, message) {
     const errorMessage = `Kutt Error: ${response.statusCode} - ${message}`;
-    app.displayErrorMessage(errorMessage);
     console.log(`${errorMessage}\n${response.responseText}`);
     return { success: false, error: errorMessage, statusCode: response.statusCode };
   }
@@ -219,11 +240,17 @@ class LinkShortener {
   #cacheFile = "/Library/Data/links.json";
   #fmCloud;
 
-  constructor() {
-    this.#kutt = new Kutt();
-    this.#fmCloud = FileManager.createCloud();
+  // kutt and fileManager can be swapped for stubs in tests.
+  constructor(kutt = new Kutt(), fileManager = FileManager.createCloud()) {
+    this.#kutt = kutt;
+    this.#fmCloud = fileManager;
     this.#cache = new Map();
     this.loadCache();
+  }
+
+  // True when text is a single http(s) link and nothing else.
+  static isURL(text) {
+    return /^https?:\/\/\S+$/i.test(String(text ?? "").trim());
   }
 
   // Load cached links from JSON file
@@ -262,6 +289,8 @@ class LinkShortener {
 
   // Shorten a URL (check cache first)
   shorten(target, options = {}) {
+    target = target.trim();
+
     // Check cache first
     if (this.#cache.has(target)) {
       console.log(`Cache hit for: ${target}`);
@@ -285,8 +314,7 @@ class LinkShortener {
   sync() {
     console.log("Syncing links from API...");
 
-    // Fetch all links by setting all=true
-    const result = this.#kutt.getLinks({ all: true });
+    const result = this.#kutt.getAllLinks();
 
     if (result && result.data && Array.isArray(result.data)) {
       // Clear existing cache
@@ -305,7 +333,7 @@ class LinkShortener {
       return { success: true, count: result.data.length };
     }
 
-    return { success: false, error: "Failed to sync links" };
+    return { success: false, error: result?.error ?? "Failed to sync links" };
   }
 
   // Get a link from cache by target URL

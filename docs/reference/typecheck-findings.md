@@ -37,11 +37,15 @@ from its match result before `replace()`, which clears one error.
 Updated 2026-10-28: 283 errors in 245 entries. Meat Inventory and Meat Reminders were
 removed, taking the `meatsDraft.active()` error with them.
 
+Updated 2026-11-15: 280 errors in 242 entries. The broken `kutt-test.js` action was
+removed (two errors), and `kutt.js` no longer has the unused `filesPath` getter that read
+`this.constructor.filesPath` (one error).
+
 | Group | Errors | Meaning |
 |-------|--------|---------|
-| Real-bug candidates | 35 | Likely wrong at runtime when the line runs. 8 entries are on production paths, 3 of them dead code. 4 errors are legacy/Airtable |
+| Real-bug candidates | 33 | Likely wrong at runtime when the line runs. 8 entries are on production paths, 3 of them dead code. 4 errors are legacy/Airtable |
 | Ambiguous, verify in Drafts | 6 | Depends on runtime behavior the definitions do not capture |
-| Checker limitations in source | 76 | Valid JavaScript TypeScript cannot follow |
+| Checker limitations in source | 75 | Valid JavaScript TypeScript cannot follow |
 | JSDoc does not match the code | 15 | Comments are wrong, runtime is fine |
 | Test-only | 155 | Test patterns TypeScript cannot follow (214 at baseline) |
 
@@ -87,7 +91,6 @@ action.
 | Location | Error | Interpretation |
 |----------|-------|----------------|
 | `Library/Actions/cp/update-status-with-ulysses-id-v3.js:3` | `updateStatusOfRecord` does not exist | `ContentPipeline` has `updateStatusOfDoc`. This action throws as written. |
-| `Library/Actions/nr/kutt-test.js:4,17` | Cannot find `KuttItAPI`, `script` | The class and the global it uses are not defined. Looks like an abandoned test action. |
 | `Library/Actions/nr/morning-pages.js:35,41` | Cannot assign to `action` | Assigns to the Drafts global `action` without declaring a local. Works, but overwrites the current action object for the rest of the run. |
 | `Library/Actions/cp/get-url.js:9,10` | Cannot find `nextAction` | Implicit global. Works in sloppy mode. Listed for completeness. |
 
@@ -124,7 +127,7 @@ JSDoc in Phases 4 and 5. Do not "fix" them now.
 
 | Pattern | Errors | Detail |
 |---------|--------|--------|
-| `this.constructor.X` | 29 | Three are in `airtable-v2.js` (legacy/Airtable). TypeScript types `this.constructor` as `Function`, so static fields read through it are unknown (TypeScript issue #3841). One instance hides a real gap. `Settings.basePath` at `Library/Scripts/modules/cp/filesystems/CloudFS.js:127` reads a static that `Settings` does not define, so it is always undefined. Nothing reads it today. |
+| `this.constructor.X` | 28 | Three are in `airtable-v2.js` (legacy/Airtable). TypeScript types `this.constructor` as `Function`, so static fields read through it are unknown (TypeScript issue #3841). One instance hides a real gap. `Settings.basePath` at `Library/Scripts/modules/cp/filesystems/CloudFS.js:127` reads a static that `Settings` does not define, so it is always undefined. Nothing reads it today. |
 | `Settings` fields | 11 | `Settings` copies keys from JSON with `Object.assign(this, ...)`. The fields exist only at runtime. A typed settings interface fixes this in Phase 4. |
 | `airtable-v2.js` responses | 16 | **legacy/Airtable.** JSDoc types the response as `boolean \| {success, data}`, so `.success` is not provable. Ambiguous data shape. No action needed while Airtable is unused. |
 | Setters that return a value | 5 | `BearDocument.js:66`, `DraftsDocument.js:63`, `TestDocument.js:24,40`, `UlyssesDocument.js:67`. The return value is discarded. Harmless. |

@@ -77,20 +77,6 @@
     "count": 1
   },
   {
-    "file": "Library/Actions/nr/kutt-test.js",
-    "code": 2552,
-    "message": "Cannot find name 'KuttItAPI'. Did you mean 'kuttItApi'?",
-    "line": "const kuttItApi = new KuttItAPI();",
-    "count": 1
-  },
-  {
-    "file": "Library/Actions/nr/kutt-test.js",
-    "code": 2552,
-    "message": "Cannot find name 'script'. Did you mean 'Script'?",
-    "line": "script.complete();",
-    "count": 1
-  },
-  {
     "file": "Library/Actions/nr/morning-pages.js",
     "code": 2339,
     "message": "Property 'isMorningPage' does not exist on type 'Draft'.",
@@ -620,13 +606,6 @@
     "code": 2339,
     "message": "Property 'capabilities' does not exist on type 'Function'.",
     "line": "data: { using: this.constructor.capabilities, methodCalls },",
-    "count": 1
-  },
-  {
-    "file": "Library/Scripts/shared/libraries/kutt.js",
-    "code": 2339,
-    "message": "Property 'filesPath' does not exist on type 'Function'.",
-    "line": "return this.constructor.filesPath;",
     "count": 1
   },
   {

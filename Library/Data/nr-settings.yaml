@@ -232,3 +232,30 @@ things:
         {{date:due-1d}}: that date moved by days (d), weeks (w), or months (m)
         {{bool:#urgent}}...{{/urgent}}: a switch that shows or hides the text
         {{#items}}- {{.}}{{/items}}: one line per item in a comma list
+# Kutt link shortener (shared/libraries/kutt.js). The Kutt domain and API key
+# are asked for once and kept in Drafts' Credentials, not here.
+kutt:
+  # Shorten Link: the field starts with the clipboard when it holds a link.
+  shortenPrompt:
+    menuTitle: Shorten Link
+    menuMessage: The short link is inserted at the cursor and copied.
+    menuItems:
+      - type: textField
+        data:
+          name: url
+          label: Link
+          options:
+            keyboard: url
+            autocapitalization: none
+            autocorrect: false
+            wantsFocus: true
+      - type: button
+        data:
+          name: Shorten
+          value: shorten
+          isDefault: true
+  # [[url]], [[link]] and [[count]] are filled in when shown.
+  messages:
+    invalidURL: '"[[url]]" is not a link.'
+    shortened: "Copied [[link]]"
+    synced: "Synced [[count]] links from Kutt."
