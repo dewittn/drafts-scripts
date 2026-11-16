@@ -212,7 +212,7 @@ test.assertDeepEqual(
 const unexcusedPrompt = run.ui.getInteractionsByType("buildMenu").find((i) => i.menuSettings.menuTitle == "Unexcused Absences");
 test.assertDeepEqual(unexcusedPrompt?.menuSettings.menuItems.slice(-1)[0]?.data?.values, ["Alex Smith", "Jordan Lee"], "the prompt lists only the absent players");
 test.assert(isSubmitted(run.rosterDraft), "a yes marks the draft submitted");
-test.assertDeepEqual(queued, [{ action: "Mark Attendace As Complete", content: "FU" }], "and queues the completion shortcut");
+test.assertDeepEqual(queued, [{ action: "Shortcut: Attendance Taken", content: "FU" }], "and queues the completion shortcut");
 test.assertDeepEqual(sent, [], "and no email is sent for US");
 
 // Nobody absent: no unexcused prompt.
@@ -272,13 +272,23 @@ test.assertDeepEqual(opened, [], "MS opens no form");
 test.assertDeepEqual(run.linksAsked, [], "or asks for a link");
 test.assertDeepEqual(sent, [{ type: "text", names: ["Alex Smith"] }], "MS texts the absences");
 test.assert(isSubmitted(run.rosterDraft), "and marks the draft submitted");
-test.assertDeepEqual(queued, [{ action: "Mark Attendace As Complete", content: "FM" }], "and queues the shortcut");
+test.assertDeepEqual(queued, [{ action: "Shortcut: Attendance Taken", content: "FM" }], "and queues the shortcut");
 
 run = recordAttendance("fixture-ms", { names: [] });
 test.assertDeepEqual(sent, [{ type: "text", names: [] }], "MS texts that no one is absent");
 
 run = recordAttendance("fixture-ms", { names: ["Alex Smith"], dryRun: true });
 test.assertDeepEqual(sent, [], "an MS dry run sends nothing");
+test.assert(isSubmitted(run.rosterDraft), "and still marks the draft");
+
+// The shortcut's Drafts action is missing (renamed or deleted).
+const findAction = /** @type {any} */ (globalThis).Action.find;
+/** @type {any} */ (globalThis).Action.find = () => undefined;
+run = recordAttendance("fixture-ms", { names: [] });
+/** @type {any} */ (globalThis).Action.find = findAction;
+const errors = run.ui.getInteractionsByType("appMessage").filter((m) => m.messageType == "error");
+test.assertDeepEqual(queued, [], "a missing shortcut action queues nothing");
+test.assert(errors.some((m) => m.message.includes("Attendance Taken")), "and says the shortcut did not run");
 test.assert(isSubmitted(run.rosterDraft), "and still marks the draft");
 
 test.summary();

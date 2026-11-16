@@ -453,8 +453,16 @@ class Attendance {
     this.team.loadPracticePlan();
   }
 
+  // The Drafts action that runs the "Attendance Taken" shortcut with the
+  // team's abbr. Action.find gives undefined for a name that does not match,
+  // and queueAction then does nothing, so a missing action is reported.
+  static completionActionName = "Shortcut: Attendance Taken";
+
   #runAttendaceShortcut() {
-    const shortcutAction = Action.find("Mark Attendace As Complete");
+    const shortcutAction = Action.find(Attendance.completionActionName);
+    if (shortcutAction == undefined) {
+      return this.bvr.ui.displayAppMessage("error", `No Drafts action named "${Attendance.completionActionName}", so the Attendance Taken shortcut did not run.`);
+    }
     const shortcutDraft = new Draft();
 
     shortcutDraft.content = this.team.abbr;

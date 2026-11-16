@@ -151,7 +151,7 @@ Left to do by hand:
   }
   2. Create a calendar named "${calendar}" for the team's games.
   3. Add a Things project template for game days if the team uses one.
-  4. Make sure the Shortcuts "Mark Attendace As Complete" and "Complete Game Day Tasks"
+  4. Make sure the Shortcuts "Attendance Taken" and "Complete Game Day Tasks"
      handle the abbr ${team.abbr}.
   5. bun run sync
   6. bun run bvr:migrate   (gives ${team.id} its team file and ${team.start.slice(0, 4)}-${team.season} season)
