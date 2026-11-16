@@ -9,8 +9,9 @@ require("../Tests/fixtures/assertions.js");
 require("modules/nr/BoldListItems.js");
 
 const test = new TestAssertions("BoldListItems");
-const bolds = (line, expected, message) => test.assertEqual(BoldListItems.line(line), expected, message);
-const leaves = (line, message) => test.assertEqual(BoldListItems.line(line), line, message);
+const bolder = new BoldListItems();
+const bolds = (line, expected, message, b = bolder) => test.assertEqual(b.line(line), expected, message);
+const leaves = (line, message, b = bolder) => test.assertEqual(b.line(line), line, message);
 
 // --- labels that change ---
 test.section("labels that change");
@@ -30,12 +31,23 @@ bolds("1) Climax: Crowdfunding will", "1) **Climax:** Crowdfunding will", "bolds
 bolds("- Cultured Code's app: Things", "- **Cultured Code's app:** Things", "keeps apostrophes inside a label");
 bolds("- Bogotá: the capital", "- **Bogotá:** the capital", "matches accented letters");
 bolds("- Goals:", "- **Goals:**", "bolds a colon label that heads a sub-list");
+bolds("- iPhone. Apple's phone", "- **iPhone.** Apple's phone", "treats a word with a capital inside as a name");
+bolds("- Lord of the Rings. A long book", "- **Lord of the Rings.** A long book", "allows small words inside a name");
+bolds("- Waking From Innocent Dreams. My novel", "- **Waking From Innocent Dreams.** My novel", "has no word limit for a name");
+bolds("- What I learned from coaching this week: patience", "- **What I learned from coaching this week:** patience", "has no word limit before a colon");
+
+// --- periods after ordinary words ---
+test.section("periods after ordinary words");
+
+leaves("- I liked it. A lot.", "skips a sentence followed by another");
+leaves("- This is a bullet that should not be matched. More text", "skips a long first sentence");
+leaves("- the app. Lowercase start", "skips a lowercase first word");
 
 // --- lines that stay the same ---
 test.section("lines that stay the same");
 
 leaves("This is a regular line of text and should not be matched.", "skips a line that is not a list item");
-leaves("1. This is a number that should not be matched.", "skips an item with no label in its first five words");
+leaves("1. This is a number that should not be matched.", "skips a sentence that ends the item");
 leaves("- Ulysses& does a great job", "skips a label ending in an unknown symbol");
 leaves("2. **Evernote.** They do a good job", "skips an item that is already bold");
 leaves("- __Evernote.__ They do a good job", "skips an item bolded with underscores");
@@ -46,16 +58,31 @@ leaves("- Test to do @tags(Chore, Online)", "skips a Things to-do");
 leaves("1. Inciting Incident ^ The Y wants", "skips a caret, which is not a separator");
 leaves("-Evernote. No space after the bullet", "needs a space after the bullet");
 
+// --- options ---
+test.section("options");
+
+const anyPeriod = new BoldListItems({ periodNamesOnly: false });
+bolds("- I liked it. A lot.", "- **I liked it.** A lot.", "bolds any period label when names are not required", anyPeriod);
+
+const colonsOnly = new BoldListItems({ separators: ":" });
+leaves("- Evernote. They do", "ignores periods when they are not a separator", colonsOnly);
+leaves("2. Complication - the alumni", "ignores dashes when they are not a separator", colonsOnly);
+bolds("- Resolution: With this", "- **Resolution:** With this", "still bolds a colon label", colonsOnly);
+
+const twoWords = new BoldListItems({ maxWords: 2 });
+bolds("- Turning Point. - there", "- **Turning Point.** - there", "allows a label up to the word limit", twoWords);
+leaves("- Waking From Innocent Dreams. My novel", "skips a label over the word limit", twoWords);
+
 // --- whole drafts ---
 test.section("whole drafts");
 
 test.assertEqual(
-  BoldListItems.text("# Notes\n\n- Evernote. Good.\n- Ulysses. Great."),
+  bolder.text("# Notes\n\n- Evernote. Good.\n- Ulysses. Great."),
   "# Notes\n\n- **Evernote.** Good.\n- **Ulysses.** Great.",
   "bolds every list item and keeps the other lines"
 );
 test.assertEqual(
-  BoldListItems.text("```yaml\n- name: Evernote\n```\n- Things: Cultured Code"),
+  bolder.text("```yaml\n- name: Evernote\n```\n- Things: Cultured Code"),
   "```yaml\n- name: Evernote\n```\n- **Things:** Cultured Code",
   "leaves list items inside fenced code alone"
 );
