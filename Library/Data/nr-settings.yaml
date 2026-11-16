@@ -344,14 +344,17 @@ kutt:
     updated: "Updated [[link]]"
     noChanges: "Nothing changed."
     deleted: "Deleted [[link]]"
+# The weekly lunch menu draft, shared by Lunch Reminders and What's for Lunch.
+# The open draft is used when it has menuTag. Otherwise menuDraftUUID when
+# set, otherwise the newest draft with the tag (a new one comes each week).
+lunchMenu: &lunchMenu
+  menuTag: "bvr/menu"
+  menuDraftUUID: ""
 # Lunch Reminders: a Things to-do for each school day picked from the week's
 # lunch menu, scheduled for that day with a reminder at reminderTime. The
 # day's menu goes in the notes.
 lunchReminders:
-  # The open draft is used when it has this tag. Otherwise menuDraftUUID when
-  # set, otherwise the newest draft with the tag (a new one comes each week).
-  menuTag: "bvr/menu"
-  menuDraftUUID: ""
+  <<: *lunchMenu
   taskTitle: Pack containers to bring home food
   # The Things area the to-dos go in, spelled as in Things. Leave empty for
   # the Inbox.
@@ -367,3 +370,23 @@ lunchReminders:
     thingsFailed: "Things did not add the reminders."
     # [[count]] is how many to-dos were added.
     added: "Added [[count]] lunch reminders to Things."
+# What's for Lunch: today's menu in a dialog. On a weekend, or a weekday the
+# menu does not cover, it opens the newest menu instead. The dialog's title
+# is "<Weekday>'s Lunch".
+whatsForLunch:
+  <<: *lunchMenu
+  dialog:
+    isCancellable: false
+    menuItems:
+      - type: button
+        data:
+          name: OK
+          value: ok
+          isDefault: true
+      - type: button
+        data:
+          name: Open Menu
+          value: open
+  messages:
+    noMenu: "No lunch menu draft found."
+    noLunch: "No lunch on the menu today."

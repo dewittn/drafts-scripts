@@ -44,17 +44,8 @@ class LunchReminders {
     return this.#settings;
   }
 
-  // The open draft when it is a lunch menu, then menuDraftUUID when set,
-  // then the newest draft with the menu tag.
   get menuDraft() {
-    if (this.#menuDraft != undefined) return this.#menuDraft;
-
-    const { menuTag, menuDraftUUID } = this.settings;
-    const openDraft = typeof draft == "undefined" ? undefined : draft;
-    if (openDraft?.hasTag(menuTag)) return (this.#menuDraft = openDraft);
-
-    const byUUID = menuDraftUUID ? Draft.find(menuDraftUUID) : undefined;
-    this.#menuDraft = byUUID ?? Draft.query("", "all", [menuTag], [], "created", true)[0];
+    this.#menuDraft ??= LunchMenu.find(this.settings);
     return this.#menuDraft;
   }
 

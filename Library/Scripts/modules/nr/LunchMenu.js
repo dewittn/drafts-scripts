@@ -19,6 +19,21 @@ class LunchMenu {
   // Items the menu site posts as a picture only. They name no food.
   static imageOnly = /^\(image only/i;
 
+  // The menu draft: the open draft when it has menuTag, then menuDraftUUID
+  // when set, then the newest draft with menuTag (a new one comes each week).
+  static find({ menuTag, menuDraftUUID }) {
+    const openDraft = typeof draft == "undefined" ? undefined : draft;
+    if (openDraft?.hasTag(menuTag)) return openDraft;
+
+    const byUUID = menuDraftUUID ? Draft.find(menuDraftUUID) : undefined;
+    return byUUID ?? Draft.query("", "all", [menuTag], [], "created", true)[0];
+  }
+
+  // The day in days that falls on date, if any.
+  static dayOn(days, date) {
+    return days.find((day) => day.date.toDateString() == date.toDateString());
+  }
+
   // Returns [{ date, weekday, items, notes }] in draft order, or [] when the
   // title has no week in it.
   static parse(content = "") {
