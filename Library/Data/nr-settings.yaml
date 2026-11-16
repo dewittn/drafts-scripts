@@ -344,3 +344,23 @@ kutt:
     updated: "Updated [[link]]"
     noChanges: "Nothing changed."
     deleted: "Deleted [[link]]"
+# Lunch Reminders: a Things to-do for each school day picked from the week's
+# lunch menu, scheduled for that day with a reminder at reminderTime. The
+# day's menu goes in the notes.
+lunchReminders:
+  # The open draft is used when it has this tag. Otherwise menuDraftUUID when
+  # set, otherwise the newest draft with the tag (a new one comes each week).
+  menuTag: "bvr/menu"
+  menuDraftUUID: ""
+  taskTitle: Pack containers to bring home food
+  # 24-hour time. Days whose reminder time has passed are not offered.
+  reminderTime: "11:00"
+  dayMenu:
+    menuTitle: Lunch Reminders
+    menuMessage: Which days should get a reminder?
+  messages:
+    noMenu: "No lunch menu draft found."
+    noDays: "No school days with lunch left on this menu."
+    thingsFailed: "Things did not add the reminders."
+    # [[count]] is how many to-dos were added.
+    added: "Added [[count]] lunch reminders to Things."
