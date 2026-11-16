@@ -102,6 +102,8 @@ class LunchReminders {
     todo.title = this.settings.taskTitle;
     todo.when = LunchReminders.thingsWhen(day.date, this.settings.reminderTime);
     todo.notes = day.notes;
+    // A to-do goes in an area through its list.
+    if (this.settings.area) todo.list = this.settings.area;
     return todo;
   }
 }

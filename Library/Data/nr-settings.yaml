@@ -353,6 +353,9 @@ lunchReminders:
   menuTag: "bvr/menu"
   menuDraftUUID: ""
   taskTitle: Pack containers to bring home food
+  # The Things area the to-dos go in, spelled as in Things. Leave empty for
+  # the Inbox.
+  area: Sanity
   # 24-hour time. Days whose reminder time has passed are not offered.
   reminderTime: "11:00"
   dayMenu:

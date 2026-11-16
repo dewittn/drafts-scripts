@@ -91,6 +91,7 @@ test.assertEqual(sent.length, 1, "sends only the picked day");
 test.assertEqual(sent[0].title, "Pack containers to bring home food", "uses the task title from settings");
 test.assertEqual(sent[0].when, "2026-11-20@11:00", "schedules it for the day with an 11:00 reminder");
 test.assertEqual(sent[0].notes, days[2].notes, "puts the day's menu in the notes");
+test.assertEqual(sent[0].list, settings.area, "files it in the area from settings");
 test.assertEqual(ui.messages[0].message, "Added 1 lunch reminders to Things.", "reports how many were added");
 
 const lateUI = makeUI([]);
