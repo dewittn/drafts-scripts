@@ -48,6 +48,7 @@
     "bvr:migrate": "bun scripts/bvr-migrate.ts",
     "new-team": "bun scripts/new-team.ts",
     "gform": "bun scripts/gform.ts",
+    "community": "bun scripts/community.ts",
     "gulp": "gulp",
     "gulp:sync": "gulp sync",
     "gulp:watch": "gulp watch",
