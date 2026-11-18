@@ -177,6 +177,16 @@ test.assertEqual(createdTemplates[0].settings.templateTags.queryType, "query man
 test.assertEqual(createdTemplates[0].settings.templateTags.queryType_query_manager, "query manager", "and sets a section tag with underscores");
 test.assertDeepEqual(settings.draftTags, ["authoring/wfid/query"], "shared draftTags setting is not mutated");
 
+// Switch fields pass their true/false through as section tags
+createdTemplates = [];
+source = makeSourceDraft([makeTask("Sam Switch", false), makeTask("Ola Off", false)]);
+ui = makeUI(0, { offerSample: true });
+new QueryLetter(settings, ui, source).create();
+test.assertEqual(createdTemplates[0].settings.templateTags.offerSample, true, "switch on sets a true tag");
+ui = makeUI(0, { offerSample: false });
+new QueryLetter(settings, ui, source).create();
+test.assertEqual(createdTemplates[1].settings.templateTags.offerSample, false, "switch off sets a false tag");
+
 // Cancelled prompt
 createdTemplates = [];
 source = makeSourceDraft([makeTask("Dan Deal", false)]);

@@ -49,6 +49,12 @@ queryLetter:
             keyboard: emailAddress
             autocapitalization: none
             autocorrect: false
+      # Switches fill a true/false tag for {{#offerSample}}...{{/offerSample}} sections.
+      - type: switch
+        data:
+          name: offerSample
+          label: Offer to send a sample
+          initialValue: false
       - type: button
         data:
           name: Create Letter

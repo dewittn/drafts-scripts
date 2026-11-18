@@ -110,11 +110,12 @@ class QueryLetter {
   // shows them capitalized, the letter uses them mid-sentence) and joined
   // into one string. Each chosen value also sets a "<field>_<choice>" tag,
   // with spaces as underscores, so Mustache sections like {{#queryType_email}}
-  // or {{#queryType_query_manager}} can switch on it.
+  // or {{#queryType_query_manager}} can switch on it. Switches pass their
+  // true/false through, so {{#offerSample}} shows its text only when on.
   #templateTagsFrom(fieldValues) {
     const templateTags = {};
     for (const [key, value] of Object.entries(fieldValues)) {
-      if (typeof value == "string") templateTags[key] = value;
+      if (typeof value == "string" || typeof value == "boolean") templateTags[key] = value;
       if (Array.isArray(value)) {
         const choices = value.map((choice) => choice.toLowerCase());
         templateTags[key] = choices.join(", ");
