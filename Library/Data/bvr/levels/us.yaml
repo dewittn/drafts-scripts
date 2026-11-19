@@ -23,3 +23,6 @@ gameReport:
       recipients: [AG, AH]
       bodyText: "[[game_summary]]"
   forms: [varsity-score-report]
+# The letter Create Welcome Letter fills in for every team at this level.
+templates:
+  welcomeLetter: bvr/welcome-letter.mustache

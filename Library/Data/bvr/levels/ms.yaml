@@ -19,3 +19,6 @@ gameReport:
   forms: [varsity-score-report]
 weeklySchedule:
   practiceTime: "2:35 - 3:35"
+# The letter Create Welcome Letter fills in for every team at this level.
+templates:
+  welcomeLetter: bvr/ms-welcome-letter.mustache

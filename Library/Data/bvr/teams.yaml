@@ -14,6 +14,8 @@
 #                                                     (override: templates.weeklySchedule)
 #   weekly summary    bvr/weekly-summary-prompt.mustache, the prompt for its opening
 #                                                     (override: templates.weeklySummaryPrompt)
+#   welcome letter    from the level: templates.welcomeLetter in levels/<level>.yaml
+#                                                     (override: templates.welcomeLetter)
 # Coaches: headCoach (default: headCoach in settings.yaml.tpl) and
 # assistantCoaches, as initials. A season can replace either in Edit Season.
 # They give the hc_ and ac_ template tags (hc_year and hc_years_coaching come
@@ -34,8 +36,6 @@ teamsData:
     attendanceDraftID: 5E1337A5-F964-4DEC-95A8-091AE789F0B1
     defaultTag: bvr/ultimate/us
     assistantCoaches: [DG]
-    templates:
-      welcomeLetter: bvr/welcome-letter.mustache
     attendance:
       # The Team dropdown value on the US attendance form. The winter form
       # lists winter teams only, so confirm this against the spring form.

@@ -227,10 +227,10 @@ class TeamConfig {
   }
 
   // What the templates read. File names and tags follow from the team ID and
-  // defaultTag unless teams.yaml overrides them.
+  // defaultTag unless the level or teams.yaml names a file (the team wins).
   get templateSettings() {
     const team = this.#team;
-    const templates = team.templates || {};
+    const templates = TeamConfig.merge(this.#level.templates || {}, team.templates || {});
     const defaults = TeamConfig.defaultTemplates;
 
     const settings = {

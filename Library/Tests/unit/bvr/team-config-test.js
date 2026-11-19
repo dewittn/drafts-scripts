@@ -80,7 +80,7 @@ test.assertEqual(tmpl.recordRow.templateFile, "bvr/game-record-row.md", "record 
 test.assertEqual(tmpl.seasonRecord.templateFile, "bvr/game-season-record.md", "season record template default");
 test.assertDeepEqual(tmpl.practicePlan, { draftTags: ["bvr/hoops/practice/plan"] }, "practice plan tags from teams.yaml");
 test.assertDeepEqual(tmpl.thingsProject, { templateFile: "bvr/test-hoops-game-day-project.mustache" }, "game-day project when the file exists");
-test.assertEqual(tmpl.welcomeLetter, undefined, "no welcome letter unless teams.yaml names one");
+test.assertEqual(tmpl.welcomeLetter, undefined, "no welcome letter unless the level or teams.yaml names one");
 test.assertEqual(config({}).templateSettings.thingsProject, undefined, "no game-day project when the file is missing");
 test.assertDeepEqual(tmpl.teamTemplateTags, { attendance_email: "attendance@example.com" }, "attendance_email from the attendance office");
 
@@ -114,6 +114,15 @@ test.assertDeepEqual(team.formNames, ["short-form", "long-form"], "forms overrid
 tmpl = team.templateSettings;
 test.assertDeepEqual(tmpl.gameReport.draftTags, ["bvr/hoops/girls/game/recap"], "recapTag override");
 test.assertDeepEqual(tmpl.welcomeLetter, { templateFile: "bvr/welcome-letter.md" }, "welcome letter override");
+
+const levelLetter = (team) =>
+  new TeamConfig({ team: { ...baseTeam, ...team }, level: { ...level, templates: { welcomeLetter: "bvr/ms-letter.mustache" } }, forms, staff });
+test.assertDeepEqual(levelLetter({}).templateSettings.welcomeLetter, { templateFile: "bvr/ms-letter.mustache" }, "welcome letter from the level");
+test.assertDeepEqual(
+  levelLetter({ templates: { welcomeLetter: "bvr/own.mustache" } }).templateSettings.welcomeLetter,
+  { templateFile: "bvr/own.mustache" },
+  "a team's welcome letter replaces the level's",
+);
 test.assertDeepEqual(tmpl.thingsProject, { templateFile: "bvr/custom.mustache" }, "game-day project override");
 test.assertDeepEqual(
   tmpl.teamTemplateTags,
