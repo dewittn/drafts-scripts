@@ -13,6 +13,7 @@ import {
   newTeamProblems,
   renderSportEntry,
   renderTeamEntry,
+  spacedAbbr,
   substitute,
   substitutionsFor,
   yamlScalar,
@@ -133,6 +134,24 @@ describe("substitution", () => {
       ["msg-soccer", 1],
       ["MSGS", 1],
     ]);
+  });
+
+  test("swaps the abbr written with a space after the level", () => {
+    const { text, replaced } = substitute("# MS GS Practice Plan: [[week_id]]", substitutionsFor(soccer, basketball));
+    expect(text).toBe("# MS GB Practice Plan: [[week_id]]");
+    expect(replaced.map((r) => [r.from, r.to])).toEqual([["MS GS", "MS GB"]]);
+  });
+
+  test("spaces an abbr only when it starts with its level", () => {
+    expect(spacedAbbr("MSGS", "ms")).toBe("MS GS");
+    expect(spacedAbbr("VUF", "us")).toBe("VUF");
+    expect(spacedAbbr("MS", "ms")).toBe("MS");
+    expect(spacedAbbr("MSGS", undefined)).toBe("MSGS");
+  });
+
+  test("a spaced abbr becomes the plain abbr for a team without one", () => {
+    const { text } = substitute("MS UF Practice Plan", substitutionsFor(msUltimate, { ...basketball, abbr: "VGB", level: "us" }));
+    expect(text).toBe("VGB Practice Plan");
   });
 
   test("reports nothing when nothing matches", () => {

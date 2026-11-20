@@ -117,13 +117,24 @@ export interface Substitution {
   count: number;
 }
 
-// The old team's name, id, abbr, and tags, paired with the new team's. Longer
-// strings first, so a tag is replaced whole before its parts could be.
+// The abbr as templates often write it, with the level split off: "MSGS" at
+// level ms reads "MS GS". An abbr that does not start with its level ("VUF")
+// is returned as it is.
+export function spacedAbbr(abbr: string, level: string | undefined): string {
+  const prefix = (level ?? "").toUpperCase();
+  if (prefix == "" || abbr.length <= prefix.length || !abbr.startsWith(prefix)) return abbr;
+  return `${prefix} ${abbr.slice(prefix.length)}`;
+}
+
+// The old team's name, id, abbr (also spaced, "MS GS"), and tags, paired with
+// the new team's. Longer strings first, so a tag is replaced whole before its
+// parts could be.
 export function substitutionsFor(from: ExistingTeam, options: NewTeamOptions): { from: string; to: string }[] {
   const pairs = [
     { from: from.name, to: options.name },
     { from: from.id, to: options.id },
     { from: from.abbr, to: options.abbr },
+    { from: spacedAbbr(from.abbr, from.level), to: spacedAbbr(options.abbr, options.level) },
   ];
   if (from.defaultTag) pairs.push({ from: from.defaultTag, to: defaultTagFor(options.sport, options.level) });
   for (const tag of from.practicePlan?.draftTags ?? []) pairs.push({ from: tag, to: practicePlanTagFor(options.sport) });
