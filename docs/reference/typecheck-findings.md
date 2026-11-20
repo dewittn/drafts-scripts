@@ -139,7 +139,9 @@ JSDoc in Phases 4 and 5. Do not "fix" them now.
 ## JSDoc does not match the code
 
 15 errors where a `@returns` or `@param` comment disagrees with what the code does. The
-code is the source of truth. The comments should be corrected in Phase 4.
+code is the source of truth. Since 2026-11-20, a change that touches one of these files corrects
+its tags (see "JSDoc on shared public methods" in the `drafts-change-workflow` skill); the rest
+wait for Phase 4.
 
 - **Menu managers return action objects, not booleans.** `StatusManager.js` (lines 58, 64,
   74, 79, 92, 100), `NavigationManager.js:43,50,51`, `MenuOrchestrator.js:90`,
