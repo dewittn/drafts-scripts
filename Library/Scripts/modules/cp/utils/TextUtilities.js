@@ -38,7 +38,8 @@ class TextUtilities {
 
   // Converts MultiMakdown into Markdown XL
   convertMarkdown(content) {
-    // Converts highlight tags `{==` and `==}` into `::`
-    return content.replace(/\{==/g, "::").replace(/==\}/g, "::");
+    // Converts highlight tags `{==` and `==}` into `::`, dropping the padding
+    // space the Highlight action writes inside them
+    return content.replace(/\{== ?/g, "::").replace(/ ?==\}/g, "::");
   }
 }

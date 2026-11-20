@@ -70,7 +70,8 @@ function processTags(tags) {
 
 // Converts MultiMakdown into Markdown XL
 function convertMarkdown() {
-  draft.content = draft.content.replace(/\{==/g, "++").replace(/==\}/g, "++");
+  // Drops the padding space the Highlight action writes inside the tags.
+  draft.content = draft.content.replace(/\{== ?/g, "++").replace(/ ?==\}/g, "++");
   draft.update();
 }
 
