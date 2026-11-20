@@ -118,8 +118,10 @@ class PracticePlan {
     return this.bvr.weekIDTemplateTag;
   }
 
-  get coachingDraftID() {
-    return this.bvr.coachingDraftID;
+  // The BVR Coaching draft, where each plan gets a link under its team.
+  get coachingDocument() {
+    if (typeof CoachingDocument == "undefined") require("modules/bvr/core/CoachingDocument.js");
+    return new CoachingDocument(this.bvr);
   }
 
   create() {
@@ -148,7 +150,7 @@ class PracticePlan {
     const newPlan = this.bvr.createDraftFromTemplate(templateSettings);
 
     this.#savePracticePlan(newPlan.draftID);
-    this.#insertPraticePlanLink(newPlan.displayTitle);
+    this.#insertPracticePlanLink(newPlan.displayTitle);
   }
 
   load() {
@@ -187,18 +189,13 @@ class PracticePlan {
     this.store.savePracticePlan(this.planID, draftID);
   }
 
-  #insertPraticePlanLink(linkTxt) {
-    if (linkTxt == undefined) {
-      return this.bvr.ui.displayAppMessage("error", "linkTxt is undefined");
+  // Links the new plan under the team's heading in the coaching draft,
+  // adding the heading when the team has none yet.
+  #insertPracticePlanLink(title) {
+    if (title == undefined) {
+      return this.bvr.ui.displayAppMessage("error", "The new practice plan has no title.");
     }
-
-    const coachingDraft = Draft.find(this.coachingDraftID);
-    const insertPosision = coachingDraft.lines.findIndex(
-      (lineTxt) => lineTxt == `## ${this.teamName}`,
-    ) + 2;
-
-    coachingDraft.insert(`[[${linkTxt}]]`, insertPosision);
-    coachingDraft.update();
+    this.coachingDocument.addPlanLink(this.teamName, title);
   }
 
   // One button per plan this season, newest week first. Undefined when there
@@ -229,16 +226,7 @@ class PracticePlan {
 
   // Removes the [[title]] line Create Practice Plan put in the coaching draft.
   #removePracticePlanLink(title) {
-    const coachingDraft = DraftsRuntime.findDraft(this.coachingDraftID);
-    if (coachingDraft == undefined) return;
-
-    const link = `[[${title}]]`;
-    const lines = coachingDraft.content.split("\n");
-    const kept = lines.filter((line) => line.trim() != link);
-    if (kept.length == lines.length) return;
-
-    coachingDraft.content = kept.join("\n");
-    coachingDraft.update();
+    this.coachingDocument.removePlanLink(title);
   }
 
   // The template tags for the plan's week from the team's calendar (see

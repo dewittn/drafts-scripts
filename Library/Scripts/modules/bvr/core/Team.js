@@ -507,19 +507,11 @@ class Team {
     return onlyTeam.id;
   }
 
-  // Teams whose current season has not reached its last day. A team file
-  // that cannot be read counts as inactive here; an action run from one of
-  // that team's drafts reports the problem.
+  // Teams whose current season has not reached its last day.
   #activeTeams() {
     if (typeof TeamFileStore == "undefined") require("modules/bvr/storage/TeamFileStore.js");
     const today = this.bvr.formatDateYMD(new Date());
-    return this.teamsData.filter((team) => {
-      try {
-        return TeamFileStore.load(this.bvr.teamFilePath(team.id))?.isActiveOn(today) == true;
-      } catch (error) {
-        return false;
-      }
-    });
+    return TeamFileStore.activeTeams(this.teamsData, (id) => this.bvr.teamFilePath(id), today).map(({ team }) => team);
   }
 
   #getTeamIDFromPrompt(teams, { noneActive = false } = {}) {

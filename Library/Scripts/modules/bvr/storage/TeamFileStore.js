@@ -36,6 +36,21 @@ class TeamFileStore {
     return undefined;
   }
 
+  // Each team in teamsData whose season is under way on today (YYYY-MM-DD),
+  // with its team file: [{ team, store }]. teamFilePath maps a team ID to its
+  // file. A file that cannot be read counts as inactive here; an action run
+  // on that team reports the problem.
+  static activeTeams(teamsData, teamFilePath, today) {
+    return teamsData.flatMap((team) => {
+      try {
+        const store = this.load(teamFilePath(team.id));
+        return store?.isActiveOn(today) == true ? [{ team, store }] : [];
+      } catch (error) {
+        return [];
+      }
+    });
+  }
+
   // Season IDs start with the year they begin in, then a name: 2026-fall,
   // 2026-winter, 2026-27. The old files key seasons by that year.
   static isValidSeasonID(seasonID) {

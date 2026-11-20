@@ -1,4 +1,4 @@
-# MS GS Practice Plan: [[week_id]]
+# MS GB Practice Plan: [[week_id]]
 
 [[BVR Coaching]]
 [[MSGB: Roster 26/27]]
