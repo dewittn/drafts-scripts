@@ -1,7 +1,9 @@
-// Toggles CriticMarkup marks in the editor, such as highlights ({== text ==})
-// and comments ({>> text <<}). With the cursor or selection inside the mark,
-// removes its delimiters. Otherwise wraps the selection in them. The same text
-// stays selected either way, so pressing the action again undoes it.
+// Toggles CriticMarkup marks in the editor: highlights ({== text ==}),
+// comments ({>> text <<}) and deletions ({-- text --}). With the cursor or
+// selection inside the mark, removes its delimiters, keeping the same text
+// selected so pressing again undoes it. Inside a deletion it removes the
+// whole mark, text and all, which accepts the deletion. Otherwise wraps the
+// selection in the mark.
 //
 // Marks are written with a space inside each delimiter for readability. Marks
 // written without the spaces, as the CriticMarkup spec shows them, are
@@ -11,9 +13,12 @@
 class CriticMarkup {
   // insertEmpty: with only a cursor outside a mark, insert an empty one to
   // type into, rather than doing nothing.
+  // keepText: pressing inside the mark removes only its delimiters. When
+  // false, it removes the text inside too.
   static marks = {
-    highlight: { open: "{==", close: "==}", insertEmpty: false },
-    comment: { open: "{>>", close: "<<}", insertEmpty: true },
+    highlight: { open: "{==", close: "==}", insertEmpty: false, keepText: true },
+    comment: { open: "{>>", close: "<<}", insertEmpty: true, keepText: true },
+    deletion: { open: "{--", close: "--}", insertEmpty: false, keepText: false },
   };
 
   // Toggles a mark at the editor's cursor or selection.
@@ -32,7 +37,7 @@ class CriticMarkup {
   static toggle(text, selection, markName) {
     const mark = CriticMarkup.marks[markName];
     const found = CriticMarkup.markAround(text, selection, mark);
-    if (found) return CriticMarkup.unwrap(found, selection);
+    if (found) return mark.keepText ? CriticMarkup.unwrap(found, selection) : CriticMarkup.remove(text, found);
     if (selection[1] > 0 || mark.insertEmpty) return CriticMarkup.wrap(text, selection, mark);
     return null;
   }
@@ -65,6 +70,21 @@ class CriticMarkup {
     const newStart = keepInside(start);
     const newEnd = keepInside(start + selectedLength);
     return { location, length, replacement: inner, selection: [newStart, newEnd - newStart] };
+  }
+
+  // Removes a whole mark, text and all, and leaves the cursor where it was.
+  // Also removes one space beside it, so the words around it don't end up
+  // with two spaces between them or a space before punctuation.
+  static remove(text, { location, length }) {
+    let start = location;
+    let end = location + length;
+    const before = text[start - 1];
+    const after = text[end];
+    const lineEdge = (char) => char === undefined || char == "\n";
+
+    if (after == " " && (before == " " || lineEdge(before))) end++;
+    else if (before == " " && (lineEdge(after) || /[.,;:!?)]/.test(after))) start--;
+    return { location: start, length: end - start, replacement: "", selection: [start, 0] };
   }
 
   // Wraps the selection in a mark's delimiters and keeps the same text selected.

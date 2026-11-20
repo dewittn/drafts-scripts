@@ -112,6 +112,46 @@ test.assertDeepEqual(
   "removes a comment after a highlight and leaves the highlight",
 );
 
+// --- deletions ---
+test.section("deletions");
+
+test.assertDeepEqual(
+  press("say hello there", [4, 5], "deletion"),
+  { text: "say {-- hello --} there", selection: [8, 5] },
+  "marks the selection for deletion",
+);
+test.assertEqual(press("say hello there", [4, 0], "deletion"), null, "does nothing with only a cursor outside a deletion");
+test.assertDeepEqual(
+  press("say {-- hello --} there", [10, 0], "deletion"),
+  { text: "say there", selection: [4, 0] },
+  "deletes the marked text and the extra space between words",
+);
+test.assertDeepEqual(
+  press("say {-- hello --} there", [8, 5], "deletion"),
+  { text: "say there", selection: [4, 0] },
+  "deletes the marked text around a selection inside it",
+);
+test.assertDeepEqual(
+  press("say {-- hello --}.", [10, 0], "deletion"),
+  { text: "say.", selection: [3, 0] },
+  "drops the space before punctuation",
+);
+test.assertDeepEqual(
+  press("{-- hello --} there", [6, 0], "deletion"),
+  { text: "there", selection: [0, 0] },
+  "drops the space after a deletion at the start of a line",
+);
+test.assertDeepEqual(
+  press("say {--hello--}", [9, 0], "deletion"),
+  { text: "say", selection: [3, 0] },
+  "deletes an unpadded deletion at the end of a line",
+);
+test.assertDeepEqual(
+  press("say {== hello ==} there", [10, 0], "deletion"),
+  null,
+  "leaves a highlight alone",
+);
+
 // --- toggling ---
 test.section("toggling");
 
