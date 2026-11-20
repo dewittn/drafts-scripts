@@ -68,22 +68,22 @@ test.section("removing emphasis");
 
 test.assertDeepEqual(
   press("say **hello** there", [8, 0]),
-  { text: "say hello there", selection: [6, 0] },
-  "removes the bold the cursor is in",
+  { text: "say hello there", selection: [4, 5] },
+  "removes the bold the cursor is in and selects the text",
 );
 test.assertDeepEqual(
   press("say _hello_ there", [7, 0], "italic"),
-  { text: "say hello there", selection: [6, 0] },
-  "removes the italics the cursor is in",
+  { text: "say hello there", selection: [4, 5] },
+  "removes the italics the cursor is in and selects the text",
 );
 test.assertDeepEqual(
   press("say *hello* there", [7, 0], "italic"),
-  { text: "say hello there", selection: [6, 0] },
+  { text: "say hello there", selection: [4, 5] },
   "removes italics written with asterisks",
 );
 test.assertDeepEqual(
   press("say __hello__ there", [8, 0]),
-  { text: "say hello there", selection: [6, 0] },
+  { text: "say hello there", selection: [4, 5] },
   "removes bold written with underscores",
 );
 test.assertDeepEqual(
@@ -103,37 +103,37 @@ test.assertDeepEqual(
 );
 test.assertDeepEqual(
   press("say ***hello*** there", [9, 0]),
-  { text: "say *hello* there", selection: [7, 0] },
+  { text: "say *hello* there", selection: [5, 5] },
   "takes only the bold off bold italics",
 );
 test.assertDeepEqual(
   press("say ***hello*** there", [9, 0], "italic"),
-  { text: "say **hello** there", selection: [8, 0] },
+  { text: "say **hello** there", selection: [6, 5] },
   "takes only the italics off bold italics",
 );
 test.assertDeepEqual(
   press("say _**hello**_ there", [9, 0]),
-  { text: "say _hello_ there", selection: [7, 0] },
+  { text: "say _hello_ there", selection: [5, 5] },
   "takes only the bold off bold inside italics",
 );
 test.assertDeepEqual(
   press("say _**hello**_ there", [9, 0], "italic"),
-  { text: "say **hello** there", selection: [8, 0] },
-  "takes only the italics off bold inside italics",
+  { text: "say **hello** there", selection: [4, 9] },
+  "takes only the italics off bold inside italics, selecting the bold text",
 );
 test.assertDeepEqual(
   press("**a _b_ c**", [5, 0], "italic"),
-  { text: "**a b c**", selection: [4, 0] },
+  { text: "**a b c**", selection: [4, 1] },
   "finds italics inside bold",
 );
 test.assertDeepEqual(
   press("*a **b** c*", [5, 0], "italic"),
-  { text: "a **b** c", selection: [4, 0] },
+  { text: "a **b** c", selection: [0, 9] },
   "finds italics around bold",
 );
 test.assertDeepEqual(
   press("**one** and **two**", [15, 0]),
-  { text: "**one** and two", selection: [13, 0] },
+  { text: "**one** and two", selection: [12, 3] },
   "removes only the bold the cursor is in",
 );
 test.assertDeepEqual(

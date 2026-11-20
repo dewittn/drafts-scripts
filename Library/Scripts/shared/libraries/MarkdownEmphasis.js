@@ -3,7 +3,8 @@
 //
 // Pressing outside the style wraps the selection in it, or inserts an empty
 // pair to type into when there is only a cursor. Pressing inside it removes
-// the style: with the cursor anywhere in a bolded word, Bold takes the ** off.
+// the style and selects the text: with the cursor anywhere in a bolded word,
+// Bold takes the ** off and selects the word.
 // Bold and italics nest, so _**text**_ loses only the style that was pressed.
 //
 // Italics are written with underscores so they look different from bold.
@@ -38,7 +39,7 @@ class MarkdownEmphasis {
   // editor.getSelectedRange() returns it.
   static toggle(text, selection, style) {
     const found = MarkdownEmphasis.emphasisAround(text, selection, style);
-    if (found) return MarkdownEmphasis.unwrap(found, selection, style);
+    if (found) return MarkdownEmphasis.unwrap(found, style);
     if (MarkdownEmphasis.inEmptyPair(text, selection, style)) return MarkdownEmphasis.removeEmptyPair(selection, style);
     return MarkdownEmphasis.wrap(text, selection, style);
   }
@@ -69,14 +70,11 @@ class MarkdownEmphasis {
   }
 
   // Takes a style off an emphasis, leaving the other style when it had both,
-  // in the same character it was written in. A selection edge sitting on the
-  // delimiters moves to the nearest edge of the text inside them.
-  static unwrap({ location, length, run, textStart, inner }, [start, selectedLength], style) {
+  // in the same character it was written in. Selects the text that was
+  // inside, so it is easy to restyle or replace.
+  static unwrap({ location, length, run, inner }, style) {
     const left = run[0].repeat(run.length - MarkdownEmphasis.width(style));
-    const keepInside = (position) => location + left.length + Math.min(Math.max(position - textStart, 0), inner.length);
-    const newStart = keepInside(start);
-    const newEnd = keepInside(start + selectedLength);
-    return { location, length, replacement: `${left}${inner}${left}`, selection: [newStart, newEnd - newStart] };
+    return { location, length, replacement: `${left}${inner}${left}`, selection: [location + left.length, inner.length] };
   }
 
   // How many characters a style puts on either side: one for italics, two
