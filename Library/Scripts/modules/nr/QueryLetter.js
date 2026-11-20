@@ -137,7 +137,7 @@ class QueryLetter {
   }
 
   #createLetter(agent, templateTags, choiceTags = []) {
-    const { templateFile, workspaceName } = this.settings;
+    const { templateFile, workspaceName, flag } = this.settings;
     const draftTags = [...(this.settings.draftTags ?? []), ...choiceTags];
 
     if (Template.load(templateFile) == undefined) {
@@ -149,6 +149,7 @@ class QueryLetter {
     }
 
     const letter = new Template({ templateFile, templateTags, draftTags, workspaceName });
+    if (flag != undefined) letter.flag(flag);
     return letter.archive().save();
   }
 

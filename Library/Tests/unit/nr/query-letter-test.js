@@ -46,12 +46,17 @@ Template = class {
   constructor(settings) {
     this.settings = settings;
     this.archived = false;
+    this.flaggedWith = undefined;
     this.saved = false;
     this.activated = false;
     createdTemplates.push(this);
   }
   archive() {
     this.archived = true;
+    return this;
+  }
+  flag(color) {
+    this.flaggedWith = color;
     return this;
   }
   save() {
@@ -108,6 +113,7 @@ function makeUI(pickerIndex, extraFields = {}, shown = true) {
 const settings = {
   templateFile: "nr/query-letter.mustache",
   draftTags: ["authoring/wfid/query"],
+  flag: "red",
   tagFields: ["queryType"],
   pickerData: { name: "agent", label: "Agent" },
   menuSettings: {
@@ -147,6 +153,7 @@ test.assertEqual(createdTemplates[0].settings.templateTags.queryType_email, "ema
 test.assertEqual(createdTemplates[0].settings.templateTags.queryType_query_manager, undefined, "unchosen select value sets no section tag");
 test.assertDeepEqual(createdTemplates[0].settings.draftTags, ["authoring/wfid/query", "email"], "draft tagged with query type");
 test.assert(createdTemplates[0].archived, "new draft is archived");
+test.assertEqual(createdTemplates[0].flaggedWith, "red", "new draft is flagged with the settings' color");
 test.assert(createdTemplates[0].saved, "new draft is saved");
 test.assert(createdTemplates[0].activated, "new draft is loaded in editor");
 test.assertDeepEqual(source.completed, ["Carol Cover"], "selected agent checked off in source");
@@ -267,4 +274,18 @@ for (const { field, choice, draftTags, sectionTag } of choiceCases) {
 test.assertDeepEqual(realSettings.draftTags, ["authoring/wfid/query"], "the settings' draftTags are not mutated");
 
 Template = originalTemplate;
+
+// --- Template.flag ---
+test.section("Template.flag");
+
+const flagTarget = (color) => {
+  const template = Object.create(Template.prototype);
+  template.draft = {};
+  template.flag(color);
+  return template.draft.flagType;
+};
+test.assertEqual(flagTarget("red"), 1, "red is Drafts flagType 1");
+test.assertEqual(flagTarget("Orange"), 0, "names are case-insensitive, orange is 0");
+test.assertEqual(flagTarget("gray"), 6, "gray is 6");
+test.assertEqual(flagTarget("crimson"), undefined, "an unknown color leaves the draft unflagged");
 test.summary();

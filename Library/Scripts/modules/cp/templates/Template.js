@@ -77,6 +77,17 @@ class Template {
     return this;
   }
 
+  // Drafts' flag colors in the order of its flagType numbers (0 to 6).
+  static flagColors = ["orange", "red", "purple", "blue", "yellow", "green", "gray"];
+
+  // Flags the draft with a color by name ("red"). Setting flagType also
+  // flags it. An unknown color leaves the draft unflagged.
+  flag(color) {
+    const flagType = Template.flagColors.indexOf(`${color}`.toLowerCase());
+    if (flagType != -1) this.draft.flagType = /** @type {draftFlagType} */ (flagType);
+    return this;
+  }
+
   activate() {
     if (this.draft == undefined) return;
 

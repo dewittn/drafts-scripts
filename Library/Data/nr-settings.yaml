@@ -5,6 +5,8 @@ queryLetter:
   templateFile: "nr/query-letter.mustache"
   draftTags:
     - "authoring/wfid/query"
+  # Flag color for new letters: orange, red, purple, blue, yellow, green, gray.
+  flag: red
   # Select fields whose chosen value also tags the new draft, lowercased with
   # spaces as hyphens ("Query Manager" -> query-manager).
   tagFields:
