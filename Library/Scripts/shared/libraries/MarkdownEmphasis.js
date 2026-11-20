@@ -1,22 +1,29 @@
-// Toggles Markdown bold (**text**) and italics (*text*) in the editor, the
+// Toggles Markdown bold (**text**) and italics (_text_) in the editor, the
 // same way CriticMarkup toggles its marks.
 //
 // Pressing outside the style wraps the selection in it, or inserts an empty
 // pair to type into when there is only a cursor. Pressing inside it removes
 // the style: with the cursor anywhere in a bolded word, Bold takes the ** off.
-// Bold and italics nest, so ***text*** loses only the style that was pressed.
+// Bold and italics nest, so _**text**_ loses only the style that was pressed.
 //
-// Only asterisks are recognized, since that is what these actions write.
-// Emphasis is looked for within one line.
+// Italics are written with underscores so they look different from bold.
+// Emphasis written either way is recognized when removing it: *italic*,
+// __bold__ and ***both*** toggle off too. Emphasis is looked for within one
+// line.
 //
 // Replaces the Drafts example Bold and Italic actions, which could only add.
 class MarkdownEmphasis {
-  // How many asterisks each style puts on either side of its text.
-  static stars = { bold: 2, italic: 1 };
+  // What each style writes on either side of its text.
+  static delimiters = { bold: "**", italic: "_" };
 
-  // A run of one to three asterisks, text that doesn't start or end with a
-  // space or asterisk, and the same run again: *italic*, **bold**, ***both***.
-  static pattern = /(?<!\*)(\*{1,3})(?![\s*])(.+?)(?<![\s*])\1(?!\*)/g;
+  // A run of one to three asterisks or underscores, text that doesn't start
+  // or end with a space or the same character, and the same run again:
+  // *italic*, **bold**, ***both***. Underscores only count outside a word,
+  // as in CommonMark, so snake_case_names aren't italics.
+  static patterns = [
+    /(?<!\*)(\*{1,3})(?![\s*])(.+?)(?<![\s*])\1(?!\*)/g,
+    /(?<!\w)(_{1,3})(?![\s_])(.+?)(?<![\s_])\1(?!\w)/g,
+  ];
 
   // Toggles a style at the editor's cursor or selection.
   static toggleInEditor(editor, style) {
@@ -38,10 +45,11 @@ class MarkdownEmphasis {
 
   // The innermost emphasis with this style that holds the whole cursor or
   // selection, as { location, length, run, textStart, inner }, or null.
-  // Looks inside emphasis of the other style, so *italic* inside **bold** is
+  // Looks inside emphasis of the other style, so _italic_ inside **bold** is
   // found. offset is where text starts in the draft, for those inner looks.
   static emphasisAround(text, [start, length], style, offset = 0) {
-    for (const match of text.matchAll(MarkdownEmphasis.pattern)) {
+    const matches = MarkdownEmphasis.patterns.flatMap((pattern) => [...text.matchAll(pattern)]);
+    for (const match of matches) {
       const location = offset + match.index;
       const [whole, run, inner] = match;
       if (start < location || location + whole.length < start + length) continue;
@@ -49,57 +57,64 @@ class MarkdownEmphasis {
       const textStart = location + run.length;
       const nested = MarkdownEmphasis.emphasisAround(inner, [start, length], style, textStart);
       if (nested) return nested;
-      if (MarkdownEmphasis.runHas(run.length, style)) return { location, length: whole.length, run: run.length, textStart, inner };
+      if (MarkdownEmphasis.runHas(run.length, style)) return { location, length: whole.length, run, textStart, inner };
     }
     return null;
   }
 
-  // Whether a run of asterisks includes a style: one is italic, two bold,
-  // three both.
+  // Whether a run of asterisks or underscores includes a style: one is
+  // italic, two bold, three both.
   static runHas(runLength, style) {
     return style == "bold" ? runLength >= 2 : runLength % 2 == 1;
   }
 
-  // Takes a style's asterisks off an emphasis, leaving the other style when
-  // it had both. A selection edge sitting on the asterisks moves to the
-  // nearest edge of the text inside them.
+  // Takes a style off an emphasis, leaving the other style when it had both,
+  // in the same character it was written in. A selection edge sitting on the
+  // delimiters moves to the nearest edge of the text inside them.
   static unwrap({ location, length, run, textStart, inner }, [start, selectedLength], style) {
-    const left = "*".repeat(run - MarkdownEmphasis.stars[style]);
+    const left = run[0].repeat(run.length - MarkdownEmphasis.width(style));
     const keepInside = (position) => location + left.length + Math.min(Math.max(position - textStart, 0), inner.length);
     const newStart = keepInside(start);
     const newEnd = keepInside(start + selectedLength);
     return { location, length, replacement: `${left}${inner}${left}`, selection: [newStart, newEnd - newStart] };
   }
 
-  // Whether the cursor sits between the asterisks of a pair inserted empty,
-  // such as **|** for bold.
+  // How many characters a style puts on either side: one for italics, two
+  // for bold, whichever character they are written in.
+  static width(style) {
+    return MarkdownEmphasis.delimiters[style].length;
+  }
+
+  // Whether the cursor sits between the delimiters of a pair inserted empty,
+  // such as **|** for bold or _|_ for italics.
   static inEmptyPair(text, [start, length], style) {
-    const delimiter = "*".repeat(MarkdownEmphasis.stars[style]);
+    const delimiter = MarkdownEmphasis.delimiters[style];
+    const char = delimiter[0];
     const before = text.slice(0, start);
     const after = text.slice(start);
     return (
       length == 0 &&
       before.endsWith(delimiter) &&
       after.startsWith(delimiter) &&
-      !before.endsWith(`*${delimiter}`) &&
-      !after.startsWith(`${delimiter}*`)
+      !before.endsWith(`${char}${delimiter}`) &&
+      !after.startsWith(`${delimiter}${char}`)
     );
   }
 
   // Removes an empty pair around the cursor.
   static removeEmptyPair([start], style) {
-    const width = MarkdownEmphasis.stars[style];
+    const width = MarkdownEmphasis.width(style);
     return { location: start - width, length: width * 2, replacement: "", selection: [start - width, 0] };
   }
 
-  // Wraps the selection in a style's asterisks and keeps it selected. Spaces
+  // Wraps the selection in a style's delimiters and keeps it selected. Spaces
   // at either end of the selection stay outside, since "** text **" isn't
   // bold. With only a cursor, inserts an empty pair with the cursor inside.
   static wrap(text, [start, length], style) {
     const selected = text.substr(start, length);
     const trimmed = selected.trim();
     const trimmedStart = trimmed ? start + selected.indexOf(trimmed) : start;
-    const delimiter = "*".repeat(MarkdownEmphasis.stars[style]);
+    const delimiter = MarkdownEmphasis.delimiters[style];
     return {
       location: trimmedStart,
       length: trimmed.length,
