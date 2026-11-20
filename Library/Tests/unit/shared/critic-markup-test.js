@@ -152,6 +152,70 @@ test.assertDeepEqual(
   "leaves a highlight alone",
 );
 
+// --- additions ---
+test.section("additions");
+
+test.assertDeepEqual(
+  press("say hello there", [4, 5], "addition"),
+  { text: "say {++ hello ++} there", selection: [8, 5] },
+  "marks the selection as an addition",
+);
+test.assertDeepEqual(
+  press("say there", [4, 0], "addition"),
+  { text: "say {++  ++}there", selection: [8, 0] },
+  "inserts an empty addition at the cursor",
+);
+test.assertDeepEqual(
+  press("say {++ hello ++} there", [10, 0], "addition"),
+  { text: "say hello there", selection: [6, 0] },
+  "accepts the addition, keeping its text",
+);
+
+// --- substitutions ---
+test.section("substitutions");
+
+test.assertDeepEqual(
+  press("say hello there", [4, 5], "substitution"),
+  { text: "say {~~ hello ~>  ~~} there", selection: [17, 0] },
+  "wraps the selection as the old text and puts the cursor where the new text goes",
+);
+test.assertEqual(press("say hello there", [4, 0], "substitution"), null, "does nothing with only a cursor outside a substitution");
+test.assertDeepEqual(
+  press("say {~~ hello ~> howdy ~~} there", [18, 0], "substitution"),
+  { text: "say howdy there", selection: [4, 5] },
+  "accepts the substitution and selects the new text",
+);
+test.assertDeepEqual(
+  press("say {~~hello~>howdy~~} there", [8, 0], "substitution"),
+  { text: "say howdy there", selection: [4, 5] },
+  "accepts an unpadded substitution",
+);
+test.assertDeepEqual(
+  press("say {~~ hello ~>  ~~} there", [17, 0], "substitution"),
+  { text: "say there", selection: [4, 0] },
+  "deletes the old text when no new text was written",
+);
+
+// --- menu ---
+test.section("menu");
+
+test.assertDeepEqual(
+  CriticMarkup.menuItems().map(({ data }) => data.name),
+  ["Highlight", "Comment", "Addition", "Deletion", "Substitution"],
+  "offers a button for every mark",
+);
+test.assertEqual(CriticMarkup.innermostMarkName("say hello there", [4, 5]), null, "finds no mark outside every mark");
+test.assertEqual(
+  CriticMarkup.innermostMarkName("say {-- hello --} there", [10, 0]),
+  "deletion",
+  "finds the mark the cursor is in",
+);
+test.assertEqual(
+  CriticMarkup.innermostMarkName("{== keep {>> note <<} this ==}", [14, 0]),
+  "comment",
+  "finds the innermost mark when one sits inside another",
+);
+
 // --- toggling ---
 test.section("toggling");
 
