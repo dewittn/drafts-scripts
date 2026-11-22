@@ -84,6 +84,6 @@ class AuthorUpdate {
     date.setDate(32);
     const nextMonth = date.format(this.dateFormat);
 
-    return [nextMonth, currentMonth];
+    return [currentMonth, nextMonth];
   }
 }
