@@ -10,7 +10,7 @@ require("shared/libraries/ActionMenu.js");
 
 const test = new TestAssertions("ActionMenu");
 
-const installed = ["Record Attendace", "Bus Home"];
+const installed = ["Record Attendance", "Bus Home"];
 /** @type {any} */ (globalThis).Action = {
   find: (name) => (installed.includes(name) ? { name } : undefined),
 };
@@ -21,10 +21,10 @@ let warnings = [];
 // --- missing actions ---
 test.section("missing actions");
 
-const menu = ActionMenu.createFromList(["Record Attendace", "Bus Ride Home", "Bus Home", "Edit Game"]);
+const menu = ActionMenu.createFromList(["Record Attendance", "Bus Ride Home", "Bus Home", "Edit Game"]);
 test.assertDeepEqual(
   menu.menuSettings.menuItems.map((item) => item.data.name),
-  ["Record Attendace", "Bus Home"],
+  ["Record Attendance", "Bus Home"],
   "leaves actions Drafts does not have out of the menu"
 );
 test.assertDeepEqual(warnings, ["Actions not found: Bus Ride Home, Edit Game"], "warns once, naming each missing action");

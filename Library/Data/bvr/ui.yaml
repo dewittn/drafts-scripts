@@ -20,7 +20,7 @@ getTeamIDFromPrompt:
     menuMessage: Which team would you like to use?
     isCancellable: false
     menuItems: []
-attendaceIsReady:
+attendanceIsReady:
   menuSettings:
     menuTitle: Submit Attendenace?
     menuMessage: Attenhance has not been marked as taken. Submit it anyway?

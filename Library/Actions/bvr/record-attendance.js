@@ -6,5 +6,5 @@ require("modules/bvr/core/BVR.js");
 
 const team = new Team(teamID);
 
-const submitAttendace = team.takeAttendace();
-if (submitAttendace) team.submitAttendace();
+const submitAttendance = team.takeAttendance();
+if (submitAttendance) team.submitAttendance();

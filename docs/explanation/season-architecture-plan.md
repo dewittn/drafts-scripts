@@ -428,5 +428,6 @@ next one cheap.
   that the `teams.yaml` value papers over.
 - `hc_year` style counters could be derived from a `coachingSince` year in the
   season or team file instead of being hand-incremented.
-- `Attendance` and the shortcut name both spell it "Attendace". Harmless, but
-  the shortcut name is an external contract, so rename carefully if at all.
+- Done 2026-11-22: the "Attendace" spelling in `Team`, `Attendance`, the
+  message classes and `ui.yaml` is now "Attendance". The Drafts action that
+  runs the shortcut was already "Shortcut: Attendance Taken".

@@ -57,7 +57,7 @@ class Attendance {
     return {
       ...this.settings.absencesMsgConfig,
       msgTemplateTag: this.msgTeamNameTag,
-      attendaceDraft: this.attendaceDraft,
+      attendanceDraft: this.attendanceDraft,
       templateTags: {
         ...this.globalTemplateTags,
         team_name: this.teamName,
@@ -71,7 +71,7 @@ class Attendance {
     return {
       ...this.settings.noAbsencesMsgConfig,
       msgTemplateTag: this.msgTeamNameTag,
-      attendaceDraft: this.attendaceDraft,
+      attendanceDraft: this.attendanceDraft,
       templateTags: {
         ...this.globalTemplateTags,
         team_name: this.teamName,
@@ -105,26 +105,26 @@ class Attendance {
   }
 
   get hasBeenRecorded() {
-    return /\[x\]/.test(this.attendaceDraft.lines[3]);
+    return /\[x\]/.test(this.attendanceDraft.lines[3]);
   }
 
   get hasBeenSubmitted() {
-    return /\[x\]/.test(this.attendaceDraft.lines[4]);
+    return /\[x\]/.test(this.attendanceDraft.lines[4]);
   }
 
   // Submitted stays checked until the next Record Attendance resets the
   // draft, so also check the draft is dated today.
   get wasSubmittedToday() {
     const today = this.bvr.formatDateYMD(new Date());
-    return this.hasBeenSubmitted && this.attendaceDraft.lines[2].includes(today);
+    return this.hasBeenSubmitted && this.attendanceDraft.lines[2].includes(today);
   }
 
   get isBusList() {
-    return this.attendaceDraft.lines[2].includes(Attendance.busListMarker);
+    return this.attendanceDraft.lines[2].includes(Attendance.busListMarker);
   }
 
-  get attendaceDraftIsLoaded() {
-    return draft.uuid == this.attendaceDraft.uuid;
+  get attendanceDraftIsLoaded() {
+    return draft.uuid == this.attendanceDraft.uuid;
   }
 
   get submitSuccess() {
@@ -160,18 +160,18 @@ class Attendance {
   }
 
   take() {
-    this.#loadAttendaceDraft();
+    this.#loadAttendanceDraft();
 
-    const attendaceDraftReset = this.#resetAttendanceDraft();
-    this.bvr.pinDraft(this.attendaceDraft);
-    if (attendaceDraftReset) return false;
+    const attendanceDraftReset = this.#resetAttendanceDraft();
+    this.bvr.pinDraft(this.attendanceDraft);
+    if (attendanceDraftReset) return false;
 
     if (this.hasBeenSubmitted) {
       this.bvr.ui.displayAppMessage("info", this.alreadySubmitted);
       return false;
     }
 
-    const { menuSettings } = this.bvr.ui.settings("attendaceIsReady");
+    const { menuSettings } = this.bvr.ui.settings("attendanceIsReady");
     if (this.hasBeenRecorded == false) {
       const takeNow = this.bvr.ui.buildMenu(menuSettings);
       if (takeNow.show() == false || takeNow.buttonPressed == "no") {
@@ -180,9 +180,9 @@ class Attendance {
     }
 
     const regEx = /\[ \]/g;
-    const lines = this.attendaceDraft.lines.slice(
+    const lines = this.attendanceDraft.lines.slice(
       5,
-      this.attendaceDraft.lines.length,
+      this.attendanceDraft.lines.length,
     ); // split into lines
 
     lines.forEach((line) => {
@@ -315,18 +315,18 @@ class Attendance {
   // who were absent or are picked up get checked, so the unchecked names are
   // the ones riding the bus.
   toggleBusList() {
-    this.#loadAttendaceDraft();
+    this.#loadAttendanceDraft();
     if (this.wasSubmittedToday == false) {
       return this.ui.displayAppMessage("info", this.displayMsgs.busListNotReady);
     }
 
-    const content = Attendance.flipBusList(this.attendaceDraft.content);
+    const content = Attendance.flipBusList(this.attendanceDraft.content);
 
     // Same editor and draft handling as submitted().
-    editor.load(this.attendaceDraft);
+    editor.load(this.attendanceDraft);
     editor.setText(content);
-    this.attendaceDraft.content = content;
-    this.attendaceDraft.update();
+    this.attendanceDraft.content = content;
+    this.attendanceDraft.update();
 
     const message = this.isBusList ? this.displayMsgs.busListOn : this.displayMsgs.busListOff;
     this.ui.displayAppMessage("info", message);
@@ -366,14 +366,14 @@ class Attendance {
   // Clear Attendance: uncheck every player on the attendance draft. The date,
   // Recorded, and Submitted lines are left as they are.
   clear() {
-    this.#loadAttendaceDraft();
-    const content = Attendance.uncheckPlayers(this.attendaceDraft.content);
+    this.#loadAttendanceDraft();
+    const content = Attendance.uncheckPlayers(this.attendanceDraft.content);
 
     // Same editor and draft handling as toggleBusList().
-    editor.load(this.attendaceDraft);
+    editor.load(this.attendanceDraft);
     editor.setText(content);
-    this.attendaceDraft.content = content;
-    this.attendaceDraft.update();
+    this.attendanceDraft.content = content;
+    this.attendanceDraft.update();
 
     this.ui.displayAppMessage("info", this.displayMsgs.attendanceCleared);
   }
@@ -391,8 +391,8 @@ class Attendance {
   // as a "- Name" list to paste elsewhere. The draft is left as it is, since
   // its checkboxes are today's attendance or the bus list.
   copyPlayerNames() {
-    this.#loadAttendaceDraft();
-    const names = Attendance.playerLines(this.attendaceDraft.content).map((line) => this.bvr.cleanUpName(line));
+    this.#loadAttendanceDraft();
+    const names = Attendance.playerLines(this.attendanceDraft.content).map((line) => this.bvr.cleanUpName(line));
 
     const picked = this.#pickPlayers(names, "copyPlayerNames");
     if (picked == undefined) return;
@@ -428,27 +428,27 @@ class Attendance {
     return names.map((name) => `- ${name}`).join("\n");
   }
 
-  #loadAttendaceDraft() {
+  #loadAttendanceDraft() {
     if (this.attendanceDraftID == undefined) {
       return alert(
-        "Error in #loadAttendaceDraft(): attendanceDraftID is undefined!",
+        "Error in #loadAttendanceDraft(): attendanceDraftID is undefined!",
       );
     }
-    this.attendaceDraft = this.loadDraft();
+    this.attendanceDraft = this.loadDraft();
   }
 
   submitted({ dryRun = false } = {}) {
-    if (dryRun == false) this.#runAttendaceShortcut();
-    const content = this.attendaceDraft.content
+    if (dryRun == false) this.#runAttendanceShortcut();
+    const content = this.attendanceDraft.content
       .replace(/- \[ \] Recorded/g, "- [x] Recorded")
       .replace(/- \[ \] Submitted/g, "- [x] Submitted");
 
     // The attendance draft is loaded in the editor (see pinDraft in take()),
     // so keep the editor buffer and the draft object in agreement.
     editor.setText(content);
-    this.attendaceDraft.content = content;
-    this.attendaceDraft.update();
-    this.bvr.unpinDraft(this.attendaceDraft);
+    this.attendanceDraft.content = content;
+    this.attendanceDraft.update();
+    this.bvr.unpinDraft(this.attendanceDraft);
     this.bvr.ui.displayAppMessage("success", this.submitSuccess);
     this.team.loadPracticePlan();
   }
@@ -458,7 +458,7 @@ class Attendance {
   // and queueAction then does nothing, so a missing action is reported.
   static completionActionName = "Shortcut: Attendance Taken";
 
-  #runAttendaceShortcut() {
+  #runAttendanceShortcut() {
     const shortcutAction = Action.find(Attendance.completionActionName);
     if (shortcutAction == undefined) {
       return this.bvr.ui.displayAppMessage("error", `No Drafts action named "${Attendance.completionActionName}", so the Attendance Taken shortcut did not run.`);
@@ -471,21 +471,21 @@ class Attendance {
 
   #resetAttendanceDraft() {
     const dateMatch = /\d{4}-\d{2}-\d{2}/;
-    const dateField = this.attendaceDraft.lines[2];
+    const dateField = this.attendanceDraft.lines[2];
     const lastTaken = dateMatch.exec(dateField)?.[0];
     const today = this.bvr.formatDateYMD(new Date());
 
     if (lastTaken != today) {
-      this.attendaceDraft.tasks.forEach((task) =>
-        this.attendaceDraft.resetTask(task)
+      this.attendanceDraft.tasks.forEach((task) =>
+        this.attendanceDraft.resetTask(task)
       );
       // A new day starts as attendance, even if the last one ended as the
       // bus list.
-      this.attendaceDraft.content = this.attendaceDraft.content
+      this.attendanceDraft.content = this.attendanceDraft.content
         .replace(lastTaken, today)
         .replace(Attendance.busListMarker, "");
 
-      this.attendaceDraft.update();
+      this.attendanceDraft.update();
       return true;
     }
 

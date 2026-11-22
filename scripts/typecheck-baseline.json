@@ -156,8 +156,8 @@
   {
     "file": "Library/Scripts/modules/bvr/messages/system_message.js",
     "code": 2339,
-    "message": "Property 'attendaceDraft' does not exist on type 'SystemMessage'.",
-    "line": "return this.attendaceDraft.processTemplate(this.messageDetails.subjectLine);",
+    "message": "Property 'attendanceDraft' does not exist on type 'SystemMessage'.",
+    "line": "return this.attendanceDraft.processTemplate(this.messageDetails.subjectLine);",
     "count": 1
   },
   {

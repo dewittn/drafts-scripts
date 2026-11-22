@@ -171,9 +171,9 @@ function recordAttendance(teamID, { names, promptResponses = {}, yesNo = {}, sea
   });
   team.loadPracticePlan = () => {};
 
-  const attendance = team.attendace;
+  const attendance = team.attendance;
   const rosterDraft = fakeDraft("ROSTER", roster);
-  attendance.attendaceDraft = rosterDraft;
+  attendance.attendanceDraft = rosterDraft;
   attendance.names = names;
   attendance.submit({ dryRun });
   return { ui, rosterDraft, linksAsked };

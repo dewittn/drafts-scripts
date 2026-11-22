@@ -72,7 +72,7 @@ class Team {
     return this.#config;
   }
 
-  get attendace() {
+  get attendance() {
     if (!this.#attendance) {
       if (typeof Attendance == "undefined") require("modules/bvr/core/Attendance.js");
       this.#attendance = new Attendance(this.dependencies);
@@ -80,7 +80,7 @@ class Team {
     return this.#attendance;
   }
 
-  set attendace(value) {
+  set attendance(value) {
     this.#attendance = value;
   }
 
@@ -292,24 +292,24 @@ class Team {
     practicePlan.delete();
   }
 
-  takeAttendace() {
-    return this.attendace.take();
+  takeAttendance() {
+    return this.attendance.take();
   }
 
-  submitAttendace(options) {
-    this.attendace.submit(options);
+  submitAttendance(options) {
+    this.attendance.submit(options);
   }
 
   toggleBusList() {
-    this.attendace.toggleBusList();
+    this.attendance.toggleBusList();
   }
 
   copyPlayerNames() {
-    this.attendace.copyPlayerNames();
+    this.attendance.copyPlayerNames();
   }
 
   clearAttendance() {
-    this.attendace.clear();
+    this.attendance.clear();
   }
 
   gameRecordResult() {
@@ -375,9 +375,9 @@ class Team {
     const { menuSettings, pickerData } = this.bvr.ui.settings(
       "insertPlayerName",
     );
-    this.attendaceDraft = Draft.find(this.attendanceDraftID);
+    this.attendanceDraft = Draft.find(this.attendanceDraftID);
 
-    const names = this.attendaceDraft.tasks
+    const names = this.attendanceDraft.tasks
       .map((task) => this.bvr.cleanUpName(task.line))
       .slice(2);
 
@@ -402,13 +402,13 @@ class Team {
   updateRoster() {
     if (!this.season.ensureCurrentSeason()) return;
 
-    const attendaceDraft = Draft.find(this.attendanceDraftID);
-    if (attendaceDraft == undefined) {
+    const attendanceDraft = Draft.find(this.attendanceDraftID);
+    if (attendanceDraft == undefined) {
       return this.ui.displayAppMessage("error", `${this.name} has no roster draft.`);
     }
 
     const title = Team.rosterTitle(this.abbr, this.season.currentSeasonLabel);
-    const updatedContent = Team.promoteRoster(attendaceDraft.content, title);
+    const updatedContent = Team.promoteRoster(attendanceDraft.content, title);
     if (updatedContent == undefined) {
       return this.ui.displayAppMessage("info", "Roster has already been updated!");
     }
@@ -428,9 +428,9 @@ class Team {
     if (rosterPrompt.show() == false) return;
 
     if (rosterPrompt.buttonPressed == "yes") {
-      attendaceDraft.content = updatedContent;
-      attendaceDraft.update();
-      editor.load(attendaceDraft);
+      attendanceDraft.content = updatedContent;
+      attendanceDraft.update();
+      editor.load(attendanceDraft);
     }
   }
 

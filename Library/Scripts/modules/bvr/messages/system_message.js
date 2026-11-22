@@ -13,7 +13,7 @@ class SystemMessage {
   }
 
   get subjectLine() {
-    return this.attendaceDraft.processTemplate(this.messageDetails.subjectLine);
+    return this.attendanceDraft.processTemplate(this.messageDetails.subjectLine);
   }
 
   compose(names) {

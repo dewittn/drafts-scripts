@@ -11,16 +11,16 @@ require("modules/bvr/core/BVR.js");
 
 const team = new Team(teamID);
 
-const submitAttendace = team.takeAttendace();
+const submitAttendance = team.takeAttendance();
 
-// Attendance class is loaded lazily by takeAttendace(), so check it here.
+// Attendance class is loaded lazily by takeAttendance(), so check it here.
 const fmCloud = FileManager.createCloud();
 const modified = fmCloud.getModificationDate("/Library/Scripts/modules/bvr/core/Attendance.js");
 const hasEditorFix = Attendance.prototype.submitted.toString().includes("editor.setText");
 const hasDryRun = Attendance.prototype.submit.toString().includes("dryRun");
 const hasLoadDraftFix = Attendance.prototype.toString().includes("this.loadDraft()")
   || Object.getOwnPropertyNames(Attendance.prototype).includes("loadDraft");
-const attendaceDraft = team.attendace.attendaceDraft;
+const attendanceDraft = team.attendance.attendanceDraft;
 alert(
   `Attendance.js modified: ${modified}\n` +
     `editor.setText fix present: ${hasEditorFix}\n` +
@@ -29,9 +29,9 @@ alert(
     `Open draft uuid: ${draft.uuid}\n` +
     `Attendance draft uuid: ${team.attendanceDraftID}\n` +
     `Open draft is attendance draft: ${draft.uuid == team.attendanceDraftID}\n` +
-    `Attendance object holds global draft: ${attendaceDraft === draft}\n` +
-    `Attendance form: ${team.attendace.formSettings?.name || "none (messages only)"}\n` +
-    `Proceed to submit (dry run): ${submitAttendace}`,
+    `Attendance object holds global draft: ${attendanceDraft === draft}\n` +
+    `Attendance form: ${team.attendance.formSettings?.name || "none (messages only)"}\n` +
+    `Proceed to submit (dry run): ${submitAttendance}`,
 );
 
-if (submitAttendace) team.submitAttendace({ dryRun: true });
+if (submitAttendance) team.submitAttendance({ dryRun: true });

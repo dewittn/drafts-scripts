@@ -7,8 +7,8 @@ class EmailMessage {
     this.subjectLine;
   }
 
-  get attendaceDraft() {
-    return this.msgConfig.attendaceDraft;
+  get attendanceDraft() {
+    return this.msgConfig.attendanceDraft;
   }
 
   get subjectLineTemplate() {
