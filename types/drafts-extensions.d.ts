@@ -67,3 +67,10 @@ declare namespace MustacheTemplate {
 declare var birchoutline: {
   Outline: { createTaskPaperOutline(text: string): any };
 };
+
+/**
+ * Set in a Drafts action's Script step before it requires a menu action such
+ * as Library/Actions/nr/insert-md-characters.js: the names of the actions the
+ * menu offers, in order. Kept in Drafts so the menu can change without a sync.
+ */
+declare var actionList: string[];
