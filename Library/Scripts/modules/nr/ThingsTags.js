@@ -34,4 +34,10 @@ class ThingsTags {
     const day = strftime(date, "%Y-%m-%d");
     return reminder ? `@when(${day}@${strftime(date, "%H:%M")})` : `@when(${day})`;
   }
+
+  // The deadline day, e.g. "@due(2026-10-28)". Things deadlines have no
+  // time, so any picked time is dropped.
+  static due(date) {
+    return `@due(${strftime(date, "%Y-%m-%d")})`;
+  }
 }

@@ -2,7 +2,7 @@
  * ThingsTags Unit Tests
  *
  * Covers the tags the Insert Things actions type, that ThingsParser reads them
- * back, and the Insert Things When prompt in nr-settings.yaml.
+ * back, and the Insert Things Date prompt in nr-settings.yaml.
  */
 
 require("../Tests/fixtures/assertions.js");
@@ -34,6 +34,7 @@ test.assertEqual(ThingsTags.tags([]), null, "returns null when nothing was picke
 test.assertEqual(ThingsTags.when(picked),"@when(2026-11-03)", "uses only the day without a reminder");
 test.assertEqual(ThingsTags.when(picked, false), "@when(2026-11-03)", "ignores the time when the reminder is off");
 test.assertEqual(ThingsTags.when(picked, true), "@when(2026-11-03@09:05)", "adds the 24-hour time for a reminder");
+test.assertEqual(ThingsTags.due(picked), "@due(2026-11-03)", "builds a deadline from the day only");
 
 // --- note lines ---
 test.section("note lines");
@@ -52,6 +53,8 @@ const [todo] = new ThingsParser().parse(line);
 test.assertEqual(todo.title, "Call the vet", "keeps the title clean");
 test.assertEqual(todo.when, "2026-11-03@09:05", "passes the reminder time to Things");
 test.assertEqual(todo.list, "Sanity", "files it in the area");
+const [due] = new ThingsParser().parse(`- Renew passport ${ThingsTags.due(picked)}`);
+test.assertEqual(due.deadline, "2026-11-03", "passes the deadline to Things");
 const [tagged] = new ThingsParser().parse(`- Take out the trash ${ThingsTags.tags(["Chore", "Easy"])}`);
 test.assertEqual(tagged.title, "Take out the trash", "keeps the title clean after @tags");
 test.assertDeepEqual(tagged.tags, ["Chore", "Easy"], "sends each picked tag to Things");
@@ -59,12 +62,14 @@ test.assertDeepEqual(tagged.tags, ["Chore", "Easy"], "sends each picked tag to T
 // --- prompt settings ---
 test.section("prompt settings");
 
-const { whenMenu } = loadRepoYAML("nr-settings.yaml").things;
-const fields = Object.fromEntries(whenMenu.menuItems.map((item) => [item.data.name, item]));
-test.assertEqual(fields.when.type, "datePicker", "asks for the date with a date picker");
-test.assertEqual(fields.when.data.options.mode, "dateAndTime", "lets the time be picked too");
+const { dateMenu } = loadRepoYAML("nr-settings.yaml").things;
+const fields = Object.fromEntries(dateMenu.menuItems.map((item) => [item.data.value ?? item.data.name, item]));
+test.assertEqual(fields.date.type, "datePicker", "asks for the date with a date picker");
+test.assertEqual(fields.date.data.options.mode, "dateAndTime", "lets the time be picked too");
 test.assertEqual(fields.reminder.type, "switch", "asks about the reminder with a switch");
 test.assertEqual(fields.reminder.data.initialValue, false, "starts with the reminder off");
+test.assertEqual(dateMenu.menuItems.find((item) => item.data.isDefault)?.data.value, "when", "makes Create when the default button");
+test.assertEqual(fields.due?.type, "button", "offers a Create due button");
 
 // --- projects ---
 test.section("projects");

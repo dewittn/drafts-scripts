@@ -187,27 +187,33 @@ things:
   projectMenu:
     menuTitle: Things Project
     menuMessage: Which project should this go in?
-  # Insert Things When. The time is used only when the reminder switch is on.
-  whenMenu:
-    menuTitle: Things When
-    menuMessage: When should this start?
+  # Insert Things Date. Create when types @when (start date), Create due types
+  # @due (deadline). The time is used only for @when with the reminder on,
+  # since Things deadlines have no time.
+  dateMenu:
+    menuTitle: Things Date
+    menuMessage: Pick a start date (when) or a deadline (due).
     menuItems:
       - type: datePicker
         data:
-          name: when
-          label: When
+          name: date
+          label: Date
           options:
             mode: dateAndTime
       - type: switch
         data:
           name: reminder
-          label: Create reminder
+          label: Create reminder (when only)
           initialValue: false
       - type: button
         data:
-          name: Insert
-          value: insert
+          name: Create when
+          value: when
           isDefault: true
+      - type: button
+        data:
+          name: Create due
+          value: due
   # Things Formatting Help, one prompt per page. Next moves on, Done stops.
   help:
     - menuTitle: "Things Format: To-dos"
