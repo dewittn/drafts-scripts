@@ -16,7 +16,10 @@ class BoldListItems {
   // A word starts with a letter or digit in any language, and may contain
   // apostrophes, hyphens and parentheses ("Don't", "e-mail", "Bogotá",
   // "Update(s)"). It may also open with a parenthesis, as in "Notes (draft):".
-  static word = "[\\p{L}\\p{N}_(][\\p{L}\\p{N}_'’()-]*";
+  // A period inside a word is kept ("Coto.Studio"); one at the end is a
+  // separator, so it is never part of the word.
+  static wordChars = "[\\p{L}\\p{N}_'’()-]";
+  static word = `[\\p{L}\\p{N}_(]${BoldListItems.wordChars}*(?:\\.${BoldListItems.wordChars}+)*`;
 
   // "- ", "* ", "+ ", "1. " or "1) ", indented or not, and not already bold.
   static marker = /^(\s*(?:[-*+]|\d+[.)])\s+)(?!\*\*|__)/;

@@ -33,6 +33,8 @@ bolds("- Bogotá: the capital", "- **Bogotá:** the capital", "matches accented 
 bolds("- Goals:", "- **Goals:**", "bolds a colon label that heads a sub-list");
 bolds("- Author Update(s): monthly", "- **Author Update(s):** monthly", "keeps parentheses inside a word");
 bolds("- Notes (draft): rough", "- **Notes (draft):** rough", "allows a word in parentheses");
+bolds("- Coto.Studio: the studio", "- **Coto.Studio:** the studio", "keeps a period inside a word");
+bolds("- Coto.Studio. The studio", "- **Coto.Studio.** The studio", "keeps a period inside a name label");
 bolds("- iPhone. Apple's phone", "- **iPhone.** Apple's phone", "treats a word with a capital inside as a name");
 bolds("- Lord of the Rings. A long book", "- **Lord of the Rings.** A long book", "allows small words inside a name");
 bolds("- Waking From Innocent Dreams. My novel", "- **Waking From Innocent Dreams.** My novel", "has no word limit for a name");
