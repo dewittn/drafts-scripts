@@ -268,7 +268,8 @@ class TeamConfig {
   }
 
   // Tags for the coaches in effect. The head coach gives hc_name, hc_email,
-  // hc_years_coaching (from coachingSince in staff.yaml.tpl) and hc_year
+  // hc_coach_name (what players call them, from coachName in staff.yaml.tpl,
+  // or the full name when there is none), hc_years_coaching (from coachingSince in staff.yaml.tpl) and hc_year
   // (from headCoachSince for this team's sport). The assistants give ac_name
   // and ac_email (the first one), ac_names (all of them, "A and B"), and for
   // Mustache templates assistants ([{ name, email }]) and ac_many (true for
@@ -282,6 +283,7 @@ class TeamConfig {
     if (head != undefined) {
       tags.hc_name = detail(head, "name");
       tags.hc_email = detail(head, "email");
+      tags.hc_coach_name = this.#staff.coachName(head) || "";
       const coaching = this.#yearTag(this.#staff.detail(head, "coachingSince"));
       const headCoaching = this.#yearTag(this.#staff.detail(head, "headCoachSince")?.[this.#team.sport]);
       if (coaching != undefined) tags.hc_years_coaching = coaching;

@@ -141,7 +141,7 @@ test.assertDeepEqual(
 test.section("coaches");
 
 const coachStaff = new Staff({
-  HC: { name: "Hana Cole", email: "hana@example.com", coachingSince: "2016-02-29", headCoachSince: { ultimate: "2021-02-22" } },
+  HC: { name: "Hana Cole", coachName: "Coach Hana", email: "hana@example.com", coachingSince: "2016-02-29", headCoachSince: { ultimate: "2021-02-22" } },
   AA: { name: "Alex Able", email: "alex@example.com", coachingSince: "2022-02-28" },
   BB: { name: "Bea Bell", email: "bea@example.com" },
   CC: { name: "Cy Cole", email: "cy@example.com" },
@@ -174,6 +174,8 @@ test.assertDeepEqual(
 const tags = coachConfig({ assistantCoaches: ["AA", "BB"] }).coachTags;
 test.assertEqual(tags.hc_name, "Hana Cole", "hc_name from the head coach");
 test.assertEqual(tags.hc_email, "hana@example.com", "hc_email from the head coach");
+test.assertEqual(tags.hc_coach_name, "Coach Hana", "hc_coach_name from the head coach's coachName");
+test.assertEqual(coachConfig({ headCoach: "OT" }).coachTags.hc_coach_name, "Oli Tan", "no coachName → hc_coach_name is the full name");
 test.assertEqual(tags.hc_years_coaching, yearTag("2016-02-29"), "hc_years_coaching from coachingSince");
 test.assertEqual(tags.hc_year, yearTag("2021-02-22"), "hc_year from headCoachSince for the team's sport");
 test.assertEqual(tags.ac_name, "Alex Able", "ac_name is the first assistant");
