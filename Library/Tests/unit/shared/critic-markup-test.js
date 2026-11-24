@@ -27,7 +27,11 @@ test.assertDeepEqual(
   { text: "say {== hello ==} there", selection: [8, 5] },
   "wraps the selection with padding and keeps it selected",
 );
-test.assertEqual(press("say hello there", [4, 0]), null, "does nothing with only a cursor outside a highlight");
+test.assertDeepEqual(
+  press("say there", [4, 0]),
+  { text: "say {==  ==}there", selection: [8, 0] },
+  "inserts an empty highlight at the cursor",
+);
 test.assertDeepEqual(
   press("{== one ==} and two", [16, 3]),
   { text: "{== one ==} and {== two ==}", selection: [20, 3] },
@@ -82,10 +86,10 @@ test.assertDeepEqual(
   { text: "{== stray and real", selection: [17, 0] },
   "pairs a highlight with its nearest opening delimiter, not an unclosed one",
 );
-test.assertEqual(
+test.assertDeepEqual(
   press("say {>> note <<} there", [10, 0]),
-  null,
-  "leaves a comment alone when highlighting with only a cursor",
+  { text: "say {>> no{==  ==}te <<} there", selection: [14, 0] },
+  "inserts an empty highlight inside a comment rather than removing the comment",
 );
 
 // --- comments ---
@@ -120,7 +124,11 @@ test.assertDeepEqual(
   { text: "say {-- hello --} there", selection: [8, 5] },
   "marks the selection for deletion",
 );
-test.assertEqual(press("say hello there", [4, 0], "deletion"), null, "does nothing with only a cursor outside a deletion");
+test.assertDeepEqual(
+  press("say there", [4, 0], "deletion"),
+  { text: "say {--  --}there", selection: [8, 0] },
+  "inserts an empty deletion at the cursor",
+);
 test.assertDeepEqual(
   press("say {-- hello --} there", [10, 0], "deletion"),
   { text: "say there", selection: [4, 0] },
@@ -148,8 +156,8 @@ test.assertDeepEqual(
 );
 test.assertDeepEqual(
   press("say {== hello ==} there", [10, 0], "deletion"),
-  null,
-  "leaves a highlight alone",
+  { text: "say {== he{--  --}llo ==} there", selection: [14, 0] },
+  "inserts an empty deletion inside a highlight rather than removing the highlight",
 );
 
 // --- additions ---
@@ -179,7 +187,11 @@ test.assertDeepEqual(
   { text: "say {~~ hello ~>  ~~} there", selection: [17, 0] },
   "wraps the selection as the old text and puts the cursor where the new text goes",
 );
-test.assertEqual(press("say hello there", [4, 0], "substitution"), null, "does nothing with only a cursor outside a substitution");
+test.assertDeepEqual(
+  press("say there", [4, 0], "substitution"),
+  { text: "say {~~  ~>  ~~}there", selection: [8, 0] },
+  "inserts an empty substitution with the cursor where the old text goes",
+);
 test.assertDeepEqual(
   press("say {~~ hello ~> howdy ~~} there", [18, 0], "substitution"),
   { text: "say howdy there", selection: [4, 5] },

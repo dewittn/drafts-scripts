@@ -2,7 +2,8 @@
 // comments ({>> text <<}), additions ({++ text ++}), deletions ({-- text --})
 // and substitutions ({~~ old ~> new ~~}).
 //
-// Pressing outside a mark wraps the selection in it. Pressing inside one
+// Pressing outside a mark wraps the selection in it, or with only a cursor,
+// inserts an empty mark to type into. Pressing inside one
 // resolves it: highlights and comments lose their delimiters, additions are
 // accepted (the text stays), deletions are accepted (the text goes), and
 // substitutions are accepted (the new text replaces the old, selected).
@@ -15,37 +16,32 @@
 class CriticMarkup {
   // label: the button name in the CriticMarkup menu.
   // middle: the delimiter between old and new text, for substitutions.
-  // insertEmpty: with only a cursor outside the mark, insert an empty one to
-  // type into, rather than doing nothing.
   // leaves: what pressing inside the mark leaves behind: its "text" without
   // the delimiters, "nothing", or its "newText" (after the middle delimiter).
   static marks = {
-    highlight: { label: "Highlight", open: "{==", close: "==}", insertEmpty: false, leaves: "text" },
-    comment: { label: "Comment", open: "{>>", close: "<<}", insertEmpty: true, leaves: "text" },
-    addition: { label: "Addition", open: "{++", close: "++}", insertEmpty: true, leaves: "text" },
-    deletion: { label: "Deletion", open: "{--", close: "--}", insertEmpty: false, leaves: "nothing" },
-    substitution: { label: "Substitution", open: "{~~", middle: "~>", close: "~~}", insertEmpty: false, leaves: "newText" },
+    highlight: { label: "Highlight", open: "{==", close: "==}", leaves: "text" },
+    comment: { label: "Comment", open: "{>>", close: "<<}", leaves: "text" },
+    addition: { label: "Addition", open: "{++", close: "++}", leaves: "text" },
+    deletion: { label: "Deletion", open: "{--", close: "--}", leaves: "nothing" },
+    substitution: { label: "Substitution", open: "{~~", middle: "~>", close: "~~}", leaves: "newText" },
   };
 
   // Toggles a mark at the editor's cursor or selection.
   static toggleInEditor(editor, markName) {
     const edit = CriticMarkup.toggle(editor.getText(), editor.getSelectedRange(), markName);
-    if (!edit) return;
-
     editor.setTextInRange(edit.location, edit.length, edit.replacement);
     editor.setSelectedRange(...edit.selection);
     editor.activate();
   }
 
   // Works out the edit for toggling a mark. Returns the range to replace, its
-  // replacement, and the new selection, or null when there is nothing to do.
+  // replacement, and the new selection.
   // selection is [start, length], as editor.getSelectedRange() returns it.
   static toggle(text, selection, markName) {
     const mark = CriticMarkup.marks[markName];
     const found = CriticMarkup.markAround(text, selection, mark);
     if (found) return CriticMarkup.resolve(text, found, selection, mark);
-    if (selection[1] > 0 || mark.insertEmpty) return CriticMarkup.wrap(text, selection, mark);
-    return null;
+    return CriticMarkup.wrap(text, selection, mark);
   }
 
   // The buttons for the CriticMarkup menu, one per mark, as buildMenu takes them.
@@ -123,12 +119,13 @@ class CriticMarkup {
 
   // Wraps the selection in a mark's delimiters. Keeps the same text selected,
   // except in a substitution, where the cursor goes where the new text is
-  // typed: {~~ old ~> | ~~}.
+  // typed: {~~ old ~> | ~~}. An empty substitution puts the cursor where the
+  // old text goes: {~~ | ~>  ~~}.
   static wrap(text, [start, length], { open, middle, close }) {
     const selected = text.substr(start, length);
     if (middle) {
-      const beforeCursor = `${open} ${selected} ${middle} `;
-      return { location: start, length, replacement: `${beforeCursor} ${close}`, selection: [start + beforeCursor.length, 0] };
+      const beforeCursor = length > 0 ? `${open} ${selected} ${middle} ` : `${open} `;
+      return { location: start, length, replacement: `${open} ${selected} ${middle}  ${close}`, selection: [start + beforeCursor.length, 0] };
     }
 
     const opening = `${open} `;
