@@ -124,7 +124,7 @@ test.assertEqual(press("say hello there", [4, 0], "deletion"), null, "does nothi
 test.assertDeepEqual(
   press("say {-- hello --} there", [10, 0], "deletion"),
   { text: "say there", selection: [4, 0] },
-  "deletes the marked text and the extra space between words",
+  "deletes the marked text and the space after it",
 );
 test.assertDeepEqual(
   press("say {-- hello --} there", [8, 5], "deletion"),
@@ -133,8 +133,8 @@ test.assertDeepEqual(
 );
 test.assertDeepEqual(
   press("say {-- hello --}.", [10, 0], "deletion"),
-  { text: "say.", selection: [3, 0] },
-  "drops the space before punctuation",
+  { text: "say .", selection: [4, 0] },
+  "keeps the space before punctuation",
 );
 test.assertDeepEqual(
   press("{-- hello --} there", [6, 0], "deletion"),
@@ -142,9 +142,9 @@ test.assertDeepEqual(
   "drops the space after a deletion at the start of a line",
 );
 test.assertDeepEqual(
-  press("say {--hello--}", [9, 0], "deletion"),
-  { text: "say", selection: [3, 0] },
-  "deletes an unpadded deletion at the end of a line",
+  press("- **Where:** {--location--}", [20, 0], "deletion"),
+  { text: "- **Where:** ", selection: [13, 0] },
+  "keeps the space before a deletion at the end of a line",
 );
 test.assertDeepEqual(
   press("say {== hello ==} there", [10, 0], "deletion"),

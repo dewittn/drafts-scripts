@@ -84,8 +84,7 @@ class CriticMarkup {
     return new RegExp(`(${escape(open)} ?)((?:(?!${escape(open)})[\\s\\S])*?) ?${escape(close)}`, "g");
   }
 
-  // Replaces a mark with what pressing inside it leaves behind. When that is
-  // nothing, the mark is removed with the spacing around it tidied.
+  // Replaces a mark with what pressing inside it leaves behind.
   static resolve(text, found, selection, mark) {
     if (mark.leaves == "nothing") return CriticMarkup.remove(text, found);
     if (mark.leaves == "newText") return CriticMarkup.acceptNewText(text, found, mark);
@@ -114,18 +113,12 @@ class CriticMarkup {
   }
 
   // Removes a whole mark, text and all, and leaves the cursor where it was.
-  // Also removes one space beside it, so the words around it don't end up
-  // with two spaces between them or a space before punctuation.
+  // Also removes one space after the mark, so the words around it don't end
+  // up with two spaces between them. The space before it always stays.
   static remove(text, { location, length }) {
-    let start = location;
-    let end = location + length;
-    const before = text[start - 1];
-    const after = text[end];
-    const lineEdge = (char) => char === undefined || char == "\n";
-
-    if (after == " " && (before == " " || lineEdge(before))) end++;
-    else if (before == " " && (lineEdge(after) || /[.,;:!?)]/.test(after))) start--;
-    return { location: start, length: end - start, replacement: "", selection: [start, 0] };
+    const end = location + length;
+    const removed = text[end] == " " ? length + 1 : length;
+    return { location, length: removed, replacement: "", selection: [location, 0] };
   }
 
   // Wraps the selection in a mark's delimiters. Keeps the same text selected,
