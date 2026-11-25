@@ -1,4 +1,4 @@
-// Test action: creates a Ulysses sheet in Inbox from this draft and copies the
+// Creates a Ulysses sheet in Inbox from this draft and copies the
 // converted Markdown XL to the clipboard. Ulysses escapes Markdown XL markers
 // on any normal import, so paste from the clipboard with Edit > Paste > Raw
 // Source Block, then remove the block to get the formatting. The draft itself
