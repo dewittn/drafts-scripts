@@ -67,6 +67,15 @@ If a helper almost fits, extend it and say so, rather than working around it. If
 - **Config, not constants.** Settings go in `Library/Data/**/*.yaml`, and secrets go in `<name>.yaml.tpl` files. Never edit the generated `.json`. Read settings with `loadSettings("<file>.json")`.
 - **Require paths** are always relative to `Library/Scripts/` (see CLAUDE.md).
 - **Know the runtime.** Read `docs/reference/drafts-runtime.md` before touching code that updates the open draft, holds state, or switches workspaces. Every run starts from a fresh context, and Drafts writes the global `draft` back to the editor when a script step ends. Both have caused real bugs.
+- **Editor actions: design for the next keystroke.** Actions that change text in the editor (CriticMarkup, Bold and Italic, Select Around, Move Lines) get used in the middle of writing. Judge them by what the user can do right after the action runs, not only by whether the text comes out right. Before writing one, work through:
+  - **Cursor only, no selection.** Do something useful, usually inserting an empty mark with the cursor inside it. Never do nothing.
+  - **Where the cursor and selection land.** Leave them on the text the user will type into or restyle next. Removing bold selects the text that was inside it.
+  - **The edges.** Check line ends, list items, headings and the end of the draft. Removing `{--location--}` from `- **Where:** {--location--}` should leave `- **Where:** ` ready to type into.
+  - **Repeated presses.** A second run should toggle or move forward predictably, never drift. Move Lines used to select one more line on every press.
+
+  Put these cases in the Drafts test checklist (section 5). These actions have been refined almost entirely by how they feel in use. Claude never uses them, so working through these cases is the closest substitute.
+
+  <!-- dev-insights: 2026-11-25, drafts-scripts, CriticMarkup usability rounds (e3df5d1, d4b2002, 804b207, 053190f) -->
 - **Airtable is legacy.** NocoDB is production. Don't invest in `airtable-v2.js`, and don't make gratuitous edits to it either, until the user decides whether to delete it.
 - **New actions:** you can't create the action inside Drafts. Give the user the action name and its whole Script step as one line in a code block, ready to paste. The path is relative to `Library/Scripts/`, so a file in `Library/Actions/<area>/` starts with `../Actions/`:
 
