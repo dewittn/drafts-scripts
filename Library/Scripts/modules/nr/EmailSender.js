@@ -41,14 +41,21 @@ class EmailSender {
     throw new Error("EmailSender subclasses must supply createClient()");
   }
 
-  send(content) {
+  /**
+   * Creates the mail draft. When the draft has no Subject: line, the subject
+   * prompt starts out filled with `title`, usually the draft's display title.
+   * @param {string} content The draft's text, written as an email.
+   * @param {string} [title] Fills the subject prompt when there is no Subject: line.
+   * @returns {any} The client's result, or false when the action failed or was cancelled.
+   */
+  send(content, title = "") {
     const email = new EmailDraft(content);
     if (email.invalidAddresses.length > 0) {
       return this.#fail(`Invalid email address: ${email.invalidAddresses.join(", ")}`);
     }
 
     if (this.#wantsSignature()) email.addSignature(this.settings.signature);
-    if (this.#promptForMissingFields(email) == false) return this.#cancel("Missing email fields");
+    if (this.#promptForMissingFields(email, title) == false) return this.#cancel("Missing email fields");
 
     const result = this.createClient().createDraft({
       to: email.recipients,
@@ -72,11 +79,11 @@ class EmailSender {
 
   // Asks for whichever of the subject and recipient the draft is missing, and
   // again when a typed address does not parse. Returns false on cancel.
-  #promptForMissingFields(email, error = "") {
+  #promptForMissingFields(email, title, error = "") {
     const missing = { subject: email.subject == "", recipient: email.recipients.length == 0 };
     if (!missing.subject && !missing.recipient) return true;
 
-    const prompt = this.#ui.buildMenu(this.#missingFieldsMenu(email, missing, error));
+    const prompt = this.#ui.buildMenu(this.#missingFieldsMenu(email, missing, title, error));
     if (prompt.show() == false) return false;
 
     const { subject = "", to = "", email: address = "" } = prompt.fieldValues;
@@ -85,22 +92,32 @@ class EmailSender {
 
     email.recipients = EmailDraft.parseRecipients(to.trim(), address.trim());
     if (address.trim() == "" || email.recipients.length > 0) return true;
-    return this.#promptForMissingFields(email, this.#invalidAddressMessage(address.trim()));
+    return this.#promptForMissingFields(email, title, this.#invalidAddressMessage(address.trim()));
   }
 
-  // The configured menu cut down to the missing fields, with the draft's To
-  // name filled in. Copies items so the settings are not changed.
-  #missingFieldsMenu(email, missing, error) {
+  // The configured menu cut down to the missing fields, with the subject and
+  // the draft's To name filled in. Copies items so the settings are not changed.
+  #missingFieldsMenu(email, missing, title, error) {
     const { menuSettings } = this.settings.missingFields;
     const shown = Object.keys(missing)
       .filter((part) => missing[part])
       .flatMap((part) => EmailSender.promptFields[part]);
+    const initialText = { subject: this.#subjectFromTitle(title), to: email.to };
 
     const menuItems = menuSettings.menuItems
       .filter((item) => item.type == "button" || shown.includes(item.data.name))
-      .map((item) => (item.data.name == "to" ? { ...item, data: { ...item.data, initialText: email.to } } : item));
+      .map((item) =>
+        item.data.name in initialText ? { ...item, data: { ...item.data, initialText: initialText[item.data.name] } } : item,
+      );
 
     return { ...menuSettings, menuMessage: error || this.#missingMessage(missing), menuItems };
+  }
+
+  // The title as a subject guess. A draft that starts with a field line, such
+  // as "To: Jane", has that line as its title, which is no subject.
+  #subjectFromTitle(title) {
+    const trimmed = title.trim();
+    return EmailDraft.fieldPattern.test(trimmed) ? "" : trimmed;
   }
 
   #missingMessage(missing) {

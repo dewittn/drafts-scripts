@@ -14,8 +14,8 @@ class GmailSender extends EmailSender {
 
   // Offers to open Gmail once the draft exists, to review and send it.
   // yesNoPrompt adds its buttons to the settings it is given, so it gets a copy.
-  send(content) {
-    const result = super.send(content);
+  send(content, title = "") {
+    const result = super.send(content, title);
     if (result && this.ui.yesNoPrompt({ ...this.settings.openPrompt }) == "yes") app.openURL(this.#gmailURL);
     return result;
   }

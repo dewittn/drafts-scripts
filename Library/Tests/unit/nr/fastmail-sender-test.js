@@ -140,6 +140,33 @@ test.assertEqual(
 );
 test.assertEqual(settings.missingFields.menuSettings.menuMessage, undefined, "the menu message is not saved to settings");
 
+// --- subject filled from the draft's title ---
+test.section("subject from the title");
+
+const subjectField = (menu) => menu.menuItems.find((item) => item.data.name == "subject");
+const titleCases = [
+  { title: "Lunch on Friday", expected: "Lunch on Friday", label: "the title fills the subject" },
+  { title: "  Lunch  ", expected: "Lunch", label: "the title is trimmed" },
+  { title: "To: Jane", expected: "", label: "a field line title leaves the subject empty" },
+  { title: undefined, expected: "", label: "no title leaves the subject empty" },
+];
+for (const { title, expected, label } of titleCases) {
+  reset();
+  ui = makeUI({ prompts: [{ shown: false }] });
+  new FastmailSender(noSignature, ui).send("Email: jane@example.com\n\nBody", title);
+  test.assertEqual(subjectField(ui.menus[0]).data.initialText, expected, label);
+}
+test.assertEqual(
+  settings.missingFields.menuSettings.menuItems.find((item) => item.data.name == "subject").data.initialText,
+  undefined,
+  "the subject settings are not changed",
+);
+
+reset();
+ui = makeUI({ prompts: [{ fieldValues: { subject: "Lunch on Friday" } }] });
+new FastmailSender(noSignature, ui).send("Email: jane@example.com\n\nBody", "Lunch on Friday");
+test.assertEqual(created[0]?.subject, "Lunch on Friday", "the accepted subject is sent");
+
 // --- re-ask on a bad typed address ---
 test.section("re-ask on a bad address");
 

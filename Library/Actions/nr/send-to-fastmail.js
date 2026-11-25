@@ -6,7 +6,7 @@ require("modules/nr/FastmailSender.js");
 // so later steps (like trashing the draft) do not run.
 function sendToFastmail() {
   const settings = loadSettings("nr-settings.json");
-  new FastmailSender(settings.fastmail, new DraftsUI()).send(draft.content);
+  new FastmailSender(settings.fastmail, new DraftsUI()).send(draft.content, draft.displayTitle);
 }
 
 sendToFastmail();

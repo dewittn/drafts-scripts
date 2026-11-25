@@ -6,7 +6,7 @@ require("modules/nr/GmailSender.js");
 // later steps (like trashing the draft) do not run.
 function sendToGmail() {
   const settings = loadSettings("nr-settings.json");
-  new GmailSender(settings.gmail, new DraftsUI()).send(draft.content);
+  new GmailSender(settings.gmail, new DraftsUI()).send(draft.content, draft.displayTitle);
 }
 
 sendToGmail();
